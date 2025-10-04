@@ -1,0 +1,21 @@
+[package]
+name = "thegrid"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gpui = { workspace = true }
+smol = { workspace = true }
+smol-macros = { workspace = true }
+contemporary = { workspace = true }
+cntp_i18n = { workspace = true }
+cntp_icon_tool_macros = { workspace = true }
+tracing = { workspace = true }
+ini = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sysinfo = { workspace = true }
+url = "2.5.7"
+
+[build-dependencies]
+cntp_i18n_gen = { workspace = true }

@@ -1,0 +1,22 @@
+[config]
+i18n_dir = "dist/contemporary_toml_translations"
+blueprint = "false"
+
+[application]
+theme_colors = ["#753026", "#fe654f"]
+
+[deployment]
+application_name = "t:APPLICATION_NAME"
+application_generic_name = "t:APPLICATION_GENERIC_NAME"
+application_machine_name = "thegrid"
+organization_name = "theCheeseboard"
+desktop_entry = "com.vicr123.thegrid"
+contemporary_base_icon = "dist/baseicon.svg"
+disk_image_background = "dist/app-dmg-background.svg"
+desktop_entry_categories = ["Utility", "System", "TerminalEmulator"]
+
+[deployment."aarch64-apple-darwin"]
+contemporary_base_icon = "dist/baseicon-mac.svg"
+
+[deployment."x86_64-apple-darwin"]
+contemporary_base_icon = "dist/baseicon-mac.svg"

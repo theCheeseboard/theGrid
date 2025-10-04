@@ -1,0 +1,17 @@
+[workspace]
+resolver = "3"
+members = ["thegrid"]
+
+[workspace.dependencies]
+gpui = { git = "https://github.com/zed-industries/zed" }
+smol = "2"
+smol-macros = "0.1"
+contemporary = { git = "https://github.com/vicr123/contemporary-rs" }
+cntp_i18n = { git = "https://github.com/vicr123/contemporary-rs", features = ["gpui"] }
+cntp_icon_tool_macros = { git = "https://github.com/vicr123/contemporary-rs" }
+cntp_i18n_gen = { git = "https://github.com/vicr123/contemporary-rs" }
+ini = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sysinfo = "0.37"
+tracing = "0.1"
