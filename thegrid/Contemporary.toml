@@ -1,6 +1,5 @@
 [config]
 i18n_dir = "dist/contemporary_toml_translations"
-blueprint = "false"
 
 [application]
 theme_colors = ["#753026", "#fe654f"]

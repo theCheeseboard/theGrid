@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 gpui = { workspace = true }
+gpui_tokio = { workspace = true }
 smol = { workspace = true }
 smol-macros = { workspace = true }
 contemporary = { workspace = true }
@@ -16,6 +17,9 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 sysinfo = { workspace = true }
 url = "2.5.7"
+matrix-sdk = { workspace = true }
+tokio = { workspace = true }
+log = "0.4.28"
 
 [build-dependencies]
 cntp_i18n_gen = { workspace = true }

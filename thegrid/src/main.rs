@@ -1,10 +1,13 @@
 // On Windows do NOT show a console window when opening the app
 #![cfg_attr(all(not(test), target_os = "windows"), windows_subsystem = "windows")]
 
+mod actions;
+pub mod auth;
 mod main_surface;
 mod main_window;
-mod actions;
+mod utilities;
 
+use crate::actions::register_actions;
 use crate::main_window::MainWindow;
 use cntp_i18n::{I18N_MANAGER, tr, tr_load};
 use cntp_icon_tool_macros::application_icon;
@@ -16,12 +19,12 @@ use gpui::{App, Bounds, Menu, MenuItem, WindowBounds, WindowOptions, px, size};
 use smol_macros::main;
 use std::any::TypeId;
 use std::rc::Rc;
-use crate::actions::register_actions;
 
 fn mane() {
     application_icon!("../dist/baseicon.svg");
 
     new_contemporary_application().run(|cx: &mut App| {
+        gpui_tokio::init(cx);
         I18N_MANAGER.write().unwrap().load_source(tr_load!());
         let bounds = Bounds::centered(None, size(px(800.0), px(600.0)), cx);
 
@@ -57,11 +60,10 @@ fn mane() {
                                     "https://github.com/vicr123/thegrid",
                                 ),
                             ]
-                                .into(),
+                            .into(),
                         },
                         menus: ContemporaryMenus {
-                            menus: vec![
-                            ],
+                            menus: vec![],
                             on_about: Rc::new(move |cx| {
                                 weak_window.upgrade().unwrap().update(cx, |window, cx| {
                                     window.about_surface_open(true);
@@ -76,13 +78,18 @@ fn mane() {
                 window
             },
         )
-            .unwrap();
+        .unwrap();
         cx.activate(true);
     });
 }
+//
+// main! {
+//     async fn main() {
+//         mane()
+//     }
+// }
 
-main! {
-    async fn main() {
-        mane()
-    }
+#[tokio::main]
+async fn main() {
+    mane()
 }

@@ -1,1 +1,13 @@
-{}
+{
+  "AUTH_LOG_IN": "Log In",
+  "AUTH_MATRIX_ID": "Matrix ID",
+  "AUTH_MATRIX_ID_EXAMPLE": "@user:example.org",
+  "AUTH_PASSWORD": "Password Login",
+  "AUTH_PASSWORD_PLACEHOLDER": "Password",
+  "AUTH_POPOVER_CONNECTION_ERROR": "Unable to connect to homeserver",
+  "AUTH_POPOVER_CONNECTION_ERROR_TEXT": "Check your Matrix ID and try again.",
+  "AUTH_SSO": "Single Sign-on",
+  "AUTH_SSO_BUTTON": "Log in with {{sso_provider}}",
+  "POPOVER_LOGIN": "Log in to {{homeserver}}",
+  "SORRY": "Sorry"
+}

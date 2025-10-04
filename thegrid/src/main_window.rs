@@ -8,14 +8,17 @@ use gpui::{
     Window,
 };
 use std::rc::Rc;
+use crate::auth::auth_surface::AuthSurface;
 
 pub struct MainWindow {
     main_surface: Entity<MainSurface>,
+    auth_surface: Entity<AuthSurface>,
     current_surface: Vec<MainWindowSurface>,
 }
 
 enum MainWindowSurface {
     Main,
+    Auth,
     About,
 }
 
@@ -24,7 +27,8 @@ impl MainWindow {
         cx.new(|cx| {
             MainWindow {
                 main_surface: MainSurface::new(cx),
-                current_surface: vec![MainWindowSurface::Main],
+                auth_surface: AuthSurface::new(cx),
+                current_surface: vec![MainWindowSurface::Auth],
             }
         })
     }
@@ -47,13 +51,15 @@ impl Render for MainWindow {
                     "main-pager",
                     match self.current_surface.last().unwrap() {
                         MainWindowSurface::Main => 0,
-                        MainWindowSurface::About => 1,
+                        MainWindowSurface::Auth => 1,
+                        MainWindowSurface::About => 2,
                     },
                 )
                     .w_full()
                     .h_full()
                     .animation(LiftAnimation::new())
                     .page(self.main_surface.clone().into_any_element())
+                    .page(self.auth_surface.clone().into_any_element())
                     .page(
                         about_surface()
                             .on_back_click(cx.listener(|this, _, _, cx| {
