@@ -86,6 +86,8 @@ impl SessionManager {
                 .await
                 .unwrap();
 
+                client.event_cache().subscribe().unwrap();
+
                 let client_clone = client.clone();
                 cx.spawn(async move |cx: &mut AsyncApp| {
                     let sync_result = Tokio::spawn_result(cx, async move {

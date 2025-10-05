@@ -18,6 +18,8 @@
   "INCOMING_VERIFICATION_DECLINE": "Don't Verify",
   "INCOMING_VERIFICATION_DESCRIPTION": "Respond to the verification request",
   "MAIN_CHAT_WELCOME": "Welcome back, {{user}}!",
+  "MESSAGE_DECRYPTION_FAILURE": "Unable to decrypt this message. Check your verification status and try again later.",
+  "MESSAGE_REDACTED": "Kapoof. Gone. Sorry, but you were too late.",
   "NO_DISPLAYED_ROOM_MESSAGE": "Choose a room to start chatting!",
   "NO_DISPLAYED_ROOM_TITLE": "Welcome to {{application_name}}",
   "POPOVER_LOGIN": "Log in to {{homeserver}}",

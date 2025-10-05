@@ -1,4 +1,4 @@
-use crate::chat::chat_room::chat_room;
+use crate::chat::chat_room::ChatRoom;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::{ChangeRoomEvent, sidebar};
 use cntp_i18n::{i18n_manager, tr};
@@ -11,6 +11,7 @@ use thegrid::session::session_manager::SessionManager;
 
 pub struct MainChatSurface {
     displayed_room: DisplayedRoom,
+    chat_room: Option<Entity<ChatRoom>>,
 }
 
 impl MainChatSurface {
@@ -25,6 +26,7 @@ impl MainChatSurface {
 
             MainChatSurface {
                 displayed_room: DisplayedRoom::None,
+                chat_room: None,
             }
         })
     }
@@ -43,6 +45,9 @@ impl Render for MainChatSurface {
             .child(
                 sidebar().on_change_room(cx.listener(|this, event: &ChangeRoomEvent, _, cx| {
                     this.displayed_room = event.new_room.clone();
+                    if let DisplayedRoom::Room(room_id) = &this.displayed_room {
+                        this.chat_room = Some(ChatRoom::new(room_id.clone(), cx))
+                    }
                     cx.notify();
                 })),
             )
@@ -70,8 +75,8 @@ impl Render for MainChatSurface {
                             )
                             .size_full()
                             .into_any_element(),
-                        DisplayedRoom::Room(room_id) => {
-                            chat_room(room_id.clone()).into_any_element()
+                        DisplayedRoom::Room(_) => {
+                            self.chat_room.as_ref().unwrap().clone().into_any_element()
                         }
                     })
                     .flex_grow(),

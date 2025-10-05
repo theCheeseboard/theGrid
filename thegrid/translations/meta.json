@@ -113,15 +113,27 @@
     "plural": false,
     "description": null
   },
+  "MESSAGE_DECRYPTION_FAILURE": {
+    "context": "chat_room.rs",
+    "definedIn": "src/chat/chat_room.rs:177",
+    "plural": false,
+    "description": null
+  },
+  "MESSAGE_REDACTED": {
+    "context": "chat_room.rs",
+    "definedIn": "src/chat/chat_room.rs:162",
+    "plural": false,
+    "description": null
+  },
   "NO_DISPLAYED_ROOM_MESSAGE": {
     "context": "main_chat_surface.rs",
-    "definedIn": "src/chat/main_chat_surface.rs:66",
+    "definedIn": "src/chat/main_chat_surface.rs:71",
     "plural": false,
     "description": null
   },
   "NO_DISPLAYED_ROOM_TITLE": {
     "context": "main_chat_surface.rs",
-    "definedIn": "src/chat/main_chat_surface.rs:55",
+    "definedIn": "src/chat/main_chat_surface.rs:60",
     "plural": false,
     "description": null
   },
@@ -151,7 +163,7 @@
   },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:44",
+    "definedIn": "src/chat/chat_room.rs:111",
     "plural": false,
     "description": null
   },
