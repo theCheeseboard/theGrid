@@ -1,13 +1,19 @@
 {
   "AUTH_LOG_IN": "Log In",
-  "AUTH_MATRIX_ID": "Matrix ID",
+  "AUTH_LOG_IN_TO_MATRIX": "Log in to Matrix",
   "AUTH_MATRIX_ID_EXAMPLE": "@user:example.org",
   "AUTH_PASSWORD": "Password Login",
   "AUTH_PASSWORD_PLACEHOLDER": "Password",
   "AUTH_POPOVER_CONNECTION_ERROR": "Unable to connect to homeserver",
   "AUTH_POPOVER_CONNECTION_ERROR_TEXT": "Check your Matrix ID and try again.",
+  "AUTH_SESSION_RESTORE": "Use existing login",
   "AUTH_SSO": "Single Sign-on",
   "AUTH_SSO_BUTTON": "Log in with {{sso_provider}}",
+  "MAIN_CHAT_WELCOME": "Welcome back, {{user}}!",
+  "NO_DISPLAYED_ROOM_MESSAGE": "Choose a room to start chatting!",
+  "NO_DISPLAYED_ROOM_TITLE": "Welcome to {{application_name}}",
   "POPOVER_LOGIN": "Log in to {{homeserver}}",
-  "SORRY": "Sorry"
+  "ROOMS_SPACES": "Rooms and Spaces",
+  "SORRY": "Sorry",
+  "UNKNOWN_ROOM": "Unknown Room"
 }

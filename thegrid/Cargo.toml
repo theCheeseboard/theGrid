@@ -20,6 +20,7 @@ url = "2.5.7"
 matrix-sdk = { workspace = true }
 tokio = { workspace = true }
 log = "0.4.28"
+uuid = { workspace = true }
 
 [build-dependencies]
 cntp_i18n_gen = { workspace = true }

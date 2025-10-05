@@ -3,7 +3,7 @@
 
 mod actions;
 pub mod auth;
-mod main_surface;
+mod chat;
 mod main_window;
 mod utilities;
 
@@ -19,6 +19,7 @@ use gpui::{App, Bounds, Menu, MenuItem, WindowBounds, WindowOptions, px, size};
 use smol_macros::main;
 use std::any::TypeId;
 use std::rc::Rc;
+use thegrid::session::session_manager::setup_session_manager;
 
 fn mane() {
     application_icon!("../dist/baseicon.svg");
@@ -27,6 +28,8 @@ fn mane() {
         gpui_tokio::init(cx);
         I18N_MANAGER.write().unwrap().load_source(tr_load!());
         let bounds = Bounds::centered(None, size(px(800.0), px(600.0)), cx);
+
+        setup_session_manager(cx);
 
         let default_window_options = contemporary_window_options(cx, "theGrid".into());
         register_actions(cx);

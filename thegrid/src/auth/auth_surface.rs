@@ -15,17 +15,22 @@ use gpui::LineFragment::Text;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, Context, ElementId, Entity, InteractiveElement, IntoElement,
-    ParentElement, Render, Styled, WeakEntity, Window, div, img, px,
+    App, AppContext, AsyncApp, BorrowAppContext, Context, ElementId, Entity, InteractiveElement,
+    IntoElement, ParentElement, Render, Styled, WeakEntity, Window, div, img, px,
 };
 use gpui_tokio::Tokio;
 use matrix_sdk::authentication::matrix::MatrixSession;
+use matrix_sdk::config::SyncSettings;
+use matrix_sdk::encryption::CrossSigningStatus;
 use matrix_sdk::ruma::api::client::session::get_login_types::v3::LoginType;
-use matrix_sdk::ruma::{OwnedUserId, user_id};
+use matrix_sdk::ruma::{DeviceId, OwnedUserId, user_id};
 use matrix_sdk::{Client, ClientBuildError};
 use smol::future::FutureExt;
+use std::path::PathBuf;
 use std::sync::Arc;
+use thegrid::session::session_manager::SessionManager;
 use tracing::{error, info};
+use uuid::Uuid;
 
 #[derive(Clone, Debug, PartialEq)]
 enum AuthState {
@@ -42,11 +47,15 @@ pub struct AuthSurface {
     client: Option<Client>,
     login_types: Vec<LoginType>,
     user_id: Option<OwnedUserId>,
+    session_uuid: Uuid,
 }
 
 impl AuthSurface {
     pub fn new(cx: &mut App) -> Entity<Self> {
         cx.new(|cx| {
+            cx.observe_global::<SessionManager>(|session_manager, cx| cx.notify())
+                .detach();
+
             let surface = Self {
                 matrix_id_field: TextField::new(
                     cx,
@@ -64,6 +73,7 @@ impl AuthSurface {
                 client: None,
                 user_id: None,
                 login_types: Vec::new(),
+                session_uuid: Uuid::new_v4(),
             };
             surface.password_field.update(cx, |this, cx| {
                 this.password_field(cx, true);
@@ -71,6 +81,14 @@ impl AuthSurface {
             });
             surface
         })
+    }
+
+    fn session_dir(&self, cx: &mut App) -> PathBuf {
+        let details = cx.global::<Details>();
+        let directories = details.standard_dirs().unwrap();
+        let data_dir = directories.data_dir();
+        let session_dir = data_dir.join("sessions");
+        session_dir.join(self.session_uuid.to_string())
     }
 
     fn login_clicked(&mut self, cx: &mut Context<Self>) {
@@ -82,10 +100,8 @@ impl AuthSurface {
         };
         self.user_id = Some(user_id.clone());
 
-        let details = cx.global::<Details>();
-        let directories = details.standard_dirs().unwrap();
-        let data_dir = directories.data_dir();
-        let store_dir = data_dir.join("store");
+        let session_dir = self.session_dir(cx);
+        let store_dir = session_dir.join("store");
 
         std::fs::create_dir_all(&store_dir).unwrap();
 
@@ -93,7 +109,7 @@ impl AuthSurface {
             let client = Tokio::spawn_result(cx, async move {
                 Client::builder()
                     .server_name(user_id.server_name())
-                    .sqlite_store(store_dir.join("database.db"), None)
+                    .sqlite_store(store_dir, None)
                     .build()
                     .await
                     .map_err(|e| anyhow!(e))
@@ -163,13 +179,16 @@ impl AuthSurface {
     }
 
     fn login_password_clicked(&mut self, cx: &mut Context<Self>) {
+        let session_dir = self.session_dir(cx);
         let default_device_name = default_device_name(cx);
         let client = self.client.clone().unwrap();
         let client_clone = client.clone();
         let user_id = self.user_id.clone().unwrap().clone();
         let password = self.password_field.read(cx).current_text(cx).to_string();
+        let session_uuid = self.session_uuid.clone();
 
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
+            let user_id_clone = user_id.clone();
             let login_response = Tokio::spawn_result(cx, async move {
                 client_clone
                     .matrix_auth()
@@ -182,9 +201,32 @@ impl AuthSurface {
             .unwrap()
             .await;
 
+            // Start sync to ensure we have the latest state
+            let client_clone = client.clone();
+            let sync_handle = Tokio::spawn_result(cx, async move {
+                client_clone
+                    .sync_once(SyncSettings::default())
+                    .await
+                    .map_err(|e| anyhow!(e))
+            })
+            .unwrap()
+            .await;
+
             match login_response {
                 Ok(login_response) => {
                     let matrix_session: MatrixSession = (&login_response.clone()).into();
+
+                    let session_file = session_dir.join("session.json");
+                    std::fs::write(
+                        session_file,
+                        serde_json::to_string(&matrix_session).unwrap(),
+                    )
+                    .unwrap();
+
+                    cx.update_global::<SessionManager, ()>(|session_manager, cx| {
+                        session_manager.set_session(session_uuid, cx);
+                    })
+                    .unwrap();
 
                     this.update(cx, |this, cx| {
                         if this.state != AuthState::Connecting {
@@ -222,37 +264,66 @@ impl Render for AuthSurface {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let locale = &i18n_manager!().locale;
         let details = cx.global::<Details>();
+        let session_manager = cx.global::<SessionManager>();
+
+        let sessions = session_manager.sessions(cx);
 
         div().size_full().key_context("AuthSurface").child(
             surface().child(
                 div()
                     .size_full()
                     .flex()
+                    .flex_col()
                     .items_center()
                     .justify_center()
+                    .gap(px(8.))
+                    .child(div()
+                               .flex()
+                               .items_center()
+                               .gap(px(12.))
+                               .child(img("contemporary-icon:/application").w(px(40.)))
+                               .child(
+                                   div().text_size(px(35.)).child(
+                                       details
+                                           .generatable
+                                           .application_name
+                                           .resolve_languages_or_default(&locale.messages),
+                                   ),
+                               )
+                    )
+                    .when(!sessions.is_empty(), |david| {
+                        david.child(
+                            sessions.iter().fold(layer()
+                                .p(px(8.))
+                                .w(px(400.))
+                                .flex()
+                                .flex_col()
+                                .gap(px(8.))
+                                .child(subtitle(tr!("AUTH_SESSION_RESTORE", "Use existing login")))
+                                , |layer, session| {
+                                    let uuid = session.uuid;
+                                    layer.child(
+                                        button(
+                                            ElementId::Name(
+                                                format!("session-{}", session.uuid).into())).child(session.matrix_session.meta.user_id.to_string())
+                                            .on_click(cx.listener(move |this, _, _, cx| {
+                                                cx.update_global::<SessionManager, ()>(|session_manager, cx| {
+                                                    session_manager.set_session(uuid, cx);
+                                                })
+                                            }))
+                                    )
+                                }
+                            )
+                        )
+                    })
                     .child(
                         layer()
-                            .p(px(16.))
+                            .p(px(8.))
                             .w(px(400.))
                             .flex()
                             .flex_col()
                             .gap(px(8.))
-                            .child(
-                                div()
-                                    .flex()
-                                    .items_center()
-                                    .gap(px(12.))
-                                    .child(img("contemporary-icon:/application").w(px(40.)))
-                                    .child(
-                                        div().text_size(px(35.)).child(
-                                            details
-                                                .generatable
-                                                .application_name
-                                                .resolve_languages_or_default(&locale.messages),
-                                        ),
-                                    ),
-                            )
-                            .child(tr!("AUTH_MATRIX_ID", "Matrix ID"))
+                            .child(subtitle(tr!("AUTH_LOG_IN_TO_MATRIX", "Log in to Matrix")))
                             .child(self.matrix_id_field.clone().into_any_element())
                             .child(
                                 div().flex().child(div().flex_grow()).child(

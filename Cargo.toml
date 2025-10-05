@@ -18,3 +18,4 @@ sysinfo = "0.37"
 tracing = "0.1"
 matrix-sdk = { version = "0.14.0", features = ["anyhow", "markdown", "sso-login", "e2e-encryption", "qrcode", "sqlite"] }
 tokio = { version = "1.47", features = ["full"] }
+uuid = "1"

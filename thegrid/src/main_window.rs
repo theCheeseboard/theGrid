@@ -1,35 +1,29 @@
-use crate::main_surface::MainSurface;
+use crate::auth::auth_surface::AuthSurface;
+use crate::chat::chat_surface::ChatSurface;
 use contemporary::about_surface::about_surface;
 use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
 use contemporary::window::contemporary_window;
-use gpui::{
-    App, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled,
-    Window,
-};
-use std::rc::Rc;
-use crate::auth::auth_surface::AuthSurface;
+use gpui::{App, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window};
+use thegrid::session::session_manager::SessionManager;
 
 pub struct MainWindow {
-    main_surface: Entity<MainSurface>,
+    main_surface: Entity<ChatSurface>,
     auth_surface: Entity<AuthSurface>,
     current_surface: Vec<MainWindowSurface>,
 }
 
 enum MainWindowSurface {
     Main,
-    Auth,
     About,
 }
 
 impl MainWindow {
     pub fn new(cx: &mut App) -> Entity<MainWindow> {
-        cx.new(|cx| {
-            MainWindow {
-                main_surface: MainSurface::new(cx),
-                auth_surface: AuthSurface::new(cx),
-                current_surface: vec![MainWindowSurface::Auth],
-            }
+        cx.new(|cx| MainWindow {
+            main_surface: ChatSurface::new(cx),
+            auth_surface: AuthSurface::new(cx),
+            current_surface: vec![MainWindowSurface::Main],
         })
     }
 
@@ -45,30 +39,31 @@ impl MainWindow {
 
 impl Render for MainWindow {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        contemporary_window()
-            .child(
-                pager(
-                    "main-pager",
-                    match self.current_surface.last().unwrap() {
-                        MainWindowSurface::Main => 0,
-                        MainWindowSurface::Auth => 1,
-                        MainWindowSurface::About => 2,
+        let session_manager = cx.global::<SessionManager>();
+        contemporary_window().child(
+            pager(
+                "main-pager",
+                match self.current_surface.last().unwrap() {
+                    MainWindowSurface::Main => match session_manager.current_session() {
+                        Some(_) => 0,
+                        None => 1,
                     },
-                )
-                    .w_full()
-                    .h_full()
-                    .animation(LiftAnimation::new())
-                    .page(self.main_surface.clone().into_any_element())
-                    .page(self.auth_surface.clone().into_any_element())
-                    .page(
-                        about_surface()
-                            .on_back_click(cx.listener(|this, _, _, cx| {
-                                this.current_surface.pop();
-                                cx.notify();
-                            }))
-                            .into_any_element(),
-                    ),
+                    MainWindowSurface::About => 2,
+                },
             )
-
+            .w_full()
+            .h_full()
+            .animation(LiftAnimation::new())
+            .page(self.main_surface.clone().into_any_element())
+            .page(self.auth_surface.clone().into_any_element())
+            .page(
+                about_surface()
+                    .on_back_click(cx.listener(|this, _, _, cx| {
+                        this.current_surface.pop();
+                        cx.notify();
+                    }))
+                    .into_any_element(),
+            ),
+        )
     }
 }
