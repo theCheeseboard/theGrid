@@ -4,7 +4,10 @@ use crate::chat::sidebar::{ChangeRoomEvent, sidebar};
 use cntp_i18n::{i18n_manager, tr};
 use contemporary::application::Details;
 use contemporary::components::interstitial::interstitial;
-use gpui::{App, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window, div, px};
+use gpui::{
+    App, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window, div, px,
+};
+use thegrid::session::session_manager::SessionManager;
 
 pub struct MainChatSurface {
     displayed_room: DisplayedRoom,
@@ -12,8 +15,17 @@ pub struct MainChatSurface {
 
 impl MainChatSurface {
     pub fn new(cx: &mut App) -> Entity<MainChatSurface> {
-        cx.new(|_| MainChatSurface {
-            displayed_room: DisplayedRoom::None,
+        cx.new(|cx| {
+            // let session_manager = cx.global::<SessionManager>();
+            // let verification_requests = session_manager.verification_requests();
+            // cx.observe(&verification_requests, |this, verification_requests, cx| {
+            //     cx.notify()
+            // })
+            // .detach();
+
+            MainChatSurface {
+                displayed_room: DisplayedRoom::None,
+            }
         })
     }
 }

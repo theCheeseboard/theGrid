@@ -1,10 +1,21 @@
+use crate::auth::verification_popover::VerificationPopover;
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::tr;
+use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
+use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::pager::pager;
-use gpui::{div, list, px, App, ElementId, InteractiveElement, IntoElement, ListAlignment, ListState, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window};
+use gpui::http_client::anyhow;
+use gpui::prelude::FluentBuilder;
+use gpui::{
+    App, AsyncApp, ElementId, InteractiveElement, IntoElement, ListAlignment, ListState,
+    ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window, div, list, px,
+};
+use gpui_tokio::Tokio;
+use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use std::rc::Rc;
+use thegrid::admonition::admonition;
 use thegrid::session::session_manager::SessionManager;
 
 type ChangeRoomHandler = dyn Fn(&ChangeRoomEvent, &mut Window, &mut App) + 'static;
@@ -39,6 +50,7 @@ impl RenderOnce for Sidebar {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let root_list_state =
             window.use_state(cx, |_, _| ListState::new(0, ListAlignment::Top, px(200.)));
+        let verification_popover = window.use_state(cx, |_, cx| VerificationPopover::new(cx));
 
         let session_manager = cx.global::<SessionManager>();
 
@@ -50,6 +62,13 @@ impl RenderOnce for Sidebar {
         };
 
         let client = client.read(cx);
+        let verification_requests = session_manager.verification_requests();
+        let verification_requests = verification_requests.read(cx);
+        let shown_verification_requests: Vec<_> = verification_requests
+            .pending_verification_requests
+            .iter()
+            .filter(|request| !request.inner.is_done() && !request.inner.is_cancelled())
+            .collect();
 
         let root_rooms: Vec<_> = client
             .joined_rooms()
@@ -63,6 +82,8 @@ impl RenderOnce for Sidebar {
         }
 
         let change_room_handler = self.on_change_room.unwrap().clone();
+
+        let verification_popover_clone = verification_popover.clone();
 
         layer()
             .w(px(300.))
@@ -91,7 +112,7 @@ impl RenderOnce for Sidebar {
                                         .child(room.name().unwrap_or_default())
                                         .on_click(move |_, window, cx| {
                                             let event = ChangeRoomEvent {
-                                                new_room: DisplayedRoom::Room(room_id.clone())
+                                                new_room: DisplayedRoom::Room(room_id.clone()),
                                             };
                                             change_room_handler(&event, window, cx);
                                         })
@@ -105,11 +126,118 @@ impl RenderOnce for Sidebar {
                         .into_any_element(),
                 ),
             )
+            .when(!shown_verification_requests.is_empty(), |david| {
+                let first_verification_request = shown_verification_requests[0].clone();
+                let first_verification_request_clone = first_verification_request.clone();
+
+                david.child(
+                    div().p(px(4.)).child(
+                        admonition()
+                            .title(tr!(
+                                "INCOMING_VERIFICATION",
+                                "Incoming Verification Request"
+                            ))
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .child(if first_verification_request.inner.is_self_verification() {
+                                        tr!(
+                                            "INCOMING_SELF_VERIFICATION_DESCRIPTION",
+                                            "Verify your other device to share encryption keys. \
+                                            The other device will be able to decrypt your messages.",
+                                        )
+                                    } else {
+                                        tr!(
+                                            "INCOMING_VERIFICATION_DESCRIPTION",
+                                            "Respond to the verification request"
+                                        )
+                                    })
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .flex_col()
+                                            .child(
+                                                button("verification-request-accept")
+                                                    .child(icon_text(
+                                                        "dialog-ok".into(),
+                                                        tr!(
+                                                            "INCOMING_VERIFICATION_ACCEPT",
+                                                            "Verify Now"
+                                                        )
+                                                        .into(),
+                                                    ))
+                                                    .on_click(move |_, _, cx| {
+                                                        let verification_request =
+                                                            first_verification_request.clone();
+                                                        let verification_request_clone =
+                                                            verification_request.clone();
+
+                                                        cx.spawn(async move |cx: &mut AsyncApp| {
+                                                            Tokio::spawn(cx, async move {
+                                                                verification_request_clone
+                                                                    .clone().inner
+                                                                    .accept_with_methods(vec![
+                                                                        VerificationMethod::SasV1,
+                                                                    ])
+                                                                    .await
+                                                                    .map_err(|e| anyhow!(e))
+                                                            })
+                                                            .unwrap()
+                                                            .await
+                                                        })
+                                                        .detach();
+
+                                                        verification_popover.update(
+                                                            cx,
+                                                            |verification_popover, cx| {
+                                                                verification_popover
+                                                                    .set_verification_request(
+                                                                        verification_request,
+                                                                        cx,
+                                                                    );
+                                                            },
+                                                        );
+                                                    }),
+                                            )
+                                            .child(
+                                                button("verification-request-decline")
+                                                    .child(icon_text(
+                                                        "dialog-cancel".into(),
+                                                        tr!("INCOMING_VERIFICATION_DECLINE", "Don't Verify")
+                                                            .into(),
+                                                    ))
+                                                    .on_click(move |_, _, cx| {
+                                                        let verification_request =
+                                                            first_verification_request_clone
+                                                                .clone();
+
+                                                        cx.spawn(async move |cx: &mut AsyncApp| {
+                                                            Tokio::spawn(cx, async move {
+                                                                verification_request
+                                                                    .clone()
+                                                                    .inner
+                                                                    .cancel()
+                                                                    .await
+                                                                    .map_err(|e| anyhow!(e))
+                                                            })
+                                                            .unwrap()
+                                                            .await
+                                                        })
+                                                        .detach()
+                                                    }),
+                                            ),
+                                    ),
+                            ),
+                    ),
+                )
+            })
             .child(
                 layer()
                     .p(px(4.))
                     .flex()
                     .child(session.matrix_session.meta.user_id.to_string()),
             )
+            .child(verification_popover_clone.clone().into_any_element())
     }
 }

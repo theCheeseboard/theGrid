@@ -1,3 +1,5 @@
+use crate::session::caches::Caches;
+use crate::session::verification_requests_cache::VerificationRequestsCache;
 use contemporary::application::Details;
 use gpui::http_client::anyhow;
 use gpui::{App, AppContext, AsyncApp, Entity, Global, WeakEntity};
@@ -6,6 +8,7 @@ use log::error;
 use matrix_sdk::Client;
 use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::config::SyncSettings;
+use matrix_sdk::ruma::events::key::verification::request::ToDeviceKeyVerificationRequestEvent;
 use matrix_sdk::store::RoomLoadSettings;
 use std::fs::{create_dir_all, read_dir};
 use std::path::PathBuf;
@@ -14,6 +17,7 @@ use uuid::Uuid;
 pub struct SessionManager {
     current_session: Option<Session>,
     current_session_client: Option<Entity<Client>>,
+    current_caches: Option<Caches>,
 }
 
 impl SessionManager {
@@ -105,6 +109,7 @@ impl SessionManager {
                 .detach();
 
                 cx.update_global::<Self, ()>(|session_manager, cx| {
+                    session_manager.current_caches = Some(Caches::new(&client, cx));
                     session_manager.current_session_client = Some(cx.new(|_| client));
                 })
                 .unwrap();
@@ -120,6 +125,14 @@ impl SessionManager {
     pub fn client(&self) -> Option<Entity<Client>> {
         self.current_session_client.clone()
     }
+
+    pub fn verification_requests(&self) -> Entity<VerificationRequestsCache> {
+        self.current_caches
+            .as_ref()
+            .unwrap()
+            .verification_requests
+            .clone()
+    }
 }
 
 impl Global for SessionManager {}
@@ -128,6 +141,7 @@ pub fn setup_session_manager(cx: &mut App) {
     cx.set_global(SessionManager {
         current_session: None,
         current_session_client: None,
+        current_caches: None,
     });
 }
 

@@ -8141,6 +8141,7 @@ dependencies = [
 name = "thegrid"
 version = "0.1.0"
 dependencies = [
+ "async-channel 2.5.0",
  "cntp_i18n",
  "cntp_i18n_gen",
  "cntp_icon_tool_macros",

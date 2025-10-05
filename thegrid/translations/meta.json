@@ -59,6 +59,54 @@
     "plural": false,
     "description": null
   },
+  "CLOSE": {
+    "context": "verification_popover.rs",
+    "definedIn": "src/auth/verification_popover.rs:160",
+    "plural": false,
+    "description": null
+  },
+  "EMOJI_MATCH": {
+    "context": "verification_popover.rs",
+    "definedIn": "src/auth/verification_popover.rs:212",
+    "plural": false,
+    "description": null
+  },
+  "EMOJI_NO_MATCH": {
+    "context": "verification_popover.rs",
+    "definedIn": "src/auth/verification_popover.rs:244",
+    "plural": false,
+    "description": null
+  },
+  "INCOMING_SELF_VERIFICATION_DESCRIPTION": {
+    "context": "sidebar.rs",
+    "definedIn": "src/chat/sidebar.rs:146",
+    "plural": false,
+    "description": null
+  },
+  "INCOMING_VERIFICATION": {
+    "context": "sidebar.rs",
+    "definedIn": "src/chat/sidebar.rs:137",
+    "plural": false,
+    "description": null
+  },
+  "INCOMING_VERIFICATION_ACCEPT": {
+    "context": "sidebar.rs",
+    "definedIn": "src/chat/sidebar.rs:165",
+    "plural": false,
+    "description": null
+  },
+  "INCOMING_VERIFICATION_DECLINE": {
+    "context": "sidebar.rs",
+    "definedIn": "src/chat/sidebar.rs:207",
+    "plural": false,
+    "description": null
+  },
+  "INCOMING_VERIFICATION_DESCRIPTION": {
+    "context": "sidebar.rs",
+    "definedIn": "src/chat/sidebar.rs:152",
+    "plural": false,
+    "description": null
+  },
   "MAIN_CHAT_WELCOME": {
     "context": "chat_surface.rs",
     "definedIn": "src/chat/chat_surface.rs:75",
@@ -67,13 +115,13 @@
   },
   "NO_DISPLAYED_ROOM_MESSAGE": {
     "context": "main_chat_surface.rs",
-    "definedIn": "src/chat/main_chat_surface.rs:54",
+    "definedIn": "src/chat/main_chat_surface.rs:66",
     "plural": false,
     "description": null
   },
   "NO_DISPLAYED_ROOM_TITLE": {
     "context": "main_chat_surface.rs",
-    "definedIn": "src/chat/main_chat_surface.rs:43",
+    "definedIn": "src/chat/main_chat_surface.rs:55",
     "plural": false,
     "description": null
   },
@@ -83,9 +131,15 @@
     "plural": false,
     "description": null
   },
+  "POPOVER_VERIFY": {
+    "context": "verification_popover.rs",
+    "definedIn": "src/auth/verification_popover.rs:72",
+    "plural": false,
+    "description": null
+  },
   "ROOMS_SPACES": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:79",
+    "definedIn": "src/chat/sidebar.rs:100",
     "plural": false,
     "description": null
   },
@@ -98,6 +152,36 @@
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
     "definedIn": "src/chat/chat_room.rs:44",
+    "plural": false,
+    "description": null
+  },
+  "VERIFICATION_POPOVER_CANCELLED": {
+    "context": "verification_popover.rs",
+    "definedIn": "src/auth/verification_popover.rs:147",
+    "plural": false,
+    "description": null
+  },
+  "VERIFICATION_POPOVER_OK": {
+    "context": "verification_popover.rs",
+    "definedIn": "src/auth/verification_popover.rs:110",
+    "plural": false,
+    "description": null
+  },
+  "VERIFICATION_POPOVER_OK_MESSAGE": {
+    "context": "verification_popover.rs",
+    "definedIn": "src/auth/verification_popover.rs:119",
+    "plural": false,
+    "description": null
+  },
+  "VERIFICATION_SAS_EMOJI": {
+    "context": "verification_popover.rs",
+    "definedIn": "src/auth/verification_popover.rs:186",
+    "plural": false,
+    "description": null
+  },
+  "VERIFICATION_SAS_EMOJI_DESCRIPTION": {
+    "context": "verification_popover.rs",
+    "definedIn": "src/auth/verification_popover.rs:190",
     "plural": false,
     "description": null
   }
