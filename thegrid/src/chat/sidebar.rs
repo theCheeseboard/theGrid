@@ -6,6 +6,7 @@ use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::pager::pager;
+use contemporary::styling::theme::Theme;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
@@ -85,6 +86,8 @@ impl RenderOnce for Sidebar {
 
         let verification_popover_clone = verification_popover.clone();
 
+        let theme = cx.global::<Theme>();
+
         layer()
             .w(px(300.))
             .flex()
@@ -141,6 +144,7 @@ impl RenderOnce for Sidebar {
                                 div()
                                     .flex()
                                     .flex_col()
+                                    .gap(px(4.))
                                     .child(if first_verification_request.inner.is_self_verification() {
                                         tr!(
                                             "INCOMING_SELF_VERIFICATION_DESCRIPTION",
@@ -157,6 +161,8 @@ impl RenderOnce for Sidebar {
                                         div()
                                             .flex()
                                             .flex_col()
+                                            .rounded(theme.border_radius)
+                                            .bg(theme.button_background)
                                             .child(
                                                 button("verification-request-accept")
                                                     .child(icon_text(

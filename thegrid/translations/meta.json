@@ -79,31 +79,31 @@
   },
   "INCOMING_SELF_VERIFICATION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:146",
+    "definedIn": "src/chat/sidebar.rs:150",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:137",
+    "definedIn": "src/chat/sidebar.rs:140",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_ACCEPT": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:165",
+    "definedIn": "src/chat/sidebar.rs:171",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_DECLINE": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:207",
+    "definedIn": "src/chat/sidebar.rs:213",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:152",
+    "definedIn": "src/chat/sidebar.rs:156",
     "plural": false,
     "description": null
   },
@@ -151,7 +151,7 @@
   },
   "ROOMS_SPACES": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:100",
+    "definedIn": "src/chat/sidebar.rs:103",
     "plural": false,
     "description": null
   },
