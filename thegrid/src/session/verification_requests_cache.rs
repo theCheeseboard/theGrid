@@ -4,7 +4,6 @@ use matrix_sdk::Client;
 use matrix_sdk::encryption::verification::{
     SasVerification, Verification, VerificationRequest, VerificationRequestState,
 };
-use matrix_sdk::ruma::OwnedTransactionId;
 use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use matrix_sdk::ruma::events::key::verification::accept::ToDeviceKeyVerificationAcceptEvent;
 use matrix_sdk::ruma::events::key::verification::cancel::ToDeviceKeyVerificationCancelEvent;
@@ -14,6 +13,7 @@ use matrix_sdk::ruma::events::key::verification::request::ToDeviceKeyVerificatio
 use matrix_sdk::ruma::events::key::verification::start::{
     StartMethod, ToDeviceKeyVerificationStartEvent,
 };
+use matrix_sdk::ruma::{OwnedDeviceId, OwnedTransactionId};
 
 pub struct VerificationRequestsCache {
     pub pending_verification_requests: Vec<VerificationRequestDetails>,
@@ -23,6 +23,7 @@ pub struct VerificationRequestsCache {
 pub struct VerificationRequestDetails {
     pub inner: VerificationRequest,
     pub sas_state: Option<SasVerification>,
+    pub device_id: Option<OwnedDeviceId>,
 }
 
 enum CacheMutation {
@@ -50,6 +51,7 @@ impl VerificationRequestsCache {
                             .send(CacheMutation::Push(VerificationRequestDetails {
                                 inner: verification_request,
                                 sas_state: None,
+                                device_id: Some(event.content.from_device),
                             }))
                             .await
                             .unwrap();
@@ -90,6 +92,7 @@ impl VerificationRequestsCache {
                                 VerificationRequestDetails {
                                     inner: verification_request,
                                     sas_state,
+                                    device_id: Some(event.content.from_device),
                                 },
                             ))
                             .await
@@ -129,6 +132,7 @@ impl VerificationRequestsCache {
                                 VerificationRequestDetails {
                                     inner: verification_request,
                                     sas_state,
+                                    device_id: None,
                                 },
                             ))
                             .await
@@ -153,6 +157,7 @@ impl VerificationRequestsCache {
                                 VerificationRequestDetails {
                                     inner: verification_request,
                                     sas_state: None,
+                                    device_id: None,
                                 },
                             ))
                             .await
@@ -177,6 +182,7 @@ impl VerificationRequestsCache {
                                 VerificationRequestDetails {
                                     inner: verification_request,
                                     sas_state: None,
+                                    device_id: None,
                                 },
                             ))
                             .await
@@ -201,6 +207,7 @@ impl VerificationRequestsCache {
                                 VerificationRequestDetails {
                                     inner: verification_request,
                                     sas_state: None,
+                                    device_id: None,
                                 },
                             ))
                             .await

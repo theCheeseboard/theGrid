@@ -117,7 +117,8 @@ impl Render for VerificationPopover {
                                                 .gap(px(8.))
                                                 .child(tr!(
                                                     "VERIFICATION_POPOVER_OK_MESSAGE",
-                                                    "Good stuff."
+                                                    "Your device is now verified, and encryption \
+                                                     keys have been shared."
                                                 ))
                                                 .child(
                                                     button("verification-popover-ok")

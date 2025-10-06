@@ -61,25 +61,25 @@
   },
   "CLOSE": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:160",
+    "definedIn": "src/auth/verification_popover.rs:161",
     "plural": false,
     "description": null
   },
   "EMOJI_MATCH": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:212",
+    "definedIn": "src/auth/verification_popover.rs:213",
     "plural": false,
     "description": null
   },
   "EMOJI_NO_MATCH": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:244",
+    "definedIn": "src/auth/verification_popover.rs:245",
     "plural": false,
     "description": null
   },
   "INCOMING_SELF_VERIFICATION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:150",
+    "definedIn": "src/chat/sidebar.rs:151",
     "plural": false,
     "description": null
   },
@@ -91,19 +91,19 @@
   },
   "INCOMING_VERIFICATION_ACCEPT": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:171",
+    "definedIn": "src/chat/sidebar.rs:183",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_DECLINE": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:213",
+    "definedIn": "src/chat/sidebar.rs:227",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:156",
+    "definedIn": "src/chat/sidebar.rs:167",
     "plural": false,
     "description": null
   },
@@ -155,15 +155,21 @@
     "plural": false,
     "description": null
   },
+  "UNKNOWN_DEVICE": {
+    "context": "sidebar.rs",
+    "definedIn": "src/chat/sidebar.rs:160",
+    "plural": false,
+    "description": null
+  },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:117",
+    "definedIn": "src/chat/chat_room.rs:124",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_CANCELLED": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:147",
+    "definedIn": "src/auth/verification_popover.rs:148",
     "plural": false,
     "description": null
   },
@@ -181,13 +187,13 @@
   },
   "VERIFICATION_SAS_EMOJI": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:186",
+    "definedIn": "src/auth/verification_popover.rs:187",
     "plural": false,
     "description": null
   },
   "VERIFICATION_SAS_EMOJI_DESCRIPTION": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:190",
+    "definedIn": "src/auth/verification_popover.rs:191",
     "plural": false,
     "description": null
   }

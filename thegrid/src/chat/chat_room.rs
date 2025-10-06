@@ -50,20 +50,27 @@ impl ChatRoom {
                 .await
                 .unwrap();
 
-                if let Ok((event_cache, drop_handles)) = event_cache {
-                    event_cache
+                if let Ok((event_cache, _)) = event_cache {
+                    if event_cache
                         .pagination()
                         .run_backwards_until(100)
                         .await
-                        .unwrap();
+                        .is_err()
+                    {
+                        return;
+                    }
 
                     let (events, mut subscriber) = event_cache.subscribe().await;
 
-                    this.update(cx, |this, cx| {
-                        this.events = events;
-                        cx.notify();
-                    })
-                    .unwrap();
+                    if this
+                        .update(cx, |this, cx| {
+                            this.events = events;
+                            cx.notify();
+                        })
+                        .is_err()
+                    {
+                        return;
+                    };
 
                     loop {
                         subscriber.recv().await.unwrap();
@@ -144,7 +151,11 @@ impl Render for ChatRoom {
                 div().flex_grow().child(
                     list(root_list_state.clone(), move |i, _, cx| {
                         let event = events[i].clone();
-                        let previous_event = events.get(i - 1).cloned();
+                        let previous_event = if i == 0 {
+                            None
+                        } else {
+                            events.get(i - 1).cloned()
+                        };
 
                         timeline_event(event, previous_event, room_id.clone()).into_any_element()
                     })

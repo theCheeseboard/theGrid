@@ -145,18 +145,30 @@ impl RenderOnce for Sidebar {
                                     .flex()
                                     .flex_col()
                                     .gap(px(4.))
-                                    .child(if first_verification_request.inner.is_self_verification() {
-                                        tr!(
-                                            "INCOMING_SELF_VERIFICATION_DESCRIPTION",
-                                            "Verify your other device to share encryption keys. \
-                                            The other device will be able to decrypt your messages.",
-                                        )
-                                    } else {
-                                        tr!(
-                                            "INCOMING_VERIFICATION_DESCRIPTION",
-                                            "Respond to the verification request"
-                                        )
-                                    })
+                                    .child(
+                                        if first_verification_request.inner.is_self_verification() {
+                                            tr!(
+                                                "INCOMING_SELF_VERIFICATION_DESCRIPTION",
+                                                "Verify your other device ({{device_id}}) to share \
+                                             encryption keys. The other device will be able to \
+                                             decrypt your messages.",
+                                                device_id = first_verification_request
+                                                    .device_id
+                                                    .clone()
+                                                    .map(|id| id.to_string())
+                                                    .unwrap_or_else(|| tr!(
+                                                        "UNKNOWN_DEVICE",
+                                                        "Unknown Device"
+                                                    )
+                                                    .to_string())
+                                            )
+                                        } else {
+                                            tr!(
+                                                "INCOMING_VERIFICATION_DESCRIPTION",
+                                                "Respond to the verification request"
+                                            )
+                                        },
+                                    )
                                     .child(
                                         div()
                                             .flex()
@@ -182,7 +194,8 @@ impl RenderOnce for Sidebar {
                                                         cx.spawn(async move |cx: &mut AsyncApp| {
                                                             Tokio::spawn(cx, async move {
                                                                 verification_request_clone
-                                                                    .clone().inner
+                                                                    .clone()
+                                                                    .inner
                                                                     .accept_with_methods(vec![
                                                                         VerificationMethod::SasV1,
                                                                     ])
@@ -210,8 +223,11 @@ impl RenderOnce for Sidebar {
                                                 button("verification-request-decline")
                                                     .child(icon_text(
                                                         "dialog-cancel".into(),
-                                                        tr!("INCOMING_VERIFICATION_DECLINE", "Don't Verify")
-                                                            .into(),
+                                                        tr!(
+                                                            "INCOMING_VERIFICATION_DECLINE",
+                                                            "Don't Verify"
+                                                        )
+                                                        .into(),
                                                     ))
                                                     .on_click(move |_, _, cx| {
                                                         let verification_request =

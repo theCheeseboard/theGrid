@@ -12,7 +12,7 @@
   "CLOSE": "Close",
   "EMOJI_MATCH": "The emoji match",
   "EMOJI_NO_MATCH": "The emoji do not match",
-  "INCOMING_SELF_VERIFICATION_DESCRIPTION": "Verify your other device to share encryption keys. The other device will be able to decrypt your messages.",
+  "INCOMING_SELF_VERIFICATION_DESCRIPTION": "Verify your other device ({{device_id}}) to share encryption keys. The other device will be able to decrypt your messages.",
   "INCOMING_VERIFICATION": "Incoming Verification Request",
   "INCOMING_VERIFICATION_ACCEPT": "Verify Now",
   "INCOMING_VERIFICATION_DECLINE": "Don't Verify",
@@ -25,10 +25,11 @@
   "POPOVER_VERIFY": "Verification",
   "ROOMS_SPACES": "Rooms and Spaces",
   "SORRY": "Sorry",
+  "UNKNOWN_DEVICE": "Unknown Device",
   "UNKNOWN_ROOM": "Unknown Room",
   "VERIFICATION_POPOVER_CANCELLED": "Verification cancelled",
   "VERIFICATION_POPOVER_OK": "Verification completed",
-  "VERIFICATION_POPOVER_OK_MESSAGE": "Good stuff.",
+  "VERIFICATION_POPOVER_OK_MESSAGE": "Your device is now verified, and encryption keys have been shared.",
   "VERIFICATION_SAS_EMOJI": "Compare these emoji",
   "VERIFICATION_SAS_EMOJI_DESCRIPTION": "Check on the other device and ensure that these emoji are displayed, in the same order."
 }
