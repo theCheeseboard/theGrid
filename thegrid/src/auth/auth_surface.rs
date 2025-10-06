@@ -23,7 +23,7 @@ use gpui_tokio::Tokio;
 use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::config::SyncSettings;
 use matrix_sdk::encryption::CrossSigningStatus;
-use matrix_sdk::ruma::api::client::session::get_login_types::v3::LoginType;
+use matrix_sdk::ruma::api::client::session::get_login_types::v3::{IdentityProvider, LoginType};
 use matrix_sdk::ruma::{DeviceId, OwnedUserId, user_id};
 use matrix_sdk::{Client, ClientBuildError};
 use smol::future::FutureExt;
@@ -33,17 +33,24 @@ use thegrid::session::session_manager::SessionManager;
 use tracing::{error, info};
 use uuid::Uuid;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 enum AuthState {
     Idle,
     Connecting,
     ConnectionError,
     AuthRequired,
+    SsoTokenRequired(IdentityProvider),
+}
+
+enum LoginMethod {
+    Password(String),
+    SsoToken(String),
 }
 
 pub struct AuthSurface {
     matrix_id_field: Entity<TextField>,
     password_field: Entity<TextField>,
+    token_field: Entity<TextField>,
     state: AuthState,
     client: Option<Client>,
     login_types: Vec<LoginType>,
@@ -70,6 +77,12 @@ impl AuthSurface {
                     "".into(),
                     tr!("AUTH_PASSWORD_PLACEHOLDER", "Password").into(),
                 ),
+                token_field: TextField::new(
+                    cx,
+                    "token",
+                    "".into(),
+                    tr!("AUTH_TOKEN_PLACEHOLDER", "Token").into(),
+                ),
                 state: AuthState::Idle,
                 client: None,
                 user_id: None,
@@ -77,6 +90,10 @@ impl AuthSurface {
                 session_uuid: Uuid::new_v4(),
             };
             surface.password_field.update(cx, |this, cx| {
+                this.password_field(cx, true);
+                cx.notify();
+            });
+            surface.token_field.update(cx, |this, cx| {
                 this.password_field(cx, true);
                 cx.notify();
             });
@@ -134,7 +151,7 @@ impl AuthSurface {
                     match login_types {
                         Ok(login_types) => {
                             this.update(cx, |this, cx| {
-                                if this.state != AuthState::Connecting {
+                                if !matches!(this.state, AuthState::Connecting) {
                                     return;
                                 }
 
@@ -147,7 +164,7 @@ impl AuthSurface {
                         }
                         Err(e) => {
                             this.update(cx, |this, cx| {
-                                if this.state != AuthState::Connecting {
+                                if !matches!(this.state, AuthState::Connecting) {
                                     return;
                                 }
 
@@ -161,7 +178,7 @@ impl AuthSurface {
                 }
                 Err(e) => {
                     this.update(cx, |this, cx| {
-                        if this.state != AuthState::Connecting {
+                        if !matches!(this.state, AuthState::Connecting) {
                             return;
                         }
 
@@ -180,24 +197,68 @@ impl AuthSurface {
     }
 
     fn login_password_clicked(&mut self, cx: &mut Context<Self>) {
+        let password = self.password_field.read(cx).current_text(cx).to_string();
+        self.perform_login(LoginMethod::Password(password), cx);
+    }
+
+    fn trigger_sso_login(&mut self, idp: IdentityProvider, cx: &mut Context<Self>) {
+        let client = self.client.clone().unwrap();
+        let client_clone = client.clone();
+
+        let idp_clone = idp.clone();
+
+        cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
+            let requested_url = Tokio::spawn_result(cx, async move {
+                client_clone
+                    .matrix_auth()
+                    .get_sso_login_url(
+                        "https://thegrid.vicr123.com/idp-signin",
+                        Some(idp.id.as_str()),
+                    )
+                    // .initial_device_display_name(default_device_name.as_str())
+                    // .send()
+                    .await
+                    .map_err(|e| anyhow!(e))
+            })
+            .unwrap()
+            .await;
+
+            cx.update(|cx| cx.open_url(&requested_url.unwrap()))
+                .unwrap();
+        })
+        .detach();
+
+        self.state = AuthState::SsoTokenRequired(idp_clone);
+        cx.notify();
+    }
+
+    fn trigger_sso_token_login(&mut self, cx: &mut Context<Self>) {
+        let sso_token = self.token_field.read(cx).current_text(cx).to_string();
+        self.perform_login(LoginMethod::SsoToken(sso_token), cx);
+    }
+
+    fn perform_login(&mut self, login_method: LoginMethod, cx: &mut Context<Self>) {
         let session_dir = self.session_dir(cx);
         let default_device_name = default_device_name(cx);
         let client = self.client.clone().unwrap();
         let client_clone = client.clone();
         let user_id = self.user_id.clone().unwrap().clone();
-        let password = self.password_field.read(cx).current_text(cx).to_string();
-        let session_uuid = self.session_uuid.clone();
+        let session_uuid = self.session_uuid;
 
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
-            let user_id_clone = user_id.clone();
             let login_response = Tokio::spawn_result(cx, async move {
-                client_clone
-                    .matrix_auth()
-                    .login_username(user_id.localpart(), password.as_str())
-                    .initial_device_display_name(default_device_name.as_str())
-                    .send()
-                    .await
-                    .map_err(|e| anyhow!(e))
+                match login_method {
+                    LoginMethod::Password(password) => client_clone
+                        .matrix_auth()
+                        .login_username(user_id.localpart(), password.as_str()),
+                    LoginMethod::SsoToken(sso_token) => {
+                        client_clone.matrix_auth().login_token(&sso_token)
+                    }
+                }
+                .initial_device_display_name(default_device_name.as_str())
+                .send()
+                .await
+                .map_err(|e| anyhow!(e))
             })
             .unwrap()
             .await;
@@ -230,7 +291,7 @@ impl AuthSurface {
                     .unwrap();
 
                     this.update(cx, |this, cx| {
-                        if this.state != AuthState::Connecting {
+                        if !matches!(this.state, AuthState::Connecting) {
                             return;
                         }
 
@@ -242,7 +303,7 @@ impl AuthSurface {
                 }
                 Err(e) => {
                     this.update(cx, |this, cx| {
-                        if this.state != AuthState::Connecting {
+                        if !matches!(this.state, AuthState::Connecting) {
                             return;
                         }
 
@@ -265,7 +326,7 @@ impl AuthSurface {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> impl IntoElement {
-        match self.state {
+        match &self.state {
             AuthState::Idle => div().into_any_element(),
             AuthState::Connecting => div()
                 .flex()
@@ -302,7 +363,88 @@ impl AuthSurface {
                         ),
                 )
                 .into_any_element(),
-            AuthState::AuthRequired => div()
+            AuthState::AuthRequired => {
+                div()
+                    .flex()
+                    .flex_col()
+                    .gap(px(8.))
+                    .when(
+                        self.login_types
+                            .iter()
+                            .any(|login_type| matches!(login_type, LoginType::Password(_))),
+                        |david| {
+                            david.child(
+                                layer()
+                                    .flex()
+                                    .flex_col()
+                                    .p(px(8.))
+                                    .w_full()
+                                    .gap(px(6.))
+                                    .child(subtitle(tr!("AUTH_PASSWORD", "Password Login")))
+                                    .child(self.password_field.clone().into_any_element())
+                                    .child(
+                                        div().flex().child(div().flex_grow()).child(
+                                            button("log_in_button")
+                                                .child(icon_text(
+                                                    "arrow-right".into(),
+                                                    tr!("AUTH_LOG_IN").into(),
+                                                ))
+                                                .on_click(cx.listener(|this, _, _, cx| {
+                                                    this.login_password_clicked(cx);
+                                                })),
+                                        ),
+                                    )
+                                    .into_any_element(),
+                            )
+                        },
+                    )
+                    .when(
+                        self.login_types
+                            .iter()
+                            .any(|login_type| matches!(login_type, LoginType::Sso(_))),
+                        |david| {
+                            let sso_providers =
+                                self.login_types
+                                    .iter()
+                                    .flat_map(|login_type| match login_type {
+                                        LoginType::Sso(sso) => sso.identity_providers.clone(),
+                                        _ => Vec::new(),
+                                    });
+
+                            david.child(
+                                sso_providers.fold(
+                                    layer()
+                                        .flex()
+                                        .flex_col()
+                                        .p(px(8.))
+                                        .w_full()
+                                        .child(subtitle(tr!("AUTH_SSO", "Single Sign-on"))),
+                                    |david, sso_provider| {
+                                        david.child(
+                                            button(ElementId::Name(
+                                                format!("sso-provider-{}", sso_provider.id).into(),
+                                            ))
+                                            .child(icon_text(
+                                                "arrow-right".into(),
+                                                tr!(
+                                                    "AUTH_SSO_BUTTON",
+                                                    "Log in with {{sso_provider}}",
+                                                    sso_provider = sso_provider.name
+                                                )
+                                                .into(),
+                                            ))
+                                            .on_click(cx.listener(move |this, _, _, cx| {
+                                                this.trigger_sso_login(sso_provider.clone(), cx);
+                                            })),
+                                        )
+                                    },
+                                ),
+                            )
+                        },
+                    )
+                    .into_any_element()
+            }
+            AuthState::SsoTokenRequired(idp) => div()
                 .flex()
                 .flex_col()
                 .gap(px(8.))
@@ -318,8 +460,17 @@ impl AuthSurface {
                                 .p(px(8.))
                                 .w_full()
                                 .gap(px(6.))
-                                .child(subtitle(tr!("AUTH_PASSWORD", "Password Login")))
-                                .child(self.password_field.clone().into_any_element())
+                                .child(subtitle(tr!(
+                                    "AUTH_SSO_NAME",
+                                    "Login with {{idp_name}}",
+                                    idp_name = idp.name
+                                )))
+                                .child(tr!(
+                                    "AUTH_SSO_MESSAGE",
+                                    "We've opened a browser. Go ahead and log in there, \
+                                    and come back when you're done."
+                                ))
+                                .child(self.token_field.clone().into_any_element())
                                 .child(
                                     div().flex().child(div().flex_grow()).child(
                                         button("log_in_button")
@@ -328,52 +479,11 @@ impl AuthSurface {
                                                 tr!("AUTH_LOG_IN").into(),
                                             ))
                                             .on_click(cx.listener(|this, _, _, cx| {
-                                                this.login_password_clicked(cx);
+                                                this.trigger_sso_token_login(cx);
                                             })),
                                     ),
                                 )
                                 .into_any_element(),
-                        )
-                    },
-                )
-                .when(
-                    self.login_types
-                        .iter()
-                        .any(|login_type| matches!(login_type, LoginType::Sso(_))),
-                    |david| {
-                        let sso_providers =
-                            self.login_types
-                                .iter()
-                                .flat_map(|login_type| match login_type {
-                                    LoginType::Sso(sso) => sso.identity_providers.clone(),
-                                    _ => Vec::new(),
-                                });
-
-                        david.child(
-                            sso_providers.fold(
-                                layer()
-                                    .flex()
-                                    .flex_col()
-                                    .p(px(8.))
-                                    .w_full()
-                                    .child(subtitle(tr!("AUTH_SSO", "Single Sign-on"))),
-                                |david, sso_provider| {
-                                    david.child(
-                                        button(ElementId::Name(
-                                            format!("sso-provider-{}", sso_provider.id).into(),
-                                        ))
-                                        .child(icon_text(
-                                            "arrow-right".into(),
-                                            tr!(
-                                                "AUTH_SSO_BUTTON",
-                                                "Log in with {{sso_provider}}",
-                                                sso_provider = sso_provider.name
-                                            )
-                                            .into(),
-                                        )),
-                                    )
-                                },
-                            ),
                         )
                     },
                 )
@@ -472,7 +582,7 @@ impl Render for AuthSurface {
                     )
                     .child(
                         popover("login-popover")
-                            .visible(self.state != AuthState::Idle)
+                            .visible(!matches!(self.state, AuthState::Idle))
                             .size_neg(100.)
                             .anchor_bottom()
                             .content(
