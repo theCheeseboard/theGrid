@@ -2,6 +2,7 @@ use crate::utilities::default_device_name;
 use cntp_i18n::{i18n_manager, tr};
 use contemporary::application::Details;
 use contemporary::components::button::button;
+use contemporary::components::constrainer;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
@@ -258,6 +259,127 @@ impl AuthSurface {
         self.state = AuthState::Connecting;
         cx.notify();
     }
+
+    fn render_constrainer_child(
+        &mut self,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> impl IntoElement {
+        match self.state {
+            AuthState::Idle => div().into_any_element(),
+            AuthState::Connecting => div()
+                .flex()
+                .items_center()
+                .justify_center()
+                .size_full()
+                .child(spinner())
+                .into_any_element(),
+            AuthState::ConnectionError => layer()
+                .flex()
+                .flex_col()
+                .p(px(8.))
+                .w_full()
+                .child(subtitle(tr!(
+                    "AUTH_POPOVER_CONNECTION_ERROR",
+                    "Unable to connect to homeserver"
+                )))
+                .child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap(px(8.))
+                        .child(tr!(
+                            "AUTH_POPOVER_CONNECTION_ERROR_TEXT",
+                            "Check your Matrix ID and try again."
+                        ))
+                        .child(
+                            button("login-popover-connection-error-ok")
+                                .child(icon_text("dialog-ok".into(), tr!("SORRY", "Sorry").into()))
+                                .on_click(cx.listener(|this, _, _, cx| {
+                                    this.state = AuthState::Idle;
+                                    cx.notify()
+                                })),
+                        ),
+                )
+                .into_any_element(),
+            AuthState::AuthRequired => div()
+                .flex()
+                .flex_col()
+                .gap(px(8.))
+                .when(
+                    self.login_types
+                        .iter()
+                        .any(|login_type| matches!(login_type, LoginType::Password(_))),
+                    |david| {
+                        david.child(
+                            layer()
+                                .flex()
+                                .flex_col()
+                                .p(px(8.))
+                                .w_full()
+                                .gap(px(6.))
+                                .child(subtitle(tr!("AUTH_PASSWORD", "Password Login")))
+                                .child(self.password_field.clone().into_any_element())
+                                .child(
+                                    div().flex().child(div().flex_grow()).child(
+                                        button("log_in_button")
+                                            .child(icon_text(
+                                                "arrow-right".into(),
+                                                tr!("AUTH_LOG_IN").into(),
+                                            ))
+                                            .on_click(cx.listener(|this, _, _, cx| {
+                                                this.login_password_clicked(cx);
+                                            })),
+                                    ),
+                                )
+                                .into_any_element(),
+                        )
+                    },
+                )
+                .when(
+                    self.login_types
+                        .iter()
+                        .any(|login_type| matches!(login_type, LoginType::Sso(_))),
+                    |david| {
+                        let sso_providers =
+                            self.login_types
+                                .iter()
+                                .flat_map(|login_type| match login_type {
+                                    LoginType::Sso(sso) => sso.identity_providers.clone(),
+                                    _ => Vec::new(),
+                                });
+
+                        david.child(
+                            sso_providers.fold(
+                                layer()
+                                    .flex()
+                                    .flex_col()
+                                    .p(px(8.))
+                                    .w_full()
+                                    .child(subtitle(tr!("AUTH_SSO", "Single Sign-on"))),
+                                |david, sso_provider| {
+                                    david.child(
+                                        button(ElementId::Name(
+                                            format!("sso-provider-{}", sso_provider.id).into(),
+                                        ))
+                                        .child(icon_text(
+                                            "arrow-right".into(),
+                                            tr!(
+                                                "AUTH_SSO_BUTTON",
+                                                "Log in with {{sso_provider}}",
+                                                sso_provider = sso_provider.name
+                                            )
+                                            .into(),
+                                        )),
+                                    )
+                                },
+                            ),
+                        )
+                    },
+                )
+                .into_any_element(),
+        }
+    }
 }
 
 impl Render for AuthSurface {
@@ -277,43 +399,53 @@ impl Render for AuthSurface {
                     .items_center()
                     .justify_center()
                     .gap(px(8.))
-                    .child(div()
-                               .flex()
-                               .items_center()
-                               .gap(px(12.))
-                               .child(img("contemporary-icon:/application").w(px(40.)))
-                               .child(
-                                   div().text_size(px(35.)).child(
-                                       details
-                                           .generatable
-                                           .application_name
-                                           .resolve_languages_or_default(&locale.messages),
-                                   ),
-                               )
+                    .child(
+                        div()
+                            .flex()
+                            .items_center()
+                            .gap(px(12.))
+                            .child(img("contemporary-icon:/application").w(px(40.)))
+                            .child(
+                                div().text_size(px(35.)).child(
+                                    details
+                                        .generatable
+                                        .application_name
+                                        .resolve_languages_or_default(&locale.messages),
+                                ),
+                            ),
                     )
                     .when(!sessions.is_empty(), |david| {
                         david.child(
-                            sessions.iter().fold(layer()
-                                .p(px(8.))
-                                .w(px(400.))
-                                .flex()
-                                .flex_col()
-                                .gap(px(8.))
-                                .child(subtitle(tr!("AUTH_SESSION_RESTORE", "Use existing login")))
-                                , |layer, session| {
+                            sessions.iter().fold(
+                                layer()
+                                    .p(px(8.))
+                                    .w(px(400.))
+                                    .flex()
+                                    .flex_col()
+                                    .gap(px(8.))
+                                    .child(subtitle(tr!(
+                                        "AUTH_SESSION_RESTORE",
+                                        "Use existing login"
+                                    ))),
+                                |layer, session| {
                                     let uuid = session.uuid;
                                     layer.child(
-                                        button(
-                                            ElementId::Name(
-                                                format!("session-{}", session.uuid).into())).child(session.matrix_session.meta.user_id.to_string())
-                                            .on_click(cx.listener(move |this, _, _, cx| {
-                                                cx.update_global::<SessionManager, ()>(|session_manager, cx| {
-                                                    session_manager.set_session(uuid, cx);
-                                                })
-                                            }))
+                                        button(ElementId::Name(
+                                            format!("session-{}", session.uuid).into(),
+                                        ))
+                                        .child(session.matrix_session.meta.user_id.to_string())
+                                        .on_click(
+                                            cx.listener(move |this, _, _, cx| {
+                                                cx.update_global::<SessionManager, ()>(
+                                                    |session_manager, cx| {
+                                                        session_manager.set_session(uuid, cx);
+                                                    },
+                                                )
+                                            }),
+                                        ),
                                     )
-                                }
-                            )
+                                },
+                            ),
                         )
                     })
                     .child(
@@ -368,104 +500,8 @@ impl Render for AuthSurface {
                                             })),
                                     )
                                     .child(
-                                        constrainer("login-popover-constrainer").child(match self
-                                            .state
-                                        {
-                                            AuthState::Idle => div().into_any_element(),
-                                            AuthState::Connecting => div().flex().items_center().justify_center().size_full().child(spinner()).into_any_element(),
-                                            AuthState::ConnectionError => layer()
-                                                .flex()
-                                                .flex_col()
-                                                .p(px(8.))
-                                                .w_full()
-                                                .child(subtitle(tr!(
-                                                    "AUTH_POPOVER_CONNECTION_ERROR",
-                                                    "Unable to connect to homeserver"
-                                                )))
-                                                .child(
-                                                    div()
-                                                        .flex()
-                                                        .flex_col()
-                                                        .gap(px(8.))
-                                                        .child(tr!(
-                                                            "AUTH_POPOVER_CONNECTION_ERROR_TEXT",
-                                                            "Check your Matrix ID and try again."
-                                                        ))
-                                                        .child(
-                                                            button(
-                                                                "login-popover-connection-error-ok",
-                                                            )
-                                                                .child(icon_text(
-                                                                    "dialog-ok".into(),
-                                                                    tr!("SORRY", "Sorry").into(),
-                                                                ))
-                                                                .on_click(cx.listener(
-                                                                    |this, _, _, cx| {
-                                                                        this.state = AuthState::Idle;
-                                                                        cx.notify()
-                                                                    },
-                                                                )),
-                                                        ),
-                                                )
-                                                .into_any_element(),
-                                            AuthState::AuthRequired => div()
-                                                .flex()
-                                                .flex_col().gap(px(8.))
-                                                .when(self.login_types.iter().any(|login_type| matches!(login_type, LoginType::Password(_))), |david| {
-                                                    david.child(
-                                                        layer()
-                                                            .flex()
-                                                            .flex_col()
-                                                            .p(px(8.))
-                                                            .w_full()
-                                                            .gap(px(6.))
-                                                            .child(subtitle(tr!(
-                                                                "AUTH_PASSWORD",
-                                                                "Password Login"
-                                                            )))
-                                                            .child(self.password_field.clone().into_any_element())
-                                                            .child(
-                                                                div().flex().child(div().flex_grow()).child(
-                                                                    button("log_in_button")
-                                                                        .child(icon_text(
-                                                                            "arrow-right".into(),
-                                                                            tr!("AUTH_LOG_IN").into(),
-                                                                        ))
-                                                                        .on_click(cx.listener(|this, _, _, cx| {
-                                                                            this.login_password_clicked(cx);
-                                                                        })),
-                                                                ),
-                                                            )
-                                                            .into_any_element(),
-                                                    )
-                                                })
-                                                .when(self.login_types.iter().any(|login_type| matches!(login_type, LoginType::Sso(_))), |david| {
-                                                    let sso_providers = self.login_types.iter().flat_map(|login_type| match login_type {
-                                                        LoginType::Sso(sso) => {
-                                                            sso.identity_providers.clone()
-                                                        },
-                                                        _ => Vec::new()
-                                                    });
-
-                                                    david.child(sso_providers.fold(
-                                                        layer()
-                                                            .flex()
-                                                            .flex_col()
-                                                            .p(px(8.))
-                                                            .w_full()
-                                                            .child(subtitle(tr!(
-                                                                "AUTH_SSO",
-                                                                "Single Sign-on"
-                                                            ))), |david, sso_provider| {
-                                                            david.child(
-                                                                button(ElementId::Name(
-                                                                    format!("sso-provider-{}", sso_provider.id).into()
-                                                                )).child(icon_text("arrow-right".into(), tr!("AUTH_SSO_BUTTON", "Log in with {{sso_provider}}", sso_provider=sso_provider.name).into())))
-                                                        }
-                                                    ))
-                                                })
-                                                .into_any_element(),
-                                        }),
+                                        constrainer("login-popover-constrainer")
+                                            .child(self.render_constrainer_child(window, cx)),
                                     ),
                             ),
                     ),
