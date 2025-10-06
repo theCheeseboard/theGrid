@@ -1,0 +1,41 @@
+name: Build on macOS
+on:
+  push:
+    branches:
+      - rust
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ macos-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "true"
+      - name: Update Rust
+        run: |
+          rustup update
+          rustup target install x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+      - uses: r7kamura/rust-problem-matchers@v1
+      - name: Install libcontemporary utils
+        run: |
+          git clone https://github.com/vicr123/contemporary-rs
+          cargo install --path ./contemporary-rs/deploy_tool/cargo_cntp_bundle
+          cargo install --path ./contemporary-rs/deploy_tool/cargo_cntp_deploy
+      - name: Build (arm)
+        run: cargo build --verbose --release
+      - name: Build (x86_64)
+        run: cargo build --verbose --release --target x86_64-apple-darwin
+      - name: Bundle
+        run: cargo cntp-bundle --target x86_64-apple-darwin --target aarch64-apple-darwin
+        working-directory: thegrid
+      - name: Deploy
+        run: cargo cntp-deploy --target x86_64-apple-darwin --target aarch64-apple-darwin --output-file "$HOME/theGrid-macOS.dmg"
+        working-directory: thegrid
+      - uses: actions/upload-artifact@v4
+        with:
+          name: theGrid-macOS
+          path: "~/theGrid-macOS.dmg"

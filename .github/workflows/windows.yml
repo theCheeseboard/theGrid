@@ -1,0 +1,44 @@
+name: Build on Windows
+on:
+  push:
+    branches:
+      - rust
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ windows-latest, windows-11-arm ]
+    runs-on: ${{ matrix.os }}
+    env:
+      ARCH: "${{ endsWith(matrix.os, 'arm') && 'aarch64' || 'x86_64' }}"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "true"
+      - name: Install Rust
+        if: matrix.os == 'windows-11-arm'
+        run: |
+          Invoke-WebRequest https://win.rustup.rs/aarch64 -OutFile rustup.exe
+          .\rustup.exe default stable
+          $CargoLocation = .\rustup.exe which cargo
+          Add-Content -Path "$env:GITHUB_PATH" -Value ([System.IO.Path]::GetDirectoryName($CargoLocation))
+      - uses: Swatinem/rust-cache@v2
+      - uses: r7kamura/rust-problem-matchers@v1
+      - name: Install libcontemporary utils
+        run: |
+          git clone https://github.com/vicr123/contemporary-rs
+          cargo install --path ./contemporary-rs/deploy_tool/cargo_cntp_bundle
+          cargo install --path ./contemporary-rs/deploy_tool/cargo_cntp_deploy
+      - name: Build
+        run: cargo build --verbose --release
+      - name: Bundle
+        run: cargo cntp-bundle
+        working-directory: thegrid
+      - name: Deploy
+        run: cargo cntp-deploy --output-file "$env:GITHUB_WORKSPACE/theGrid-$env:ARCH.exe"
+        working-directory: thegrid
+      - uses: actions/upload-artifact@v4
+        with:
+          name: theGrid-windows-${{ env.ARCH }}
+          path: "theGrid-${{ env.ARCH }}.exe"
