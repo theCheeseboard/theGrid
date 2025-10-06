@@ -1,0 +1,18 @@
+<html lang="en">
+<head>
+    <title>Sign in to theGrid</title>
+</head>
+<body>
+Sign into theGrid using the token below:
+<pre id="token"></pre>
+<script>
+    const query = new URLSearchParams(window.location.search);
+    const loginToken = query.get('loginToken');
+    if (loginToken) {
+        document.getElementById('token').innerText = query.get('loginToken')
+    } else {
+        document.getElementById('token').innerText = 'There was a problem with sign in. Please try again.'
+    }
+</script>
+</body>
+</html>
