@@ -1,3 +1,4 @@
+use crate::chat::timeline_event::timeline_event;
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
@@ -8,16 +9,17 @@ use gpui::http_client::anyhow;
 use gpui::private::anyhow::Error;
 use gpui::{
     App, AppContext, AsyncApp, Context, ElementId, Entity, InteractiveElement, IntoElement,
-    ListAlignment, ListState, ParentElement, Render, RenderOnce, Styled, WeakEntity, Window, div,
-    list, px,
+    ListAlignment, ListOffset, ListState, ParentElement, Render, RenderOnce, Styled, WeakEntity,
+    Window, div, list, px,
 };
 use gpui_tokio::Tokio;
 use matrix_sdk::deserialized_responses::{TimelineEvent, TimelineEventKind};
 use matrix_sdk::event_cache::{EventCacheDropHandles, RoomEventCache, RoomEventCacheUpdate};
 use matrix_sdk::linked_chunk::relational::IndexableItem;
 use matrix_sdk::ruma::OwnedRoomId;
-use matrix_sdk::ruma::events::AnyTimelineEvent;
+use matrix_sdk::ruma::events::message::MessageEventContent;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
+use matrix_sdk::ruma::events::{AnyMessageLikeEvent, AnyTimelineEvent, OriginalMessageLikeEvent};
 use std::sync::Arc;
 use thegrid::session::session_manager::SessionManager;
 
@@ -64,13 +66,17 @@ impl ChatRoom {
                     .unwrap();
 
                     loop {
-                        let update = subscriber.recv().await.unwrap();
+                        subscriber.recv().await.unwrap();
                         let events = event_cache.events().await;
-                        this.update(cx, |this, cx| {
-                            this.events = events;
-                            cx.notify();
-                        })
-                        .unwrap();
+                        if this
+                            .update(cx, |this, cx| {
+                                this.events = events;
+                                cx.notify();
+                            })
+                            .is_err()
+                        {
+                            return;
+                        };
                     }
                 }
             })
@@ -119,6 +125,10 @@ impl Render for ChatRoom {
         let room_id = self.room_id.clone();
         if events.len() != root_list_state.item_count() {
             root_list_state.reset(events.len());
+            root_list_state.scroll_to(ListOffset {
+                item_ix: events.len(),
+                offset_in_item: px(0.),
+            })
         }
 
         div()
@@ -134,53 +144,9 @@ impl Render for ChatRoom {
                 div().flex_grow().child(
                     list(root_list_state.clone(), move |i, _, cx| {
                         let event = events[i].clone();
-                        let id = event.id().to_string();
+                        let previous_event = events.get(i - 1).cloned();
 
-                        let event = match &event.kind {
-                            TimelineEventKind::Decrypted(decrypted) => {
-                                match decrypted.event.deserialize() {
-                                    Ok(event) => Ok(event),
-                                    Err(_) => Err(anyhow!("Unknown Error")),
-                                }
-                            }
-                            TimelineEventKind::UnableToDecrypt { .. } => {
-                                Err(anyhow!("Unable to decrypt"))
-                            }
-                            TimelineEventKind::PlainText { event } => match event.deserialize() {
-                                Ok(event) => Ok(event.into_full_event(room_id.clone())),
-                                Err(_) => Err(anyhow!("Unknown Error")),
-                            },
-                        };
-
-                        div()
-                            .id(ElementId::Name(id.into()))
-                            .child(match event {
-                                Ok(AnyTimelineEvent::MessageLike(message_like)) => {
-                                    match message_like.original_content() {
-                                        None => div()
-                                            .child(tr!(
-                                                "MESSAGE_REDACTED",
-                                                "Kapoof. Gone. Sorry, but you were too late."
-                                            ))
-                                            .into_any_element(),
-                                        Some(content) => {
-                                            // let Some(content) =
-                                            div().into_any_element()
-                                        }
-                                    }
-                                }
-                                Ok(AnyTimelineEvent::State(state)) => {
-                                    div().child(format!("{:?}", state)).into_any_element()
-                                }
-                                Err(e) => div()
-                                    .child(tr!(
-                                        "MESSAGE_DECRYPTION_FAILURE",
-                                        "Unable to decrypt this message. Check your verification \
-                                        status and try again later."
-                                    ))
-                                    .into_any_element(),
-                            })
-                            .into_any_element()
+                        timeline_event(event, previous_event, room_id.clone()).into_any_element()
                     })
                     .flex()
                     .flex_col()

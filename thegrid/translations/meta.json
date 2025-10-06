@@ -114,14 +114,8 @@
     "description": null
   },
   "MESSAGE_DECRYPTION_FAILURE": {
-    "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:177",
-    "plural": false,
-    "description": null
-  },
-  "MESSAGE_REDACTED": {
-    "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:162",
+    "context": "timeline_event.rs",
+    "definedIn": "src/chat/timeline_event.rs:77",
     "plural": false,
     "description": null
   },
@@ -163,7 +157,7 @@
   },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:111",
+    "definedIn": "src/chat/chat_room.rs:117",
     "plural": false,
     "description": null
   },
