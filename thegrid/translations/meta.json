@@ -1,4 +1,16 @@
 {
+  "ACCOUNT_ACCOUNT_SWITCHER": {
+    "context": "main.rs",
+    "definedIn": "src/main.rs:73",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_LOG_OUT": {
+    "context": "main.rs",
+    "definedIn": "src/main.rs:76",
+    "plural": false,
+    "description": null
+  },
   "AUTH_LOG_IN": {
     "context": "auth_surface.rs",
     "definedIn": "src/auth/auth_surface.rs:333",
@@ -107,9 +119,45 @@
     "plural": false,
     "description": null
   },
+  "LOG_OUT": {
+    "context": "logout_popover.rs",
+    "definedIn": "src/auth/logout_popover.rs:154",
+    "plural": false,
+    "description": null
+  },
+  "LOG_OUT_COMFIRMATION_MESSAGE": {
+    "context": "logout_popover.rs",
+    "definedIn": "src/auth/logout_popover.rs:136",
+    "plural": false,
+    "description": null
+  },
+  "LOG_OUT_CONFIRMATION_TITLE": {
+    "context": "logout_popover.rs",
+    "definedIn": "src/auth/logout_popover.rs:127",
+    "plural": false,
+    "description": null
+  },
+  "LOG_OUT_TITLE": {
+    "context": "logout_popover.rs",
+    "definedIn": "src/auth/logout_popover.rs:111",
+    "plural": false,
+    "description": null
+  },
+  "LOG_OUT_WARNING": {
+    "context": "logout_popover.rs",
+    "definedIn": "src/auth/logout_popover.rs:144",
+    "plural": false,
+    "description": null
+  },
   "MAIN_CHAT_WELCOME": {
     "context": "chat_surface.rs",
     "definedIn": "src/chat/chat_surface.rs:75",
+    "plural": false,
+    "description": null
+  },
+  "MENU_ACCOUNT": {
+    "context": "main.rs",
+    "definedIn": "src/main.rs:70",
     "plural": false,
     "description": null
   },
@@ -121,13 +169,13 @@
   },
   "NO_DISPLAYED_ROOM_MESSAGE": {
     "context": "main_chat_surface.rs",
-    "definedIn": "src/chat/main_chat_surface.rs:71",
+    "definedIn": "src/chat/main_chat_surface.rs:91",
     "plural": false,
     "description": null
   },
   "NO_DISPLAYED_ROOM_TITLE": {
     "context": "main_chat_surface.rs",
-    "definedIn": "src/chat/main_chat_surface.rs:60",
+    "definedIn": "src/chat/main_chat_surface.rs:80",
     "plural": false,
     "description": null
   },
@@ -194,6 +242,12 @@
   "VERIFICATION_SAS_EMOJI_DESCRIPTION": {
     "context": "verification_popover.rs",
     "definedIn": "src/auth/verification_popover.rs:191",
+    "plural": false,
+    "description": null
+  },
+  "WARNING": {
+    "context": "logout_popover.rs",
+    "definedIn": "src/auth/logout_popover.rs:142",
     "plural": false,
     "description": null
   }

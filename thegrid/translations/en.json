@@ -1,4 +1,6 @@
 {
+  "ACCOUNT_ACCOUNT_SWITCHER": "Switch Accounts...",
+  "ACCOUNT_LOG_OUT": "Log Out",
   "AUTH_LOG_IN": "Log In",
   "AUTH_LOG_IN_TO_MATRIX": "Log in to Matrix",
   "AUTH_MATRIX_ID_EXAMPLE": "@user:example.org",
@@ -17,7 +19,13 @@
   "INCOMING_VERIFICATION_ACCEPT": "Verify Now",
   "INCOMING_VERIFICATION_DECLINE": "Don't Verify",
   "INCOMING_VERIFICATION_DESCRIPTION": "Respond to the verification request",
+  "LOG_OUT": "Log out now",
+  "LOG_OUT_COMFIRMATION_MESSAGE": "Log out of your account?",
+  "LOG_OUT_CONFIRMATION_TITLE": "Log out of your account",
+  "LOG_OUT_TITLE": "Log Out",
+  "LOG_OUT_WARNING": "If you're not logged in anywhere else, logging out now will cause you to lose all your encrypted messages.",
   "MAIN_CHAT_WELCOME": "Welcome back, {{user}}!",
+  "MENU_ACCOUNT": "Account",
   "MESSAGE_DECRYPTION_FAILURE": "Unable to decrypt this message. Check your verification status and try again later.",
   "NO_DISPLAYED_ROOM_MESSAGE": "Choose a room to start chatting!",
   "NO_DISPLAYED_ROOM_TITLE": "Welcome to {{application_name}}",
@@ -31,5 +39,6 @@
   "VERIFICATION_POPOVER_OK": "Verification completed",
   "VERIFICATION_POPOVER_OK_MESSAGE": "Your device is now verified, and encryption keys have been shared.",
   "VERIFICATION_SAS_EMOJI": "Compare these emoji",
-  "VERIFICATION_SAS_EMOJI_DESCRIPTION": "Check on the other device and ensure that these emoji are displayed, in the same order."
+  "VERIFICATION_SAS_EMOJI_DESCRIPTION": "Check on the other device and ensure that these emoji are displayed, in the same order.",
+  "WARNING": "Warning"
 }

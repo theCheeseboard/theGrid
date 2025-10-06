@@ -1,3 +1,5 @@
+use crate::actions::{AccountSwitcher, LogOut};
+use crate::auth::logout_popover::logout_popover;
 use crate::chat::chat_room::ChatRoom;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::{ChangeRoomEvent, sidebar};
@@ -5,13 +7,18 @@ use cntp_i18n::{i18n_manager, tr};
 use contemporary::application::Details;
 use contemporary::components::interstitial::interstitial;
 use gpui::{
-    App, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window, div, px,
+    App, AppContext, BorrowAppContext, Context, Entity, FocusHandle, InteractiveElement,
+    IntoElement, ParentElement, Render, Styled, Window, div, px,
 };
+use log::info;
 use thegrid::session::session_manager::SessionManager;
 
 pub struct MainChatSurface {
     displayed_room: DisplayedRoom,
     chat_room: Option<Entity<ChatRoom>>,
+    focus_handle: FocusHandle,
+
+    logout_popover_visible: Entity<bool>,
 }
 
 impl MainChatSurface {
@@ -27,6 +34,8 @@ impl MainChatSurface {
             MainChatSurface {
                 displayed_room: DisplayedRoom::None,
                 chat_room: None,
+                focus_handle: cx.focus_handle(),
+                logout_popover_visible: cx.new(|_| false),
             }
         })
     }
@@ -39,6 +48,17 @@ impl Render for MainChatSurface {
         let locale = &i18n_manager!().locale;
 
         div()
+            .track_focus(&self.focus_handle)
+            .on_action(cx.listener(|this, _: &LogOut, _, cx| {
+                this.logout_popover_visible.write(cx, true);
+                cx.notify()
+            }))
+            .on_action(cx.listener(|_, _: &AccountSwitcher, _, cx| {
+                cx.update_global::<SessionManager, ()>(|session_manager, cx| {
+                    session_manager.clear_session()
+                });
+                cx.notify()
+            }))
             .size_full()
             .flex()
             .gap(px(2.))
@@ -81,5 +101,6 @@ impl Render for MainChatSurface {
                     })
                     .flex_grow(),
             )
+            .child(logout_popover(self.logout_popover_visible.clone()))
     }
 }

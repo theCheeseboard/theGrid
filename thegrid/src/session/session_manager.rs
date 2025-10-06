@@ -2,7 +2,8 @@ use crate::session::caches::Caches;
 use crate::session::verification_requests_cache::VerificationRequestsCache;
 use contemporary::application::Details;
 use gpui::http_client::anyhow;
-use gpui::{App, AppContext, AsyncApp, Entity, Global, WeakEntity};
+use gpui::private::anyhow;
+use gpui::{App, AppContext, AsyncApp, Entity, Global, Task, WeakEntity};
 use gpui_tokio::Tokio;
 use log::error;
 use matrix_sdk::Client;
@@ -10,7 +11,7 @@ use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::config::SyncSettings;
 use matrix_sdk::ruma::events::key::verification::request::ToDeviceKeyVerificationRequestEvent;
 use matrix_sdk::store::RoomLoadSettings;
-use std::fs::{create_dir_all, read_dir};
+use std::fs::{create_dir_all, read_dir, remove_dir_all};
 use std::path::PathBuf;
 use uuid::Uuid;
 
@@ -118,6 +119,12 @@ impl SessionManager {
             })
             .detach();
         }
+    }
+
+    pub fn clear_session(&mut self) {
+        self.current_session = None;
+        self.current_session_client = None;
+        self.current_caches = None;
     }
 
     pub fn current_session(&self) -> Option<Session> {

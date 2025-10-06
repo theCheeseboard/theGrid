@@ -7,7 +7,7 @@ mod chat;
 mod main_window;
 mod utilities;
 
-use crate::actions::register_actions;
+use crate::actions::{AccountSwitcher, LogOut, register_actions};
 use crate::main_window::MainWindow;
 use cntp_i18n::{I18N_MANAGER, tr, tr_load};
 use cntp_icon_tool_macros::application_icon;
@@ -66,7 +66,16 @@ fn mane() {
                             .into(),
                         },
                         menus: ContemporaryMenus {
-                            menus: vec![],
+                            menus: vec![Menu {
+                                name: tr!("MENU_ACCOUNT", "Account").into(),
+                                items: vec![
+                                    MenuItem::action(
+                                        tr!("ACCOUNT_ACCOUNT_SWITCHER", "Switch Accounts..."),
+                                        AccountSwitcher,
+                                    ),
+                                    MenuItem::action(tr!("ACCOUNT_LOG_OUT", "Log Out"), LogOut),
+                                ],
+                            }],
                             on_about: Rc::new(move |cx| {
                                 weak_window.upgrade().unwrap().update(cx, |window, cx| {
                                     window.about_surface_open(true);

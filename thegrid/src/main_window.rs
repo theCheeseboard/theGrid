@@ -35,6 +35,8 @@ impl MainWindow {
         }
         self
     }
+
+    pub fn log_out_triggered(&mut self) {}
 }
 
 impl Render for MainWindow {
