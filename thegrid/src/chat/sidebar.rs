@@ -1,5 +1,6 @@
 use crate::auth::verification_popover::VerificationPopover;
 use crate::chat::displayed_room::DisplayedRoom;
+use crate::chat::main_chat_surface::{ChangeRoomEvent, ChangeRoomHandler};
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
@@ -18,13 +19,6 @@ use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use std::rc::Rc;
 use thegrid::admonition::admonition;
 use thegrid::session::session_manager::SessionManager;
-
-type ChangeRoomHandler = dyn Fn(&ChangeRoomEvent, &mut Window, &mut App) + 'static;
-
-#[derive(Clone)]
-pub struct ChangeRoomEvent {
-    pub new_room: DisplayedRoom,
-}
 
 #[derive(IntoElement)]
 pub struct Sidebar {

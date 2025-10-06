@@ -2,7 +2,7 @@ use crate::actions::{AccountSwitcher, LogOut};
 use crate::auth::logout_popover::logout_popover;
 use crate::chat::chat_room::ChatRoom;
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::sidebar::{ChangeRoomEvent, sidebar};
+use crate::chat::sidebar::sidebar;
 use cntp_i18n::{i18n_manager, tr};
 use contemporary::application::Details;
 use contemporary::components::interstitial::interstitial;
@@ -12,6 +12,13 @@ use gpui::{
 };
 use log::info;
 use thegrid::session::session_manager::SessionManager;
+
+pub type ChangeRoomHandler = dyn Fn(&ChangeRoomEvent, &mut Window, &mut App) + 'static;
+
+#[derive(Clone)]
+pub struct ChangeRoomEvent {
+    pub new_room: DisplayedRoom,
+}
 
 pub struct MainChatSurface {
     displayed_room: DisplayedRoom,
@@ -39,6 +46,25 @@ impl MainChatSurface {
             }
         })
     }
+
+    pub fn on_change_room(
+        &mut self,
+        event: &ChangeRoomEvent,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.displayed_room = event.new_room.clone();
+        if let DisplayedRoom::Room(room_id) = &self.displayed_room {
+            self.chat_room = Some(ChatRoom::new(
+                room_id.clone(),
+                cx.listener(|this, event: &ChangeRoomEvent, window, cx| {
+                    this.on_change_room(event, window, cx);
+                }),
+                cx,
+            ))
+        }
+        cx.notify();
+    }
 }
 
 impl Render for MainChatSurface {
@@ -62,15 +88,11 @@ impl Render for MainChatSurface {
             .size_full()
             .flex()
             .gap(px(2.))
-            .child(
-                sidebar().on_change_room(cx.listener(|this, event: &ChangeRoomEvent, _, cx| {
-                    this.displayed_room = event.new_room.clone();
-                    if let DisplayedRoom::Room(room_id) = &this.displayed_room {
-                        this.chat_room = Some(ChatRoom::new(room_id.clone(), cx))
-                    }
-                    cx.notify();
-                })),
-            )
+            .child(sidebar().on_change_room(cx.listener(
+                |this, event: &ChangeRoomEvent, window, cx| {
+                    this.on_change_room(event, window, cx);
+                },
+            )))
             .child(
                 div()
                     .child(match &self.displayed_room {

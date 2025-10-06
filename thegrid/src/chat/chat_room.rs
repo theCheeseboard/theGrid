@@ -1,37 +1,39 @@
+use crate::chat::displayed_room::DisplayedRoom;
+use crate::chat::main_chat_surface::{ChangeRoomEvent, ChangeRoomHandler};
 use crate::chat::timeline_event::timeline_event;
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
+use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::text_field::TextField;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
-use gpui::private::anyhow::Error;
 use gpui::{
-    App, AppContext, AsyncApp, Context, ElementId, Entity, InteractiveElement, IntoElement,
-    ListAlignment, ListOffset, ListState, ParentElement, Render, RenderOnce, Styled, WeakEntity,
-    Window, div, list, px,
+    App, AppContext, AsyncApp, Context, Entity, IntoElement, ListAlignment, ListOffset, ListState,
+    ParentElement, Render, Styled, WeakEntity, Window, div, list, px,
 };
 use gpui_tokio::Tokio;
-use matrix_sdk::deserialized_responses::{TimelineEvent, TimelineEventKind};
-use matrix_sdk::event_cache::{EventCacheDropHandles, RoomEventCache, RoomEventCacheUpdate};
-use matrix_sdk::linked_chunk::relational::IndexableItem;
+use matrix_sdk::deserialized_responses::TimelineEvent;
 use matrix_sdk::ruma::OwnedRoomId;
-use matrix_sdk::ruma::events::message::MessageEventContent;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
-use matrix_sdk::ruma::events::{AnyMessageLikeEvent, AnyTimelineEvent, OriginalMessageLikeEvent};
-use std::sync::Arc;
+use std::rc::Rc;
 use thegrid::admonition::{AdmonitionSeverity, admonition};
 use thegrid::session::session_manager::SessionManager;
 
 pub struct ChatRoom {
     room_id: OwnedRoomId,
     events: Vec<TimelineEvent>,
+    on_change_room: Option<Rc<Box<ChangeRoomHandler>>>,
 }
 
 impl ChatRoom {
-    pub fn new(room_id: OwnedRoomId, cx: &mut App) -> Entity<Self> {
+    pub fn new(
+        room_id: OwnedRoomId,
+        on_change_room: impl Fn(&ChangeRoomEvent, &mut Window, &mut App) + 'static,
+        cx: &mut App,
+    ) -> Entity<Self> {
         cx.new(|cx| {
             let session_manager = cx.global::<SessionManager>();
             let client = session_manager.client().unwrap();
@@ -41,6 +43,7 @@ impl ChatRoom {
                 return Self {
                     room_id,
                     events: Vec::new(),
+                    on_change_room: Some(Rc::new(Box::new(on_change_room))),
                 };
             };
 
@@ -94,6 +97,7 @@ impl ChatRoom {
             Self {
                 room_id,
                 events: Vec::new(),
+                on_change_room: Some(Rc::new(Box::new(on_change_room))),
             }
         })
     }
@@ -169,15 +173,54 @@ impl Render for ChatRoom {
             .when_else(
                 room.is_tombstoned(),
                 |david| {
+                    let tombstone_content = room.tombstone_content().unwrap();
+
                     david.child(
                         div().p(px(2.)).child(
                             admonition()
                                 .severity(AdmonitionSeverity::Info)
                                 .title(tr!("ROOM_TOMBSTONED_TITLE", "This room has been replaced"))
-                                .child(tr!(
-                                    "ROOM_TOMBSTONED_TEXT",
-                                    "Join the new room to keep the conversation going."
-                                )),
+                                .child(
+                                    div()
+                                        .flex()
+                                        .flex_col()
+                                        .gap(px(4.))
+                                        .child(tr!(
+                                            "ROOM_TOMBSTONED_TEXT",
+                                            "Join the new room to keep the conversation going."
+                                        ))
+                                        .child(
+                                            div().flex().child(div().flex_grow()).child(
+                                                button("view-replaced-room-button")
+                                                    .child(icon_text(
+                                                        "arrow-right".into(),
+                                                        tr!(
+                                                            "ROOM_TOMBSTONED_NAVIGATE",
+                                                            "Go to new room"
+                                                        )
+                                                        .into(),
+                                                    ))
+                                                    .on_click(cx.listener(
+                                                        move |this, _, window, cx| {
+                                                            if let Some(change_room_handler) =
+                                                                &this.on_change_room
+                                                            {
+                                                                let event = ChangeRoomEvent {
+                                                                    new_room: DisplayedRoom::Room(
+                                                                        tombstone_content
+                                                                            .replacement_room
+                                                                            .clone(),
+                                                                    ),
+                                                                };
+                                                                change_room_handler(
+                                                                    &event, window, cx,
+                                                                );
+                                                            }
+                                                        },
+                                                    )),
+                                            ),
+                                        ),
+                                ),
                         ),
                     )
                 },
