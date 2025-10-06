@@ -35,7 +35,7 @@ pub fn logout_popover(visible: Entity<bool>) -> LogoutPopover {
 }
 
 impl LogoutPopover {
-    pub fn perform_logout(
+    fn perform_logout(
         visible: Entity<bool>,
         state: Entity<LogoutPopoverState>,
         window: &mut Window,

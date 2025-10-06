@@ -49,29 +49,32 @@ impl RenderOnce for TimelineRow {
         div()
             .id(ElementId::Name(id.into()))
             .child(match event {
-                Ok(AnyTimelineEvent::MessageLike(message_like)) => match message_like {
-                    AnyMessageLikeEvent::Message(message) => match message.as_original() {
-                        None => div().into_any_element(),
-                        Some(original_message) => {
-                            let message_content = original_message
-                                .content
-                                .text
-                                .find_plain()
-                                .unwrap_or_default();
-                            div().child(message_content.to_string()).into_any_element()
-                        }
-                    },
-                    AnyMessageLikeEvent::RoomMessage(room_message) => {
-                        match room_message.as_original() {
+                Ok(event) => match &event {
+                    AnyTimelineEvent::MessageLike(message_like) => match message_like {
+                        AnyMessageLikeEvent::Message(message) => match message.as_original() {
                             None => div().into_any_element(),
                             Some(original_message) => {
-                                room_message_event(original_message.clone()).into_any_element()
+                                let message_content = original_message
+                                    .content
+                                    .text
+                                    .find_plain()
+                                    .unwrap_or_default();
+                                div().child(message_content.to_string()).into_any_element()
+                            }
+                        },
+                        AnyMessageLikeEvent::RoomMessage(room_message) => {
+                            match room_message.as_original() {
+                                None => div().into_any_element(),
+                                Some(original_message) => {
+                                    room_message_event(original_message.clone(), event)
+                                        .into_any_element()
+                                }
                             }
                         }
-                    }
-                    _ => div().into_any_element(),
+                        _ => div().into_any_element(),
+                    },
+                    AnyTimelineEvent::State(state) => div().into_any_element(),
                 },
-                Ok(AnyTimelineEvent::State(state)) => div().into_any_element(),
                 Err(e) => div()
                     .child(tr!(
                         "MESSAGE_DECRYPTION_FAILURE",

@@ -163,7 +163,7 @@
   },
   "MESSAGE_DECRYPTION_FAILURE": {
     "context": "timeline_event.rs",
-    "definedIn": "src/chat/timeline_event.rs:77",
+    "definedIn": "src/chat/timeline_event.rs:80",
     "plural": false,
     "description": null
   },
@@ -197,6 +197,18 @@
     "plural": false,
     "description": null
   },
+  "ROOM_TOMBSTONED_TEXT": {
+    "context": "chat_room.rs",
+    "definedIn": "src/chat/chat_room.rs:178",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_TOMBSTONED_TITLE": {
+    "context": "chat_room.rs",
+    "definedIn": "src/chat/chat_room.rs:176",
+    "plural": false,
+    "description": null
+  },
   "SORRY": {
     "context": "auth_surface.rs",
     "definedIn": "src/auth/auth_surface.rs:400",
@@ -211,7 +223,7 @@
   },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:124",
+    "definedIn": "src/chat/chat_room.rs:126",
     "plural": false,
     "description": null
   },

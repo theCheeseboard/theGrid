@@ -32,6 +32,8 @@
   "POPOVER_LOGIN": "Log in to {{homeserver}}",
   "POPOVER_VERIFY": "Verification",
   "ROOMS_SPACES": "Rooms and Spaces",
+  "ROOM_TOMBSTONED_TEXT": "Join the new room to keep the conversation going.",
+  "ROOM_TOMBSTONED_TITLE": "This room has been replaced",
   "SORRY": "Sorry",
   "UNKNOWN_DEVICE": "Unknown Device",
   "UNKNOWN_ROOM": "Unknown Room",

@@ -6,6 +6,7 @@ use contemporary::components::icon::icon;
 use contemporary::components::layer::layer;
 use contemporary::components::text_field::TextField;
 use gpui::http_client::anyhow;
+use gpui::prelude::FluentBuilder;
 use gpui::private::anyhow::Error;
 use gpui::{
     App, AppContext, AsyncApp, Context, ElementId, Entity, InteractiveElement, IntoElement,
@@ -21,6 +22,7 @@ use matrix_sdk::ruma::events::message::MessageEventContent;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::events::{AnyMessageLikeEvent, AnyTimelineEvent, OriginalMessageLikeEvent};
 use std::sync::Arc;
+use thegrid::admonition::{AdmonitionSeverity, admonition};
 use thegrid::session::session_manager::SessionManager;
 
 pub struct ChatRoom {
@@ -164,31 +166,53 @@ impl Render for ChatRoom {
                     .h_full(),
                 ),
             )
-            .child(
-                layer()
-                    .p(px(2.))
-                    .gap(px(2.))
-                    .flex()
-                    .child(message_field.clone().into_any_element())
-                    .child(
-                        button("send_button")
-                            .child(icon("mail-send".into()))
-                            .on_click(move |_, _, cx| {
-                                let message = message_field_clone.read(cx).current_text(cx);
-                                let content =
-                                    RoomMessageEventContent::text_plain(message.to_string());
-                                let room_clone = room_clone.clone();
+            .when_else(
+                room.is_tombstoned(),
+                |david| {
+                    david.child(
+                        div().p(px(2.)).child(
+                            admonition()
+                                .severity(AdmonitionSeverity::Info)
+                                .title(tr!("ROOM_TOMBSTONED_TITLE", "This room has been replaced"))
+                                .child(tr!(
+                                    "ROOM_TOMBSTONED_TEXT",
+                                    "Join the new room to keep the conversation going."
+                                )),
+                        ),
+                    )
+                },
+                |david| {
+                    david.child(
+                        layer()
+                            .p(px(2.))
+                            .gap(px(2.))
+                            .flex()
+                            .child(message_field.clone().into_any_element())
+                            .child(
+                                button("send_button")
+                                    .child(icon("mail-send".into()))
+                                    .on_click(move |_, _, cx| {
+                                        let message = message_field_clone.read(cx).current_text(cx);
+                                        let content = RoomMessageEventContent::text_plain(
+                                            message.to_string(),
+                                        );
+                                        let room_clone = room_clone.clone();
 
-                                cx.spawn(async move |cx| {
-                                    Tokio::spawn_result(cx, async move {
-                                        room_clone.send(content).await.map_err(|e| anyhow!(e))
-                                    })
-                                    .unwrap()
-                                    .await;
-                                })
-                                .detach();
-                            }),
-                    ),
+                                        cx.spawn(async move |cx| {
+                                            Tokio::spawn_result(cx, async move {
+                                                room_clone
+                                                    .send(content)
+                                                    .await
+                                                    .map_err(|e| anyhow!(e))
+                                            })
+                                            .unwrap()
+                                            .await;
+                                        })
+                                        .detach();
+                                    }),
+                            ),
+                    )
+                },
             )
     }
 }
