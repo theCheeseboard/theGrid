@@ -2,7 +2,7 @@ name: Build on Linux
 on:
   push:
     branches:
-      - rust
+      - master
 
 jobs:
   build:

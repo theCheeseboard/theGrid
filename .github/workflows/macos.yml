@@ -2,7 +2,7 @@ name: Build on macOS
 on:
   push:
     branches:
-      - rust
+      - master
 
 jobs:
   build:
