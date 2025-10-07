@@ -1,3 +1,4 @@
+use crate::session::account_cache::AccountCache;
 use crate::session::caches::Caches;
 use crate::session::verification_requests_cache::VerificationRequestsCache;
 use contemporary::application::Details;
@@ -141,6 +142,10 @@ impl SessionManager {
             .unwrap()
             .verification_requests
             .clone()
+    }
+
+    pub fn current_account(&self) -> Entity<AccountCache> {
+        self.current_caches.as_ref().unwrap().account_cache.clone()
     }
 }
 

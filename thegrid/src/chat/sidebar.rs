@@ -7,12 +7,12 @@ use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::pager::pager;
-use contemporary::styling::theme::Theme;
+use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
     App, AsyncApp, ElementId, InteractiveElement, IntoElement, ListAlignment, ListState,
-    ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window, div, list, px,
+    ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window, div, list, px, rgb,
 };
 use gpui_tokio::Tokio;
 use matrix_sdk::ruma::events::key::verification::VerificationMethod;
@@ -77,8 +77,9 @@ impl RenderOnce for Sidebar {
         }
 
         let change_room_handler = self.on_change_room.unwrap().clone();
-
         let verification_popover_clone = verification_popover.clone();
+
+        let account = session_manager.current_account().read(cx);
 
         let theme = cx.global::<Theme>();
 
@@ -252,7 +253,21 @@ impl RenderOnce for Sidebar {
                 layer()
                     .p(px(4.))
                     .flex()
-                    .child(session.matrix_session.meta.user_id.to_string()),
+                    .gap(px(4.))
+                    .child(div().size(px(48.)).bg(rgb(0xff0000)))
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .justify_center()
+                            .gap(px(4.))
+                            .child(account.display_name().unwrap_or_default())
+                            .child(
+                                div()
+                                    .text_color(theme.foreground.disabled())
+                                    .child(session.matrix_session.meta.user_id.to_string()),
+                            ),
+                    ),
             )
             .child(verification_popover_clone.clone().into_any_element())
     }
