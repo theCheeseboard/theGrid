@@ -65,17 +65,16 @@ impl Sidebar {
                 shown_verification_requests[0].clone(),
             );
         }
+        
+        let account = session_manager.current_account().read(cx);
+        if let Some(identity) = account.identity() && !identity.is_verified() {
+            return SidebarAlert::VerifySession;
+        }
 
         let devices = session_manager.devices().read(cx);
         let unverified_devices = devices.unverified_devices();
-        let all_devices = devices.devices();
-        if all_devices.len() > 1 {
-            if all_devices.len() == unverified_devices.len() + 1 {
-                return SidebarAlert::VerifySession;
-            }
-            if !unverified_devices.is_empty() {
-                return SidebarAlert::UnverifiedDevices(unverified_devices.len());
-            }
+        if !unverified_devices.is_empty() {
+            return SidebarAlert::UnverifiedDevices(unverified_devices.len());
         }
 
         SidebarAlert::None

@@ -56,7 +56,7 @@ impl VerificationPopover {
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 if let Some(identity) = cx
                     .spawn_tokio(
-                        async move { client.encryption().get_user_identity(&user_id).await },
+                        async move { client.encryption().request_user_identity(&user_id).await },
                     )
                     .await
                     .ok()

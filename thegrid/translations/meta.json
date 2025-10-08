@@ -109,31 +109,31 @@
   },
   "INCOMING_SELF_VERIFICATION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:209",
+    "definedIn": "src/chat/sidebar.rs:208",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:199",
+    "definedIn": "src/chat/sidebar.rs:198",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_ACCEPT": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:240",
+    "definedIn": "src/chat/sidebar.rs:239",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_DECLINE": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:284",
+    "definedIn": "src/chat/sidebar.rs:283",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:225",
+    "definedIn": "src/chat/sidebar.rs:224",
     "plural": false,
     "description": null
   },
@@ -211,7 +211,7 @@
   },
   "ROOMS_SPACES": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:130",
+    "definedIn": "src/chat/sidebar.rs:129",
     "plural": false,
     "description": null
   },
@@ -241,7 +241,7 @@
   },
   "UNKNOWN_DEVICE": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:218",
+    "definedIn": "src/chat/sidebar.rs:217",
     "plural": false,
     "description": null
   },
@@ -253,19 +253,19 @@
   },
   "UNVERIFIED_DEVICES": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:381",
+    "definedIn": "src/chat/sidebar.rs:380",
     "plural": false,
     "description": null
   },
   "UNVERIFIED_DEVICES_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:388",
+    "definedIn": "src/chat/sidebar.rs:387",
     "plural": true,
     "description": null
   },
   "UNVERIFIED_DEVICES_VIEW_DEVICES": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:408",
+    "definedIn": "src/chat/sidebar.rs:407",
     "plural": false,
     "description": null
   },
@@ -319,31 +319,31 @@
   },
   "VERIFY_SESSION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:313",
+    "definedIn": "src/chat/sidebar.rs:312",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:320",
+    "definedIn": "src/chat/sidebar.rs:319",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_OTHER_DEVICE": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:335",
+    "definedIn": "src/chat/sidebar.rs:334",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_RECOVERY_KEY": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:355",
+    "definedIn": "src/chat/sidebar.rs:354",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_RESET_CRYPTO": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:368",
+    "definedIn": "src/chat/sidebar.rs:367",
     "plural": false,
     "description": null
   },

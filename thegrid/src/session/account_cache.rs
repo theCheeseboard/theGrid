@@ -1,12 +1,15 @@
 use crate::tokio_helper::TokioHelper;
 use gpui::{App, AppContext, AsyncApp, Entity, WeakEntity};
+use matrix_sdk::encryption::identities::UserIdentity;
 use matrix_sdk::ruma::OwnedMxcUri;
 use matrix_sdk::ruma::events::room::member::SyncRoomMemberEvent;
 use matrix_sdk::{Client, Room};
+use std::time::Duration;
 
 pub struct AccountCache {
     display_name: Option<String>,
     avatar_url: Option<OwnedMxcUri>,
+    identity: Option<UserIdentity>,
 }
 
 enum CacheMutation {
@@ -43,6 +46,32 @@ impl AccountCache {
                         this.avatar_url = avatar_url;
                         cx.notify()
                     });
+                },
+            )
+            .detach();
+
+            let client_clone = client.clone();
+            cx.spawn(
+                async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                    loop {
+                        let client = client_clone.clone();
+                        let user_id = client.user_id().unwrap().to_owned();
+                        if let Ok(identity) = cx
+                            .spawn_tokio(async move {
+                                client.encryption().request_user_identity(&user_id).await
+                            })
+                            .await
+                        {
+                            let _ = weak_this.update(cx, |this, cx| {
+                                this.identity = identity;
+                                cx.notify()
+                            });
+                        }
+
+                        cx.background_executor()
+                            .timer(Duration::from_secs(10))
+                            .await;
+                    }
                 },
             )
             .detach();
@@ -93,6 +122,7 @@ impl AccountCache {
             AccountCache {
                 display_name: None,
                 avatar_url: None,
+                identity: None,
             }
         })
     }
@@ -103,5 +133,9 @@ impl AccountCache {
 
     pub fn avatar_url(&self) -> Option<OwnedMxcUri> {
         self.avatar_url.clone()
+    }
+
+    pub fn identity(&self) -> Option<UserIdentity> {
+        self.identity.clone()
     }
 }
