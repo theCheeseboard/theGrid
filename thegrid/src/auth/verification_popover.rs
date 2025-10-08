@@ -12,14 +12,11 @@ use contemporary::components::subtitle::subtitle;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, Context, ElementId, Entity, Flatten, IntoElement, ParentElement,
-    Render, Styled, WeakEntity, Window, div, px,
+    AppContext, AsyncApp, Context, Flatten, IntoElement, ParentElement, Render, Styled, WeakEntity,
+    Window, div, px,
 };
 use gpui_tokio::Tokio;
-use matrix_sdk::encryption::verification::{
-    SasVerification, VerificationRequest, VerificationRequestState,
-};
-use matrix_sdk::ruma::api::client::session::get_login_types::v3::LoginType;
+use matrix_sdk::encryption::verification::VerificationRequestState;
 use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use thegrid::session::session_manager::SessionManager;
 use thegrid::session::verification_requests_cache::VerificationRequestDetails;
@@ -55,9 +52,9 @@ impl VerificationPopover {
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 if let Some(identity) = cx
-                    .spawn_tokio(
-                        async move { client.encryption().request_user_identity(&user_id).await },
-                    )
+                    .spawn_tokio(async move {
+                        client.encryption().request_user_identity(&user_id).await
+                    })
                     .await
                     .ok()
                     .flatten()

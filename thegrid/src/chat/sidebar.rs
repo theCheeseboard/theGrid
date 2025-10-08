@@ -1,3 +1,4 @@
+use crate::auth::recovery_passphrase_popover::RecoveryPassphrasePopover;
 use crate::auth::verification_popover::VerificationPopover;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::main_chat_surface::{ChangeRoomEvent, ChangeRoomHandler};
@@ -65,9 +66,11 @@ impl Sidebar {
                 shown_verification_requests[0].clone(),
             );
         }
-        
+
         let account = session_manager.current_account().read(cx);
-        if let Some(identity) = account.identity() && !identity.is_verified() {
+        if let Some(identity) = account.identity()
+            && !identity.is_verified()
+        {
             return SidebarAlert::VerifySession;
         }
 
@@ -183,6 +186,10 @@ impl RenderOnce for SidebarAlert {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let verification_popover = window.use_state(cx, |_, cx| VerificationPopover::new(cx));
         let verification_popover_clone = verification_popover.clone();
+
+        let recovery_passphrase_popover =
+            window.use_state(cx, |_, cx| RecoveryPassphrasePopover::new(cx));
+        let recovery_passphrase_popover_clone = recovery_passphrase_popover.clone();
 
         let theme = cx.global::<Theme>();
 
@@ -356,7 +363,16 @@ impl RenderOnce for SidebarAlert {
                                                     )
                                                     .into(),
                                                 ))
-                                                .on_click(move |_, _, cx| {}),
+                                                .on_click(move |_, _, cx| {
+                                                    recovery_passphrase_popover.update(
+                                                        cx,
+                                                        |recovery_passphrase_popover, cx| {
+                                                            recovery_passphrase_popover
+                                                                .set_visible(true);
+                                                            cx.notify()
+                                                        },
+                                                    )
+                                                }),
                                         )
                                         .child(
                                             button("reset-crypto")
@@ -416,5 +432,6 @@ impl RenderOnce for SidebarAlert {
                 ),
             })
             .child(verification_popover_clone.clone().into_any_element())
+            .child(recovery_passphrase_popover_clone.clone().into_any_element())
     }
 }
