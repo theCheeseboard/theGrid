@@ -41,10 +41,24 @@
   "SORRY": "Sorry",
   "UNKNOWN_DEVICE": "Unknown Device",
   "UNKNOWN_ROOM": "Unknown Room",
+  "UNVERIFIED_DEVICES": "Unverified devices",
+  "UNVERIFIED_DEVICES_DESCRIPTION": {
+    "one": "{{count}} unverified device has access to your account. Verify it to share encryption keys, or log it out to maintain account security.",
+    "other": "{{count}} unverified devices have access to your account. Verify them to share encryption keys, or log them out to maintain account security."
+  },
+  "UNVERIFIED_DEVICES_VIEW_DEVICES": "View Devices",
+  "VERIFICATION_POPOVER_AWAITING_OK": "Verification Request Sent",
+  "VERIFICATION_POPOVER_AWAITING_OK_SPINNER": "Waiting for other device to respond...",
+  "VERIFICATION_POPOVER_AWAITING_OK_TEXT": "We've sent a verification request to all of your other devices. Go ahead and accept the verification request on one of your other verified devices to continue.",
   "VERIFICATION_POPOVER_CANCELLED": "Verification cancelled",
   "VERIFICATION_POPOVER_OK": "Verification completed",
   "VERIFICATION_POPOVER_OK_MESSAGE": "Your device is now verified, and encryption keys have been shared.",
   "VERIFICATION_SAS_EMOJI": "Compare these emoji",
   "VERIFICATION_SAS_EMOJI_DESCRIPTION": "Check on the other device and ensure that these emoji are displayed, in the same order.",
+  "VERIFY_SESSION": "Verify Session",
+  "VERIFY_SESSION_DESCRIPTION": "Verify this session to access encrypted messages sent from other devices.",
+  "VERIFY_SESSION_OTHER_DEVICE": "Verify with another verified device",
+  "VERIFY_SESSION_RECOVERY_KEY": "Enter Recovery Key",
+  "VERIFY_SESSION_RESET_CRYPTO": "Reset Recovery Key",
   "WARNING": "Warning"
 }

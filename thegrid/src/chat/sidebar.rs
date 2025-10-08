@@ -1,7 +1,7 @@
 use crate::auth::verification_popover::VerificationPopover;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::main_chat_surface::{ChangeRoomEvent, ChangeRoomHandler};
-use cntp_i18n::tr;
+use cntp_i18n::{tr, trn};
 use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
@@ -17,12 +17,22 @@ use gpui::{
 use gpui_tokio::Tokio;
 use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use std::rc::Rc;
-use thegrid::admonition::admonition;
+use thegrid::admonition::{AdmonitionSeverity, admonition};
 use thegrid::session::session_manager::SessionManager;
+use thegrid::session::verification_requests_cache::VerificationRequestDetails;
+use thegrid::tokio_helper::TokioHelper;
 
 #[derive(IntoElement)]
 pub struct Sidebar {
     on_change_room: Option<Rc<Box<ChangeRoomHandler>>>,
+}
+
+#[derive(IntoElement)]
+enum SidebarAlert {
+    None,
+    IncomingVerificationRequest(VerificationRequestDetails),
+    VerifySession,
+    UnverifiedDevices(usize),
 }
 
 pub fn sidebar() -> Sidebar {
@@ -39,13 +49,44 @@ impl Sidebar {
         self.on_change_room = Some(Rc::new(Box::new(on_change_room)));
         self
     }
+
+    fn current_alert(&self, _: &mut Window, cx: &mut App) -> SidebarAlert {
+        let session_manager = cx.global::<SessionManager>();
+
+        let verification_requests = session_manager.verification_requests().read(cx);
+        let shown_verification_requests: Vec<_> = verification_requests
+            .pending_verification_requests
+            .iter()
+            .filter(|request| !request.inner.is_done() && !request.inner.is_cancelled())
+            .collect();
+
+        if !shown_verification_requests.is_empty() {
+            return SidebarAlert::IncomingVerificationRequest(
+                shown_verification_requests[0].clone(),
+            );
+        }
+
+        let devices = session_manager.devices().read(cx);
+        let unverified_devices = devices.unverified_devices();
+        let all_devices = devices.devices();
+        if all_devices.len() > 1 {
+            if all_devices.len() == unverified_devices.len() + 1 {
+                return SidebarAlert::VerifySession;
+            }
+            if !unverified_devices.is_empty() {
+                return SidebarAlert::UnverifiedDevices(unverified_devices.len());
+            }
+        }
+
+        SidebarAlert::None
+    }
 }
 
 impl RenderOnce for Sidebar {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let root_list_state =
             window.use_state(cx, |_, _| ListState::new(0, ListAlignment::Top, px(200.)));
-        let verification_popover = window.use_state(cx, |_, cx| VerificationPopover::new(cx));
+        let current_notification = self.current_alert(window, cx);
 
         let session_manager = cx.global::<SessionManager>();
 
@@ -57,13 +98,6 @@ impl RenderOnce for Sidebar {
         };
 
         let client = client.read(cx);
-        let verification_requests = session_manager.verification_requests();
-        let verification_requests = verification_requests.read(cx);
-        let shown_verification_requests: Vec<_> = verification_requests
-            .pending_verification_requests
-            .iter()
-            .filter(|request| !request.inner.is_done() && !request.inner.is_cancelled())
-            .collect();
 
         let root_rooms: Vec<_> = client
             .joined_rooms()
@@ -77,8 +111,6 @@ impl RenderOnce for Sidebar {
         }
 
         let change_room_handler = self.on_change_room.unwrap().clone();
-        let verification_popover_clone = verification_popover.clone();
-
         let account = session_manager.current_account().read(cx);
 
         let theme = cx.global::<Theme>();
@@ -124,11 +156,43 @@ impl RenderOnce for Sidebar {
                         .into_any_element(),
                 ),
             )
-            .when(!shown_verification_requests.is_empty(), |david| {
-                let first_verification_request = shown_verification_requests[0].clone();
-                let first_verification_request_clone = first_verification_request.clone();
+            .child(current_notification)
+            .child(
+                layer()
+                    .p(px(4.))
+                    .flex()
+                    .gap(px(4.))
+                    .child(div().size(px(48.)).bg(rgb(0xff0000)))
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .justify_center()
+                            .gap(px(4.))
+                            .child(account.display_name().unwrap_or_default())
+                            .child(
+                                div()
+                                    .text_color(theme.foreground.disabled())
+                                    .child(session.matrix_session.meta.user_id.to_string()),
+                            ),
+                    ),
+            )
+    }
+}
 
-                david.child(
+impl RenderOnce for SidebarAlert {
+    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        let verification_popover = window.use_state(cx, |_, cx| VerificationPopover::new(cx));
+        let verification_popover_clone = verification_popover.clone();
+
+        let theme = cx.global::<Theme>();
+
+        div()
+            .child(match self {
+                SidebarAlert::None => div(),
+                SidebarAlert::IncomingVerificationRequest(verification_request) => {
+                    let verification_request_clone = verification_request.clone();
+
                     div().p(px(4.)).child(
                         admonition()
                             .title(tr!(
@@ -140,30 +204,28 @@ impl RenderOnce for Sidebar {
                                     .flex()
                                     .flex_col()
                                     .gap(px(4.))
-                                    .child(
-                                        if first_verification_request.inner.is_self_verification() {
-                                            tr!(
-                                                "INCOMING_SELF_VERIFICATION_DESCRIPTION",
-                                                "Verify your other device ({{device_id}}) to share \
+                                    .child(if verification_request.inner.is_self_verification() {
+                                        tr!(
+                                            "INCOMING_SELF_VERIFICATION_DESCRIPTION",
+                                            "Verify your other device ({{device_id}}) to share \
                                              encryption keys. The other device will be able to \
                                              decrypt your messages.",
-                                                device_id = first_verification_request
-                                                    .device_id
-                                                    .clone()
-                                                    .map(|id| id.to_string())
-                                                    .unwrap_or_else(|| tr!(
-                                                        "UNKNOWN_DEVICE",
-                                                        "Unknown Device"
-                                                    )
-                                                    .to_string())
-                                            )
-                                        } else {
-                                            tr!(
-                                                "INCOMING_VERIFICATION_DESCRIPTION",
-                                                "Respond to the verification request"
-                                            )
-                                        },
-                                    )
+                                            device_id = verification_request
+                                                .device_id
+                                                .clone()
+                                                .map(|id| id.to_string())
+                                                .unwrap_or_else(|| tr!(
+                                                    "UNKNOWN_DEVICE",
+                                                    "Unknown Device"
+                                                )
+                                                .to_string())
+                                        )
+                                    } else {
+                                        tr!(
+                                            "INCOMING_VERIFICATION_DESCRIPTION",
+                                            "Respond to the verification request"
+                                        )
+                                    })
                                     .child(
                                         div()
                                             .flex()
@@ -182,7 +244,7 @@ impl RenderOnce for Sidebar {
                                                     ))
                                                     .on_click(move |_, _, cx| {
                                                         let verification_request =
-                                                            first_verification_request.clone();
+                                                            verification_request.clone();
                                                         let verification_request_clone =
                                                             verification_request.clone();
 
@@ -226,19 +288,16 @@ impl RenderOnce for Sidebar {
                                                     ))
                                                     .on_click(move |_, _, cx| {
                                                         let verification_request =
-                                                            first_verification_request_clone
-                                                                .clone();
+                                                            verification_request_clone.clone();
 
                                                         cx.spawn(async move |cx: &mut AsyncApp| {
-                                                            Tokio::spawn(cx, async move {
+                                                            cx.spawn_tokio(async move {
                                                                 verification_request
                                                                     .clone()
                                                                     .inner
                                                                     .cancel()
                                                                     .await
-                                                                    .map_err(|e| anyhow!(e))
                                                             })
-                                                            .unwrap()
                                                             .await
                                                         })
                                                         .detach()
@@ -246,29 +305,117 @@ impl RenderOnce for Sidebar {
                                             ),
                                     ),
                             ),
-                    ),
-                )
+                    )
+                }
+                SidebarAlert::VerifySession => div().p(px(4.)).child(
+                    admonition()
+                        .severity(AdmonitionSeverity::Warning)
+                        .title(tr!("VERIFY_SESSION", "Verify Session"))
+                        .child(
+                            div()
+                                .flex()
+                                .flex_col()
+                                .gap(px(4.))
+                                .child(tr!(
+                                    "VERIFY_SESSION_DESCRIPTION",
+                                    "Verify this session to access encrypted messages sent from \
+                                    other devices.",
+                                ))
+                                .child(
+                                    div()
+                                        .flex()
+                                        .flex_col()
+                                        .rounded(theme.border_radius)
+                                        .bg(theme.button_background)
+                                        .child(
+                                            button("verify-now")
+                                                .child(icon_text(
+                                                    "edit-copy".into(),
+                                                    tr!(
+                                                        "VERIFY_SESSION_OTHER_DEVICE",
+                                                        "Verify with another verified device"
+                                                    )
+                                                    .into(),
+                                                ))
+                                                .on_click(move |_, _, cx| {
+                                                    verification_popover.update(
+                                                        cx,
+                                                        |verification_popover, cx| {
+                                                            verification_popover
+                                                                .trigger_outgoing_verification(cx)
+                                                        },
+                                                    );
+                                                }),
+                                        )
+                                        .child(
+                                            button("verify-recovery")
+                                                .child(icon_text(
+                                                    "visibility".into(),
+                                                    tr!(
+                                                        "VERIFY_SESSION_RECOVERY_KEY",
+                                                        "Enter Recovery Key"
+                                                    )
+                                                    .into(),
+                                                ))
+                                                .on_click(move |_, _, cx| {}),
+                                        )
+                                        .child(
+                                            button("reset-crypto")
+                                                .destructive()
+                                                .child(icon_text(
+                                                    "view-refresh".into(),
+                                                    tr!(
+                                                        "VERIFY_SESSION_RESET_CRYPTO",
+                                                        "Reset Recovery Key"
+                                                    )
+                                                    .into(),
+                                                ))
+                                                .on_click(move |_, _, cx| {}),
+                                        ),
+                                ),
+                        ),
+                ),
+                SidebarAlert::UnverifiedDevices(count) => div().p(px(4.)).child(
+                    admonition()
+                        .severity(AdmonitionSeverity::Warning)
+                        .title(tr!("UNVERIFIED_DEVICES", "Unverified devices"))
+                        .child(
+                            div()
+                                .flex()
+                                .flex_col()
+                                .gap(px(4.))
+                                .child(trn!(
+                                    "UNVERIFIED_DEVICES_DESCRIPTION",
+                                    "{{count}} unverified device has access to your account. \
+                                    Verify it to share encryption keys, or log it out to \
+                                    maintain account security.",
+                                    "{{count}} unverified devices have access to your account. \
+                                    Verify them to share encryption keys, or log them out to \
+                                    maintain account security.",
+                                    count = count as isize
+                                ))
+                                .child(
+                                    div()
+                                        .flex()
+                                        .flex_col()
+                                        .rounded(theme.border_radius)
+                                        .bg(theme.button_background)
+                                        .child(
+                                            button("verify-now")
+                                                .child(icon_text(
+                                                    "phone".into(),
+                                                    tr!(
+                                                        "UNVERIFIED_DEVICES_VIEW_DEVICES",
+                                                        "View Devices"
+                                                    )
+                                                    .into(),
+                                                ))
+                                                .on_click(move |_, _, cx| {}),
+                                        ),
+                                ),
+                        ),
+                ),
             })
-            .child(
-                layer()
-                    .p(px(4.))
-                    .flex()
-                    .gap(px(4.))
-                    .child(div().size(px(48.)).bg(rgb(0xff0000)))
-                    .child(
-                        div()
-                            .flex()
-                            .flex_col()
-                            .justify_center()
-                            .gap(px(4.))
-                            .child(account.display_name().unwrap_or_default())
-                            .child(
-                                div()
-                                    .text_color(theme.foreground.disabled())
-                                    .child(session.matrix_session.meta.user_id.to_string()),
-                            ),
-                    ),
-            )
             .child(verification_popover_clone.clone().into_any_element())
     }
 }

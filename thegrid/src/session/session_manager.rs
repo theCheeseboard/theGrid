@@ -7,14 +7,15 @@ use gpui::private::anyhow;
 use gpui::{App, AppContext, AsyncApp, Entity, Global, Task, WeakEntity};
 use gpui_tokio::Tokio;
 use log::error;
-use matrix_sdk::Client;
 use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::config::SyncSettings;
 use matrix_sdk::ruma::events::key::verification::request::ToDeviceKeyVerificationRequestEvent;
 use matrix_sdk::store::RoomLoadSettings;
+use matrix_sdk::{Client, LoopCtrl};
 use std::fs::{create_dir_all, read_dir, remove_dir_all};
 use std::path::PathBuf;
 use uuid::Uuid;
+use crate::session::devices_cache::DevicesCache;
 
 pub struct SessionManager {
     current_session: Option<Session>,
@@ -94,7 +95,9 @@ impl SessionManager {
                 cx.spawn(async move |cx: &mut AsyncApp| {
                     let sync_result = Tokio::spawn_result(cx, async move {
                         client_clone
-                            .sync(SyncSettings::default())
+                            .sync_with_callback(SyncSettings::default(), |_| async {
+                                LoopCtrl::Continue
+                            })
                             .await
                             .map_err(|e| anyhow!(e))
                     })
@@ -146,6 +149,10 @@ impl SessionManager {
 
     pub fn current_account(&self) -> Entity<AccountCache> {
         self.current_caches.as_ref().unwrap().account_cache.clone()
+    }
+    
+    pub fn devices(&self) -> Entity<DevicesCache> {
+        self.current_caches.as_ref().unwrap().devices_cache.clone()
     }
 }
 

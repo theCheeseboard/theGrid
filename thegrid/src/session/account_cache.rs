@@ -1,13 +1,8 @@
-use crate::session::verification_requests_cache::VerificationRequestDetails;
-use gpui::http_client::anyhow;
+use crate::tokio_helper::TokioHelper;
 use gpui::{App, AppContext, AsyncApp, Entity, WeakEntity};
-use gpui_tokio::Tokio;
 use matrix_sdk::ruma::OwnedMxcUri;
-use matrix_sdk::ruma::events::key::verification::request::ToDeviceKeyVerificationRequestEvent;
-use matrix_sdk::ruma::events::presence::PresenceEvent;
 use matrix_sdk::ruma::events::room::member::SyncRoomMemberEvent;
 use matrix_sdk::{Client, Room};
-use url::quirks::origin;
 
 pub struct AccountCache {
     display_name: Option<String>,
@@ -28,30 +23,20 @@ impl AccountCache {
             cx.spawn(
                 async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                     let client = client_clone.clone();
-                    let display_name = Tokio::spawn_result(cx, async move {
-                        client
-                            .account()
-                            .get_display_name()
-                            .await
-                            .map_err(|e| anyhow!(e))
-                    })
-                    .unwrap()
-                    .await
-                    .ok()
-                    .flatten();
+
+                    let display_name = cx
+                        .spawn_tokio(async move { client.account().get_display_name().await })
+                        .await
+                        .ok()
+                        .flatten();
 
                     let client = client_clone.clone();
-                    let avatar_url = Tokio::spawn_result(cx, async move {
-                        client
-                            .account()
-                            .get_avatar_url()
-                            .await
-                            .map_err(|e| anyhow!(e))
-                    })
-                    .unwrap()
-                    .await
-                    .ok()
-                    .flatten();
+
+                    let avatar_url = cx
+                        .spawn_tokio(async move { client.account().get_avatar_url().await })
+                        .await
+                        .ok()
+                        .flatten();
 
                     let _ = weak_this.update(cx, |this, cx| {
                         this.display_name = display_name;

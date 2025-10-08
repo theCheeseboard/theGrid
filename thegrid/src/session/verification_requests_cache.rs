@@ -1,4 +1,4 @@
-use gpui::{App, AppContext, AsyncApp, Entity, WeakEntity};
+use gpui::{App, AppContext, AsyncApp, Context, Entity, WeakEntity};
 use log::{error, info};
 use matrix_sdk::Client;
 use matrix_sdk::encryption::verification::{
@@ -47,14 +47,13 @@ impl VerificationRequestsCache {
                 match verification_request {
                     None => {}
                     Some(verification_request) => {
-                        tx_clone
+                        let _ = tx_clone
                             .send(CacheMutation::Push(VerificationRequestDetails {
                                 inner: verification_request,
                                 sas_state: None,
                                 device_id: Some(event.content.from_device),
                             }))
-                            .await
-                            .unwrap();
+                            .await;
                     }
                 }
             });
@@ -69,24 +68,22 @@ impl VerificationRequestsCache {
                 match verification_request {
                     None => {}
                     Some(verification_request) => {
-                        let sas_state = if let StartMethod::SasV1(_) = event.content.method {
-                            if let VerificationRequestState::Transitioned {
-                                verification: Verification::SasV1(sas),
-                                ..
-                            } = verification_request.state()
-                            {
-                                match sas.accept().await {
-                                    Ok(_) => Some(sas),
-                                    Err(_) => None,
+                        let sas_state = {
+                            match verification_request.state() {
+                                VerificationRequestState::Transitioned {
+                                    verification: Verification::SasV1(sas),
+                                    ..
+                                } if matches!(event.content.method, StartMethod::SasV1(_)) => {
+                                    match sas.accept().await {
+                                        Ok(_) => Some(sas),
+                                        Err(_) => None,
+                                    }
                                 }
-                            } else {
-                                None
+                                _ => None,
                             }
-                        } else {
-                            None
                         };
 
-                        tx_clone
+                        let _ = tx_clone
                             .send(CacheMutation::Replace(
                                 event.content.transaction_id,
                                 VerificationRequestDetails {
@@ -95,8 +92,7 @@ impl VerificationRequestsCache {
                                     device_id: Some(event.content.from_device),
                                 },
                             ))
-                            .await
-                            .unwrap();
+                            .await;
                     }
                 }
             });
@@ -111,22 +107,25 @@ impl VerificationRequestsCache {
                 match verification_request {
                     None => {}
                     Some(verification_request) => {
-                        info!("Ready event! {:?}", verification_request);
-                        let sas_state = if event
-                            .content
-                            .methods
-                            .iter()
-                            .any(|method| matches!(method, VerificationMethod::SasV1))
-                        {
-                            verification_request.start_sas().await.unwrap_or_else(|e| {
-                                error!("Unable to start SAS: {e}");
+                        let sas_state = if verification_request.we_started() {
+                            if event
+                                .content
+                                .methods
+                                .iter()
+                                .any(|method| matches!(method, VerificationMethod::SasV1))
+                            {
+                                verification_request.start_sas().await.unwrap_or_else(|e| {
+                                    error!("Unable to start SAS: {e}");
+                                    None
+                                })
+                            } else {
                                 None
-                            })
+                            }
                         } else {
                             None
                         };
 
-                        tx_clone
+                        let _ = tx_clone
                             .send(CacheMutation::Replace(
                                 event.content.transaction_id,
                                 VerificationRequestDetails {
@@ -135,8 +134,7 @@ impl VerificationRequestsCache {
                                     device_id: None,
                                 },
                             ))
-                            .await
-                            .unwrap();
+                            .await;
                     }
                 }
             });
@@ -151,7 +149,7 @@ impl VerificationRequestsCache {
                 match verification_request {
                     None => {}
                     Some(verification_request) => {
-                        tx_clone
+                        let _ = tx_clone
                             .send(CacheMutation::Replace(
                                 event.content.transaction_id,
                                 VerificationRequestDetails {
@@ -160,8 +158,7 @@ impl VerificationRequestsCache {
                                     device_id: None,
                                 },
                             ))
-                            .await
-                            .unwrap();
+                            .await;
                     }
                 }
             });
@@ -176,7 +173,7 @@ impl VerificationRequestsCache {
                 match verification_request {
                     None => {}
                     Some(verification_request) => {
-                        tx_clone
+                        let _ = tx_clone
                             .send(CacheMutation::Replace(
                                 event.content.transaction_id,
                                 VerificationRequestDetails {
@@ -185,8 +182,7 @@ impl VerificationRequestsCache {
                                     device_id: None,
                                 },
                             ))
-                            .await
-                            .unwrap();
+                            .await;
                     }
                 }
             });
@@ -201,7 +197,7 @@ impl VerificationRequestsCache {
                 match verification_request {
                     None => {}
                     Some(verification_request) => {
-                        tx_clone
+                        let _ = tx_clone
                             .send(CacheMutation::Replace(
                                 event.content.transaction_id,
                                 VerificationRequestDetails {
@@ -210,8 +206,7 @@ impl VerificationRequestsCache {
                                     device_id: None,
                                 },
                             ))
-                            .await
-                            .unwrap();
+                            .await;
                     }
                 }
             });
@@ -220,7 +215,7 @@ impl VerificationRequestsCache {
                 async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                     loop {
                         let mutation = rx.recv().await.unwrap();
-                        weak_this
+                        if weak_this
                             .update(cx, |this, cx| {
                                 match mutation {
                                     CacheMutation::Push(verification_request) => {
@@ -236,7 +231,13 @@ impl VerificationRequestsCache {
                                         for request in this.pending_verification_requests.iter_mut()
                                         {
                                             if request.inner.flow_id() == transaction_id {
-                                                *request = new_request;
+                                                *request = VerificationRequestDetails {
+                                                    inner: new_request.inner,
+                                                    sas_state: new_request
+                                                        .sas_state
+                                                        .or(request.sas_state.clone()),
+                                                    device_id: new_request.device_id,
+                                                };
                                                 break;
                                             }
                                         }
@@ -244,7 +245,10 @@ impl VerificationRequestsCache {
                                 }
                                 cx.notify();
                             })
-                            .unwrap();
+                            .is_err()
+                        {
+                            return;
+                        };
                     }
                 },
             )
@@ -254,6 +258,20 @@ impl VerificationRequestsCache {
                 pending_verification_requests: Vec::new(),
             }
         })
+    }
+
+    pub fn notify_new_verification_request(
+        &mut self,
+        verification_request: VerificationRequest,
+        cx: &mut Context<Self>,
+    ) {
+        self.pending_verification_requests
+            .push(VerificationRequestDetails {
+                inner: verification_request,
+                sas_state: None,
+                device_id: None,
+            });
+        cx.notify()
     }
 
     pub fn verification_request(&self, flow_id: &str) -> Option<&VerificationRequestDetails> {
