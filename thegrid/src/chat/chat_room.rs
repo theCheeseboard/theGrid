@@ -15,16 +15,20 @@ use gpui::{
     ParentElement, Render, Styled, WeakEntity, Window, div, list, px,
 };
 use gpui_tokio::Tokio;
+use log::{error, info};
 use matrix_sdk::deserialized_responses::TimelineEvent;
+use matrix_sdk::event_cache::RoomPaginationStatus;
 use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use std::rc::Rc;
 use thegrid::admonition::{AdmonitionSeverity, admonition};
 use thegrid::session::session_manager::SessionManager;
+use thegrid::tokio_helper::TokioHelper;
 
 pub struct ChatRoom {
     room_id: OwnedRoomId,
     events: Vec<TimelineEvent>,
+    pagination_status: Entity<RoomPaginationStatus>,
     on_change_room: Option<Rc<Box<ChangeRoomHandler>>>,
 }
 
@@ -35,6 +39,10 @@ impl ChatRoom {
         cx: &mut App,
     ) -> Entity<Self> {
         cx.new(|cx| {
+            let pagination_status = cx.new(|_| RoomPaginationStatus::Idle {
+                hit_timeline_start: false,
+            });
+
             let session_manager = cx.global::<SessionManager>();
             let client = session_manager.client().unwrap();
             let client = client.read(cx);
@@ -43,10 +51,12 @@ impl ChatRoom {
                 return Self {
                     room_id,
                     events: Vec::new(),
+                    pagination_status: pagination_status.clone(),
                     on_change_room: Some(Rc::new(Box::new(on_change_room))),
                 };
             };
 
+            let pagination_status_clone = pagination_status.clone();
             cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 let event_cache = Tokio::spawn(cx, async move {
                     room.event_cache().await.map_err(|e| anyhow!(e))
@@ -56,14 +66,45 @@ impl ChatRoom {
                 .unwrap();
 
                 if let Ok((event_cache, _)) = event_cache {
-                    if event_cache
-                        .pagination()
-                        .run_backwards_until(100)
+                    let event_cache_clone = event_cache.clone();
+                    cx.spawn(async move |cx: &mut AsyncApp| {
+                        cx.spawn_tokio(async move {
+                            event_cache_clone
+                                .pagination()
+                                .run_backwards_until(100)
+                                .await
+                        })
                         .await
-                        .is_err()
-                    {
-                        return;
-                    }
+                    })
+                    .detach();
+
+                    let event_cache_clone = event_cache.clone();
+                    cx.spawn(async move |cx: &mut AsyncApp| {
+                        loop {
+                            let event_cache_clone = event_cache_clone.clone();
+                            let Ok(room_pagination_status) = cx
+                                .spawn_tokio(async move {
+                                    event_cache_clone
+                                        .pagination()
+                                        .status()
+                                        .next()
+                                        .await
+                                        .ok_or(anyhow!("Event cache closed"))
+                                })
+                                .await
+                            else {
+                                return;
+                            };
+
+                            if pagination_status_clone
+                                .write(cx, room_pagination_status)
+                                .is_err()
+                            {
+                                return;
+                            }
+                        }
+                    })
+                    .detach();
 
                     let (events, mut subscriber) = event_cache.subscribe().await;
 
@@ -87,9 +128,12 @@ impl ChatRoom {
                             })
                             .is_err()
                         {
+                            info!("Event cache closed");
                             return;
                         };
                     }
+                } else {
+                    error!("Unable to get event cache for room")
                 }
             })
             .detach();
@@ -97,6 +141,7 @@ impl ChatRoom {
             Self {
                 room_id,
                 events: Vec::new(),
+                pagination_status: pagination_status.clone(),
                 on_change_room: Some(Rc::new(Box::new(on_change_room))),
             }
         })
