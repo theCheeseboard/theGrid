@@ -2,7 +2,7 @@ use crate::auth::recovery_passphrase_popover::RecoveryPassphrasePopover;
 use crate::auth::verification_popover::VerificationPopover;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::main_chat_surface::{ChangeRoomEvent, ChangeRoomHandler};
-use crate::mxc_image::mxc_image;
+use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::{tr, trn};
 use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
@@ -174,7 +174,11 @@ impl RenderOnce for Sidebar {
                     .flex()
                     .gap(px(4.))
                     .when_some(account.avatar_url(), |david, avatar_url| {
-                        david.child(mxc_image(avatar_url).size(px(48.)))
+                        david.child(
+                            mxc_image(avatar_url)
+                                .size(px(48.))
+                                .size_policy(SizePolicy::Fit),
+                        )
                     })
                     .when_none(&account.avatar_url(), |david| {
                         david.child(div().size(px(48.)).bg(rgb(0xff0000)))

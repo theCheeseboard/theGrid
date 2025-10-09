@@ -1,3 +1,4 @@
+use crate::mxc_image::{SizePolicy, mxc_image};
 use contemporary::styling::theme::Theme;
 use gpui::{App, IntoElement, ParentElement, RenderOnce, Styled, Window, div, px, relative, rgba};
 use matrix_sdk::ruma::events::room::message::{MessageType, RoomMessageEventContent};
@@ -59,7 +60,11 @@ impl RoomMessageEventRenderable for RoomMessageEventContent {
     fn speech_box_content(&self) -> impl IntoElement {
         div().child(match &self.msgtype {
             MessageType::Emote(emote) => div().child(emote.body.clone()).into_any_element(),
-            MessageType::Image(image) => "Image".into_any_element(),
+            MessageType::Image(image) => mxc_image(image.source.clone())
+                .min_w(px(100.))
+                .min_h(px(30.))
+                .size_policy(SizePolicy::Constrain(500., 500.))
+                .into_any_element(),
             MessageType::Text(text) => text.body.clone().into_any_element(),
             MessageType::VerificationRequest(verification_request) => {
                 "Key Verification Request".into_any_element()
