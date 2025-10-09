@@ -95,15 +95,42 @@ impl SessionManager {
 
                 client.event_cache().subscribe().unwrap();
 
+                let (tx_clear_error, rx_clear_error) = async_channel::bounded(1);
+                cx.spawn(async move |cx: &mut AsyncApp| {
+                    loop {
+                        if rx_clear_error.recv().await.is_err() {
+                            return;
+                        };
+
+                        if cx
+                            .update_global::<Self, ()>(|session_manager, cx| {
+                                session_manager.current_client_error = ClientError::None;
+                            })
+                            .is_err()
+                        {
+                            return;
+                        }
+                    }
+                })
+                .detach();
+
                 let client_clone = client.clone();
                 cx.spawn(async move |cx: &mut AsyncApp| {
                     loop {
                         let client_clone = client_clone.clone();
+                        let tx_clear_error = tx_clear_error.clone();
                         let sync_result = cx
                             .spawn_tokio(async move {
                                 client_clone
-                                    .sync_with_callback(SyncSettings::default(), |_| async {
-                                        LoopCtrl::Continue
+                                    .sync_with_callback(SyncSettings::default(), |_| {
+                                        let tx_clear_error = tx_clear_error.clone();
+                                        async move {
+                                            if tx_clear_error.send(()).await.is_err() {
+                                                return LoopCtrl::Break;
+                                            };
+
+                                            LoopCtrl::Continue
+                                        }
                                     })
                                     .await
                             })
@@ -114,19 +141,17 @@ impl SessionManager {
                         match error {
                             ClientError::None => {}
                             ClientError::Terminal(_) => {
-                                error!("Sync error: {sync_result}");
-                                cx.update_global::<Self, ()>(|session_manager, cx| {
+                                error!("Sync error: {sync_result:?}");
+                                let _ = cx.update_global::<Self, ()>(|session_manager, cx| {
                                     session_manager.current_client_error = error;
-                                })
-                                .unwrap();
+                                });
 
                                 return;
                             }
                             ClientError::Recoverable(_) => {
-                                cx.update_global::<Self, ()>(|session_manager, cx| {
+                                let _ = cx.update_global::<Self, ()>(|session_manager, cx| {
                                     session_manager.current_client_error = error;
-                                })
-                                .unwrap();
+                                });
                             }
                         }
                     }

@@ -19,6 +19,7 @@ use gpui_tokio::Tokio;
 use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use std::rc::Rc;
 use thegrid::admonition::{AdmonitionSeverity, admonition};
+use thegrid::session::error_handling::{ClientError, RecoverableClientError};
 use thegrid::session::session_manager::SessionManager;
 use thegrid::session::verification_requests_cache::VerificationRequestDetails;
 use thegrid::tokio_helper::TokioHelper;
@@ -34,6 +35,7 @@ enum SidebarAlert {
     IncomingVerificationRequest(VerificationRequestDetails),
     VerifySession,
     UnverifiedDevices(usize),
+    ClientError(RecoverableClientError),
 }
 
 pub fn sidebar() -> Sidebar {
@@ -53,6 +55,10 @@ impl Sidebar {
 
     fn current_alert(&self, _: &mut Window, cx: &mut App) -> SidebarAlert {
         let session_manager = cx.global::<SessionManager>();
+
+        if let ClientError::Recoverable(recoverable_error) = session_manager.error() {
+            return SidebarAlert::ClientError(recoverable_error);
+        }
 
         let verification_requests = session_manager.verification_requests().read(cx);
         let shown_verification_requests: Vec<_> = verification_requests
@@ -429,6 +435,12 @@ impl RenderOnce for SidebarAlert {
                                         ),
                                 ),
                         ),
+                ),
+                SidebarAlert::ClientError(recoverable_client_error) => div().p(px(4.)).child(
+                    admonition()
+                        .severity(AdmonitionSeverity::Warning)
+                        .title(recoverable_client_error.title())
+                        .child(recoverable_client_error.description()),
                 ),
             })
             .child(verification_popover_clone.clone().into_any_element())

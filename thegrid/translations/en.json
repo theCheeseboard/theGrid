@@ -39,6 +39,8 @@
   "POPOVER_RECOVERY_PASSPHRASE_DESCRIPTION": "Enter the recovery passphrase for your account to verify this session. You can also use the recovery key here.",
   "POPOVER_RECOVERY_PASSPHRASE_GRANDSTAND": "Verify with Recovery Key",
   "POPOVER_VERIFY": "Verification",
+  "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE": "Disconnected from Homeserver",
+  "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE_DESCRIPTION": "Trying to reconnect...",
   "RECOVERY_KEY_WHAT_DESCRIPTION": "The recovery passphrase and key was set up when you first set up your account. If you don't know your recovery passphrase or key, and you don't have any verified devices to recover from, you'll have to reset your account's encryption details.",
   "RECOVERY_KEY_WHAT_TITLE": "Recovery what?",
   "RECOVERY_PASSPHRASE_PLACEHOLDER": "Recovery Passphrase",

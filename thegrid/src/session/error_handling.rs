@@ -1,7 +1,7 @@
 use cntp_i18n::{I18nString, tr};
 use matrix_sdk::ruma::api::client::error::{ErrorBody, ErrorKind};
 use matrix_sdk::ruma::api::error::FromHttpResponseError;
-use matrix_sdk::{HttpError, RumaApiError};
+use matrix_sdk::{HttpError, RumaApiError, reqwest};
 
 #[derive(Clone, Copy)]
 pub enum ClientError {
@@ -17,7 +17,9 @@ pub enum TerminalClientError {
 }
 
 #[derive(Clone, Copy)]
-pub enum RecoverableClientError {}
+pub enum RecoverableClientError {
+    HomeserverUnavailable,
+}
 
 pub fn handle_error(error: &matrix_sdk::Error) -> ClientError {
     match &error {
@@ -28,6 +30,7 @@ pub fn handle_error(error: &matrix_sdk::Error) -> ClientError {
                 }
                 _ => ClientError::Terminal(TerminalClientError::UnknownError),
             },
+            HttpError::Reqwest(reqwest_error) => handle_reqwest_error(reqwest_error),
             _ => ClientError::Terminal(TerminalClientError::UnknownError),
         },
         _ => ClientError::Terminal(TerminalClientError::UnknownError),
@@ -47,6 +50,10 @@ fn handle_client_api_error(error: &matrix_sdk::ruma::api::client::Error) -> Clie
     }
 }
 
+fn handle_reqwest_error(error: &reqwest::Error) -> ClientError {
+    ClientError::Recoverable(RecoverableClientError::HomeserverUnavailable)
+}
+
 impl TerminalClientError {
     pub fn description(&self) -> I18nString {
         match self {
@@ -64,6 +71,30 @@ impl TerminalClientError {
         match self {
             TerminalClientError::UnknownToken => true,
             TerminalClientError::UnknownError => false,
+        }
+    }
+}
+
+impl RecoverableClientError {
+    pub fn title(&self) -> I18nString {
+        match self {
+            RecoverableClientError::HomeserverUnavailable => {
+                tr!(
+                    "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE",
+                    "Disconnected from Homeserver"
+                )
+            }
+        }
+    }
+
+    pub fn description(&self) -> I18nString {
+        match self {
+            RecoverableClientError::HomeserverUnavailable => {
+                tr!(
+                    "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE_DESCRIPTION",
+                    "Trying to reconnect..."
+                )
+            }
         }
     }
 }
