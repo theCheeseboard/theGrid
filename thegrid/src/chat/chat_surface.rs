@@ -1,15 +1,22 @@
 use crate::chat::main_chat_surface::MainChatSurface;
 use cntp_i18n::tr;
+use contemporary::application::Details;
 use contemporary::components::application_menu::ApplicationMenu;
+use contemporary::components::button::button;
+use contemporary::components::icon_text::icon_text;
+use contemporary::components::interstitial::interstitial;
 use contemporary::components::pager::fade_animation::FadeAnimation;
 use contemporary::components::pager::pager;
 use contemporary::components::spinner::spinner;
 use contemporary::styling::theme::Theme;
 use contemporary::surface::surface;
+use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, Context, Entity, InteractiveElement, IntoElement, Menu, ParentElement, Render,
-    Styled, Window, div, px,
+    App, AppContext, BorrowAppContext, Context, Entity, InteractiveElement, IntoElement, Menu,
+    ParentElement, Render, Styled, Window, div, px,
 };
+use std::fs::remove_dir_all;
+use thegrid::session::error_handling::ClientError;
 use thegrid::session::session_manager::SessionManager;
 
 pub struct ChatSurface {
@@ -53,14 +60,18 @@ impl Render for ChatSurface {
                         .content_stretch(),
                 )
                 .child(
-                    pager(
-                        "chat-surface-root-pager",
-                        if session_manager.client().is_some() {
-                            1
-                        } else {
-                            0
-                        },
-                    )
+                    pager("chat-surface-root-pager", {
+                        match session_manager.error() {
+                            ClientError::None | ClientError::Recoverable(_) => {
+                                if session_manager.client().is_some() {
+                                    1
+                                } else {
+                                    0
+                                }
+                            }
+                            ClientError::Terminal(_) => 2,
+                        }
+                    })
                     .animation(FadeAnimation::new())
                     .page(
                         div()
@@ -79,6 +90,71 @@ impl Render for ChatSurface {
                             .into_any_element(),
                     )
                     .page(self.main_chat_surface.clone().into_any_element())
+                    .page(match session_manager.error() {
+                        ClientError::None => div().into_any_element(),
+                        ClientError::Terminal(terminal_error) => interstitial()
+                            .size_full()
+                            .icon("network-disconnect".into())
+                            .title(
+                                tr!("MAIN_CHAT_ERROR_TERMINAL", "Disconnected from Matrix").into(),
+                            )
+                            .message(terminal_error.description().into())
+                            .when_else(
+                                terminal_error.should_logout(),
+                                |david| {
+                                    david.child(
+                                        button("log-out-button")
+                                            .child(icon_text(
+                                                "system-log-out".into(),
+                                                tr!("ACCOUNT_LOG_OUT").into(),
+                                            ))
+                                            .on_click(cx.listener(|_, _, _, cx| {
+                                                cx.update_global::<SessionManager, ()>(
+                                                    |session_manager, cx| {
+                                                        let details = cx.global::<Details>();
+                                                        let directories =
+                                                            details.standard_dirs().unwrap();
+                                                        let data_dir = directories.data_dir();
+                                                        let session_dir = data_dir.join("sessions");
+                                                        let this_session_dir = session_dir.join(
+                                                            session_manager
+                                                                .current_session()
+                                                                .as_ref()
+                                                                .unwrap()
+                                                                .uuid
+                                                                .to_string(),
+                                                        );
+
+                                                        // Delete the session
+                                                        remove_dir_all(this_session_dir).unwrap();
+
+                                                        session_manager.clear_session()
+                                                    },
+                                                );
+                                            })),
+                                    )
+                                },
+                                |david| {
+                                    david.child(
+                                        button("log-out-button")
+                                            .child(icon_text(
+                                                "system-switch-user".into(),
+                                                tr!("ACCOUNT_SWITCHER_ERROR", "Account Switcher")
+                                                    .into(),
+                                            ))
+                                            .on_click(cx.listener(|_, _, _, cx| {
+                                                cx.update_global::<SessionManager, ()>(
+                                                    |session_manager, cx| {
+                                                        session_manager.clear_session()
+                                                    },
+                                                );
+                                            })),
+                                    )
+                                },
+                            )
+                            .into_any_element(),
+                        ClientError::Recoverable(_) => div().into_any_element(),
+                    })
                     .size_full(),
                 )
                 .application_menu(self.application_menu.clone()),

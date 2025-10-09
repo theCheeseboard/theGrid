@@ -11,6 +11,12 @@
     "plural": false,
     "description": null
   },
+  "ACCOUNT_SWITCHER_ERROR": {
+    "context": "chat_surface.rs",
+    "definedIn": "src/chat/chat_surface.rs:142",
+    "plural": false,
+    "description": null
+  },
   "AUTH_LOG_IN": {
     "context": "auth_surface.rs",
     "definedIn": "src/auth/auth_surface.rs:575",
@@ -167,9 +173,15 @@
     "plural": false,
     "description": null
   },
+  "MAIN_CHAT_ERROR_TERMINAL": {
+    "context": "chat_surface.rs",
+    "definedIn": "src/chat/chat_surface.rs:99",
+    "plural": false,
+    "description": null
+  },
   "MAIN_CHAT_WELCOME": {
     "context": "chat_surface.rs",
-    "definedIn": "src/chat/chat_surface.rs:75",
+    "definedIn": "src/chat/chat_surface.rs:86",
     "plural": false,
     "description": null
   },
@@ -290,6 +302,18 @@
   "SORRY": {
     "context": "auth_surface.rs",
     "definedIn": "src/auth/auth_surface.rs:358",
+    "plural": false,
+    "description": null
+  },
+  "TERMINAL_ERROR_UNKNOWN_ERROR": {
+    "context": "error_handling.rs",
+    "definedIn": "src/session/error_handling.rs:58",
+    "plural": false,
+    "description": null
+  },
+  "TERMINAL_ERROR_UNKNOWN_TOKEN": {
+    "context": "error_handling.rs",
+    "definedIn": "src/session/error_handling.rs:54",
     "plural": false,
     "description": null
   },

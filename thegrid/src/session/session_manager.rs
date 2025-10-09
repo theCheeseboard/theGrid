@@ -1,6 +1,9 @@
 use crate::session::account_cache::AccountCache;
 use crate::session::caches::Caches;
+use crate::session::devices_cache::DevicesCache;
+use crate::session::error_handling::{ClientError, handle_error};
 use crate::session::verification_requests_cache::VerificationRequestsCache;
+use crate::tokio_helper::TokioHelper;
 use contemporary::application::Details;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
@@ -9,18 +12,19 @@ use gpui_tokio::Tokio;
 use log::error;
 use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::config::SyncSettings;
+use matrix_sdk::ruma::api::error::FromHttpResponseError;
 use matrix_sdk::ruma::events::key::verification::request::ToDeviceKeyVerificationRequestEvent;
 use matrix_sdk::store::RoomLoadSettings;
-use matrix_sdk::{Client, LoopCtrl};
+use matrix_sdk::{Client, Error, HttpError, LoopCtrl, RumaApiError};
 use std::fs::{create_dir_all, read_dir, remove_dir_all};
 use std::path::PathBuf;
 use uuid::Uuid;
-use crate::session::devices_cache::DevicesCache;
 
 pub struct SessionManager {
     current_session: Option<Session>,
     current_session_client: Option<Entity<Client>>,
     current_caches: Option<Caches>,
+    current_client_error: ClientError,
 }
 
 impl SessionManager {
@@ -93,25 +97,39 @@ impl SessionManager {
 
                 let client_clone = client.clone();
                 cx.spawn(async move |cx: &mut AsyncApp| {
-                    let sync_result = Tokio::spawn_result(cx, async move {
-                        client_clone
-                            .sync_with_callback(SyncSettings::default(), |_| async {
-                                LoopCtrl::Continue
+                    loop {
+                        let client_clone = client_clone.clone();
+                        let sync_result = cx
+                            .spawn_tokio(async move {
+                                client_clone
+                                    .sync_with_callback(SyncSettings::default(), |_| async {
+                                        LoopCtrl::Continue
+                                    })
+                                    .await
                             })
                             .await
-                            .map_err(|e| anyhow!(e))
-                    })
-                    .unwrap()
-                    .await
-                    .unwrap_err();
+                            .unwrap_err();
 
-                    cx.update_global::<Self, ()>(|session_manager, cx| {
-                        error!("Sync error: {:?}", sync_result);
-                        session_manager.current_session = None;
-                        session_manager.current_session_client = None;
-                        // TODO: Explain to the user why we logged out
-                    })
-                    .unwrap();
+                        let error = handle_error(&sync_result);
+                        match error {
+                            ClientError::None => {}
+                            ClientError::Terminal(_) => {
+                                error!("Sync error: {sync_result}");
+                                cx.update_global::<Self, ()>(|session_manager, cx| {
+                                    session_manager.current_client_error = error;
+                                })
+                                .unwrap();
+
+                                return;
+                            }
+                            ClientError::Recoverable(_) => {
+                                cx.update_global::<Self, ()>(|session_manager, cx| {
+                                    session_manager.current_client_error = error;
+                                })
+                                .unwrap();
+                            }
+                        }
+                    }
                 })
                 .detach();
 
@@ -129,6 +147,7 @@ impl SessionManager {
         self.current_session = None;
         self.current_session_client = None;
         self.current_caches = None;
+        self.current_client_error = ClientError::None;
     }
 
     pub fn current_session(&self) -> Option<Session> {
@@ -137,6 +156,10 @@ impl SessionManager {
 
     pub fn client(&self) -> Option<Entity<Client>> {
         self.current_session_client.clone()
+    }
+
+    pub fn error(&self) -> ClientError {
+        self.current_client_error
     }
 
     pub fn verification_requests(&self) -> Entity<VerificationRequestsCache> {
@@ -150,7 +173,7 @@ impl SessionManager {
     pub fn current_account(&self) -> Entity<AccountCache> {
         self.current_caches.as_ref().unwrap().account_cache.clone()
     }
-    
+
     pub fn devices(&self) -> Entity<DevicesCache> {
         self.current_caches.as_ref().unwrap().devices_cache.clone()
     }
@@ -163,6 +186,7 @@ pub fn setup_session_manager(cx: &mut App) {
         current_session: None,
         current_session_client: None,
         current_caches: None,
+        current_client_error: ClientError::None,
     });
 }
 
