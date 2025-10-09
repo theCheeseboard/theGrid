@@ -2,6 +2,7 @@ use crate::auth::recovery_passphrase_popover::RecoveryPassphrasePopover;
 use crate::auth::verification_popover::VerificationPopover;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::main_chat_surface::{ChangeRoomEvent, ChangeRoomHandler};
+use crate::mxc_image::mxc_image;
 use cntp_i18n::{tr, trn};
 use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
@@ -12,8 +13,9 @@ use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, ElementId, InteractiveElement, IntoElement, ListAlignment, ListState,
-    ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window, div, list, px, rgb,
+    App, AsyncApp, BorrowAppContext, ElementId, InteractiveElement, IntoElement, ListAlignment,
+    ListState, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window, div, list,
+    px, rgb,
 };
 use gpui_tokio::Tokio;
 use matrix_sdk::ruma::events::key::verification::VerificationMethod;
@@ -120,6 +122,7 @@ impl RenderOnce for Sidebar {
 
         let change_room_handler = self.on_change_room.unwrap().clone();
         let account = session_manager.current_account().read(cx);
+        let avatar_url = account.avatar_url();
 
         let theme = cx.global::<Theme>();
 
@@ -170,7 +173,12 @@ impl RenderOnce for Sidebar {
                     .p(px(4.))
                     .flex()
                     .gap(px(4.))
-                    .child(div().size(px(48.)).bg(rgb(0xff0000)))
+                    .when_some(account.avatar_url(), |david, avatar_url| {
+                        david.child(mxc_image(avatar_url).size(px(48.)))
+                    })
+                    .when_none(&account.avatar_url(), |david| {
+                        david.child(div().size(px(48.)).bg(rgb(0xff0000)))
+                    })
                     .child(
                         div()
                             .flex()

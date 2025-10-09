@@ -20,3 +20,5 @@ matrix-sdk = { version = "0.14.0", features = ["anyhow", "markdown", "sso-login"
 tokio = { version = "1.47", features = ["full"] }
 uuid = "1"
 async-channel = "2"
+image = "0.25"
+smallvec = "1"

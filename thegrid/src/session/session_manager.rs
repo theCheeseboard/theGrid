@@ -2,6 +2,7 @@ use crate::session::account_cache::AccountCache;
 use crate::session::caches::Caches;
 use crate::session::devices_cache::DevicesCache;
 use crate::session::error_handling::{ClientError, handle_error};
+use crate::session::media_cache::MediaCache;
 use crate::session::verification_requests_cache::VerificationRequestsCache;
 use crate::tokio_helper::TokioHelper;
 use contemporary::application::Details;
@@ -201,6 +202,10 @@ impl SessionManager {
 
     pub fn devices(&self) -> Entity<DevicesCache> {
         self.current_caches.as_ref().unwrap().devices_cache.clone()
+    }
+
+    pub fn media(&self) -> &MediaCache {
+        &self.current_caches.as_ref().unwrap().media_cache
     }
 }
 

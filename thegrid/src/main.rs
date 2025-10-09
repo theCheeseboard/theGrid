@@ -7,6 +7,8 @@ mod chat;
 mod main_window;
 mod utilities;
 
+mod mxc_image;
+
 use crate::actions::{AccountSwitcher, LogOut, register_actions};
 use crate::main_window::MainWindow;
 use cntp_i18n::{I18N_MANAGER, tr, tr_load};
