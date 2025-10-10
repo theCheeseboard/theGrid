@@ -1,11 +1,11 @@
 use contemporary::components::icon::icon;
 use contemporary::styling::theme::Theme;
+use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
     App, BorrowAppContext, IntoElement, ParentElement, Refineable, RenderOnce, StyleRefinement,
     Styled, Window, div, img, px, rgb, rgba,
 };
-use gpui::http_client::anyhow;
 use thegrid::session::media_cache::{MediaCacheEntry, MediaState};
 use thegrid::session::session_manager::SessionManager;
 
@@ -40,6 +40,12 @@ impl MxcImage {
 
 impl RenderOnce for MxcImage {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        let MediaCacheEntry::MediaSource(_) = &self.mxc else {
+            let mut david = div().bg(rgba(0x00000064));
+            david.style().refine(&self.style);
+            return david;
+        };
+
         // To avoid dropping the Arc<RenderImage> while the image is still on the screen,
         // we store it in state. Once a frame passes without this element being rendered,
         // its refcount will decrement and the image will be dropped if there are no other
@@ -59,62 +65,63 @@ impl RenderOnce for MxcImage {
         read_image_store.write(cx, read_image_to_store);
 
         let mut david = div()
-            .when(
-                is_failed,
-                |david| {
+            .when(is_failed, |david| {
+                david
+                    .bg(rgba(0x00000064))
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .child(icon("exception".into()))
+            })
+            .when(is_loading, |david| david.bg(rgba(0x00000064)))
+            .when(is_loaded, |david| {
+                if let Ok(image) = read_image {
+                    david.child(
+                        img(image.clone())
+                            .when_some(self.style.corner_radii.top_left, |david, radius| {
+                                david.rounded_tl(radius)
+                            })
+                            .when_some(self.style.corner_radii.top_right, |david, radius| {
+                                david.rounded_tr(radius)
+                            })
+                            .when_some(self.style.corner_radii.bottom_left, |david, radius| {
+                                david.rounded_bl(radius)
+                            })
+                            .when_some(self.style.corner_radii.bottom_right, |david, radius| {
+                                david.rounded_br(radius)
+                            })
+                            .when(self.size_policy == SizePolicy::Fit, |img| img.size_full())
+                            .when_some(
+                                match self.size_policy {
+                                    SizePolicy::Constrain(width, height) => Some((width, height)),
+                                    _ => None,
+                                },
+                                |img, dimensions| {
+                                    let image_dimensions = image.size(0);
+
+                                    let mut width = image_dimensions.width.0 as f32;
+                                    let mut height = image_dimensions.height.0 as f32;
+                                    if width > dimensions.0 {
+                                        height = height * dimensions.0 / width;
+                                        width = dimensions.0;
+                                    }
+                                    if height > dimensions.1 {
+                                        width = width * dimensions.1 / height;
+                                        height = dimensions.1;
+                                    }
+                                    img.w(px(width)).h(px(height))
+                                },
+                            ),
+                    )
+                } else {
                     david
                         .bg(rgba(0x00000064))
                         .flex()
                         .items_center()
                         .justify_center()
                         .child(icon("exception".into()))
-                },
-            )
-            .when(
-                is_loading,
-                |david| david.bg(rgba(0x00000064)),
-            )
-            .when(
-                is_loaded,
-                |david| {
-                    if let Ok(image) = read_image {
-                        david.child(
-                            img(image.clone())
-                                .when(self.size_policy == SizePolicy::Fit, |img| img.size_full())
-                                .when_some(
-                                    match self.size_policy {
-                                        SizePolicy::Constrain(width, height) => {
-                                            Some((width, height))
-                                        }
-                                        _ => None,
-                                    },
-                                    |img, dimensions| {
-                                        let image_dimensions = image.size(0);
-
-                                        let mut width = image_dimensions.width.0 as f32;
-                                        let mut height = image_dimensions.height.0 as f32;
-                                        if width > dimensions.0 {
-                                            height = height * dimensions.0 / width;
-                                            width = dimensions.0;
-                                        }
-                                        if height > dimensions.1 {
-                                            width = width * dimensions.1 / height;
-                                            height = dimensions.1;
-                                        }
-                                        img.w(px(width)).h(px(height))
-                                    },
-                                ),
-                        )
-                    } else {
-                        david
-                            .bg(rgba(0x00000064))
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .child(icon("exception".into()))
-                    }
-                },
-            );
+                }
+            });
         david.style().refine(&self.style);
         david
     }

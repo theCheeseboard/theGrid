@@ -19,19 +19,18 @@ pub struct MediaCache {
 }
 
 #[derive(Clone)]
-pub struct MediaCacheEntry {
-    pub media_source: MediaSource
+pub enum MediaCacheEntry {
+    MediaSource(MediaSource),
+    None,
 }
 
 impl MediaCacheEntry {
     pub fn new(media_source: MediaSource) -> Self {
-        Self { media_source }
+        MediaCacheEntry::MediaSource(media_source)
     }
-    
+
     pub fn from_mxc(mxc: OwnedMxcUri) -> Self {
-        Self {
-            media_source: MediaSource::Plain(mxc)
-        }
+        MediaCacheEntry::MediaSource(MediaSource::Plain(mxc))
     }
 }
 
@@ -43,13 +42,33 @@ impl From<MediaSource> for MediaCacheEntry {
 
 impl From<OwnedMxcUri> for MediaCacheEntry {
     fn from(value: OwnedMxcUri) -> Self {
-        Self::from_mxc(value)   
+        Self::from_mxc(value)
+    }
+}
+
+impl From<Option<OwnedMxcUri>> for MediaCacheEntry {
+    fn from(value: Option<OwnedMxcUri>) -> Self {
+        match value {
+            None => MediaCacheEntry::None,
+            Some(value) => Self::from_mxc(value),
+        }
     }
 }
 
 impl PartialEq for MediaCacheEntry {
     fn eq(&self, other: &Self) -> bool {
-        self.media_source.unique_key() == other.media_source.unique_key()
+        match self {
+            MediaCacheEntry::MediaSource(media_source) => match other {
+                MediaCacheEntry::MediaSource(other_media_source) => {
+                    media_source.unique_key() == other_media_source.unique_key()
+                }
+                MediaCacheEntry::None => false,
+            },
+            MediaCacheEntry::None => match other {
+                MediaCacheEntry::MediaSource(_) => false,
+                MediaCacheEntry::None => true,
+            },
+        }
     }
 }
 
@@ -57,7 +76,12 @@ impl Eq for MediaCacheEntry {}
 
 impl Hash for MediaCacheEntry {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.media_source.unique_key().hash(state);
+        match self {
+            MediaCacheEntry::MediaSource(media_source) => {
+                media_source.unique_key().hash(state);
+            }
+            MediaCacheEntry::None => {}
+        }
     }
 }
 
@@ -69,11 +93,22 @@ impl MediaCache {
         }
     }
 
-    pub fn media_file(&self, media_source: MediaCacheEntry, cx: &mut App) -> Entity<MediaFile> {
+    pub fn media_file(
+        &self,
+        media_cache_entry: MediaCacheEntry,
+        cx: &mut App,
+    ) -> Entity<MediaFile> {
+        let media_source = match &media_cache_entry {
+            MediaCacheEntry::MediaSource(media_source) => media_source,
+            MediaCacheEntry::None => {
+                panic!("Tried to get media file for None")
+            }
+        };
+
         self.tracked_files
             .borrow_mut()
-            .entry(media_source.clone())
-            .or_insert_with(|| MediaFile::new(self.client.clone(), media_source.media_source, cx))
+            .entry(media_cache_entry.clone())
+            .or_insert_with(|| MediaFile::new(self.client.clone(), media_source.clone(), cx))
             .to_owned()
     }
 }

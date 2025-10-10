@@ -6,6 +6,7 @@ use gpui::http_client::anyhow;
 use gpui::{
     App, ElementId, InteractiveElement, IntoElement, ParentElement, RenderOnce, Window, div,
 };
+use matrix_sdk::Room;
 use matrix_sdk::deserialized_responses::{TimelineEvent, TimelineEventKind};
 use matrix_sdk::linked_chunk::relational::IndexableItem;
 use matrix_sdk::ruma::OwnedRoomId;
@@ -15,18 +16,18 @@ use matrix_sdk::ruma::events::{AnyMessageLikeEvent, AnyTimelineEvent};
 pub struct TimelineRow {
     event: TimelineEvent,
     previous_event: Option<TimelineEvent>,
-    room_id: OwnedRoomId,
+    room: Room,
 }
 
 pub fn timeline_event(
     event: TimelineEvent,
     previous_event: Option<TimelineEvent>,
-    room_id: OwnedRoomId,
+    room: Room,
 ) -> TimelineRow {
     TimelineRow {
         event,
         previous_event,
-        room_id,
+        room,
     }
 }
 
@@ -41,7 +42,7 @@ impl RenderOnce for TimelineRow {
             },
             TimelineEventKind::UnableToDecrypt { .. } => Err(anyhow!("Unable to decrypt")),
             TimelineEventKind::PlainText { event } => match event.deserialize() {
-                Ok(event) => Ok(event.into_full_event(self.room_id.clone())),
+                Ok(event) => Ok(event.into_full_event(self.room.room_id().to_owned())),
                 Err(_) => Err(anyhow!("Unknown Error")),
             },
         };
@@ -65,10 +66,13 @@ impl RenderOnce for TimelineRow {
                         AnyMessageLikeEvent::RoomMessage(room_message) => {
                             match room_message.as_original() {
                                 None => div().into_any_element(),
-                                Some(original_message) => {
-                                    room_message_event(original_message.clone(), event)
-                                        .into_any_element()
-                                }
+                                Some(original_message) => room_message_event(
+                                    original_message.clone(),
+                                    self.room,
+                                    event,
+                                    self.previous_event,
+                                )
+                                .into_any_element(),
                             }
                         }
                         _ => div().into_any_element(),

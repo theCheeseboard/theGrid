@@ -179,8 +179,8 @@ impl Render for ChatRoom {
 
         let message_field_clone = message_field.clone();
         let room_clone = room.clone();
+        let room_clone_2 = room.clone();
         let events = self.events.clone();
-        let room_id = self.room_id.clone();
         if events.len() != root_list_state.item_count() {
             root_list_state.reset(events.len());
             root_list_state.scroll_to(ListOffset {
@@ -208,7 +208,8 @@ impl Render for ChatRoom {
                             events.get(i - 1).cloned()
                         };
 
-                        timeline_event(event, previous_event, room_id.clone()).into_any_element()
+                        timeline_event(event, previous_event, room_clone_2.clone())
+                            .into_any_element()
                     })
                     .flex()
                     .flex_col()
