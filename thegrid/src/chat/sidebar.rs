@@ -176,6 +176,7 @@ impl RenderOnce for Sidebar {
                     .when_some(account.avatar_url(), |david, avatar_url| {
                         david.child(
                             mxc_image(avatar_url)
+                                .rounded(theme.border_radius)
                                 .size(px(48.))
                                 .size_policy(SizePolicy::Fit),
                         )

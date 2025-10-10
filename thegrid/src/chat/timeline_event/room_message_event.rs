@@ -147,7 +147,7 @@ where
             true
         };
 
-        div().flex().m(px(2.)).when_else(
+        div().flex().m(px(2.)).max_w(relative(100.)).when_else(
             is_head_event,
             |david| {
                 david.child(
