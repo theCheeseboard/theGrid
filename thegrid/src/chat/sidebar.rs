@@ -1,7 +1,9 @@
+use crate::account_settings::AccountSettingsPage;
 use crate::auth::recovery_passphrase_popover::RecoveryPassphrasePopover;
 use crate::auth::verification_popover::VerificationPopover;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::main_chat_surface::{ChangeRoomEvent, ChangeRoomHandler};
+use crate::main_window::{MainWindowSurface, SurfaceChangeEvent, SurfaceChangeHandler};
 use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::{tr, trn};
 use contemporary::components::button::button;
@@ -29,6 +31,7 @@ use thegrid::tokio_helper::TokioHelper;
 #[derive(IntoElement)]
 pub struct Sidebar {
     on_change_room: Option<Rc<Box<ChangeRoomHandler>>>,
+    on_surface_change: Option<Rc<Box<SurfaceChangeHandler>>>,
 }
 
 #[derive(IntoElement)]
@@ -36,13 +39,14 @@ enum SidebarAlert {
     None,
     IncomingVerificationRequest(VerificationRequestDetails),
     VerifySession,
-    UnverifiedDevices(usize),
+    UnverifiedDevices(usize, Option<Rc<Box<SurfaceChangeHandler>>>),
     ClientError(RecoverableClientError),
 }
 
 pub fn sidebar() -> Sidebar {
     Sidebar {
         on_change_room: None,
+        on_surface_change: None,
     }
 }
 
@@ -52,6 +56,14 @@ impl Sidebar {
         on_change_room: impl Fn(&ChangeRoomEvent, &mut Window, &mut App) + 'static,
     ) -> Self {
         self.on_change_room = Some(Rc::new(Box::new(on_change_room)));
+        self
+    }
+
+    pub fn on_surface_change(
+        mut self,
+        on_surface_change: impl Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static,
+    ) -> Self {
+        self.on_surface_change = Some(Rc::new(Box::new(on_surface_change)));
         self
     }
 
@@ -85,7 +97,10 @@ impl Sidebar {
         let devices = session_manager.devices().read(cx);
         let unverified_devices = devices.unverified_devices();
         if !unverified_devices.is_empty() {
-            return SidebarAlert::UnverifiedDevices(unverified_devices.len());
+            return SidebarAlert::UnverifiedDevices(
+                unverified_devices.len(),
+                self.on_surface_change.clone(),
+            );
         }
 
         SidebarAlert::None
@@ -403,7 +418,7 @@ impl RenderOnce for SidebarAlert {
                                 ),
                         ),
                 ),
-                SidebarAlert::UnverifiedDevices(count) => div().p(px(4.)).child(
+                SidebarAlert::UnverifiedDevices(count, handler) => div().p(px(4.)).child(
                     admonition()
                         .severity(AdmonitionSeverity::Warning)
                         .title(tr!("UNVERIFIED_DEVICES", "Unverified devices"))
@@ -438,7 +453,17 @@ impl RenderOnce for SidebarAlert {
                                                     )
                                                     .into(),
                                                 ))
-                                                .on_click(move |_, _, cx| {}),
+                                                .on_click(move |_, window, cx| {
+                                                    if let Some(handler) = handler.clone() {
+                                                        handler(
+                                                            &SurfaceChangeEvent {
+                                                                change: MainWindowSurface::AccountSettings(AccountSettingsPage::Devices).into(),
+                                                            },
+                                                            window,
+                                                            cx,
+                                                        );
+                                                    }
+                                                }),
                                         ),
                                 ),
                         ),

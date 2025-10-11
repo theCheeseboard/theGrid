@@ -1,4 +1,4 @@
-use crate::account_settings::AccountSettingsSurface;
+use crate::account_settings::{AccountSettingsPage, AccountSettingsSurface};
 use crate::auth::auth_surface::AuthSurface;
 use crate::chat::chat_surface::ChatSurface;
 use contemporary::about_surface::about_surface;
@@ -18,7 +18,7 @@ pub struct MainWindow {
 #[derive(Clone)]
 pub enum MainWindowSurface {
     Main,
-    AccountSettings,
+    AccountSettings(AccountSettingsPage),
     About,
 }
 
@@ -69,10 +69,19 @@ impl MainWindow {
         this: &mut MainWindow,
         event: &SurfaceChangeEvent,
         _: &mut Window,
-        _: &mut Context<Self>,
+        cx: &mut Context<Self>,
     ) {
         match &event.change {
-            SurfaceChange::Push(surface) => this.push_surface(surface.clone()),
+            SurfaceChange::Push(surface) => {
+                this.push_surface(surface.clone());
+                if let MainWindowSurface::AccountSettings(page) = surface {
+                    this.account_settings_surface
+                        .update(cx, |account_settings_surface, cx| {
+                            account_settings_surface.set_current_page(page.clone());
+                            cx.notify();
+                        })
+                }
+            }
             SurfaceChange::Pop => this.pop_surface(),
         }
     }
@@ -97,7 +106,7 @@ impl Render for MainWindow {
                         Some(_) => 0,
                         None => 1,
                     },
-                    MainWindowSurface::AccountSettings => 2,
+                    MainWindowSurface::AccountSettings(_) => 2,
                     MainWindowSurface::About => 3,
                 },
             )

@@ -1,3 +1,4 @@
+use crate::account_settings::AccountSettingsPage;
 use crate::actions::{AccountSettings, AccountSwitcher, LogOut};
 use crate::auth::logout_popover::logout_popover;
 use crate::chat::chat_room::ChatRoom;
@@ -92,7 +93,8 @@ impl Render for MainChatSurface {
             .on_action(cx.listener(|this, _: &AccountSettings, window, cx| {
                 (this.on_surface_change)(
                     &SurfaceChangeEvent {
-                        change: MainWindowSurface::AccountSettings.into(),
+                        change: MainWindowSurface::AccountSettings(AccountSettingsPage::Profile)
+                            .into(),
                     },
                     window,
                     cx,
@@ -107,11 +109,15 @@ impl Render for MainChatSurface {
             .size_full()
             .flex()
             .gap(px(2.))
-            .child(sidebar().on_change_room(cx.listener(
-                |this, event: &ChangeRoomEvent, window, cx| {
-                    this.on_change_room(event, window, cx);
-                },
-            )))
+            .child(
+                sidebar()
+                    .on_change_room(cx.listener(|this, event: &ChangeRoomEvent, window, cx| {
+                        this.on_change_room(event, window, cx);
+                    }))
+                    .on_surface_change(cx.listener(|this, event, window, cx| {
+                        (this.on_surface_change)(event, window, cx)
+                    })),
+            )
             .child(
                 div()
                     .child(match &self.displayed_room {

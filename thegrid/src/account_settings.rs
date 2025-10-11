@@ -26,6 +26,12 @@ use gpui::{
 use std::rc::Rc;
 use thegrid::session::session_manager::SessionManager;
 
+#[derive(Clone)]
+pub enum AccountSettingsPage {
+    Profile,
+    Devices,
+}
+
 pub struct AccountSettingsSurface {
     current_page: usize,
 
@@ -54,6 +60,13 @@ impl AccountSettingsSurface {
 
             on_surface_change: Rc::new(Box::new(on_surface_change)),
         })
+    }
+
+    pub fn set_current_page(&mut self, page: AccountSettingsPage) {
+        self.current_page = match page {
+            AccountSettingsPage::Profile => 0,
+            AccountSettingsPage::Devices => 3,
+        }
     }
 }
 
