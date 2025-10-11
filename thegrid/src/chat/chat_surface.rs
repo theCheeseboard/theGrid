@@ -1,4 +1,5 @@
-use crate::chat::main_chat_surface::MainChatSurface;
+use crate::chat::main_chat_surface::{ChangeRoomHandler, MainChatSurface};
+use crate::main_window::{SurfaceChangeEvent, SurfaceChangeHandler};
 use cntp_i18n::tr;
 use contemporary::application::Details;
 use contemporary::components::application_menu::ApplicationMenu;
@@ -16,6 +17,7 @@ use gpui::{
     ParentElement, Render, Styled, Window, div, px,
 };
 use std::fs::remove_dir_all;
+use std::rc::Rc;
 use thegrid::session::error_handling::ClientError;
 use thegrid::session::session_manager::SessionManager;
 
@@ -25,7 +27,10 @@ pub struct ChatSurface {
 }
 
 impl ChatSurface {
-    pub fn new(cx: &mut App) -> Entity<ChatSurface> {
+    pub fn new(
+        cx: &mut App,
+        on_surface_change: impl Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static,
+    ) -> Entity<ChatSurface> {
         cx.new(|cx| ChatSurface {
             application_menu: ApplicationMenu::new(
                 cx,
@@ -35,7 +40,7 @@ impl ChatSurface {
                 },
             ),
 
-            main_chat_surface: MainChatSurface::new(cx),
+            main_chat_surface: MainChatSurface::new(cx, on_surface_change),
         })
     }
 }

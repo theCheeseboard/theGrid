@@ -30,6 +30,7 @@ use smol::future::FutureExt;
 use std::path::PathBuf;
 use std::sync::Arc;
 use thegrid::session::session_manager::SessionManager;
+use thegrid::tokio_helper::TokioHelper;
 use tracing::{error, info};
 use uuid::Uuid;
 
@@ -124,29 +125,24 @@ impl AuthSurface {
         std::fs::create_dir_all(&store_dir).unwrap();
 
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
-            let client = Tokio::spawn_result(cx, async move {
-                Client::builder()
-                    .server_name(user_id.server_name())
-                    .sqlite_store(store_dir, None)
-                    .build()
-                    .await
-                    .map_err(|e| anyhow!(e))
-            })
-            .unwrap()
-            .await;
+            let client = cx
+                .spawn_tokio(async move {
+                    Client::builder()
+                        .server_name(user_id.server_name())
+                        .sqlite_store(store_dir, None)
+                        .build()
+                        .await
+                })
+                .await;
 
             match client {
                 Ok(client) => {
                     let client_clone = client.clone();
-                    let login_types = Tokio::spawn_result(cx, async move {
-                        client_clone
-                            .matrix_auth()
-                            .get_login_types()
-                            .await
-                            .map_err(|e| anyhow!(e))
-                    })
-                    .unwrap()
-                    .await;
+                    let login_types = cx
+                        .spawn_tokio(
+                            async move { client_clone.matrix_auth().get_login_types().await },
+                        )
+                        .await;
 
                     match login_types {
                         Ok(login_types) => {

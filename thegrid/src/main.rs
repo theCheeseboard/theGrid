@@ -7,9 +7,10 @@ mod chat;
 mod main_window;
 mod utilities;
 
+mod account_settings;
 mod mxc_image;
 
-use crate::actions::{AccountSwitcher, LogOut, register_actions};
+use crate::actions::{AccountSettings, AccountSwitcher, LogOut, register_actions};
 use crate::main_window::MainWindow;
 use cntp_i18n::{I18N_MANAGER, tr, tr_load};
 use cntp_icon_tool_macros::application_icon;
@@ -71,6 +72,11 @@ fn mane() {
                             menus: vec![Menu {
                                 name: tr!("MENU_ACCOUNT", "Account").into(),
                                 items: vec![
+                                    MenuItem::action(
+                                        tr!("ACCOUNT_ACCOUNT_SETTINGS", "Account Settings..."),
+                                        AccountSettings,
+                                    ),
+                                    MenuItem::separator(),
                                     MenuItem::action(
                                         tr!("ACCOUNT_ACCOUNT_SWITCHER", "Switch Accounts..."),
                                         AccountSwitcher,

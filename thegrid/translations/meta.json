@@ -1,103 +1,151 @@
 {
+  "ACCOUNT_ACCOUNT_SETTINGS": {
+    "context": "main.rs",
+    "definedIn": "src/main.rs:76",
+    "plural": false,
+    "description": null
+  },
   "ACCOUNT_ACCOUNT_SWITCHER": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:75",
+    "definedIn": "src/main.rs:81",
     "plural": false,
     "description": null
   },
   "ACCOUNT_LOG_OUT": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:78",
+    "definedIn": "src/main.rs:84",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_SETTINGS_DEVICES": {
+    "context": "account_settings.rs",
+    "definedIn": "src/account_settings.rs:132",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_SETTINGS_IGNORED_USERS": {
+    "context": "account_settings.rs",
+    "definedIn": "src/account_settings.rs:136",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_SETTINGS_NOTIFICATIONS": {
+    "context": "account_settings.rs",
+    "definedIn": "src/account_settings.rs:128",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_SETTINGS_PROFILE": {
+    "context": "account_settings.rs",
+    "definedIn": "src/account_settings.rs:120",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_SETTINGS_SECURITY": {
+    "context": "account_settings.rs",
+    "definedIn": "src/account_settings.rs:124",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_SETTINGS_TITLE": {
+    "context": "account_settings.rs",
+    "definedIn": "src/account_settings.rs:84",
     "plural": false,
     "description": null
   },
   "ACCOUNT_SWITCHER_ERROR": {
     "context": "chat_surface.rs",
-    "definedIn": "src/chat/chat_surface.rs:142",
+    "definedIn": "src/chat/chat_surface.rs:147",
     "plural": false,
     "description": null
   },
   "AUTH_LOG_IN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:575",
+    "definedIn": "src/auth/auth_surface.rs:571",
     "plural": false,
     "description": null
   },
   "AUTH_LOG_IN_TO_MATRIX": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:568",
+    "definedIn": "src/auth/auth_surface.rs:564",
     "plural": false,
     "description": null
   },
   "AUTH_MATRIX_ID_EXAMPLE": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:72",
+    "definedIn": "src/auth/auth_surface.rs:73",
     "plural": false,
     "description": null
   },
   "AUTH_PASSWORD": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:383",
+    "definedIn": "src/auth/auth_surface.rs:379",
     "plural": false,
     "description": null
   },
   "AUTH_PASSWORD_PLACEHOLDER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:78",
+    "definedIn": "src/auth/auth_surface.rs:79",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_CONNECTION_ERROR": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:344",
+    "definedIn": "src/auth/auth_surface.rs:340",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_CONNECTION_ERROR_TEXT": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:353",
+    "definedIn": "src/auth/auth_surface.rs:349",
     "plural": false,
     "description": null
   },
   "AUTH_SESSION_RESTORE": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:537",
+    "definedIn": "src/auth/auth_surface.rs:533",
     "plural": false,
     "description": null
   },
   "AUTH_SSO": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:421",
+    "definedIn": "src/auth/auth_surface.rs:417",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_BUTTON": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:430",
+    "definedIn": "src/auth/auth_surface.rs:426",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_MESSAGE": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:469",
+    "definedIn": "src/auth/auth_surface.rs:465",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_NAME": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:464",
+    "definedIn": "src/auth/auth_surface.rs:460",
     "plural": false,
     "description": null
   },
   "AUTH_TOKEN_PLACEHOLDER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:84",
+    "definedIn": "src/auth/auth_surface.rs:85",
     "plural": false,
     "description": null
   },
   "CLOSE": {
     "context": "recovery_passphrase_popover.rs",
     "definedIn": "src/auth/recovery_passphrase_popover.rs:238",
+    "plural": false,
+    "description": null
+  },
+  "DEVICES_THIS_DEVICE": {
+    "context": "devices_settings.rs",
+    "definedIn": "src/account_settings/devices_settings.rs:47",
     "plural": false,
     "description": null
   },
@@ -113,33 +161,39 @@
     "plural": false,
     "description": null
   },
+  "IGNORED_USERS_IGNORE": {
+    "context": "ignored_users_settings.rs",
+    "definedIn": "src/account_settings/ignored_users_settings.rs:47",
+    "plural": false,
+    "description": null
+  },
   "INCOMING_SELF_VERIFICATION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:234",
+    "definedIn": "src/chat/sidebar.rs:229",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:224",
+    "definedIn": "src/chat/sidebar.rs:219",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_ACCEPT": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:265",
+    "definedIn": "src/chat/sidebar.rs:260",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_DECLINE": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:309",
+    "definedIn": "src/chat/sidebar.rs:304",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:250",
+    "definedIn": "src/chat/sidebar.rs:245",
     "plural": false,
     "description": null
   },
@@ -175,19 +229,19 @@
   },
   "MAIN_CHAT_ERROR_TERMINAL": {
     "context": "chat_surface.rs",
-    "definedIn": "src/chat/chat_surface.rs:99",
+    "definedIn": "src/chat/chat_surface.rs:104",
     "plural": false,
     "description": null
   },
   "MAIN_CHAT_WELCOME": {
     "context": "chat_surface.rs",
-    "definedIn": "src/chat/chat_surface.rs:86",
+    "definedIn": "src/chat/chat_surface.rs:91",
     "plural": false,
     "description": null
   },
   "MENU_ACCOUNT": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:72",
+    "definedIn": "src/main.rs:73",
     "plural": false,
     "description": null
   },
@@ -197,21 +251,33 @@
     "plural": false,
     "description": null
   },
+  "NEW_DISPLAY_NAME_PLACEHOLDER": {
+    "context": "profile_settings.rs",
+    "definedIn": "src/account_settings/profile_settings.rs:33",
+    "plural": false,
+    "description": null
+  },
+  "NOTIFICATIONS_SYSTEM": {
+    "context": "notifications_settings.rs",
+    "definedIn": "src/account_settings/notifications_settings.rs:48",
+    "plural": false,
+    "description": null
+  },
   "NO_DISPLAYED_ROOM_MESSAGE": {
     "context": "main_chat_surface.rs",
-    "definedIn": "src/chat/main_chat_surface.rs:113",
+    "definedIn": "src/chat/main_chat_surface.rs:132",
     "plural": false,
     "description": null
   },
   "NO_DISPLAYED_ROOM_TITLE": {
     "context": "main_chat_surface.rs",
-    "definedIn": "src/chat/main_chat_surface.rs:102",
+    "definedIn": "src/chat/main_chat_surface.rs:121",
     "plural": false,
     "description": null
   },
   "POPOVER_LOGIN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:596",
+    "definedIn": "src/auth/auth_surface.rs:592",
     "plural": false,
     "description": null
   },
@@ -236,6 +302,30 @@
   "POPOVER_VERIFY": {
     "context": "verification_popover.rs",
     "definedIn": "src/auth/verification_popover.rs:429",
+    "plural": false,
+    "description": null
+  },
+  "PROFILE_CHANGE_DISPLAY_NAME": {
+    "context": "profile_settings.rs",
+    "definedIn": "src/account_settings/profile_settings.rs:107",
+    "plural": false,
+    "description": null
+  },
+  "PROFILE_CHANGE_DISPLAY_NAME_DESCRIPTION": {
+    "context": "profile_settings.rs",
+    "definedIn": "src/account_settings/profile_settings.rs:142",
+    "plural": false,
+    "description": null
+  },
+  "PROFILE_CHANGE_PROFILE_PICTURE": {
+    "context": "profile_settings.rs",
+    "definedIn": "src/account_settings/profile_settings.rs:122",
+    "plural": false,
+    "description": null
+  },
+  "PROFILE_PROFILE": {
+    "context": "profile_settings.rs",
+    "definedIn": "src/account_settings/profile_settings.rs:95",
     "plural": false,
     "description": null
   },
@@ -311,9 +401,15 @@
     "plural": false,
     "description": null
   },
+  "SECURITY_PROFILE": {
+    "context": "security_settings.rs",
+    "definedIn": "src/account_settings/security_settings.rs:47",
+    "plural": false,
+    "description": null
+  },
   "SORRY": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:358",
+    "definedIn": "src/auth/auth_surface.rs:354",
     "plural": false,
     "description": null
   },
@@ -331,7 +427,7 @@
   },
   "UNKNOWN_DEVICE": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:243",
+    "definedIn": "src/chat/sidebar.rs:238",
     "plural": false,
     "description": null
   },
@@ -343,19 +439,19 @@
   },
   "UNVERIFIED_DEVICES": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:415",
+    "definedIn": "src/chat/sidebar.rs:410",
     "plural": false,
     "description": null
   },
   "UNVERIFIED_DEVICES_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:422",
+    "definedIn": "src/chat/sidebar.rs:417",
     "plural": true,
     "description": null
   },
   "UNVERIFIED_DEVICES_VIEW_DEVICES": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:442",
+    "definedIn": "src/chat/sidebar.rs:437",
     "plural": false,
     "description": null
   },
@@ -409,31 +505,31 @@
   },
   "VERIFY_SESSION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:338",
+    "definedIn": "src/chat/sidebar.rs:333",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:345",
+    "definedIn": "src/chat/sidebar.rs:340",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_OTHER_DEVICE": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:360",
+    "definedIn": "src/chat/sidebar.rs:355",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_RECOVERY_KEY": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:380",
+    "definedIn": "src/chat/sidebar.rs:375",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_RESET_CRYPTO": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:402",
+    "definedIn": "src/chat/sidebar.rs:397",
     "plural": false,
     "description": null
   },

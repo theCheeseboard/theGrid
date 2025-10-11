@@ -173,17 +173,12 @@ impl RenderOnce for Sidebar {
                     .p(px(4.))
                     .flex()
                     .gap(px(4.))
-                    .when_some(account.avatar_url(), |david, avatar_url| {
-                        david.child(
-                            mxc_image(avatar_url)
-                                .rounded(theme.border_radius)
-                                .size(px(48.))
-                                .size_policy(SizePolicy::Fit),
-                        )
-                    })
-                    .when_none(&account.avatar_url(), |david| {
-                        david.child(div().size(px(48.)).bg(rgb(0xff0000)))
-                    })
+                    .child(
+                        mxc_image(account.avatar_url())
+                            .rounded(theme.border_radius)
+                            .size(px(48.))
+                            .size_policy(SizePolicy::Fit),
+                    )
                     .child(
                         div()
                             .flex()

@@ -1,8 +1,11 @@
-use crate::actions::{AccountSwitcher, LogOut};
+use crate::actions::{AccountSettings, AccountSwitcher, LogOut};
 use crate::auth::logout_popover::logout_popover;
 use crate::chat::chat_room::ChatRoom;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::sidebar;
+use crate::main_window::{
+    MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
+};
 use cntp_i18n::{i18n_manager, tr};
 use contemporary::application::Details;
 use contemporary::components::interstitial::interstitial;
@@ -11,6 +14,7 @@ use gpui::{
     IntoElement, ParentElement, Render, Styled, Window, div, px,
 };
 use log::info;
+use std::rc::Rc;
 use thegrid::session::session_manager::SessionManager;
 
 pub type ChangeRoomHandler = dyn Fn(&ChangeRoomEvent, &mut Window, &mut App) + 'static;
@@ -26,10 +30,15 @@ pub struct MainChatSurface {
     focus_handle: FocusHandle,
 
     logout_popover_visible: Entity<bool>,
+
+    on_surface_change: Rc<Box<SurfaceChangeHandler>>,
 }
 
 impl MainChatSurface {
-    pub fn new(cx: &mut App) -> Entity<MainChatSurface> {
+    pub fn new(
+        cx: &mut App,
+        on_surface_change: impl Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static,
+    ) -> Entity<MainChatSurface> {
         cx.new(|cx| {
             // let session_manager = cx.global::<SessionManager>();
             // let verification_requests = session_manager.verification_requests();
@@ -43,6 +52,7 @@ impl MainChatSurface {
                 chat_room: None,
                 focus_handle: cx.focus_handle(),
                 logout_popover_visible: cx.new(|_| false),
+                on_surface_change: Rc::new(Box::new(on_surface_change)),
             }
         })
     }
@@ -78,6 +88,15 @@ impl Render for MainChatSurface {
             .on_action(cx.listener(|this, _: &LogOut, _, cx| {
                 this.logout_popover_visible.write(cx, true);
                 cx.notify()
+            }))
+            .on_action(cx.listener(|this, _: &AccountSettings, window, cx| {
+                (this.on_surface_change)(
+                    &SurfaceChangeEvent {
+                        change: MainWindowSurface::AccountSettings.into(),
+                    },
+                    window,
+                    cx,
+                );
             }))
             .on_action(cx.listener(|_, _: &AccountSwitcher, _, cx| {
                 cx.update_global::<SessionManager, ()>(|session_manager, cx| {

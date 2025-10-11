@@ -1,0 +1,52 @@
+use cntp_i18n::tr;
+use contemporary::components::constrainer::constrainer;
+use contemporary::components::grandstand::grandstand;
+use contemporary::components::layer::layer;
+use contemporary::components::subtitle::subtitle;
+use contemporary::styling::theme::Theme;
+use gpui::{
+    App, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window, div, px,
+};
+
+pub struct DevicesSettings {}
+
+impl DevicesSettings {
+    pub fn new(cx: &mut App) -> Entity<Self> {
+        cx.new(|cx| Self {})
+    }
+}
+
+impl Render for DevicesSettings {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let theme = cx.global::<Theme>();
+
+        div()
+            .bg(theme.background)
+            .w_full()
+            .h_full()
+            .flex()
+            .flex_col()
+            .child(
+                grandstand("devices-grandstand")
+                    .text(tr!("ACCOUNT_SETTINGS_DEVICES"))
+                    .pt(px(36.)),
+            )
+            .child(
+                constrainer("devices")
+                    .flex()
+                    .flex_col()
+                    .w_full()
+                    .p(px(8.))
+                    .gap(px(8.))
+                    .child(
+                        layer()
+                            .flex()
+                            .flex_col()
+                            .p(px(8.))
+                            .w_full()
+                            .child(subtitle(tr!("DEVICES_THIS_DEVICE", "This Device")))
+                            .child(div().child("Coming soon")),
+                    ),
+            )
+    }
+}

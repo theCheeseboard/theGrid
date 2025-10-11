@@ -1,3 +1,4 @@
+use crate::account_settings::AccountSettingsSurface;
 use crate::auth::auth_surface::AuthSurface;
 use crate::chat::chat_surface::ChatSurface;
 use contemporary::about_surface::about_surface;
@@ -10,33 +11,79 @@ use thegrid::session::session_manager::SessionManager;
 pub struct MainWindow {
     main_surface: Entity<ChatSurface>,
     auth_surface: Entity<AuthSurface>,
+    account_settings_surface: Entity<AccountSettingsSurface>,
     current_surface: Vec<MainWindowSurface>,
 }
 
-enum MainWindowSurface {
+#[derive(Clone)]
+pub enum MainWindowSurface {
     Main,
+    AccountSettings,
     About,
+}
+
+pub type SurfaceChangeHandler = dyn Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static;
+
+#[derive(Clone)]
+pub struct SurfaceChangeEvent {
+    pub change: SurfaceChange,
+}
+
+#[derive(Clone)]
+pub enum SurfaceChange {
+    Push(MainWindowSurface),
+    Pop,
+}
+
+impl From<MainWindowSurface> for SurfaceChange {
+    fn from(value: MainWindowSurface) -> Self {
+        SurfaceChange::Push(value)
+    }
 }
 
 impl MainWindow {
     pub fn new(cx: &mut App) -> Entity<MainWindow> {
-        cx.new(|cx| MainWindow {
-            main_surface: ChatSurface::new(cx),
-            auth_surface: AuthSurface::new(cx),
-            current_surface: vec![MainWindowSurface::Main],
+        cx.new(|cx| {
+            let handle_surface_change = cx.listener(Self::handle_surface_change);
+            let handle_surface_change_2 = cx.listener(Self::handle_surface_change);
+
+            MainWindow {
+                main_surface: ChatSurface::new(cx, handle_surface_change),
+                auth_surface: AuthSurface::new(cx),
+                account_settings_surface: AccountSettingsSurface::new(cx, handle_surface_change_2),
+                current_surface: vec![MainWindowSurface::Main],
+            }
         })
     }
 
     pub fn about_surface_open(&mut self, is_open: bool) -> &Self {
         if is_open {
-            self.current_surface.push(MainWindowSurface::About);
+            self.push_surface(MainWindowSurface::About);
         } else {
-            self.current_surface.pop();
+            self.pop_surface();
         }
         self
     }
 
-    pub fn log_out_triggered(&mut self) {}
+    fn handle_surface_change(
+        this: &mut MainWindow,
+        event: &SurfaceChangeEvent,
+        _: &mut Window,
+        _: &mut Context<Self>,
+    ) {
+        match &event.change {
+            SurfaceChange::Push(surface) => this.push_surface(surface.clone()),
+            SurfaceChange::Pop => this.pop_surface(),
+        }
+    }
+
+    pub fn push_surface(&mut self, surface: MainWindowSurface) {
+        self.current_surface.push(surface);
+    }
+
+    pub fn pop_surface(&mut self) {
+        self.current_surface.pop();
+    }
 }
 
 impl Render for MainWindow {
@@ -50,7 +97,8 @@ impl Render for MainWindow {
                         Some(_) => 0,
                         None => 1,
                     },
-                    MainWindowSurface::About => 2,
+                    MainWindowSurface::AccountSettings => 2,
+                    MainWindowSurface::About => 3,
                 },
             )
             .w_full()
@@ -58,6 +106,7 @@ impl Render for MainWindow {
             .animation(LiftAnimation::new())
             .page(self.main_surface.clone().into_any_element())
             .page(self.auth_surface.clone().into_any_element())
+            .page(self.account_settings_surface.clone().into_any_element())
             .page(
                 about_surface()
                     .on_back_click(cx.listener(|this, _, _, cx| {
