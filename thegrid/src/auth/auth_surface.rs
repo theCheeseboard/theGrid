@@ -32,11 +32,13 @@ use std::sync::Arc;
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
 use tracing::{error, info};
+use url::Url;
 use uuid::Uuid;
 
 #[derive(Clone, Debug)]
 enum AuthState {
     Idle,
+    Advanced,
     Connecting,
     ConnectionError,
     AuthRequired,
@@ -52,6 +54,8 @@ pub struct AuthSurface {
     matrix_id_field: Entity<TextField>,
     password_field: Entity<TextField>,
     token_field: Entity<TextField>,
+    username_field: Entity<TextField>,
+    homeserver_field: Entity<TextField>,
     state: AuthState,
     client: Option<Client>,
     login_types: Vec<LoginType>,
@@ -83,6 +87,18 @@ impl AuthSurface {
                     "token",
                     "".into(),
                     tr!("AUTH_TOKEN_PLACEHOLDER", "Token").into(),
+                ),
+                username_field: TextField::new(
+                    cx,
+                    "username",
+                    "".into(),
+                    tr!("AUTH_USERNAME_PLACEHOLDER", "Username").into(),
+                ),
+                homeserver_field: TextField::new(
+                    cx,
+                    "homeserver",
+                    "".into(),
+                    tr!("AUTH_HOMESERVER_PLACEHOLDER", "Homeserver").into(),
                 ),
                 state: AuthState::Idle,
                 client: None,
@@ -192,6 +208,93 @@ impl AuthSurface {
         cx.notify();
     }
 
+    fn advanced_login_clicked(&mut self, cx: &mut Context<Self>) {
+        self.state = AuthState::Advanced;
+        cx.notify();
+    }
+
+    fn trigger_advanced_login(&mut self, cx: &mut Context<Self>) {
+        let session_dir = self.session_dir(cx);
+        let store_dir = session_dir.join("store");
+        let homeserver_url = self.homeserver_field.read(cx).current_text(cx);
+        let Ok(homeserver_url) = homeserver_url
+            .parse::<Url>()
+            .or_else(|_| format!("https://{homeserver_url}/").parse::<Url>())
+        else {
+            error!("Unable to parse homeserver URL");
+            return;
+        };
+
+        std::fs::create_dir_all(&store_dir).unwrap();
+
+        cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
+            let client = cx
+                .spawn_tokio(async move {
+                    Client::builder()
+                        .homeserver_url(&homeserver_url)
+                        .sqlite_store(store_dir, None)
+                        .build()
+                        .await
+                })
+                .await;
+
+            match client {
+                Ok(client) => {
+                    let client_clone = client.clone();
+                    let login_types = cx
+                        .spawn_tokio(
+                            async move { client_clone.matrix_auth().get_login_types().await },
+                        )
+                        .await;
+
+                    match login_types {
+                        Ok(login_types) => {
+                            this.update(cx, |this, cx| {
+                                if !matches!(this.state, AuthState::Connecting) {
+                                    return;
+                                }
+
+                                this.client = Some(client);
+                                this.login_types = login_types.flows;
+                                this.state = AuthState::AuthRequired;
+                                cx.notify();
+                            })
+                            .unwrap();
+                        }
+                        Err(e) => {
+                            this.update(cx, |this, cx| {
+                                if !matches!(this.state, AuthState::Connecting) {
+                                    return;
+                                }
+
+                                this.state = AuthState::ConnectionError;
+                                error!("Unable to create client");
+                                cx.notify();
+                            })
+                            .unwrap();
+                        }
+                    }
+                }
+                Err(e) => {
+                    this.update(cx, |this, cx| {
+                        if !matches!(this.state, AuthState::Connecting) {
+                            return;
+                        }
+
+                        this.state = AuthState::ConnectionError;
+                        error!("Unable to create client");
+                        cx.notify();
+                    })
+                    .unwrap();
+                }
+            }
+        })
+        .detach();
+
+        self.state = AuthState::Connecting;
+        cx.notify();
+    }
+
     fn login_password_clicked(&mut self, cx: &mut Context<Self>) {
         let password = self.password_field.read(cx).current_text(cx).to_string();
         self.perform_login(LoginMethod::Password(password), cx);
@@ -238,7 +341,11 @@ impl AuthSurface {
         let default_device_name = default_device_name(cx);
         let client = self.client.clone().unwrap();
         let client_clone = client.clone();
-        let user_id = self.user_id.clone().unwrap().clone();
+        let username = self
+            .user_id
+            .clone()
+            .map(|user_id| user_id.localpart().to_string())
+            .unwrap_or_else(|| self.username_field.read(cx).current_text(cx).to_string());
         let session_uuid = self.session_uuid;
 
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
@@ -246,7 +353,7 @@ impl AuthSurface {
                 match login_method {
                     LoginMethod::Password(password) => client_clone
                         .matrix_auth()
-                        .login_username(user_id.localpart(), password.as_str()),
+                        .login_username(username, password.as_str()),
                     LoginMethod::SsoToken(sso_token) => {
                         client_clone.matrix_auth().login_token(&sso_token)
                     }
@@ -324,6 +431,36 @@ impl AuthSurface {
     ) -> impl IntoElement {
         match &self.state {
             AuthState::Idle => div().into_any_element(),
+            AuthState::Advanced => layer()
+                .flex()
+                .flex_col()
+                .p(px(8.))
+                .w_full()
+                .child(subtitle(tr!(
+                    "AUTH_POPOVER_ADVANCED_LOGIN",
+                    "Advanced Login"
+                )))
+                .child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap(px(8.))
+                        .child(tr!(
+                            "AUTH_POPOVER_ADVANCED_LOGIN_TEXT",
+                            "If your homeserver doesn't support server discovery, you can enter \
+                            its URL here to log in."
+                        ))
+                        .child(self.homeserver_field.clone().into_any_element())
+                        .child(self.username_field.clone().into_any_element())
+                        .child(
+                            button("advanced-login-popover-login")
+                                .child(icon_text("dialog-ok".into(), tr!("AUTH_LOG_IN").into()))
+                                .on_click(cx.listener(|this, _, _, cx| {
+                                    this.trigger_advanced_login(cx);
+                                })),
+                        ),
+                )
+                .into_any_element(),
             AuthState::Connecting => div()
                 .flex()
                 .items_center()
@@ -564,16 +701,28 @@ impl Render for AuthSurface {
                             .child(subtitle(tr!("AUTH_LOG_IN_TO_MATRIX", "Log in to Matrix")))
                             .child(self.matrix_id_field.clone().into_any_element())
                             .child(
-                                div().flex().child(div().flex_grow()).child(
-                                    button("log_in_button")
-                                        .child(icon_text(
-                                            "arrow-right".into(),
-                                            tr!("AUTH_LOG_IN", "Log In").into(),
-                                        ))
-                                        .on_click(cx.listener(|this, _, _, cx| {
-                                            this.login_clicked(cx);
-                                        })),
-                                ),
+                                div()
+                                    .flex()
+                                    .gap(px(4.))
+                                    .child(div().flex_grow())
+                                    .child(
+                                        button("advanced_log_in")
+                                            .child(tr!("AUTH_ADVANCED_LOG_IN", "Advanced Login..."))
+                                            .flat()
+                                            .on_click(cx.listener(|this, _, _, cx| {
+                                                this.advanced_login_clicked(cx)
+                                            })),
+                                    )
+                                    .child(
+                                        button("log_in_button")
+                                            .child(icon_text(
+                                                "arrow-right".into(),
+                                                tr!("AUTH_LOG_IN", "Log In").into(),
+                                            ))
+                                            .on_click(cx.listener(|this, _, _, cx| {
+                                                this.login_clicked(cx);
+                                            })),
+                                    ),
                             ),
                     )
                     .child(
@@ -588,17 +737,16 @@ impl Render for AuthSurface {
                                     .gap(px(9.))
                                     .child(
                                         grandstand("login-popover-grandstand")
-                                            .text(tr!(
-                                                "POPOVER_LOGIN",
-                                                "Log in to {{homeserver}}",
-                                                homeserver = self
-                                                    .user_id
-                                                    .clone()
-                                                    .map(|user_id| user_id
-                                                        .server_name()
-                                                        .to_string())
-                                                    .unwrap_or_default()
-                                            ))
+                                            .when_some(self.user_id.clone(), |david, user_id| {
+                                                david.text(tr!(
+                                                    "POPOVER_LOGIN_HOMESERVER",
+                                                    "Log in to {{homeserver}}",
+                                                    homeserver = user_id.server_name().to_string()
+                                                ))
+                                            })
+                                            .when_none(&self.user_id, |david| {
+                                                david.text(tr!("POPOVER_LOGIN", "Log in"))
+                                            })
                                             .on_back_click(cx.listener(|this, _, _, cx| {
                                                 this.client = None;
                                                 this.state = AuthState::Idle;
