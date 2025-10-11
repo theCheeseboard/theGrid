@@ -24,6 +24,7 @@ uuid = { workspace = true }
 async-channel = { workspace = true }
 image = { workspace = true }
 smallvec = { workspace = true }
+chrono = { workspace = true }
 
 [build-dependencies]
 cntp_i18n_gen = { workspace = true }

@@ -122,7 +122,6 @@ impl RenderOnce for Sidebar {
 
         let change_room_handler = self.on_change_room.unwrap().clone();
         let account = session_manager.current_account().read(cx);
-        let avatar_url = account.avatar_url();
 
         let theme = cx.global::<Theme>();
 

@@ -1,6 +1,6 @@
 mod account_cache;
 mod caches;
-mod devices_cache;
+pub mod devices_cache;
 pub mod error_handling;
 pub mod media_cache;
 pub mod session_manager;

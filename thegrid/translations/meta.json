@@ -143,21 +143,39 @@
     "plural": false,
     "description": null
   },
+  "DEVICES_OTHER_DEVICES": {
+    "context": "devices_settings.rs",
+    "definedIn": "src/account_settings/devices_settings.rs:142",
+    "plural": false,
+    "description": null
+  },
   "DEVICES_THIS_DEVICE": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:47",
+    "definedIn": "src/account_settings/devices_settings.rs:127",
+    "plural": false,
+    "description": null
+  },
+  "DEVICE_LAST_ACTIVITY": {
+    "context": "devices_settings.rs",
+    "definedIn": "src/account_settings/devices_settings.rs:205",
+    "plural": false,
+    "description": null
+  },
+  "DEVICE_VERIFY": {
+    "context": "devices_settings.rs",
+    "definedIn": "src/account_settings/devices_settings.rs:263",
     "plural": false,
     "description": null
   },
   "EMOJI_MATCH": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:300",
+    "definedIn": "src/auth/verification_popover.rs:341",
     "plural": false,
     "description": null
   },
   "EMOJI_NO_MATCH": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:334",
+    "definedIn": "src/auth/verification_popover.rs:375",
     "plural": false,
     "description": null
   },
@@ -169,31 +187,31 @@
   },
   "INCOMING_SELF_VERIFICATION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:229",
+    "definedIn": "src/chat/sidebar.rs:228",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:219",
+    "definedIn": "src/chat/sidebar.rs:218",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_ACCEPT": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:260",
+    "definedIn": "src/chat/sidebar.rs:259",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_DECLINE": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:304",
+    "definedIn": "src/chat/sidebar.rs:303",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:245",
+    "definedIn": "src/chat/sidebar.rs:244",
     "plural": false,
     "description": null
   },
@@ -301,7 +319,7 @@
   },
   "POPOVER_VERIFY": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:429",
+    "definedIn": "src/auth/verification_popover.rs:470",
     "plural": false,
     "description": null
   },
@@ -379,7 +397,7 @@
   },
   "ROOMS_SPACES": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:141",
+    "definedIn": "src/chat/sidebar.rs:140",
     "plural": false,
     "description": null
   },
@@ -427,7 +445,7 @@
   },
   "UNKNOWN_DEVICE": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:238",
+    "definedIn": "src/chat/sidebar.rs:237",
     "plural": false,
     "description": null
   },
@@ -439,97 +457,115 @@
   },
   "UNVERIFIED_DEVICES": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:410",
+    "definedIn": "src/chat/sidebar.rs:409",
     "plural": false,
     "description": null
   },
   "UNVERIFIED_DEVICES_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:417",
+    "definedIn": "src/chat/sidebar.rs:416",
     "plural": true,
     "description": null
   },
   "UNVERIFIED_DEVICES_VIEW_DEVICES": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:437",
+    "definedIn": "src/chat/sidebar.rs:436",
+    "plural": false,
+    "description": null
+  },
+  "UNVERIFIED_DEVICE_BADGE": {
+    "context": "devices_settings.rs",
+    "definedIn": "src/account_settings/devices_settings.rs:242",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_AWAITING_OK": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:442",
+    "definedIn": "src/auth/verification_popover.rs:483",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_AWAITING_OK_SPINNER": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:459",
+    "definedIn": "src/auth/verification_popover.rs:518",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_AWAITING_OK_TEXT": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:451",
+    "definedIn": "src/auth/verification_popover.rs:495",
+    "plural": false,
+    "description": null
+  },
+  "VERIFICATION_POPOVER_AWAITING_OK_US_TEXT": {
+    "context": "verification_popover.rs",
+    "definedIn": "src/auth/verification_popover.rs:503",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_CANCELLED": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:401",
+    "definedIn": "src/auth/verification_popover.rs:442",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_OK": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:216",
+    "definedIn": "src/auth/verification_popover.rs:257",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_OK_MESSAGE": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:225",
+    "definedIn": "src/auth/verification_popover.rs:266",
     "plural": false,
     "description": null
   },
   "VERIFICATION_SAS_EMOJI": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:273",
+    "definedIn": "src/auth/verification_popover.rs:314",
     "plural": false,
     "description": null
   },
   "VERIFICATION_SAS_EMOJI_DESCRIPTION": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:277",
+    "definedIn": "src/auth/verification_popover.rs:318",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:333",
+    "definedIn": "src/chat/sidebar.rs:332",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:340",
+    "definedIn": "src/chat/sidebar.rs:339",
+    "plural": false,
+    "description": null
+  },
+  "VERIFY_SESSION_DESCRIPTION_ADDITIONAL": {
+    "context": "devices_settings.rs",
+    "definedIn": "src/account_settings/devices_settings.rs:98",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_OTHER_DEVICE": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:355",
+    "definedIn": "src/chat/sidebar.rs:354",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_RECOVERY_KEY": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:375",
+    "definedIn": "src/chat/sidebar.rs:374",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_RESET_CRYPTO": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:397",
+    "definedIn": "src/chat/sidebar.rs:396",
     "plural": false,
     "description": null
   },

@@ -138,4 +138,14 @@ impl AccountCache {
     pub fn identity(&self) -> Option<UserIdentity> {
         self.identity.clone()
     }
+
+    pub fn we_are_verified(&self) -> bool {
+        if let Some(identity) = self.identity()
+            && identity.is_verified()
+        {
+            true
+        } else {
+            false
+        }
+    }
 }

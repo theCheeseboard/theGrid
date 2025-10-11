@@ -10,6 +10,7 @@ pub struct DevicesCache {
 
 enum CacheMutation {}
 
+#[derive(Clone)]
 pub struct CachedDevice {
     pub inner: Device,
     pub encryption_status: Option<matrix_sdk::encryption::identities::Device>,

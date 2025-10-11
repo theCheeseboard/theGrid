@@ -16,6 +16,7 @@ use gpui::{
     Window, div, px,
 };
 use gpui_tokio::Tokio;
+use matrix_sdk::encryption::identities::Device;
 use matrix_sdk::encryption::verification::VerificationRequestState;
 use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use thegrid::session::session_manager::SessionManager;
@@ -86,6 +87,43 @@ impl VerificationPopover {
         cx.notify()
     }
 
+    pub fn request_device_verification(
+        &mut self,
+        device: Device,
+        cx: &mut Context<VerificationPopover>,
+    ) {
+        self.verification_request = Some(String::default());
+
+        let session_manager = cx.global::<SessionManager>();
+        let verification_requests = session_manager.verification_requests();
+
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                if let Ok(verification_request) = cx
+                    .spawn_tokio(async move {
+                        device
+                            .request_verification_with_methods(vec![VerificationMethod::SasV1])
+                            .await
+                    })
+                    .await
+                {
+                    let verification_request_clone = verification_request.clone();
+                    let _ = verification_requests.update(cx, |requests, cx| {
+                        requests.notify_new_verification_request(verification_request_clone, cx);
+                    });
+                    let _ = weak_this.update(cx, |this, cx| {
+                        this.verification_request =
+                            Some(verification_request.flow_id().to_string());
+                        cx.notify()
+                    });
+                }
+            },
+        )
+        .detach();
+
+        cx.notify()
+    }
+
     pub fn clear_verification_request(&mut self) {
         self.verification_request = None;
     }
@@ -123,6 +161,9 @@ impl VerificationPopover {
 impl Render for VerificationPopover {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let session_manager = cx.global::<SessionManager>();
+        let account = session_manager.current_account().read(cx);
+        let verified = account.we_are_verified();
+
         let verification_request = session_manager
             .verification_requests()
             .read(cx)
@@ -447,19 +488,37 @@ impl Render for VerificationPopover {
                                             .flex()
                                             .flex_col()
                                             .gap(px(8.))
-                                            .child(tr!(
-                                                "VERIFICATION_POPOVER_AWAITING_OK_TEXT",
-                                                "We've sent a verification request to all of your \
-                                                 other devices. Go ahead and accept the \
-                                                 verification request on one of your other verified \
-                                                 devices to continue."
-                                            ))
-                                            .child(div().flex().gap(px(8.)).items_center().child(spinner().size(px(16.))).child(
-                                                tr!(
-                                                    "VERIFICATION_POPOVER_AWAITING_OK_SPINNER",
-                                                    "Waiting for other device to respond..."
-                                                ),
-                                            )),
+                                            .when_else(
+                                                verified,
+                                                |david| {
+                                                    david.child(tr!(
+                                                        "VERIFICATION_POPOVER_AWAITING_OK_TEXT",
+                                                        "We sent a verification request to that \
+                                                        device. Go ahead and accept it on that \
+                                                        device to continue."
+                                                    ))
+                                                },
+                                                |david| {
+                                                    david.child(tr!(
+                                                        "VERIFICATION_POPOVER_AWAITING_OK_US_TEXT",
+                                                        "We sent a verification request to all \
+                                                        of your other devices. Go ahead and accept \
+                                                        the verification request on one of your \
+                                                        other verified devices to continue."
+                                                    ))
+                                                },
+                                            )
+                                            .child(
+                                                div()
+                                                    .flex()
+                                                    .gap(px(8.))
+                                                    .items_center()
+                                                    .child(spinner().size(px(16.)))
+                                                    .child(tr!(
+                                                        "VERIFICATION_POPOVER_AWAITING_OK_SPINNER",
+                                                        "Waiting for other device to respond..."
+                                                    )),
+                                            ),
                                     )
                                     .into_any_element(),
                             ),
