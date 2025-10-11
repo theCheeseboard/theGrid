@@ -55,7 +55,7 @@
   },
   "ACCOUNT_SWITCHER_ERROR": {
     "context": "chat_surface.rs",
-    "definedIn": "src/chat/chat_surface.rs:147",
+    "definedIn": "src/chat/chat_surface.rs:148",
     "plural": false,
     "description": null
   },
@@ -138,8 +138,8 @@
     "description": null
   },
   "CLOSE": {
-    "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:238",
+    "context": "verification_popover.rs",
+    "definedIn": "src/auth/verification_popover.rs:450",
     "plural": false,
     "description": null
   },
@@ -247,13 +247,13 @@
   },
   "MAIN_CHAT_ERROR_TERMINAL": {
     "context": "chat_surface.rs",
-    "definedIn": "src/chat/chat_surface.rs:104",
+    "definedIn": "src/chat/chat_surface.rs:105",
     "plural": false,
     "description": null
   },
   "MAIN_CHAT_WELCOME": {
     "context": "chat_surface.rs",
-    "definedIn": "src/chat/chat_surface.rs:91",
+    "definedIn": "src/chat/chat_surface.rs:92",
     "plural": false,
     "description": null
   },

@@ -12,14 +12,12 @@ use contemporary::components::spinner::spinner;
 use contemporary::styling::theme::Theme;
 use contemporary::surface::surface;
 use gpui::prelude::FluentBuilder;
-use gpui::{
-    App, AppContext, BorrowAppContext, Context, Entity, InteractiveElement, IntoElement, Menu,
-    ParentElement, Render, Styled, Window, div, px,
-};
+use gpui::{App, AppContext, BorrowAppContext, Context, Entity, InteractiveElement, IntoElement, Menu, ParentElement, Render, Styled, Window, div, px, MenuItem};
 use std::fs::remove_dir_all;
 use std::rc::Rc;
 use thegrid::session::error_handling::ClientError;
 use thegrid::session::session_manager::SessionManager;
+use crate::actions::{AccountSettings, AccountSwitcher, LogOut};
 
 pub struct ChatSurface {
     application_menu: Entity<ApplicationMenu>,
@@ -36,7 +34,18 @@ impl ChatSurface {
                 cx,
                 Menu {
                     name: "Application Menu".into(),
-                    items: vec![],
+                    items: vec![
+                        MenuItem::action(
+                            tr!("ACCOUNT_ACCOUNT_SETTINGS"),
+                            AccountSettings,
+                        ),
+                        MenuItem::separator(),
+                        MenuItem::action(
+                            tr!("ACCOUNT_ACCOUNT_SWITCHER"),
+                            AccountSwitcher,
+                        ),
+                        MenuItem::action(tr!("ACCOUNT_LOG_OUT"), LogOut),
+                    ],
                 },
             ),
 
@@ -56,14 +65,6 @@ impl Render for ChatSurface {
 
         div().size_full().key_context("MainSurface").child(
             surface()
-                .actions(
-                    div()
-                        .occlude()
-                        .flex()
-                        .flex_grow()
-                        .gap(px(2.))
-                        .content_stretch(),
-                )
                 .child(
                     pager("chat-surface-root-pager", {
                         match session_manager.error() {
