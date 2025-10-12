@@ -61,11 +61,11 @@ fn mane() {
                             links: [
                                 (
                                     ApplicationLink::FileBug,
-                                    "https://github.com/vicr123/thegrid/issues",
+                                    "https://github.com/theCheeseboard/thegrid/issues",
                                 ),
                                 (
                                     ApplicationLink::SourceCode,
-                                    "https://github.com/vicr123/thegrid",
+                                    "https://github.com/theCheeseboard/thegrid",
                                 ),
                             ]
                             .into(),
