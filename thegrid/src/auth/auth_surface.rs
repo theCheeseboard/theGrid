@@ -387,6 +387,12 @@ impl AuthSurface {
                         serde_json::to_string(&matrix_session).unwrap(),
                     )
                     .unwrap();
+                    
+                    let homeserver_file = session_dir.join("homeserver");
+                    std::fs::write(
+                        homeserver_file,
+                        client.homeserver().to_string(),
+                    ).unwrap();
 
                     cx.update_global::<SessionManager, ()>(|session_manager, cx| {
                         session_manager.set_session(session_uuid, cx);

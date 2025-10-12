@@ -69,14 +69,22 @@ impl SessionManager {
             let store_dir = session.session_dir.join("store");
             let matrix_session = session.matrix_session;
 
+            let homeserver_file = session.session_dir.join("homeserver");
+            let homeserver = std::fs::read_to_string(homeserver_file);
+
             cx.spawn(async move |cx: &mut AsyncApp| {
                 let client = Tokio::spawn_result(cx, async move {
-                    Client::builder()
-                        .server_name(user_id.server_name())
-                        .sqlite_store(store_dir, None)
-                        .build()
-                        .await
-                        .map_err(|e| anyhow!(e))
+                    {
+                        if let Ok(homeserver) = homeserver {
+                            Client::builder().homeserver_url(homeserver)
+                        } else {
+                            Client::builder().server_name(user_id.server_name())
+                        }
+                    }
+                    .sqlite_store(store_dir, None)
+                    .build()
+                    .await
+                    .map_err(|e| anyhow!(e))
                 })
                 .unwrap()
                 .await
