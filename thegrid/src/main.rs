@@ -11,6 +11,7 @@ mod account_settings;
 mod mxc_image;
 
 use crate::actions::{AccountSettings, AccountSwitcher, LogOut, register_actions};
+use crate::chat::chat_input::bind_chat_input_keys;
 use crate::main_window::MainWindow;
 use cntp_i18n::{I18N_MANAGER, tr, tr_load};
 use cntp_icon_tool_macros::application_icon;
@@ -33,6 +34,7 @@ fn mane() {
         let bounds = Bounds::centered(None, size(px(800.0), px(600.0)), cx);
 
         setup_session_manager(cx);
+        bind_chat_input_keys(cx);
 
         let default_window_options = contemporary_window_options(cx, "theGrid".into());
         register_actions(cx);

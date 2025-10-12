@@ -1,3 +1,4 @@
+use crate::chat::chat_input::ChatInput;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::main_chat_surface::{ChangeRoomEvent, ChangeRoomHandler};
 use crate::chat::timeline_event::timeline_event;
@@ -30,6 +31,7 @@ pub struct ChatRoom {
     events: Vec<TimelineEvent>,
     pagination_status: Entity<RoomPaginationStatus>,
     on_change_room: Option<Rc<Box<ChangeRoomHandler>>>,
+    chat_input: Entity<ChatInput>,
 }
 
 impl ChatRoom {
@@ -43,6 +45,15 @@ impl ChatRoom {
                 hit_timeline_start: false,
             });
 
+            let enter_press_listener = cx.listener(|this: &mut Self, _, window, cx| {
+                this.send_pending_message(window, cx);
+            });
+            let chat_input = cx.new(|cx| {
+                let mut chat_input = ChatInput::new(cx);
+                chat_input.on_enter_press(enter_press_listener);
+                chat_input
+            });
+
             let session_manager = cx.global::<SessionManager>();
             let client = session_manager.client().unwrap();
             let client = client.read(cx);
@@ -53,6 +64,7 @@ impl ChatRoom {
                     events: Vec::new(),
                     pagination_status: pagination_status.clone(),
                     on_change_room: Some(Rc::new(Box::new(on_change_room))),
+                    chat_input,
                 };
             };
 
@@ -143,23 +155,43 @@ impl ChatRoom {
                 events: Vec::new(),
                 pagination_status: pagination_status.clone(),
                 on_change_room: Some(Rc::new(Box::new(on_change_room))),
+                chat_input,
             }
         })
+    }
+
+    pub fn send_pending_message(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let chat_input = self.chat_input.clone();
+        let room_id = self.room_id.clone();
+
+        cx.on_next_frame(window, move |_, window, cx| {
+            let message = chat_input.read(cx).text();
+            if message.is_empty() {
+                return;
+            }
+
+            let content = RoomMessageEventContent::text_plain(message.to_string());
+
+            let session_manager = cx.global::<SessionManager>();
+            let client = session_manager.client().unwrap().read(cx);
+            let room = client.get_room(&room_id).unwrap();
+
+            cx.spawn(async move |_, cx: &mut AsyncApp| {
+                let _ = cx
+                    .spawn_tokio(async move { room.send(content).await })
+                    .await;
+            })
+            .detach();
+
+            chat_input.update(cx, |message_field, _| message_field.reset())
+        });
     }
 }
 
 impl Render for ChatRoom {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let message_field = window.use_state(cx, |window, cx| {
-            let text_field = TextField::new(cx, "message-field", "".into(), "".into());
-            text_field.update(cx, |text_field, cx| {
-                text_field.borderless(true);
-            });
-            text_field
-        });
         let root_list_state =
             window.use_state(cx, |_, _| ListState::new(0, ListAlignment::Top, px(200.)));
-        let message_field = message_field.read(cx);
         let root_list_state = root_list_state.read(cx);
 
         let session_manager = cx.global::<SessionManager>();
@@ -177,9 +209,7 @@ impl Render for ChatRoom {
             );
         };
 
-        let message_field_clone = message_field.clone();
         let room_clone = room.clone();
-        let room_clone_2 = room.clone();
         let events = self.events.clone();
         if events.len() != root_list_state.item_count() {
             root_list_state.reset(events.len());
@@ -208,8 +238,7 @@ impl Render for ChatRoom {
                             events.get(i - 1).cloned()
                         };
 
-                        timeline_event(event, previous_event, room_clone_2.clone())
-                            .into_any_element()
+                        timeline_event(event, previous_event, room_clone.clone()).into_any_element()
                     })
                     .flex()
                     .flex_col()
@@ -276,29 +305,13 @@ impl Render for ChatRoom {
                             .p(px(2.))
                             .gap(px(2.))
                             .flex()
-                            .child(message_field.clone().into_any_element())
+                            .child(self.chat_input.clone().into_any_element())
                             .child(
                                 button("send_button")
                                     .child(icon("mail-send".into()))
-                                    .on_click(move |_, _, cx| {
-                                        let message = message_field_clone.read(cx).current_text(cx);
-                                        let content = RoomMessageEventContent::text_plain(
-                                            message.to_string(),
-                                        );
-                                        let room_clone = room_clone.clone();
-
-                                        cx.spawn(async move |cx| {
-                                            Tokio::spawn_result(cx, async move {
-                                                room_clone
-                                                    .send(content)
-                                                    .await
-                                                    .map_err(|e| anyhow!(e))
-                                            })
-                                            .unwrap()
-                                            .await;
-                                        })
-                                        .detach();
-                                    }),
+                                    .on_click(cx.listener(move |this, _, window, cx| {
+                                        this.send_pending_message(window, cx);
+                                    })),
                             ),
                     )
                 },

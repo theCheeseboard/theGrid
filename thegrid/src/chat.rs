@@ -1,3 +1,4 @@
+pub mod chat_input;
 mod chat_room;
 pub mod chat_surface;
 mod displayed_room;

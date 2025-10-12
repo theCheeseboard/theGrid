@@ -1,19 +1,19 @@
 {
   "ACCOUNT_ACCOUNT_SETTINGS": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:76",
+    "definedIn": "src/main.rs:78",
     "plural": false,
     "description": null
   },
   "ACCOUNT_ACCOUNT_SWITCHER": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:81",
+    "definedIn": "src/main.rs:83",
     "plural": false,
     "description": null
   },
   "ACCOUNT_LOG_OUT": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:84",
+    "definedIn": "src/main.rs:86",
     "plural": false,
     "description": null
   },
@@ -289,7 +289,7 @@
   },
   "MENU_ACCOUNT": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:73",
+    "definedIn": "src/main.rs:75",
     "plural": false,
     "description": null
   },
@@ -439,19 +439,19 @@
   },
   "ROOM_TOMBSTONED_NAVIGATE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:244",
+    "definedIn": "src/chat/chat_room.rs:273",
     "plural": false,
     "description": null
   },
   "ROOM_TOMBSTONED_TEXT": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:235",
+    "definedIn": "src/chat/chat_room.rs:264",
     "plural": false,
     "description": null
   },
   "ROOM_TOMBSTONED_TITLE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:228",
+    "definedIn": "src/chat/chat_room.rs:257",
     "plural": false,
     "description": null
   },
@@ -487,7 +487,7 @@
   },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:175",
+    "definedIn": "src/chat/chat_room.rs:207",
     "plural": false,
     "description": null
   },

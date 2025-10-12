@@ -8003,6 +8003,7 @@ dependencies = [
  "sysinfo 0.37.2",
  "tokio",
  "tracing",
+ "unicode-segmentation",
  "url",
  "uuid",
 ]
