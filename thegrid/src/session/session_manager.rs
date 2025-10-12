@@ -1,7 +1,7 @@
 use crate::session::account_cache::AccountCache;
 use crate::session::caches::Caches;
 use crate::session::devices_cache::DevicesCache;
-use crate::session::error_handling::{ClientError, handle_error};
+use crate::session::error_handling::{ClientError, TerminalClientError, handle_error};
 use crate::session::media_cache::MediaCache;
 use crate::session::verification_requests_cache::VerificationRequestsCache;
 use crate::tokio_helper::TokioHelper;
@@ -87,91 +87,103 @@ impl SessionManager {
                     .map_err(|e| anyhow!(e))
                 })
                 .unwrap()
-                .await
-                .unwrap();
+                .await;
 
-                let client_clone = client.clone();
-                Tokio::spawn_result(cx, async move {
-                    client_clone
-                        .matrix_auth()
-                        .restore_session(matrix_session, RoomLoadSettings::All)
+                match client {
+                    Ok(client) => {
+                        let client_clone = client.clone();
+                        Tokio::spawn_result(cx, async move {
+                            client_clone
+                                .matrix_auth()
+                                .restore_session(matrix_session, RoomLoadSettings::All)
+                                .await
+                                .map_err(|e| anyhow!(e))
+                        })
+                        .unwrap()
                         .await
-                        .map_err(|e| anyhow!(e))
-                })
-                .unwrap()
-                .await
-                .unwrap();
+                        .unwrap();
 
-                client.event_cache().subscribe().unwrap();
+                        client.event_cache().subscribe().unwrap();
 
-                let (tx_clear_error, rx_clear_error) = async_channel::bounded(1);
-                cx.spawn(async move |cx: &mut AsyncApp| {
-                    loop {
-                        if rx_clear_error.recv().await.is_err() {
-                            return;
-                        };
+                        let (tx_clear_error, rx_clear_error) = async_channel::bounded(1);
+                        cx.spawn(async move |cx: &mut AsyncApp| {
+                            loop {
+                                if rx_clear_error.recv().await.is_err() {
+                                    return;
+                                };
 
-                        if cx
-                            .update_global::<Self, ()>(|session_manager, cx| {
-                                session_manager.current_client_error = ClientError::None;
-                            })
-                            .is_err()
-                        {
-                            return;
-                        }
-                    }
-                })
-                .detach();
+                                if cx
+                                    .update_global::<Self, ()>(|session_manager, cx| {
+                                        session_manager.current_client_error = ClientError::None;
+                                    })
+                                    .is_err()
+                                {
+                                    return;
+                                }
+                            }
+                        })
+                        .detach();
 
-                let client_clone = client.clone();
-                cx.spawn(async move |cx: &mut AsyncApp| {
-                    loop {
-                        let client_clone = client_clone.clone();
-                        let tx_clear_error = tx_clear_error.clone();
-                        let sync_result = cx
-                            .spawn_tokio(async move {
-                                client_clone
-                                    .sync_with_callback(SyncSettings::default(), |_| {
-                                        let tx_clear_error = tx_clear_error.clone();
-                                        async move {
-                                            if tx_clear_error.send(()).await.is_err() {
-                                                return LoopCtrl::Break;
-                                            };
+                        let client_clone = client.clone();
+                        cx.spawn(async move |cx: &mut AsyncApp| {
+                            loop {
+                                let client_clone = client_clone.clone();
+                                let tx_clear_error = tx_clear_error.clone();
+                                let sync_result = cx
+                                    .spawn_tokio(async move {
+                                        client_clone
+                                            .sync_with_callback(SyncSettings::default(), |_| {
+                                                let tx_clear_error = tx_clear_error.clone();
+                                                async move {
+                                                    if tx_clear_error.send(()).await.is_err() {
+                                                        return LoopCtrl::Break;
+                                                    };
 
-                                            LoopCtrl::Continue
-                                        }
+                                                    LoopCtrl::Continue
+                                                }
+                                            })
+                                            .await
                                     })
                                     .await
-                            })
-                            .await
-                            .unwrap_err();
+                                    .unwrap_err();
 
-                        let error = handle_error(&sync_result);
-                        match error {
-                            ClientError::None => {}
-                            ClientError::Terminal(_) => {
-                                error!("Sync error: {sync_result:?}");
-                                let _ = cx.update_global::<Self, ()>(|session_manager, cx| {
-                                    session_manager.current_client_error = error;
-                                });
+                                let error = handle_error(&sync_result);
+                                match error {
+                                    ClientError::None => {}
+                                    ClientError::Terminal(_) => {
+                                        error!("Sync error: {sync_result:?}");
+                                        let _ =
+                                            cx.update_global::<Self, ()>(|session_manager, cx| {
+                                                session_manager.current_client_error = error;
+                                            });
 
-                                return;
+                                        return;
+                                    }
+                                    ClientError::Recoverable(_) => {
+                                        let _ =
+                                            cx.update_global::<Self, ()>(|session_manager, cx| {
+                                                session_manager.current_client_error = error;
+                                            });
+                                    }
+                                }
                             }
-                            ClientError::Recoverable(_) => {
-                                let _ = cx.update_global::<Self, ()>(|session_manager, cx| {
-                                    session_manager.current_client_error = error;
-                                });
-                            }
-                        }
+                        })
+                        .detach();
+
+                        cx.update_global::<Self, ()>(|session_manager, cx| {
+                            session_manager.current_caches = Some(Caches::new(&client, cx));
+                            session_manager.current_session_client = Some(cx.new(|_| client));
+                        })
+                        .unwrap();
                     }
-                })
-                .detach();
-
-                cx.update_global::<Self, ()>(|session_manager, cx| {
-                    session_manager.current_caches = Some(Caches::new(&client, cx));
-                    session_manager.current_session_client = Some(cx.new(|_| client));
-                })
-                .unwrap();
+                    Err(error) => {
+                        error!("Unable to create client: {error:?}");
+                        let _ = cx.update_global::<Self, ()>(|session_manager, cx| {
+                            session_manager.current_client_error =
+                                ClientError::Terminal(TerminalClientError::UnknownError);
+                        });
+                    }
+                }
             })
             .detach();
         }
