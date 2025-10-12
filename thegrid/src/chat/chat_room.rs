@@ -3,7 +3,7 @@ use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::emoji_flyout::{EmojiFlyout, EmojiSelectedEvent};
 use crate::chat::main_chat_surface::{ChangeRoomEvent, ChangeRoomHandler};
 use crate::chat::timeline_event::timeline_event;
-use cntp_i18n::tr;
+use cntp_i18n::{tr, trn};
 use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
@@ -21,12 +21,15 @@ use gpui_tokio::Tokio;
 use log::{error, info};
 use matrix_sdk::deserialized_responses::TimelineEvent;
 use matrix_sdk::event_cache::RoomPaginationStatus;
-use matrix_sdk::ruma::OwnedRoomId;
+use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
+use matrix_sdk::ruma::{OwnedRoomId, OwnedUserId};
 use std::rc::Rc;
+use std::time::Duration;
 use thegrid::admonition::{AdmonitionSeverity, admonition};
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
+use tokio::sync::broadcast::error::RecvError;
 
 pub struct ChatRoom {
     room_id: OwnedRoomId,
@@ -35,6 +38,7 @@ pub struct ChatRoom {
     on_change_room: Option<Rc<Box<ChangeRoomHandler>>>,
     chat_input: Entity<ChatInput>,
     emoji_flyout: Option<Entity<EmojiFlyout>>,
+    typing_users: Vec<RoomMember>,
 }
 
 impl ChatRoom {
@@ -51,9 +55,13 @@ impl ChatRoom {
             let enter_press_listener = cx.listener(|this: &mut Self, _, window, cx| {
                 this.send_pending_message(window, cx);
             });
+            let text_changed_listener = cx.listener(|this: &mut Self, _, window, cx| {
+                this.text_changed(window, cx);
+            });
             let chat_input = cx.new(|cx| {
                 let mut chat_input = ChatInput::new(cx);
                 chat_input.on_enter_press(enter_press_listener);
+                chat_input.on_text_changed(text_changed_listener);
                 chat_input
             });
 
@@ -69,13 +77,48 @@ impl ChatRoom {
                     on_change_room: Some(Rc::new(Box::new(on_change_room))),
                     chat_input,
                     emoji_flyout: None,
+                    typing_users: Vec::new(),
                 };
             };
 
+            let (typing_notification_guard, mut typing_notification) =
+                room.subscribe_to_typing_notifications();
+            let room_clone = room.clone();
+            cx.spawn(
+                async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                    loop {
+                        match typing_notification.recv().await {
+                            Ok(notification) => {
+                                let mut typing_users = Vec::new();
+                                for user in notification {
+                                    let member =
+                                        room_clone.get_member(&user).await.unwrap().unwrap();
+                                    typing_users.push(member);
+                                }
+                                if weak_this
+                                    .update(cx, |this, cx| {
+                                        this.typing_users = typing_users;
+                                        cx.notify();
+                                    })
+                                    .is_err()
+                                {
+                                    return;
+                                };
+                            }
+                            Err(_) => {
+                                return;
+                            }
+                        }
+                    }
+                },
+            )
+            .detach();
+
             let pagination_status_clone = pagination_status.clone();
             cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                let room_clone = room.clone();
                 let event_cache = Tokio::spawn(cx, async move {
-                    room.event_cache().await.map_err(|e| anyhow!(e))
+                    room_clone.event_cache().await.map_err(|e| anyhow!(e))
                 })
                 .unwrap()
                 .await
@@ -151,6 +194,9 @@ impl ChatRoom {
                 } else {
                     error!("Unable to get event cache for room")
                 }
+
+                // Manually drop this here to move it into the closure
+                drop(typing_notification_guard);
             })
             .detach();
 
@@ -161,6 +207,7 @@ impl ChatRoom {
                 on_change_room: Some(Rc::new(Box::new(on_change_room))),
                 chat_input,
                 emoji_flyout: None,
+                typing_users: Vec::new(),
             }
         })
     }
@@ -190,6 +237,19 @@ impl ChatRoom {
 
             chat_input.update(cx, |message_field, _| message_field.reset())
         });
+    }
+
+    pub fn text_changed(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let session_manager = cx.global::<SessionManager>();
+        let client = session_manager.client().unwrap().read(cx);
+        let room = client.get_room(&self.room_id).unwrap();
+
+        cx.spawn(async move |_, cx: &mut AsyncApp| {
+            let _ = cx
+                .spawn_tokio(async move { room.typing_notice(true).await })
+                .await;
+        })
+        .detach();
     }
 }
 
@@ -226,6 +286,8 @@ impl Render for ChatRoom {
 
         let window_size = window.viewport_size();
         let inset = window.client_inset().unwrap_or_else(|| px(0.));
+
+        let typing_users = &self.typing_users;
 
         div()
             .flex()
@@ -308,68 +370,125 @@ impl Render for ChatRoom {
                     )
                 },
                 |david| {
-                    david.child(
-                        layer()
-                            .p(px(2.))
-                            .gap(px(2.))
-                            .flex()
-                            .child(self.chat_input.clone().into_any_element())
-                            .child(button("emoji").child("😀").flat().on_click(cx.listener(
-                                |this, _, _, cx| {
-                                    let emoji_selected_listener = cx.listener(
-                                        |this, event: &EmojiSelectedEvent, window, cx| {
-                                            this.chat_input.update(cx, |chat_input, cx| {
-                                                chat_input.type_string(&event.emoji, window, cx);
-                                                cx.notify()
-                                            });
-                                            this.emoji_flyout = None;
-                                            cx.notify()
-                                        },
-                                    );
-                                    this.emoji_flyout = Some(cx.new(|cx| {
-                                        let mut emoji_flyout = EmojiFlyout::new(cx);
-                                        emoji_flyout
-                                            .set_emoji_selected_listener(emoji_selected_listener);
-                                        emoji_flyout
-                                    }));
-                                    cx.notify()
-                                },
-                            )))
-                            .child(
-                                button("send_button")
-                                    .child(icon("mail-send".into()))
-                                    .on_click(cx.listener(move |this, _, window, cx| {
-                                        this.send_pending_message(window, cx);
-                                    })),
-                            )
-                            .when_some(self.emoji_flyout.clone(), |david, emoji_flyout| {
-                                david.child(deferred(
-                                    anchored().position(Point::new(px(0.), px(0.))).child(
-                                        div()
-                                            .top_0()
-                                            .left_0()
-                                            .w(window_size.width - inset - inset)
-                                            .h(window_size.height - inset - inset)
-                                            .m(inset)
-                                            .occlude()
-                                            .on_any_mouse_down(cx.listener(
-                                                move |this, _, _, cx| {
-                                                    this.emoji_flyout = None;
-                                                    cx.notify()
-                                                },
-                                            ))
-                                            .child(
-                                                anchored()
-                                                    .position(Point::new(
-                                                        window_size.width,
-                                                        window_size.height,
-                                                    ))
-                                                    .child(emoji_flyout.into_any_element()),
-                                            ),
-                                    ),
-                                ))
+                    david
+                        .child(
+                            div().flex().child(match typing_users.len() {
+                                0 => "".to_string(),
+                                1 => tr!(
+                                    "TYPING_NOTIFICATION_ONE",
+                                    "{{user}} is typing...",
+                                    user = typing_users[0]
+                                        .display_name()
+                                        .unwrap_or_default()
+                                        .to_string()
+                                )
+                                .into(),
+                                2 => tr!(
+                                    "TYPING_NOTIFICATION_TWO",
+                                    "{{user}} and {{user2}} are typing...",
+                                    user = typing_users[0]
+                                        .display_name()
+                                        .unwrap_or_default()
+                                        .to_string(),
+                                    user2 = typing_users[1]
+                                        .display_name()
+                                        .unwrap_or_default()
+                                        .to_string()
+                                )
+                                .into(),
+                                3 => tr!(
+                                    "TYPING_NOTIFICATION_THREE",
+                                    "{{user}}, {{user2}} and {{user3}} are typing...",
+                                    user = typing_users[0]
+                                        .display_name()
+                                        .unwrap_or_default()
+                                        .to_string(),
+                                    user2 = typing_users[1]
+                                        .display_name()
+                                        .unwrap_or_default()
+                                        .to_string(),
+                                    user3 = typing_users[2]
+                                        .display_name()
+                                        .unwrap_or_default()
+                                        .to_string()
+                                )
+                                .into(),
+                                _ => trn!(
+                                    "TYPING_NOTIFICATION",
+                                    "{{count}} user is typing...",
+                                    "{{count}} users are typing...",
+                                    count = typing_users.len() as isize
+                                )
+                                .into(),
                             }),
-                    )
+                        )
+                        .child(
+                            layer()
+                                .p(px(2.))
+                                .gap(px(2.))
+                                .flex()
+                                .child(self.chat_input.clone().into_any_element())
+                                .child(button("emoji").child("😀").flat().on_click(cx.listener(
+                                    |this, _, _, cx| {
+                                        let emoji_selected_listener = cx.listener(
+                                            |this, event: &EmojiSelectedEvent, window, cx| {
+                                                this.chat_input.update(cx, |chat_input, cx| {
+                                                    chat_input.type_string(
+                                                        &event.emoji,
+                                                        window,
+                                                        cx,
+                                                    );
+                                                    cx.notify()
+                                                });
+                                                this.emoji_flyout = None;
+                                                cx.notify()
+                                            },
+                                        );
+                                        this.emoji_flyout = Some(cx.new(|cx| {
+                                            let mut emoji_flyout = EmojiFlyout::new(cx);
+                                            emoji_flyout.set_emoji_selected_listener(
+                                                emoji_selected_listener,
+                                            );
+                                            emoji_flyout
+                                        }));
+                                        cx.notify()
+                                    },
+                                )))
+                                .child(
+                                    button("send_button")
+                                        .child(icon("mail-send".into()))
+                                        .on_click(cx.listener(move |this, _, window, cx| {
+                                            this.send_pending_message(window, cx);
+                                        })),
+                                )
+                                .when_some(self.emoji_flyout.clone(), |david, emoji_flyout| {
+                                    david.child(deferred(
+                                        anchored().position(Point::new(px(0.), px(0.))).child(
+                                            div()
+                                                .top_0()
+                                                .left_0()
+                                                .w(window_size.width - inset - inset)
+                                                .h(window_size.height - inset - inset)
+                                                .m(inset)
+                                                .occlude()
+                                                .on_any_mouse_down(cx.listener(
+                                                    move |this, _, _, cx| {
+                                                        this.emoji_flyout = None;
+                                                        cx.notify()
+                                                    },
+                                                ))
+                                                .child(
+                                                    anchored()
+                                                        .position(Point::new(
+                                                            window_size.width,
+                                                            window_size.height,
+                                                        ))
+                                                        .child(emoji_flyout.into_any_element()),
+                                                ),
+                                        ),
+                                    ))
+                                }),
+                        )
                 },
             )
     }

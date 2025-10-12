@@ -79,6 +79,13 @@
   "SORRY": "Sorry",
   "TERMINAL_ERROR_UNKNOWN_ERROR": "An unknown error occurred.",
   "TERMINAL_ERROR_UNKNOWN_TOKEN": "This session was logged out by another device.",
+  "TYPING_NOTIFICATION": {
+    "one": "{{count}} user is typing...",
+    "other": "{{count}} users are typing..."
+  },
+  "TYPING_NOTIFICATION_ONE": "{{user}} is typing...",
+  "TYPING_NOTIFICATION_THREE": "{{user}}, {{user2}} and {{user3}} are typing...",
+  "TYPING_NOTIFICATION_TWO": "{{user}} and {{user2}} are typing...",
   "UNKNOWN_DEVICE": "Unknown Device",
   "UNKNOWN_ROOM": "Unknown Room",
   "UNVERIFIED_DEVICES": "Unverified devices",

@@ -56,9 +56,12 @@ pub fn bind_chat_input_keys(cx: &mut App) {
 }
 
 pub type EnterPressListener = dyn Fn(&EnterPressEvent, &mut Window, &mut App) + 'static;
+pub type TextChangedListener = dyn Fn(&TextChangedEvent, &mut Window, &mut App) + 'static;
 
 #[derive(Clone)]
 pub struct EnterPressEvent;
+#[derive(Clone)]
+pub struct TextChangedEvent;
 
 pub struct ChatInput {
     text: String,
@@ -70,7 +73,9 @@ pub struct ChatInput {
     last_layout: Option<Vec<ShapedLine>>,
     last_bounds: Option<Bounds<Pixels>>,
     is_selecting: bool,
+
     enter_press_listener: Option<Rc<Box<EnterPressListener>>>,
+    text_changed_listener: Option<Rc<Box<TextChangedListener>>>,
 }
 
 impl ChatInput {
@@ -86,6 +91,7 @@ impl ChatInput {
             last_bounds: None,
             is_selecting: false,
             enter_press_listener: None,
+            text_changed_listener: None,
         }
     }
 
@@ -121,6 +127,13 @@ impl ChatInput {
         listener: impl Fn(&EnterPressEvent, &mut Window, &mut App) + 'static,
     ) {
         self.enter_press_listener = Some(Rc::new(Box::new(listener)));
+    }
+
+    pub fn on_text_changed(
+        &mut self,
+        listener: impl Fn(&TextChangedEvent, &mut Window, &mut App) + 'static,
+    ) {
+        self.text_changed_listener = Some(Rc::new(Box::new(listener)));
     }
 
     pub fn offset_from_utf16(&self, offset: usize) -> usize {
@@ -423,7 +436,7 @@ impl EntityInputHandler for ChatInput {
         &mut self,
         range_utf16: Option<Range<usize>>,
         new_text: &str,
-        _: &mut Window,
+        window: &mut Window,
         cx: &mut Context<Self>,
     ) {
         let range = range_utf16
@@ -433,9 +446,14 @@ impl EntityInputHandler for ChatInput {
             .unwrap_or(self.selected_range.clone());
 
         self.text =
-            (self.text[0..range.start].to_owned() + new_text + &self.text[range.end..]).into();
+            self.text[0..range.start].to_owned() + new_text + &self.text[range.end..];
         self.selected_range = range.start + new_text.len()..range.start + new_text.len();
         self.marked_range.take();
+        
+        if let Some(text_changed_listener) = &self.text_changed_listener {
+            text_changed_listener(&TextChangedEvent, window, cx);
+        }
+        
         cx.notify();
     }
 
@@ -444,7 +462,7 @@ impl EntityInputHandler for ChatInput {
         range_utf16: Option<Range<usize>>,
         new_text: &str,
         new_selected_range_utf16: Option<Range<usize>>,
-        _window: &mut Window,
+        window: &mut Window,
         cx: &mut Context<Self>,
     ) {
         let range = range_utf16
@@ -454,7 +472,7 @@ impl EntityInputHandler for ChatInput {
             .unwrap_or(self.selected_range.clone());
 
         self.text =
-            (self.text[0..range.start].to_owned() + new_text + &self.text[range.end..]).into();
+            self.text[0..range.start].to_owned() + new_text + &self.text[range.end..];
         if !new_text.is_empty() {
             self.marked_range = Some(range.start..range.start + new_text.len());
         } else {
@@ -465,7 +483,11 @@ impl EntityInputHandler for ChatInput {
             .map(|range_utf16| self.range_from_utf16(range_utf16))
             .map(|new_range| new_range.start + range.start..new_range.end + range.end)
             .unwrap_or_else(|| range.start + new_text.len()..range.start + new_text.len());
-
+        
+        if let Some(text_changed_listener) = &self.text_changed_listener {
+            text_changed_listener(&TextChangedEvent, window, cx);
+        }
+        
         cx.notify();
     }
 
