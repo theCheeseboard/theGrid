@@ -240,16 +240,19 @@ impl ChatRoom {
     }
 
     pub fn text_changed(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let session_manager = cx.global::<SessionManager>();
-        let client = session_manager.client().unwrap().read(cx);
-        let room = client.get_room(&self.room_id).unwrap();
+        let room_id = self.room_id.clone();
+        cx.on_next_frame(window, move |_, window, cx| {
+            let session_manager = cx.global::<SessionManager>();
+            let client = session_manager.client().unwrap().read(cx);
+            let room = client.get_room(&room_id).unwrap();
 
-        cx.spawn(async move |_, cx: &mut AsyncApp| {
-            let _ = cx
-                .spawn_tokio(async move { room.typing_notice(true).await })
-                .await;
-        })
-        .detach();
+            cx.spawn(async move |_, cx: &mut AsyncApp| {
+                let _ = cx
+                    .spawn_tokio(async move { room.typing_notice(true).await })
+                    .await;
+            })
+            .detach();
+        });
     }
 }
 
@@ -430,24 +433,19 @@ impl Render for ChatRoom {
                                 .child(self.chat_input.clone().into_any_element())
                                 .child(button("emoji").child("😀").flat().on_click(cx.listener(
                                     |this, _, _, cx| {
-                                        let emoji_selected_listener = cx.listener(
-                                            |this, event: &EmojiSelectedEvent, window, cx| {
-                                                this.chat_input.update(cx, |chat_input, cx| {
-                                                    chat_input.type_string(
-                                                        &event.emoji,
-                                                        window,
-                                                        cx,
-                                                    );
-                                                    cx.notify()
-                                                });
-                                                this.emoji_flyout = None;
-                                                cx.notify()
-                                            },
-                                        );
+                                        let chat_input = this.chat_input.clone();
                                         this.emoji_flyout = Some(cx.new(|cx| {
                                             let mut emoji_flyout = EmojiFlyout::new(cx);
                                             emoji_flyout.set_emoji_selected_listener(
-                                                emoji_selected_listener,
+                                                move |event, window, cx| {
+                                                    chat_input.update(cx, |chat_input, cx| {
+                                                        chat_input.type_string(
+                                                            &event.emoji,
+                                                            window,
+                                                            cx,
+                                                        );
+                                                    });
+                                                },
                                             );
                                             emoji_flyout
                                         }));
