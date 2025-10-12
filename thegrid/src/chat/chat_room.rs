@@ -1,5 +1,6 @@
 use crate::chat::chat_input::ChatInput;
 use crate::chat::displayed_room::DisplayedRoom;
+use crate::chat::emoji_flyout::{EmojiFlyout, EmojiSelectedEvent};
 use crate::chat::main_chat_surface::{ChangeRoomEvent, ChangeRoomHandler};
 use crate::chat::timeline_event::timeline_event;
 use cntp_i18n::tr;
@@ -12,8 +13,9 @@ use contemporary::components::text_field::TextField;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, Context, Entity, IntoElement, ListAlignment, ListOffset, ListState,
-    ParentElement, Render, Styled, WeakEntity, Window, div, list, px,
+    App, AppContext, AsyncApp, Context, Entity, InteractiveElement, IntoElement, ListAlignment,
+    ListOffset, ListState, ParentElement, Point, Render, Styled, WeakEntity, Window, anchored,
+    deferred, div, list, px,
 };
 use gpui_tokio::Tokio;
 use log::{error, info};
@@ -32,6 +34,7 @@ pub struct ChatRoom {
     pagination_status: Entity<RoomPaginationStatus>,
     on_change_room: Option<Rc<Box<ChangeRoomHandler>>>,
     chat_input: Entity<ChatInput>,
+    emoji_flyout: Option<Entity<EmojiFlyout>>,
 }
 
 impl ChatRoom {
@@ -65,6 +68,7 @@ impl ChatRoom {
                     pagination_status: pagination_status.clone(),
                     on_change_room: Some(Rc::new(Box::new(on_change_room))),
                     chat_input,
+                    emoji_flyout: None,
                 };
             };
 
@@ -156,6 +160,7 @@ impl ChatRoom {
                 pagination_status: pagination_status.clone(),
                 on_change_room: Some(Rc::new(Box::new(on_change_room))),
                 chat_input,
+                emoji_flyout: None,
             }
         })
     }
@@ -218,6 +223,9 @@ impl Render for ChatRoom {
                 offset_in_item: px(0.),
             })
         }
+
+        let window_size = window.viewport_size();
+        let inset = window.client_inset().unwrap_or_else(|| px(0.));
 
         div()
             .flex()
@@ -306,13 +314,61 @@ impl Render for ChatRoom {
                             .gap(px(2.))
                             .flex()
                             .child(self.chat_input.clone().into_any_element())
+                            .child(button("emoji").child("😀").flat().on_click(cx.listener(
+                                |this, _, _, cx| {
+                                    let emoji_selected_listener = cx.listener(
+                                        |this, event: &EmojiSelectedEvent, window, cx| {
+                                            this.chat_input.update(cx, |chat_input, cx| {
+                                                chat_input.type_string(&event.emoji, window, cx);
+                                                cx.notify()
+                                            });
+                                            this.emoji_flyout = None;
+                                            cx.notify()
+                                        },
+                                    );
+                                    this.emoji_flyout = Some(cx.new(|cx| {
+                                        let mut emoji_flyout = EmojiFlyout::new(cx);
+                                        emoji_flyout
+                                            .set_emoji_selected_listener(emoji_selected_listener);
+                                        emoji_flyout
+                                    }));
+                                    cx.notify()
+                                },
+                            )))
                             .child(
                                 button("send_button")
                                     .child(icon("mail-send".into()))
                                     .on_click(cx.listener(move |this, _, window, cx| {
                                         this.send_pending_message(window, cx);
                                     })),
-                            ),
+                            )
+                            .when_some(self.emoji_flyout.clone(), |david, emoji_flyout| {
+                                david.child(deferred(
+                                    anchored().position(Point::new(px(0.), px(0.))).child(
+                                        div()
+                                            .top_0()
+                                            .left_0()
+                                            .w(window_size.width - inset - inset)
+                                            .h(window_size.height - inset - inset)
+                                            .m(inset)
+                                            .occlude()
+                                            .on_any_mouse_down(cx.listener(
+                                                move |this, _, _, cx| {
+                                                    this.emoji_flyout = None;
+                                                    cx.notify()
+                                                },
+                                            ))
+                                            .child(
+                                                anchored()
+                                                    .position(Point::new(
+                                                        window_size.width,
+                                                        window_size.height,
+                                                    ))
+                                                    .child(emoji_flyout.into_any_element()),
+                                            ),
+                                    ),
+                                ))
+                            }),
                     )
                 },
             )

@@ -112,6 +112,10 @@ impl ChatInput {
         self.is_selecting = false;
     }
 
+    pub fn type_string(&mut self, text: &str, window: &mut Window, cx: &mut Context<Self>) {
+        self.replace_text_in_range(None, text, window, cx);
+    }
+
     pub fn on_enter_press(
         &mut self,
         listener: impl Fn(&EnterPressEvent, &mut Window, &mut App) + 'static,

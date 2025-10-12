@@ -439,19 +439,19 @@
   },
   "ROOM_TOMBSTONED_NAVIGATE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:273",
+    "definedIn": "src/chat/chat_room.rs:281",
     "plural": false,
     "description": null
   },
   "ROOM_TOMBSTONED_TEXT": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:264",
+    "definedIn": "src/chat/chat_room.rs:272",
     "plural": false,
     "description": null
   },
   "ROOM_TOMBSTONED_TITLE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:257",
+    "definedIn": "src/chat/chat_room.rs:265",
     "plural": false,
     "description": null
   },
@@ -487,7 +487,7 @@
   },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:207",
+    "definedIn": "src/chat/chat_room.rs:212",
     "plural": false,
     "description": null
   },

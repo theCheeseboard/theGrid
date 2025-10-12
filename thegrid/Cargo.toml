@@ -26,6 +26,7 @@ image = { workspace = true }
 smallvec = { workspace = true }
 chrono = { workspace = true }
 unicode-segmentation = { workspace = true }
+emojis = { workspace = true }
 
 [build-dependencies]
 cntp_i18n_gen = { workspace = true }
