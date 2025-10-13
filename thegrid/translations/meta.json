@@ -168,8 +168,8 @@
     "description": null
   },
   "CLOSE": {
-    "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:238",
+    "context": "verification_popover.rs",
+    "definedIn": "src/auth/verification_popover.rs:450",
     "plural": false,
     "description": null
   },
