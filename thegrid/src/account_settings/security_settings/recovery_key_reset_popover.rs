@@ -80,6 +80,7 @@ impl RecoveryKeyResetPopover {
         let client = session_manager.client().unwrap().read(cx).clone();
         let encryption = client.encryption();
         let recovery = encryption.recovery();
+        let backups = encryption.backups();
 
         self.state = RecoveryKeyResetState::Processing;
         cx.notify();
@@ -88,13 +89,21 @@ impl RecoveryKeyResetPopover {
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 let result = cx
                     .spawn_tokio(async move {
-                        if passphrase.is_empty() {
-                            recovery.reset_key().await
+                        if backups.fetch_exists_on_server().await.unwrap() {
+                            if passphrase.is_empty() {
+                                recovery.reset_key().await
+                            } else {
+                                recovery
+                                    .reset_key()
+                                    .with_passphrase(passphrase.as_str())
+                                    .await
+                            }
                         } else {
-                            recovery
-                                .reset_key()
-                                .with_passphrase(passphrase.as_str())
-                                .await
+                            if passphrase.is_empty() {
+                                recovery.enable().await
+                            } else {
+                                recovery.enable().with_passphrase(passphrase.as_str()).await
+                            }
                         }
                     })
                     .await;
@@ -205,6 +214,20 @@ impl Render for RecoveryKeyResetPopover {
                                                 recovery passphrase in lieu of the recovery key \
                                                 to recover your encrypted messages."
                                             ))
+                                            .child(
+                                                admonition()
+                                                    .severity(AdmonitionSeverity::Warning)
+                                                    .title(tr!("HEADS_UP"))
+                                                    .child(tr!(
+                                                        "KEY_RESET_PASSPHRASE_WARNING",
+                                                        "Avoid using your account password as the \
+                                                        recovery passphrase. If someone gains \
+                                                        knowledge of your account password, they \
+                                                        will be able to both log into your Matrix \
+                                                        account, decrypt all of your messages, and \
+                                                        will also be able to impersonate you."
+                                                    )),
+                                            )
                                             .child(self.passphrase_field.clone())
                                             .when_some(self.error.as_ref(), |david, error| {
                                                 let error_text = match error {
@@ -357,7 +380,7 @@ impl Render for RecoveryKeyResetPopover {
                                                 button("finish")
                                                     .child(icon_text(
                                                         "dialog-ok".into(),
-                                                        tr!("DONE", "Done").into(),
+                                                        tr!("DONE").into(),
                                                     ))
                                                     .on_click(cx.listener(
                                                         move |this, _, _, cx| {

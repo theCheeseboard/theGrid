@@ -8,7 +8,9 @@ mod main_window;
 mod utilities;
 
 mod account_settings;
+mod identity_reset;
 mod mxc_image;
+mod uiaa_client;
 
 use crate::actions::{AccountSettings, AccountSwitcher, LogOut, register_actions};
 use crate::chat::chat_input::bind_chat_input_keys;

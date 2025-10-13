@@ -1,6 +1,6 @@
+use crate::auth::emoji_flyout::{EmojiFlyout, EmojiSelectedEvent};
 use crate::chat::chat_input::ChatInput;
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::emoji_flyout::{EmojiFlyout, EmojiSelectedEvent};
 use crate::chat::main_chat_surface::{ChangeRoomEvent, ChangeRoomHandler};
 use crate::chat::timeline_event::timeline_event;
 use cntp_i18n::{tr, trn};

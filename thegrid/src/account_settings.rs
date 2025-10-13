@@ -49,16 +49,21 @@ impl AccountSettingsSurface {
         cx: &mut App,
         on_surface_change: impl Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static,
     ) -> Entity<Self> {
+        let on_surface_change = Rc::new(Box::new(on_surface_change));
+        let on_surface_change_2 = on_surface_change.clone();
         cx.new(|cx| Self {
             current_page: 0,
+            on_surface_change: Rc::new(Box::new(move |event, window, cx| {
+                on_surface_change(event, window, cx)
+            })),
 
             profile_settings: ProfileSettings::new(cx),
-            security_settings: SecuritySettings::new(cx),
+            security_settings: SecuritySettings::new(cx, move |event, window, cx| {
+                on_surface_change_2(event, window, cx)
+            }),
             notifications_settings: NotificationsSettings::new(cx),
             devices_settings: DevicesSettings::new(cx),
             ignored_users_settings: IgnoredUsersSettings::new(cx),
-
-            on_surface_change: Rc::new(Box::new(on_surface_change)),
         })
     }
 

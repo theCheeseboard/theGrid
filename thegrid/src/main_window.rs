@@ -1,6 +1,7 @@
 use crate::account_settings::{AccountSettingsPage, AccountSettingsSurface};
 use crate::auth::auth_surface::AuthSurface;
 use crate::chat::chat_surface::ChatSurface;
+use crate::identity_reset::IdentityResetSurface;
 use contemporary::about_surface::about_surface;
 use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
@@ -12,6 +13,7 @@ pub struct MainWindow {
     main_surface: Entity<ChatSurface>,
     auth_surface: Entity<AuthSurface>,
     account_settings_surface: Entity<AccountSettingsSurface>,
+    identity_reset_surface: Entity<IdentityResetSurface>,
     current_surface: Vec<MainWindowSurface>,
 }
 
@@ -19,6 +21,7 @@ pub struct MainWindow {
 pub enum MainWindowSurface {
     Main,
     AccountSettings(AccountSettingsPage),
+    IdentityReset,
     About,
 }
 
@@ -46,11 +49,13 @@ impl MainWindow {
         cx.new(|cx| {
             let handle_surface_change = cx.listener(Self::handle_surface_change);
             let handle_surface_change_2 = cx.listener(Self::handle_surface_change);
+            let handle_surface_change_3 = cx.listener(Self::handle_surface_change);
 
             MainWindow {
                 main_surface: ChatSurface::new(cx, handle_surface_change),
                 auth_surface: AuthSurface::new(cx),
                 account_settings_surface: AccountSettingsSurface::new(cx, handle_surface_change_2),
+                identity_reset_surface: IdentityResetSurface::new(cx, handle_surface_change_3),
                 current_surface: vec![MainWindowSurface::Main],
             }
         })
@@ -107,7 +112,8 @@ impl Render for MainWindow {
                         None => 1,
                     },
                     MainWindowSurface::AccountSettings(_) => 2,
-                    MainWindowSurface::About => 3,
+                    MainWindowSurface::IdentityReset => 3,
+                    MainWindowSurface::About => 4,
                 },
             )
             .w_full()
@@ -116,6 +122,7 @@ impl Render for MainWindow {
             .page(self.main_surface.clone().into_any_element())
             .page(self.auth_surface.clone().into_any_element())
             .page(self.account_settings_surface.clone().into_any_element())
+            .page(self.identity_reset_surface.clone().into_any_element())
             .page(
                 about_surface()
                     .on_back_click(cx.listener(|this, _, _, cx| {

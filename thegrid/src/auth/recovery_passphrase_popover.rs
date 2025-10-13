@@ -14,6 +14,7 @@ use gpui::{
     App, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
     div, px,
 };
+use matrix_sdk::encryption::recovery::RecoveryState::Enabled;
 use thegrid::admonition::{AdmonitionSeverity, admonition};
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
@@ -29,6 +30,7 @@ enum RecoveryState {
     Recovering,
     Error(String),
     Complete,
+    CompleteWithIncompleteRecovery,
 }
 
 impl RecoveryPassphrasePopover {
@@ -58,6 +60,7 @@ impl RecoveryPassphrasePopover {
 
         let session_manager = cx.global::<SessionManager>();
         let client = session_manager.client().unwrap().read(cx).clone();
+        let recovery = client.encryption().recovery();
         let recovery_key = self
             .recovery_passphrase_field
             .read(cx)
@@ -80,10 +83,17 @@ impl RecoveryPassphrasePopover {
                         cx.notify();
                     })
                 } else {
-                    weak_this.update(cx, |this, cx| {
-                        this.recovery_state = RecoveryState::Complete;
-                        cx.notify();
-                    })
+                    if recovery.state() == Enabled {
+                        weak_this.update(cx, |this, cx| {
+                            this.recovery_state = RecoveryState::Complete;
+                            cx.notify();
+                        })
+                    } else {
+                        weak_this.update(cx, |this, cx| {
+                            this.recovery_state = RecoveryState::CompleteWithIncompleteRecovery;
+                            cx.notify();
+                        })
+                    }
                 }
             },
         )
@@ -107,6 +117,7 @@ impl Render for RecoveryPassphrasePopover {
                         RecoveryState::Recovering => 1,
                         RecoveryState::Error(_) => 0,
                         RecoveryState::Complete => 2,
+                        RecoveryState::CompleteWithIncompleteRecovery => 3,
                     },
                 )
                 .size_full()
@@ -236,6 +247,66 @@ impl Render for RecoveryPassphrasePopover {
                                                     .child(icon_text(
                                                         "dialog-ok".into(),
                                                         tr!("CLOSE", "Close").into(),
+                                                    ))
+                                                    .on_click(cx.listener(|this, _, _, cx| {
+                                                        this.visible = false;
+                                                        this.recovery_state = RecoveryState::Idle;
+                                                        cx.notify()
+                                                    })),
+                                            ),
+                                    )
+                                    .into_any_element(),
+                            ),
+                        )
+                        .into_any_element(),
+                )
+                .page(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap(px(9.))
+                        .child(
+                            grandstand("recovery-passphrase-popover-grandstand")
+                                .text(tr!(
+                                    "POPOVER_RECOVERY_PASSPHRASE_GRANDSTAND",
+                                    "Verify with Recovery Key"
+                                ))
+                                .on_back_click(cx.listener(move |this, _, _, cx| {
+                                    this.visible = false;
+                                    this.recovery_state = RecoveryState::Idle;
+                                    cx.notify()
+                                })),
+                        )
+                        .child(
+                            constrainer("recovery-passphrase-popover-constrainer").child(
+                                layer()
+                                    .flex()
+                                    .flex_col()
+                                    .p(px(8.))
+                                    .w_full()
+                                    .child(subtitle(tr!(
+                                        "RECOVERY_PASSPHRASE_POPOVER_CORRUPT",
+                                        "Your account recovery data is corrupt"
+                                    )))
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .flex_col()
+                                            .gap(px(8.))
+                                            .child(tr!(
+                                                "RECOVERY_PASSPHRASE_POPOVER_CORRUPT_MESSAGE",
+                                                "The recovery data for your account is corrupt. To \
+                                                recover from this state, you need to reset the \
+                                                recovery key from a verified session that has all \
+                                                of your encryption data. If you don't have one, \
+                                                you will need to reset your cryptographic identity \
+                                                from Account Settings."
+                                            ))
+                                            .child(
+                                                button("recovery-passphrase-popover-ok")
+                                                    .child(icon_text(
+                                                        "dialog-ok".into(),
+                                                        tr!("SORRY", "Sorry").into(),
                                                     ))
                                                     .on_click(cx.listener(|this, _, _, cx| {
                                                         this.visible = false;

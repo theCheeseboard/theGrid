@@ -5,6 +5,9 @@ pub mod recovery_key_reset_popover;
 use crate::account_settings::security_settings::key_export_popover::KeyExportPopover;
 use crate::account_settings::security_settings::key_import_popover::KeyImportPopover;
 use crate::account_settings::security_settings::recovery_key_reset_popover::RecoveryKeyResetPopover;
+use crate::main_window::{
+    MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
+};
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
@@ -20,20 +23,26 @@ use gpui::{
     Render, Styled, WeakEntity, Window, div, px,
 };
 use matrix_sdk::encryption::recovery::RecoveryState;
+use std::rc::Rc;
 use thegrid::session::session_manager::SessionManager;
 
 pub struct SecuritySettings {
     recovery_key_reset_popover: Entity<RecoveryKeyResetPopover>,
     key_export_popover: Entity<KeyExportPopover>,
     key_import_popover: Entity<KeyImportPopover>,
+    on_surface_change: Rc<Box<SurfaceChangeHandler>>,
 }
 
 impl SecuritySettings {
-    pub fn new(cx: &mut App) -> Entity<Self> {
+    pub fn new(
+        cx: &mut App,
+        on_surface_change: impl Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static,
+    ) -> Entity<Self> {
         cx.new(|cx| Self {
             recovery_key_reset_popover: cx.new(|cx| RecoveryKeyResetPopover::new(cx)),
             key_export_popover: cx.new(|cx| KeyExportPopover::new(cx)),
             key_import_popover: cx.new(|cx| KeyImportPopover::new(cx)),
+            on_surface_change: Rc::new(Box::new(on_surface_change)),
         })
     }
 
@@ -151,7 +160,18 @@ impl Render for SecuritySettings {
                                                 .into(),
                                             ))
                                             .destructive()
-                                            .on_click(cx.listener(|this, _, _, cx| {})),
+                                            .on_click(cx.listener(|this, _, window, cx| {
+                                                (this.on_surface_change)(
+                                                    &SurfaceChangeEvent {
+                                                        change: SurfaceChange::Push(
+                                                            MainWindowSurface::IdentityReset,
+                                                        ),
+                                                    },
+                                                    window,
+                                                    cx,
+                                                );
+                                                cx.notify();
+                                            })),
                                     ),
                             ),
                     )
