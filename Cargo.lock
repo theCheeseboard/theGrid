@@ -7999,6 +7999,7 @@ dependencies = [
  "cntp_i18n_gen",
  "cntp_icon_tool_macros",
  "contemporary",
+ "directories",
  "emojis",
  "gpui",
  "gpui_tokio",

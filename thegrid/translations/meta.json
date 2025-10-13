@@ -245,6 +245,84 @@
     "plural": false,
     "description": null
   },
+  "KEY_EXPORT_DESCRIPTION": {
+    "context": "key_export_popover.rs",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:163",
+    "plural": false,
+    "description": null
+  },
+  "KEY_EXPORT_OPTIONS": {
+    "context": "key_export_popover.rs",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:154",
+    "plural": false,
+    "description": null
+  },
+  "KEY_EXPORT_PASSWORD": {
+    "context": "key_export_popover.rs",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:38",
+    "plural": false,
+    "description": null
+  },
+  "KEY_EXPORT_PASSWORD_CONFIRM": {
+    "context": "key_export_popover.rs",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:44",
+    "plural": false,
+    "description": null
+  },
+  "KEY_EXPORT_TITLE": {
+    "context": "key_export_popover.rs",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:140",
+    "plural": false,
+    "description": null
+  },
+  "KEY_IMPORT_DESCRIPTION": {
+    "context": "key_import_popover.rs",
+    "definedIn": "src/account_settings/security_settings/key_import_popover.rs:145",
+    "plural": false,
+    "description": null
+  },
+  "KEY_IMPORT_ERROR_INVALID_MAC": {
+    "context": "key_import_popover.rs",
+    "definedIn": "src/account_settings/security_settings/key_import_popover.rs:154",
+    "plural": false,
+    "description": null
+  },
+  "KEY_IMPORT_ERROR_MESSAGE": {
+    "context": "key_import_popover.rs",
+    "definedIn": "src/account_settings/security_settings/key_import_popover.rs:158",
+    "plural": false,
+    "description": null
+  },
+  "KEY_IMPORT_ERROR_TITLE": {
+    "context": "key_import_popover.rs",
+    "definedIn": "src/account_settings/security_settings/key_import_popover.rs:168",
+    "plural": false,
+    "description": null
+  },
+  "KEY_IMPORT_IMPORT": {
+    "context": "security_settings.rs",
+    "definedIn": "src/account_settings/security_settings.rs:36",
+    "plural": false,
+    "description": null
+  },
+  "KEY_IMPORT_OPTIONS": {
+    "context": "key_import_popover.rs",
+    "definedIn": "src/account_settings/security_settings/key_import_popover.rs:136",
+    "plural": false,
+    "description": null
+  },
+  "KEY_IMPORT_PASSWORD": {
+    "context": "key_import_popover.rs",
+    "definedIn": "src/account_settings/security_settings/key_import_popover.rs:41",
+    "plural": false,
+    "description": null
+  },
+  "KEY_IMPORT_TITLE": {
+    "context": "key_import_popover.rs",
+    "definedIn": "src/account_settings/security_settings/key_import_popover.rs:122",
+    "plural": false,
+    "description": null
+  },
   "LOG_OUT": {
     "context": "logout_popover.rs",
     "definedIn": "src/auth/logout_popover.rs:154",
@@ -455,9 +533,33 @@
     "plural": false,
     "description": null
   },
-  "SECURITY_PROFILE": {
+  "SECURITY_KEY_BACKUP": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:47",
+    "definedIn": "src/account_settings/security_settings.rs:83",
+    "plural": false,
+    "description": null
+  },
+  "SECURITY_KEY_BACKUP_DESCRIPTION": {
+    "context": "security_settings.rs",
+    "definedIn": "src/account_settings/security_settings.rs:85",
+    "plural": false,
+    "description": null
+  },
+  "SECURITY_KEY_BACKUP_EXPORT": {
+    "context": "security_settings.rs",
+    "definedIn": "src/account_settings/security_settings.rs:101",
+    "plural": false,
+    "description": null
+  },
+  "SECURITY_KEY_BACKUP_IMPORT": {
+    "context": "security_settings.rs",
+    "definedIn": "src/account_settings/security_settings.rs:121",
+    "plural": false,
+    "description": null
+  },
+  "SECURITY_KEY_EXPORT_WARNING": {
+    "context": "key_export_popover.rs",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:175",
     "plural": false,
     "description": null
   },
