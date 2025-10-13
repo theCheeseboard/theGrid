@@ -1,8 +1,10 @@
 mod key_export_popover;
 mod key_import_popover;
+pub mod recovery_key_reset_popover;
 
 use crate::account_settings::security_settings::key_export_popover::KeyExportPopover;
 use crate::account_settings::security_settings::key_import_popover::KeyImportPopover;
+use crate::account_settings::security_settings::recovery_key_reset_popover::RecoveryKeyResetPopover;
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
@@ -12,12 +14,16 @@ use contemporary::components::layer::layer;
 use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
 use directories::UserDirs;
+use gpui::prelude::FluentBuilder;
 use gpui::{
     App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, PathPromptOptions,
     Render, Styled, WeakEntity, Window, div, px,
 };
+use matrix_sdk::encryption::recovery::RecoveryState;
+use thegrid::session::session_manager::SessionManager;
 
 pub struct SecuritySettings {
+    recovery_key_reset_popover: Entity<RecoveryKeyResetPopover>,
     key_export_popover: Entity<KeyExportPopover>,
     key_import_popover: Entity<KeyImportPopover>,
 }
@@ -25,6 +31,7 @@ pub struct SecuritySettings {
 impl SecuritySettings {
     pub fn new(cx: &mut App) -> Entity<Self> {
         cx.new(|cx| Self {
+            recovery_key_reset_popover: cx.new(|cx| RecoveryKeyResetPopover::new(cx)),
             key_export_popover: cx.new(|cx| KeyExportPopover::new(cx)),
             key_import_popover: cx.new(|cx| KeyImportPopover::new(cx)),
         })
@@ -56,6 +63,11 @@ impl Render for SecuritySettings {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.global::<Theme>();
 
+        let session_manager = cx.global::<SessionManager>();
+        let client = session_manager.client().unwrap().read(cx);
+        let recovery = client.encryption().recovery();
+        let recovery_not_set_up = recovery.state() == RecoveryState::Disabled;
+
         div()
             .bg(theme.background)
             .w_full()
@@ -74,6 +86,75 @@ impl Render for SecuritySettings {
                     .w_full()
                     .p(px(8.))
                     .gap(px(8.))
+                    .child(
+                        layer()
+                            .flex()
+                            .flex_col()
+                            .p(px(8.))
+                            .w_full()
+                            .child(subtitle(tr!("SECURITY_ENCRYPTION", "Encryption")))
+                            .child(div().child(tr!(
+                                "SECURITY_ENCRYPTION_DESCRIPTION",
+                                "Set up a recovery key to ensure you don't lose access to your \
+                                encrypted messages"
+                            )))
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .bg(theme.button_background)
+                                    .rounded(theme.border_radius)
+                                    .child(
+                                        button("key-setup")
+                                            .when_else(
+                                                recovery_not_set_up,
+                                                |button| {
+                                                    button.child(icon_text(
+                                                        "configure".into(),
+                                                        tr!(
+                                                            "SECURITY_RECOVERY_KEY_SETUP",
+                                                            "Set up Recovery Key"
+                                                        )
+                                                        .into(),
+                                                    ))
+                                                },
+                                                |button| {
+                                                    button.child(icon_text(
+                                                        "edit-rename".into(),
+                                                        tr!(
+                                                            "SECURITY_RECOVERY_KEY_RESET",
+                                                            "Reset Recovery Key"
+                                                        )
+                                                        .into(),
+                                                    ))
+                                                },
+                                            )
+                                            .on_click(cx.listener(|this, _, _, cx| {
+                                                this.recovery_key_reset_popover.update(
+                                                    cx,
+                                                    |recovery_key_reset_popover, cx| {
+                                                        recovery_key_reset_popover.open(cx);
+                                                        cx.notify()
+                                                    },
+                                                );
+                                                cx.notify()
+                                            })),
+                                    )
+                                    .child(
+                                        button("key-reset")
+                                            .child(icon_text(
+                                                "view-refresh".into(),
+                                                tr!(
+                                                    "SECURITY_IDENTITY_RESET",
+                                                    "Reset Cryptographic Identity"
+                                                )
+                                                .into(),
+                                            ))
+                                            .destructive()
+                                            .on_click(cx.listener(|this, _, _, cx| {})),
+                                    ),
+                            ),
+                    )
                     .child(
                         layer()
                             .flex()
@@ -132,5 +213,6 @@ impl Render for SecuritySettings {
             )
             .child(self.key_export_popover.clone())
             .child(self.key_import_popover.clone())
+            .child(self.recovery_key_reset_popover.clone())
     }
 }

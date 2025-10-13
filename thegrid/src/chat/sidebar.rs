@@ -1,4 +1,5 @@
 use crate::account_settings::AccountSettingsPage;
+use crate::account_settings::security_settings::recovery_key_reset_popover::RecoveryKeyResetPopover;
 use crate::auth::recovery_passphrase_popover::RecoveryPassphrasePopover;
 use crate::auth::verification_popover::VerificationPopover;
 use crate::chat::displayed_room::DisplayedRoom;
@@ -20,6 +21,7 @@ use gpui::{
     px, rgb,
 };
 use gpui_tokio::Tokio;
+use matrix_sdk::encryption::recovery::RecoveryState;
 use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use std::rc::Rc;
 use thegrid::admonition::{AdmonitionSeverity, admonition};
@@ -38,7 +40,8 @@ pub struct Sidebar {
 enum SidebarAlert {
     None,
     IncomingVerificationRequest(VerificationRequestDetails),
-    VerifySession,
+    SetupRecovery,
+    VerifySession(bool),
     UnverifiedDevices(usize, Option<Rc<Box<SurfaceChangeHandler>>>),
     ClientError(RecoverableClientError),
 }
@@ -87,14 +90,20 @@ impl Sidebar {
             );
         }
 
+        let client = session_manager.client().unwrap().read(cx);
+        let recovery = client.encryption().recovery();
+        if recovery.state() == RecoveryState::Disabled {
+            return SidebarAlert::SetupRecovery;
+        }
+
         let account = session_manager.current_account().read(cx);
+        let devices = session_manager.devices().read(cx);
         if let Some(identity) = account.identity()
             && !identity.is_verified()
         {
-            return SidebarAlert::VerifySession;
+            return SidebarAlert::VerifySession(devices.is_last_device());
         }
 
-        let devices = session_manager.devices().read(cx);
         let unverified_devices = devices.unverified_devices();
         if !unverified_devices.is_empty() {
             return SidebarAlert::UnverifiedDevices(
@@ -215,6 +224,10 @@ impl RenderOnce for SidebarAlert {
         let verification_popover = window.use_state(cx, |_, cx| VerificationPopover::new(cx));
         let verification_popover_clone = verification_popover.clone();
 
+        let recovery_key_reset_popover =
+            window.use_state(cx, |_, cx| RecoveryKeyResetPopover::new(cx));
+        let recovery_key_reset_popover_clone = recovery_key_reset_popover.clone();
+
         let recovery_passphrase_popover =
             window.use_state(cx, |_, cx| RecoveryPassphrasePopover::new(cx));
         let recovery_passphrase_popover_clone = recovery_passphrase_popover.clone();
@@ -274,7 +287,7 @@ impl RenderOnce for SidebarAlert {
                                                             "INCOMING_VERIFICATION_ACCEPT",
                                                             "Verify Now"
                                                         )
-                                                        .into(),
+                                                            .into(),
                                                     ))
                                                     .on_click(move |_, _, cx| {
                                                         let verification_request =
@@ -293,10 +306,10 @@ impl RenderOnce for SidebarAlert {
                                                                     .await
                                                                     .map_err(|e| anyhow!(e))
                                                             })
-                                                            .unwrap()
-                                                            .await
+                                                                .unwrap()
+                                                                .await
                                                         })
-                                                        .detach();
+                                                            .detach();
 
                                                         verification_popover.update(
                                                             cx,
@@ -318,7 +331,7 @@ impl RenderOnce for SidebarAlert {
                                                             "INCOMING_VERIFICATION_DECLINE",
                                                             "Don't Verify"
                                                         )
-                                                        .into(),
+                                                            .into(),
                                                     ))
                                                     .on_click(move |_, _, cx| {
                                                         let verification_request =
@@ -332,16 +345,59 @@ impl RenderOnce for SidebarAlert {
                                                                     .cancel()
                                                                     .await
                                                             })
-                                                            .await
+                                                                .await
                                                         })
-                                                        .detach()
+                                                            .detach()
                                                     }),
                                             ),
                                     ),
                             ),
                     )
                 }
-                SidebarAlert::VerifySession => div().p(px(4.)).child(
+                SidebarAlert::SetupRecovery => div().p(px(4.)).child(
+                    admonition()
+                        .severity(AdmonitionSeverity::Warning)
+                        .title(tr!("SETUP_RECOVERY", "Set up recovery"))
+                        .child(
+                            div()
+                                .flex()
+                                .flex_col()
+                                .gap(px(4.))
+                                .child(tr!(
+                                    "SETUP_RECOVERY_DESCRIPTION",
+                                    "Set up a recovery key for your account so you don't lose \
+                                    access to your encrypted messages",
+                                ))
+                                .child(
+                                    div()
+                                        .flex()
+                                        .flex_col()
+                                        .rounded(theme.border_radius)
+                                        .bg(theme.button_background)
+                                        .child(
+                                            button("setup-now")
+                                                .child(icon_text(
+                                                    "configure".into(),
+                                                    tr!(
+                                                        "SETUP_RECOVERY_NOW",
+                                                        "Set up now"
+                                                    )
+                                                        .into(),
+                                                ))
+                                                .on_click(move |_, _, cx| {
+                                                    recovery_key_reset_popover.update(cx,
+                                                          |recovery_key_reset_popover,
+                                                           cx| {
+                                                              recovery_key_reset_popover
+                                                                  .open(cx);
+                                                              cx.notify();
+                                                          })
+                                                }),
+                                        )
+                                ),
+                        ),
+                ),
+                SidebarAlert::VerifySession(is_last_device) => div().p(px(4.)).child(
                     admonition()
                         .severity(AdmonitionSeverity::Warning)
                         .title(tr!("VERIFY_SESSION", "Verify Session"))
@@ -361,26 +417,28 @@ impl RenderOnce for SidebarAlert {
                                         .flex_col()
                                         .rounded(theme.border_radius)
                                         .bg(theme.button_background)
-                                        .child(
-                                            button("verify-now")
-                                                .child(icon_text(
-                                                    "edit-copy".into(),
-                                                    tr!(
+                                        .when(!is_last_device, |david| {
+                                            david.child(
+                                                button("verify-now")
+                                                    .child(icon_text(
+                                                        "edit-copy".into(),
+                                                        tr!(
                                                         "VERIFY_SESSION_OTHER_DEVICE",
                                                         "Verify with another verified device"
                                                     )
-                                                    .into(),
-                                                ))
-                                                .on_click(move |_, _, cx| {
-                                                    verification_popover.update(
-                                                        cx,
-                                                        |verification_popover, cx| {
-                                                            verification_popover
-                                                                .trigger_outgoing_verification(cx)
-                                                        },
-                                                    );
-                                                }),
-                                        )
+                                                            .into(),
+                                                    ))
+                                                    .on_click(move |_, _, cx| {
+                                                        verification_popover.update(
+                                                            cx,
+                                                            |verification_popover, cx| {
+                                                                verification_popover
+                                                                    .trigger_outgoing_verification(cx)
+                                                            },
+                                                        );
+                                                    }),
+                                            )
+                                        })
                                         .child(
                                             button("verify-recovery")
                                                 .child(icon_text(
@@ -389,7 +447,7 @@ impl RenderOnce for SidebarAlert {
                                                         "VERIFY_SESSION_RECOVERY_KEY",
                                                         "Enter Recovery Key"
                                                     )
-                                                    .into(),
+                                                        .into(),
                                                 ))
                                                 .on_click(move |_, _, cx| {
                                                     recovery_passphrase_popover.update(
@@ -411,7 +469,7 @@ impl RenderOnce for SidebarAlert {
                                                         "VERIFY_SESSION_RESET_CRYPTO",
                                                         "Reset Recovery Key"
                                                     )
-                                                    .into(),
+                                                        .into(),
                                                 ))
                                                 .on_click(move |_, _, cx| {}),
                                         ),
@@ -451,7 +509,7 @@ impl RenderOnce for SidebarAlert {
                                                         "UNVERIFIED_DEVICES_VIEW_DEVICES",
                                                         "View Devices"
                                                     )
-                                                    .into(),
+                                                        .into(),
                                                 ))
                                                 .on_click(move |_, window, cx| {
                                                     if let Some(handler) = handler.clone() {
@@ -477,5 +535,6 @@ impl RenderOnce for SidebarAlert {
             })
             .child(verification_popover_clone.clone().into_any_element())
             .child(recovery_passphrase_popover_clone.clone().into_any_element())
+            .child(recovery_key_reset_popover_clone.clone().into_any_element())
     }
 }

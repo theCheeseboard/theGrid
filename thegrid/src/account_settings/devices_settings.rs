@@ -1,3 +1,4 @@
+use crate::account_settings::security_settings::recovery_key_reset_popover::RecoveryKeyResetPopover;
 use crate::auth::verification_popover::VerificationPopover;
 use chrono::{DateTime, Local};
 use cntp_i18n::tr;
@@ -15,6 +16,7 @@ use gpui::{
     Render, RenderOnce, Styled, Window, div, px, rgba,
 };
 use matrix_sdk::encryption::identities::Device;
+use matrix_sdk::encryption::recovery::RecoveryState;
 use matrix_sdk::ruma::OwnedDeviceId;
 use std::rc::Rc;
 use thegrid::admonition::{AdmonitionSeverity, admonition};
@@ -22,12 +24,14 @@ use thegrid::session::devices_cache::CachedDevice;
 use thegrid::session::session_manager::SessionManager;
 
 pub struct DevicesSettings {
+    recovery_key_reset_popover: Entity<RecoveryKeyResetPopover>,
     verification_popover: Entity<VerificationPopover>,
 }
 
 impl DevicesSettings {
     pub fn new(cx: &mut App) -> Entity<Self> {
         cx.new(|cx| Self {
+            recovery_key_reset_popover: cx.new(|cx| RecoveryKeyResetPopover::new(cx)),
             verification_popover: cx.new(|cx| VerificationPopover::new(cx)),
         })
     }
@@ -56,6 +60,7 @@ impl Render for DevicesSettings {
         let verified = account.we_are_verified();
 
         let client = session_manager.client().unwrap().read(cx).clone();
+        let recovery_not_set_up = client.encryption().recovery().state() == RecoveryState::Disabled;
 
         let devices = session_manager.devices().read(cx);
         let mut device_list = devices.devices();
@@ -83,7 +88,41 @@ impl Render for DevicesSettings {
                     .w_full()
                     .p(px(8.))
                     .gap(px(8.))
-                    .when(!verified, |david| {
+                    .when(recovery_not_set_up, |david| {
+                        david.child(
+                            admonition()
+                                .severity(AdmonitionSeverity::Warning)
+                                .title(tr!("SETUP_RECOVERY"))
+                                .child(
+                                    div()
+                                        .flex()
+                                        .flex_col()
+                                        .gap(px(4.))
+                                        .child(tr!("SETUP_RECOVERY_DESCRIPTION"))
+                                        .child(
+                                            div().flex().child(div().flex_grow()).child(
+                                                button("setup-now")
+                                                    .child(icon_text(
+                                                        "configure".into(),
+                                                        tr!("SETUP_RECOVERY_NOW").into(),
+                                                    ))
+                                                    .on_click(cx.listener(
+                                                        move |this, _, _, cx| {
+                                                            this.recovery_key_reset_popover.update(
+                                                                cx,
+                                                                |popover, cx| {
+                                                                    popover.open(cx);
+                                                                    cx.notify();
+                                                                },
+                                                            )
+                                                        },
+                                                    )),
+                                            ),
+                                        ),
+                                ),
+                        )
+                    })
+                    .when(!verified && !recovery_not_set_up, |david| {
                         david.child(
                             admonition()
                                 .severity(AdmonitionSeverity::Warning)

@@ -1,11 +1,12 @@
-use std::time::Duration;
 use crate::tokio_helper::TokioHelper;
 use gpui::{App, AppContext, AsyncApp, Entity, WeakEntity};
 use matrix_sdk::Client;
 use matrix_sdk::ruma::api::client::device::Device;
+use std::time::Duration;
 
 pub struct DevicesCache {
     devices: Vec<CachedDevice>,
+    pub is_last_device: bool,
 }
 
 enum CacheMutation {}
@@ -50,16 +51,25 @@ impl DevicesCache {
                             });
                         }
 
+                        let client = client_clone.clone();
+                        let is_last_device = cx
+                            .spawn_tokio(async move {
+                                client.encryption().recovery().is_last_device().await
+                            })
+                            .await
+                            .unwrap_or(true);
+
                         if weak_this
                             .update(cx, |this, cx| {
                                 this.devices = cached_devices;
+                                this.is_last_device = is_last_device;
                                 cx.notify();
                             })
                             .is_err()
                         {
                             return;
                         }
-                        
+
                         cx.background_executor().timer(Duration::from_secs(5)).await;
                     }
                 },
@@ -68,6 +78,7 @@ impl DevicesCache {
 
             DevicesCache {
                 devices: Vec::new(),
+                is_last_device: true,
             }
         })
     }
@@ -87,5 +98,9 @@ impl DevicesCache {
 
     pub fn devices(&self) -> Vec<&CachedDevice> {
         self.devices.iter().collect()
+    }
+
+    pub fn is_last_device(&self) -> bool {
+        self.is_last_device
     }
 }

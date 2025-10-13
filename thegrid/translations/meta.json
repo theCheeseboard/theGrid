@@ -168,32 +168,38 @@
     "description": null
   },
   "CLOSE": {
-    "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:450",
+    "context": "recovery_passphrase_popover.rs",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:238",
     "plural": false,
     "description": null
   },
   "DEVICES_OTHER_DEVICES": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:142",
+    "definedIn": "src/account_settings/devices_settings.rs:181",
     "plural": false,
     "description": null
   },
   "DEVICES_THIS_DEVICE": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:127",
+    "definedIn": "src/account_settings/devices_settings.rs:166",
     "plural": false,
     "description": null
   },
   "DEVICE_LAST_ACTIVITY": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:205",
+    "definedIn": "src/account_settings/devices_settings.rs:244",
     "plural": false,
     "description": null
   },
   "DEVICE_VERIFY": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:263",
+    "definedIn": "src/account_settings/devices_settings.rs:302",
+    "plural": false,
+    "description": null
+  },
+  "DONE": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:360",
     "plural": false,
     "description": null
   },
@@ -209,6 +215,12 @@
     "plural": false,
     "description": null
   },
+  "HEADS_UP": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:348",
+    "plural": false,
+    "description": null
+  },
   "IGNORED_USERS_IGNORE": {
     "context": "ignored_users_settings.rs",
     "definedIn": "src/account_settings/ignored_users_settings.rs:47",
@@ -217,31 +229,31 @@
   },
   "INCOMING_SELF_VERIFICATION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:243",
+    "definedIn": "src/chat/sidebar.rs:256",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:233",
+    "definedIn": "src/chat/sidebar.rs:246",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_ACCEPT": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:274",
+    "definedIn": "src/chat/sidebar.rs:287",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_DECLINE": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:318",
+    "definedIn": "src/chat/sidebar.rs:331",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:259",
+    "definedIn": "src/chat/sidebar.rs:272",
     "plural": false,
     "description": null
   },
@@ -301,7 +313,7 @@
   },
   "KEY_IMPORT_IMPORT": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:36",
+    "definedIn": "src/account_settings/security_settings.rs:43",
     "plural": false,
     "description": null
   },
@@ -320,6 +332,66 @@
   "KEY_IMPORT_TITLE": {
     "context": "key_import_popover.rs",
     "definedIn": "src/account_settings/security_settings/key_import_popover.rs:122",
+    "plural": false,
+    "description": null
+  },
+  "KEY_RESET_COMPLETE": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:301",
+    "plural": false,
+    "description": null
+  },
+  "KEY_RESET_DESCRIPTION": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:308",
+    "plural": false,
+    "description": null
+  },
+  "KEY_RESET_ERROR_MESSAGE": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:212",
+    "plural": false,
+    "description": null
+  },
+  "KEY_RESET_ERROR_TITLE": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:222",
+    "plural": false,
+    "description": null
+  },
+  "KEY_RESET_OPTIONS": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:172",
+    "plural": false,
+    "description": null
+  },
+  "KEY_RESET_PASSPHRASE": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:202",
+    "plural": false,
+    "description": null
+  },
+  "KEY_RESET_TITLE": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:286",
+    "plural": false,
+    "description": null
+  },
+  "KEY_RESET_WARNING": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:350",
+    "plural": false,
+    "description": null
+  },
+  "KEY_SETUP_DESCRIPTION": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:184",
+    "plural": false,
+    "description": null
+  },
+  "KEY_SETUP_TITLE": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:283",
     "plural": false,
     "description": null
   },
@@ -485,6 +557,12 @@
     "plural": false,
     "description": null
   },
+  "RECOVERY_PASSPHRASE": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:49",
+    "plural": false,
+    "description": null
+  },
   "RECOVERY_PASSPHRASE_PLACEHOLDER": {
     "context": "recovery_passphrase_popover.rs",
     "definedIn": "src/auth/recovery_passphrase_popover.rs:40",
@@ -511,7 +589,7 @@
   },
   "ROOMS_SPACES": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:155",
+    "definedIn": "src/chat/sidebar.rs:164",
     "plural": false,
     "description": null
   },
@@ -533,33 +611,81 @@
     "plural": false,
     "description": null
   },
+  "SECURITY_ENCRYPTION": {
+    "context": "security_settings.rs",
+    "definedIn": "src/account_settings/security_settings.rs:95",
+    "plural": false,
+    "description": null
+  },
+  "SECURITY_ENCRYPTION_DESCRIPTION": {
+    "context": "security_settings.rs",
+    "definedIn": "src/account_settings/security_settings.rs:97",
+    "plural": false,
+    "description": null
+  },
+  "SECURITY_IDENTITY_RESET": {
+    "context": "security_settings.rs",
+    "definedIn": "src/account_settings/security_settings.rs:148",
+    "plural": false,
+    "description": null
+  },
   "SECURITY_KEY_BACKUP": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:83",
+    "definedIn": "src/account_settings/security_settings.rs:164",
     "plural": false,
     "description": null
   },
   "SECURITY_KEY_BACKUP_DESCRIPTION": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:85",
+    "definedIn": "src/account_settings/security_settings.rs:166",
     "plural": false,
     "description": null
   },
   "SECURITY_KEY_BACKUP_EXPORT": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:101",
+    "definedIn": "src/account_settings/security_settings.rs:182",
     "plural": false,
     "description": null
   },
   "SECURITY_KEY_BACKUP_IMPORT": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:121",
+    "definedIn": "src/account_settings/security_settings.rs:202",
     "plural": false,
     "description": null
   },
   "SECURITY_KEY_EXPORT_WARNING": {
     "context": "key_export_popover.rs",
     "definedIn": "src/account_settings/security_settings/key_export_popover.rs:175",
+    "plural": false,
+    "description": null
+  },
+  "SECURITY_RECOVERY_KEY_RESET": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:246",
+    "plural": false,
+    "description": null
+  },
+  "SECURITY_RECOVERY_KEY_SETUP": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:236",
+    "plural": false,
+    "description": null
+  },
+  "SETUP_RECOVERY": {
+    "context": "sidebar.rs",
+    "definedIn": "src/chat/sidebar.rs:360",
+    "plural": false,
+    "description": null
+  },
+  "SETUP_RECOVERY_DESCRIPTION": {
+    "context": "sidebar.rs",
+    "definedIn": "src/chat/sidebar.rs:367",
+    "plural": false,
+    "description": null
+  },
+  "SETUP_RECOVERY_NOW": {
+    "context": "sidebar.rs",
+    "definedIn": "src/chat/sidebar.rs:382",
     "plural": false,
     "description": null
   },
@@ -607,7 +733,7 @@
   },
   "UNKNOWN_DEVICE": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:252",
+    "definedIn": "src/chat/sidebar.rs:265",
     "plural": false,
     "description": null
   },
@@ -619,25 +745,25 @@
   },
   "UNVERIFIED_DEVICES": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:424",
+    "definedIn": "src/chat/sidebar.rs:482",
     "plural": false,
     "description": null
   },
   "UNVERIFIED_DEVICES_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:431",
+    "definedIn": "src/chat/sidebar.rs:489",
     "plural": true,
     "description": null
   },
   "UNVERIFIED_DEVICES_VIEW_DEVICES": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:451",
+    "definedIn": "src/chat/sidebar.rs:509",
     "plural": false,
     "description": null
   },
   "UNVERIFIED_DEVICE_BADGE": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:242",
+    "definedIn": "src/account_settings/devices_settings.rs:281",
     "plural": false,
     "description": null
   },
@@ -697,37 +823,37 @@
   },
   "VERIFY_SESSION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:347",
+    "definedIn": "src/chat/sidebar.rs:403",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:354",
+    "definedIn": "src/chat/sidebar.rs:410",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_DESCRIPTION_ADDITIONAL": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:98",
+    "definedIn": "src/account_settings/devices_settings.rs:137",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_OTHER_DEVICE": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:369",
+    "definedIn": "src/chat/sidebar.rs:426",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_RECOVERY_KEY": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:389",
+    "definedIn": "src/chat/sidebar.rs:447",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_RESET_CRYPTO": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:411",
+    "definedIn": "src/chat/sidebar.rs:469",
     "plural": false,
     "description": null
   },

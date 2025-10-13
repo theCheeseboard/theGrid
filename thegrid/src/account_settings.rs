@@ -2,7 +2,7 @@ mod devices_settings;
 mod ignored_users_settings;
 mod notifications_settings;
 mod profile_settings;
-mod security_settings;
+pub mod security_settings;
 
 use crate::account_settings::devices_settings::DevicesSettings;
 use crate::account_settings::ignored_users_settings::IgnoredUsersSettings;
