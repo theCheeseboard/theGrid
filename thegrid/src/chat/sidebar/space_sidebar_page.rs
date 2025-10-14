@@ -109,7 +109,13 @@ impl Render for SpaceSidebarPage {
                             div()
                                 .id(ElementId::Name(room.inner.room_id().to_string().into()))
                                 .p(px(2.))
-                                .child(room.inner.name().unwrap_or_default())
+                                .child(
+                                    room.inner
+                                        .cached_display_name()
+                                        .map(|name| name.to_string())
+                                        .or_else(|| room.inner.name())
+                                        .unwrap_or_default(),
+                                )
                                 .on_click(cx.listener(move |this, _, window, cx| {
                                     this.change_room(room_id.clone(), window, cx);
                                 }))
