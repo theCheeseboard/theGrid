@@ -328,7 +328,7 @@ impl Render for RecoveryKeyResetPopover {
                                             .flex_col()
                                             .gap(px(8.))
                                             .child(tr!(
-                                                "KEY_RESET_DESCRIPTION",
+                                                "KEY_RESET_OK_DESCRIPTION",
                                                 "Your recovery key has been set up. Keep the \
                                                 recovery key somewhere safe, as you will need it \
                                                 if you lose access to all your verified devices."
