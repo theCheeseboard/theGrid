@@ -370,7 +370,7 @@ impl AuthSurface {
             let client_clone = client.clone();
             let sync_handle = Tokio::spawn_result(cx, async move {
                 client_clone
-                    .sync_once(SyncSettings::default())
+                    .sync_once(SyncSettings::new().ignore_timeout_on_first_sync(true))
                     .await
                     .map_err(|e| anyhow!(e))
             })
@@ -387,12 +387,9 @@ impl AuthSurface {
                         serde_json::to_string(&matrix_session).unwrap(),
                     )
                     .unwrap();
-                    
+
                     let homeserver_file = session_dir.join("homeserver");
-                    std::fs::write(
-                        homeserver_file,
-                        client.homeserver().to_string(),
-                    ).unwrap();
+                    std::fs::write(homeserver_file, client.homeserver().to_string()).unwrap();
 
                     cx.update_global::<SessionManager, ()>(|session_manager, cx| {
                         session_manager.set_session(session_uuid, cx);
