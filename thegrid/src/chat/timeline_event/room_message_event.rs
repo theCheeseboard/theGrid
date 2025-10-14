@@ -4,8 +4,8 @@ use contemporary::styling::theme::Theme;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, IntoElement, ParentElement, RenderOnce, Styled, Window, div, px, relative, rgb,
-    rgba,
+    App, AsyncApp, InteractiveElement, IntoElement, ParentElement, RenderOnce, Styled, Window, div,
+    px, relative, rgb, rgba,
 };
 use matrix_sdk::Room;
 use matrix_sdk::deserialized_responses::{TimelineEvent, TimelineEventKind};
@@ -147,37 +147,43 @@ where
             true
         };
 
-        div().flex().m(px(2.)).max_w(relative(100.)).when_else(
-            is_head_event,
-            |david| {
-                david.child(
-                    div()
+        div()
+            .id("room-message")
+            .flex()
+            .m(px(2.))
+            .max_w(relative(100.))
+            .when_else(
+                is_head_event,
+                |david| {
+                    david.child(
+                        div()
+                            .id("container")
+                            .flex()
+                            .gap(px(4.))
+                            .child(
+                                mxc_image(author.avatar())
+                                    .size(px(40.))
+                                    .m(px(2.))
+                                    .size_policy(SizePolicy::Fit)
+                                    .rounded(theme.border_radius),
+                            )
+                            .child(
+                                div().id("content").flex().flex_col().child(
+                                    div()
+                                        .child(author.display_name())
+                                        .child(self.event.content.message_line(theme)),
+                                ),
+                            ),
+                    )
+                },
+                |david| {
+                    david
                         .flex()
                         .gap(px(4.))
-                        .child(
-                            mxc_image(author.avatar())
-                                .size(px(40.))
-                                .m(px(2.))
-                                .size_policy(SizePolicy::Fit)
-                                .rounded(theme.border_radius),
-                        )
-                        .child(
-                            div().flex().flex_col().child(
-                                div()
-                                    .child(author.display_name())
-                                    .child(self.event.content.message_line(theme)),
-                            ),
-                        ),
-                )
-            },
-            |david| {
-                david
-                    .flex()
-                    .gap(px(4.))
-                    .child(div().w(px(40.)).mx(px(2.)))
-                    .child(div().child(self.event.content.message_line(theme)))
-            },
-        )
+                        .child(div().w(px(40.)).mx(px(2.)))
+                        .child(div().child(self.event.content.message_line(theme)))
+                },
+            )
     }
 }
 
