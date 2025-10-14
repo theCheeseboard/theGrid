@@ -127,13 +127,13 @@
   },
   "AUTH_REQUIRED": {
     "context": "uiaa_client.rs",
-    "definedIn": "src/uiaa_client.rs:208",
+    "definedIn": "src/uiaa_client.rs:275",
     "plural": false,
     "description": null
   },
   "AUTH_REQUIRED_BROWSER_GO": {
     "context": "uiaa_client.rs",
-    "definedIn": "src/uiaa_client.rs:191",
+    "definedIn": "src/uiaa_client.rs:258",
     "plural": false,
     "description": null
   },
@@ -847,19 +847,25 @@
   },
   "UIAA_BROWSER_AUTH": {
     "context": "uiaa_client.rs",
-    "definedIn": "src/uiaa_client.rs:166",
+    "definedIn": "src/uiaa_client.rs:233",
     "plural": false,
     "description": null
   },
   "UIAA_BROWSER_OPEN": {
     "context": "uiaa_client.rs",
-    "definedIn": "src/uiaa_client.rs:173",
+    "definedIn": "src/uiaa_client.rs:240",
     "plural": false,
     "description": null
   },
   "UIAA_ERROR": {
     "context": "uiaa_client.rs",
-    "definedIn": "src/uiaa_client.rs:210",
+    "definedIn": "src/uiaa_client.rs:277",
+    "plural": false,
+    "description": null
+  },
+  "UIAA_PASSWORD_AUTH": {
+    "context": "uiaa_client.rs",
+    "definedIn": "src/uiaa_client.rs:191",
     "plural": false,
     "description": null
   },

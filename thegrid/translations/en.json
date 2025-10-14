@@ -146,6 +146,7 @@
   "UIAA_BROWSER_AUTH": "To continue, complete authentication in your web browser.",
   "UIAA_BROWSER_OPEN": "Open Web Browser",
   "UIAA_ERROR": "There was a problem authenticating with the homeserver.",
+  "UIAA_PASSWORD_AUTH": "To continue, confirm your account password.",
   "UNKNOWN_DEVICE": "Unknown Device",
   "UNKNOWN_ROOM": "Unknown Room",
   "UNVERIFIED_DEVICES": "Unverified devices",

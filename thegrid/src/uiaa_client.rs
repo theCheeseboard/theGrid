@@ -2,11 +2,15 @@ use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::icon_text::icon_text;
+use contemporary::components::text_field::TextField;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, Context, IntoElement, ParentElement, Render, Styled, WeakEntity, Window, div,
+    App, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
+    div, px,
 };
-use matrix_sdk::ruma::api::client::uiaa::{AuthData, AuthType, FallbackAcknowledgement, UiaaInfo};
+use matrix_sdk::ruma::api::client::uiaa::{
+    AuthData, AuthType, FallbackAcknowledgement, Password, UiaaInfo, UserIdentifier,
+};
 use matrix_sdk::ruma::api::{OutgoingRequest, SendAccessToken};
 use std::rc::Rc;
 use thegrid::session::session_manager::SessionManager;
@@ -37,6 +41,7 @@ pub struct UiaaClient {
 
 enum CurrentStep {
     None,
+    Password(Entity<TextField>),
     BrowserAuth(Url),
     Error,
 }
@@ -67,6 +72,19 @@ impl UiaaClient {
         let uiaa_session = uiaa_info.session.clone();
 
         match this_step {
+            Some(AuthType::Password) => {
+                self.uiaa_step_completed = true;
+                let text_field = TextField::new(
+                    cx,
+                    "account-password",
+                    "".into(),
+                    tr!("AUTH_PASSWORD_PLACEHOLDER").into(),
+                );
+                text_field.update(cx, |text_field, cx| {
+                    text_field.password_field(cx, true);
+                });
+                self.current_step = CurrentStep::Password(text_field)
+            }
             Some(auth_type) if uiaa_session.is_some() => {
                 self.uiaa_step_completed = false;
 
@@ -147,12 +165,61 @@ impl UiaaClient {
 
 impl Render for UiaaClient {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let session_manager = cx.global::<SessionManager>();
+        let user_id = session_manager
+            .client()
+            .and_then(|client| client.read(cx).user_id())
+            .map(|user_id| user_id.to_string());
         let uiaa_session = self
             .uiaa_info
             .as_ref()
             .and_then(|uiaa_info| uiaa_info.session.clone());
+
         match &self.current_step {
             CurrentStep::None => div().into_any_element(),
+            CurrentStep::Password(text_field) => {
+                let text_field_clone = text_field.clone();
+                dialog_box("uiaa-dialog")
+                    .visible(true)
+                    .title(tr!("AUTH_REQUIRED").into())
+                    .content(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .w(px(500.))
+                            .child(tr!(
+                                "UIAA_PASSWORD_AUTH",
+                                "To continue, confirm your account password."
+                            ))
+                            .child(text_field.clone()),
+                    )
+                    .standard_button(
+                        StandardButton::Cancel,
+                        cx.listener(|this, _, window, cx| {
+                            this.cancel_authentication(window, cx);
+                        }),
+                    )
+                    .button(
+                        button("continue-button")
+                            .child(icon_text(
+                                "dialog-ok".into(),
+                                tr!("AUTH_REQUIRED_BROWSER_GO").into(),
+                            ))
+                            .when(!self.uiaa_step_completed, |david| david.disabled())
+                            .on_click(cx.listener(move |this, _, window, cx| {
+                                let password = text_field_clone.read(cx).current_text(cx);
+                                this.send_auth_data(
+                                    Some(AuthData::Password(Password::new(
+                                        UserIdentifier::UserIdOrLocalpart(user_id.clone().unwrap()),
+                                        password.into(),
+                                    ))),
+                                    window,
+                                    cx,
+                                );
+                            })),
+                    )
+                    .into_any_element()
+            }
             CurrentStep::BrowserAuth(url) => {
                 let url = url.clone();
                 dialog_box("uiaa-dialog")
@@ -187,7 +254,7 @@ impl Render for UiaaClient {
                     .button(
                         button("continue-button")
                             .child(icon_text(
-                                "arrow-right".into(),
+                                "dialog-ok".into(),
                                 tr!("AUTH_REQUIRED_BROWSER_GO", "Continue").into(),
                             ))
                             .when(!self.uiaa_step_completed, |david| david.disabled())
