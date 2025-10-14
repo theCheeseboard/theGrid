@@ -92,7 +92,7 @@ impl IdentityResetSurface {
                                             handle.auth_type()
                                         {
                                             this.uiaa_client.update(cx, |uiaa_client, cx| {
-                                                uiaa_client.set_uiaa_info(uiaa.clone(), window, cx);
+                                                uiaa_client.set_uiaa_info(uiaa.clone(), cx);
                                                 cx.notify();
                                             });
                                         }

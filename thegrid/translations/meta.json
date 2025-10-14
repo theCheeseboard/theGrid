@@ -197,27 +197,51 @@
     "plural": false,
     "description": null
   },
+  "DEVICES_LOG_OUT_ACTION": {
+    "context": "devices_settings.rs",
+    "definedIn": "src/account_settings/devices_settings.rs:304",
+    "plural": false,
+    "description": null
+  },
+  "DEVICES_LOG_OUT_INFORMATION": {
+    "context": "devices_settings.rs",
+    "definedIn": "src/account_settings/devices_settings.rs:286",
+    "plural": false,
+    "description": null
+  },
+  "DEVICES_LOG_OUT_TEXT": {
+    "context": "devices_settings.rs",
+    "definedIn": "src/account_settings/devices_settings.rs:281",
+    "plural": false,
+    "description": null
+  },
+  "DEVICES_LOG_OUT_TITLE": {
+    "context": "devices_settings.rs",
+    "definedIn": "src/account_settings/devices_settings.rs:278",
+    "plural": false,
+    "description": null
+  },
   "DEVICES_OTHER_DEVICES": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:181",
+    "definedIn": "src/account_settings/devices_settings.rs:243",
     "plural": false,
     "description": null
   },
   "DEVICES_THIS_DEVICE": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:166",
+    "definedIn": "src/account_settings/devices_settings.rs:220",
     "plural": false,
     "description": null
   },
   "DEVICE_LAST_ACTIVITY": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:244",
+    "definedIn": "src/account_settings/devices_settings.rs:352",
     "plural": false,
     "description": null
   },
   "DEVICE_VERIFY": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:302",
+    "definedIn": "src/account_settings/devices_settings.rs:411",
     "plural": false,
     "description": null
   },
@@ -871,7 +895,7 @@
   },
   "UNVERIFIED_DEVICE_BADGE": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:281",
+    "definedIn": "src/account_settings/devices_settings.rs:390",
     "plural": false,
     "description": null
   },
@@ -943,7 +967,7 @@
   },
   "VERIFY_SESSION_DESCRIPTION_ADDITIONAL": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:137",
+    "definedIn": "src/account_settings/devices_settings.rs:191",
     "plural": false,
     "description": null
   },

@@ -57,7 +57,7 @@ impl UiaaClient {
         }
     }
 
-    pub fn set_uiaa_info(&mut self, uiaa_info: UiaaInfo, _: &mut Window, cx: &mut Context<Self>) {
+    pub fn set_uiaa_info(&mut self, uiaa_info: UiaaInfo, cx: &mut Context<Self>) {
         let session_manager = cx.global::<SessionManager>();
         let client = session_manager.client().unwrap().read(cx).clone();
 

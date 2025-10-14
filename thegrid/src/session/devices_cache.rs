@@ -1,7 +1,9 @@
 use crate::tokio_helper::TokioHelper;
+use gpui::http_client::anyhow;
 use gpui::{App, AppContext, AsyncApp, Entity, WeakEntity};
 use matrix_sdk::Client;
 use matrix_sdk::ruma::api::client::device::Device;
+use smol::stream::StreamExt;
 use std::time::Duration;
 
 pub struct DevicesCache {
@@ -25,6 +27,12 @@ impl DevicesCache {
             let client_clone = client.clone();
             cx.spawn(
                 async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                    let client = client_clone.clone();
+                    let mut devices_stream = cx
+                        .spawn_tokio(async move { client.encryption().devices_stream().await })
+                        .await
+                        .unwrap();
+
                     loop {
                         let client = client_clone.clone();
                         let Ok(devices) =
@@ -70,7 +78,7 @@ impl DevicesCache {
                             return;
                         }
 
-                        cx.background_executor().timer(Duration::from_secs(5)).await;
+                        let _ = devices_stream.next().await;
                     }
                 },
             )

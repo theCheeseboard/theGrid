@@ -1,9 +1,11 @@
 use crate::account_settings::security_settings::recovery_key_reset_popover::RecoveryKeyResetPopover;
 use crate::auth::verification_popover::VerificationPopover;
+use crate::uiaa_client::{SendAuthDataEvent, UiaaClient};
 use chrono::{DateTime, Local};
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
@@ -12,27 +14,43 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, Context, ElementId, Entity, InteractiveElement, IntoElement, ParentElement,
-    Render, RenderOnce, Styled, Window, div, px, rgba,
+    App, AppContext, AsyncApp, Context, ElementId, Entity, InteractiveElement, IntoElement,
+    ParentElement, Render, RenderOnce, Styled, WeakEntity, Window, div, px, rgba,
 };
 use matrix_sdk::encryption::identities::Device;
 use matrix_sdk::encryption::recovery::RecoveryState;
 use matrix_sdk::ruma::OwnedDeviceId;
+use matrix_sdk::ruma::api::client::uiaa::AuthData;
 use std::rc::Rc;
 use thegrid::admonition::{AdmonitionSeverity, admonition};
 use thegrid::session::devices_cache::CachedDevice;
 use thegrid::session::session_manager::SessionManager;
+use thegrid::tokio_helper::TokioHelper;
+use tracing::error;
 
 pub struct DevicesSettings {
     recovery_key_reset_popover: Entity<RecoveryKeyResetPopover>,
     verification_popover: Entity<VerificationPopover>,
+    log_out_device: Option<OwnedDeviceId>,
+    log_out_confirm_dialog_visible: bool,
+    uiaa_client: Entity<UiaaClient>,
 }
 
 impl DevicesSettings {
     pub fn new(cx: &mut App) -> Entity<Self> {
-        cx.new(|cx| Self {
-            recovery_key_reset_popover: cx.new(|cx| RecoveryKeyResetPopover::new(cx)),
-            verification_popover: cx.new(|cx| VerificationPopover::new(cx)),
+        cx.new(|cx| {
+            let send_auth_data =
+                cx.listener(|this: &mut Self, event: &SendAuthDataEvent, _, cx| {
+                    this.confirm_log_out_device(event.auth_data.clone(), cx);
+                });
+
+            Self {
+                recovery_key_reset_popover: cx.new(|cx| RecoveryKeyResetPopover::new(cx)),
+                verification_popover: cx.new(VerificationPopover::new),
+                log_out_device: None,
+                log_out_confirm_dialog_visible: false,
+                uiaa_client: cx.new(|cx| UiaaClient::new(send_auth_data, |_, _, _| {}, cx)),
+            }
         })
     }
 
@@ -48,6 +66,42 @@ impl DevicesSettings {
             .update(cx, |verification_popover, cx| {
                 verification_popover.request_device_verification(device, cx)
             });
+    }
+
+    pub fn log_out_device(&mut self, device: OwnedDeviceId, cx: &mut Context<Self>) {
+        self.log_out_device = Some(device);
+        self.log_out_confirm_dialog_visible = true;
+        cx.notify();
+    }
+
+    pub fn confirm_log_out_device(&mut self, auth_data: Option<AuthData>, cx: &mut Context<Self>) {
+        let session_manager = cx.global::<SessionManager>();
+        let client = session_manager.client().unwrap().read(cx).clone();
+        let device = self.log_out_device.clone().unwrap();
+
+        let uiaa_client_entity = self.uiaa_client.clone();
+
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                if let Err(e) = cx
+                    .spawn_tokio(async move { client.delete_devices(&[device], auth_data).await })
+                    .await
+                {
+                    if let Some(uiaa) = e.as_uiaa_response() {
+                        uiaa_client_entity
+                            .update(cx, |uiaa_client, cx| {
+                                uiaa_client.set_uiaa_info(uiaa.clone(), cx);
+                                cx.notify()
+                            })
+                            .unwrap();
+                        return;
+                    } else {
+                        error!("Failed to log out device: {:?}", e);
+                    }
+                }
+            },
+        )
+        .detach();
     }
 }
 
@@ -164,9 +218,17 @@ impl Render for DevicesSettings {
                             .p(px(8.))
                             .w_full()
                             .child(subtitle(tr!("DEVICES_THIS_DEVICE", "This Device")))
-                            .child(DeviceItem {
-                                device: this_device,
-                                verify_device: Rc::new(Box::new(|_, _, _| {})),
+                            .child({
+                                let device_id = this_device.inner.device_id.clone();
+                                DeviceItem {
+                                    device: this_device,
+                                    verify_device: Rc::new(Box::new(|_, _, _| {})),
+                                    erase_device: Rc::new(Box::new(cx.listener(
+                                        move |this, _, _, cx| {
+                                            this.log_out_device(device_id.clone(), cx)
+                                        },
+                                    ))),
+                                }
                             }),
                     )
                     .when(!device_list.is_empty(), |david| {
@@ -181,10 +243,11 @@ impl Render for DevicesSettings {
                                     .child(subtitle(tr!("DEVICES_OTHER_DEVICES", "Other Devices"))),
                                 |david, item| {
                                     let device = item.encryption_status.clone().unwrap();
+                                    let device_id = item.inner.device_id.clone();
                                     david.child(
                                         div()
                                             .id(ElementId::Name(
-                                                item.inner.device_id.to_string().into(),
+                                                device_id.clone().to_string().into(),
                                             ))
                                             .child(DeviceItem {
                                                 device: item,
@@ -196,6 +259,11 @@ impl Render for DevicesSettings {
                                                         )
                                                     },
                                                 ))),
+                                                erase_device: Rc::new(Box::new(cx.listener(
+                                                    move |this, _, _, cx| {
+                                                        this.log_out_device(device_id.clone(), cx)
+                                                    },
+                                                ))),
                                             }),
                                     )
                                 },
@@ -204,6 +272,45 @@ impl Render for DevicesSettings {
                     }),
             )
             .child(self.verification_popover.clone().into_any_element())
+            .child(
+                dialog_box("log-out-confirm")
+                    .visible(self.log_out_confirm_dialog_visible)
+                    .title(tr!("DEVICES_LOG_OUT_TITLE", "Forcibly log device out?").into())
+                    .content_text_informational(
+                        tr!(
+                            "DEVICES_LOG_OUT_TEXT",
+                            "Do you want to forcibly log out from this device?"
+                        )
+                        .into(),
+                        tr!(
+                            "DEVICES_LOG_OUT_INFORMATION",
+                            "The device won't be able to receive or send any messages, and if \
+                            it was verified, it will no longer be verified."
+                        )
+                        .into(),
+                    )
+                    .standard_button(
+                        StandardButton::Cancel,
+                        cx.listener(|this, _, _, cx| {
+                            this.log_out_confirm_dialog_visible = false;
+                            cx.notify();
+                        }),
+                    )
+                    .button(
+                        button("log-out-force")
+                            .destructive()
+                            .child(icon_text(
+                                "system-log-out".into(),
+                                tr!("DEVICES_LOG_OUT_ACTION", "Forcibly log out").into(),
+                            ))
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.confirm_log_out_device(None, cx);
+                                this.log_out_confirm_dialog_visible = false;
+                                cx.notify();
+                            })),
+                    ),
+            )
+            .child(self.uiaa_client.clone())
     }
 }
 
@@ -211,6 +318,7 @@ impl Render for DevicesSettings {
 struct DeviceItem {
     device: CachedDevice,
     verify_device: Rc<Box<dyn Fn(&(), &mut Window, &mut App)>>,
+    erase_device: Rc<Box<dyn Fn(&(), &mut Window, &mut App)>>,
 }
 
 impl RenderOnce for DeviceItem {
@@ -250,6 +358,7 @@ impl RenderOnce for DeviceItem {
         }
 
         let verify_device = self.verify_device.clone();
+        let erase_device = self.erase_device.clone();
 
         layer()
             .p(px(4.))
@@ -307,7 +416,8 @@ impl RenderOnce for DeviceItem {
                     .child(
                         button("log-out-device-button")
                             .destructive()
-                            .child(icon("system-log-out".into())),
+                            .child(icon("system-log-out".into()))
+                            .on_click(move |_, window, cx| erase_device(&(), window, cx)),
                     ),
             )
     }
