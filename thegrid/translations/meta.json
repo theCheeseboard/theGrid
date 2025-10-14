@@ -439,7 +439,7 @@
   },
   "KEY_RESET_DESCRIPTION": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:331",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:202",
     "plural": false,
     "description": null
   },
@@ -452,6 +452,12 @@
   "KEY_RESET_ERROR_TITLE": {
     "context": "recovery_key_reset_popover.rs",
     "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:245",
+    "plural": false,
+    "description": null
+  },
+  "KEY_RESET_OK_DESCRIPTION": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:331",
     "plural": false,
     "description": null
   },
