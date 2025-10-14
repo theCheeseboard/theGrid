@@ -34,7 +34,7 @@
   "CLOSE": "Close",
   "DEVICES_LOG_OUT_ACTION": "Forcibly log out",
   "DEVICES_LOG_OUT_INFORMATION": "The device won't be able to receive or send any messages, and if it was verified, it will no longer be verified.",
-  "DEVICES_LOG_OUT_TEXT": "Do you want to forcibly log out from this device?",
+  "DEVICES_LOG_OUT_TEXT": "Do you want to forcibly log out from {{device}}?",
   "DEVICES_LOG_OUT_TITLE": "Forcibly log device out?",
   "DEVICES_OTHER_DEVICES": "Other Devices",
   "DEVICES_THIS_DEVICE": "This Device",

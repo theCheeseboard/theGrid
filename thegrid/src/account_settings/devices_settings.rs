@@ -279,7 +279,12 @@ impl Render for DevicesSettings {
                     .content_text_informational(
                         tr!(
                             "DEVICES_LOG_OUT_TEXT",
-                            "Do you want to forcibly log out from this device?"
+                            "Do you want to forcibly log out from {{device}}?",
+                            device = self
+                                .log_out_device
+                                .as_ref()
+                                .map(|device_id| device_id.clone().to_string())
+                                .unwrap_or_default()
                         )
                         .into(),
                         tr!(

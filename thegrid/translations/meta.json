@@ -199,13 +199,13 @@
   },
   "DEVICES_LOG_OUT_ACTION": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:304",
+    "definedIn": "src/account_settings/devices_settings.rs:309",
     "plural": false,
     "description": null
   },
   "DEVICES_LOG_OUT_INFORMATION": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:286",
+    "definedIn": "src/account_settings/devices_settings.rs:291",
     "plural": false,
     "description": null
   },
@@ -235,13 +235,13 @@
   },
   "DEVICE_LAST_ACTIVITY": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:352",
+    "definedIn": "src/account_settings/devices_settings.rs:357",
     "plural": false,
     "description": null
   },
   "DEVICE_VERIFY": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:411",
+    "definedIn": "src/account_settings/devices_settings.rs:416",
     "plural": false,
     "description": null
   },
@@ -901,7 +901,7 @@
   },
   "UNVERIFIED_DEVICE_BADGE": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:390",
+    "definedIn": "src/account_settings/devices_settings.rs:395",
     "plural": false,
     "description": null
   },
