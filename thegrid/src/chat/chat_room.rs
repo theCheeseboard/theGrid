@@ -298,7 +298,12 @@ impl Render for ChatRoom {
             .size_full()
             .child(
                 grandstand("main-area-grandstand")
-                    .text(room.name().unwrap_or_default())
+                    .text(
+                        room.cached_display_name()
+                            .map(|name| name.to_string())
+                            .or_else(|| room.name())
+                            .unwrap_or_default(),
+                    )
                     .pt(px(36.)),
             )
             .child(
