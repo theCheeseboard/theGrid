@@ -1,39 +1,52 @@
+mod root_sidebar_page;
+mod space_sidebar_page;
+
 use crate::account_settings::AccountSettingsPage;
 use crate::account_settings::security_settings::recovery_key_reset_popover::RecoveryKeyResetPopover;
 use crate::auth::recovery_passphrase_popover::RecoveryPassphrasePopover;
 use crate::auth::verification_popover::VerificationPopover;
-use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::main_chat_surface::{ChangeRoomEvent, ChangeRoomHandler};
+use crate::chat::sidebar::root_sidebar_page::RootSidebarPage;
+use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
 use crate::main_window::{MainWindowSurface, SurfaceChangeEvent, SurfaceChangeHandler};
 use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::{tr, trn};
 use contemporary::components::button::button;
-use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::pager::pager;
+use contemporary::components::pager::slide_horizontal_animation::SlideHorizontalAnimation;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, BorrowAppContext, ElementId, InteractiveElement, IntoElement, ListAlignment,
-    ListState, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window, div, list,
-    px, rgb,
+    App, AppContext, AsyncApp, BorrowAppContext, Context, Entity, InteractiveElement, IntoElement,
+    ListAlignment, ListState, ParentElement, Render, RenderOnce, StatefulInteractiveElement,
+    Styled, Window, div, px,
 };
 use gpui_tokio::Tokio;
 use matrix_sdk::encryption::recovery::RecoveryState;
 use matrix_sdk::ruma::events::key::verification::VerificationMethod;
+use matrix_sdk::ruma::room_id;
 use std::rc::Rc;
 use thegrid::admonition::{AdmonitionSeverity, admonition};
 use thegrid::session::error_handling::{ClientError, RecoverableClientError};
+use thegrid::session::room_cache::RoomCategory;
 use thegrid::session::session_manager::SessionManager;
 use thegrid::session::verification_requests_cache::VerificationRequestDetails;
 use thegrid::tokio_helper::TokioHelper;
 
-#[derive(IntoElement)]
 pub struct Sidebar {
     on_change_room: Option<Rc<Box<ChangeRoomHandler>>>,
     on_surface_change: Option<Rc<Box<SurfaceChangeHandler>>>,
+
+    current_page: usize,
+    pages: Vec<SidebarPage>,
+}
+
+pub enum SidebarPage {
+    Root(Entity<RootSidebarPage>),
+    Space(Entity<SpaceSidebarPage>),
 }
 
 #[derive(IntoElement)]
@@ -46,28 +59,38 @@ enum SidebarAlert {
     ClientError(RecoverableClientError),
 }
 
-pub fn sidebar() -> Sidebar {
-    Sidebar {
-        on_change_room: None,
-        on_surface_change: None,
-    }
-}
-
 impl Sidebar {
+    pub fn new(cx: &mut Context<Self>) -> Self {
+        let change_room_handler = cx.listener(|this, event, window, cx| {
+            if let Some(on_change_room) = this.on_change_room.clone() {
+                on_change_room(event, window, cx)
+            }
+        });
+
+        let self_entity = cx.entity();
+
+        Sidebar {
+            on_change_room: None,
+            on_surface_change: None,
+            current_page: 0,
+            pages: vec![SidebarPage::Root(cx.new(|cx| {
+                RootSidebarPage::new(cx, self_entity, change_room_handler)
+            }))],
+        }
+    }
+
     pub fn on_change_room(
-        mut self,
+        &mut self,
         on_change_room: impl Fn(&ChangeRoomEvent, &mut Window, &mut App) + 'static,
-    ) -> Self {
+    ) {
         self.on_change_room = Some(Rc::new(Box::new(on_change_room)));
-        self
     }
 
     pub fn on_surface_change(
-        mut self,
+        &mut self,
         on_surface_change: impl Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static,
-    ) -> Self {
+    ) {
         self.on_surface_change = Some(Rc::new(Box::new(on_surface_change)));
-        self
     }
 
     fn current_alert(&self, _: &mut Window, cx: &mut App) -> SidebarAlert {
@@ -114,10 +137,20 @@ impl Sidebar {
 
         SidebarAlert::None
     }
+
+    pub fn push_page(&mut self, page: SidebarPage) {
+        self.pages.truncate(self.current_page + 1);
+        self.pages.push(page);
+        self.current_page += 1;
+    }
+
+    pub fn pop_page(&mut self) {
+        self.current_page -= 1;
+    }
 }
 
-impl RenderOnce for Sidebar {
-    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+impl Render for Sidebar {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let root_list_state =
             window.use_state(cx, |_, _| ListState::new(0, ListAlignment::Top, px(200.)));
         let current_notification = self.current_alert(window, cx);
@@ -127,24 +160,21 @@ impl RenderOnce for Sidebar {
         let Some(session) = session_manager.current_session() else {
             return layer();
         };
-        let Some(client) = session_manager.client() else {
-            return layer();
-        };
 
-        let client = client.read(cx);
+        let room_cache = session_manager.rooms().read(cx);
 
-        let root_rooms: Vec<_> = client
-            .joined_rooms()
-            .iter()
-            .filter(|room| !room.is_space())
-            .cloned()
-            .collect();
+        let root_rooms = room_cache
+            .rooms_in_category(
+                RoomCategory::Space(room_id!("!kqHArBQfzKMdLtLrpX:bnbdiscord.net").to_owned()),
+                cx,
+            )
+            .clone();
         let root_list_state = root_list_state.read(cx);
         if root_rooms.len() != root_list_state.item_count() {
             root_list_state.reset(root_rooms.len());
         }
 
-        let change_room_handler = self.on_change_room.unwrap().clone();
+        let change_room_handler = self.on_change_room.clone().unwrap();
         let account = session_manager.current_account().read(cx);
 
         let theme = cx.global::<Theme>();
@@ -154,40 +184,18 @@ impl RenderOnce for Sidebar {
             .flex()
             .flex_col()
             .child(
-                pager("sidebar-pager", 0).flex_grow().page(
-                    div()
-                        .flex()
-                        .flex_col()
-                        .h_full()
-                        .child(
-                            grandstand("sidebar-grandstand")
-                                .text(tr!("ROOMS_SPACES", "Rooms and Spaces"))
-                                .pt(px(36.)),
-                        )
-                        .child(
-                            div().flex_grow().child(
-                                list(root_list_state.clone(), move |i, _, cx| {
-                                    let room = &root_rooms[i];
-                                    let room_id = room.room_id().to_owned();
-                                    let change_room_handler = change_room_handler.clone();
-                                    div()
-                                        .id(ElementId::Name(room.room_id().to_string().into()))
-                                        .p(px(2.))
-                                        .child(room.name().unwrap_or_default())
-                                        .on_click(move |_, window, cx| {
-                                            let event = ChangeRoomEvent {
-                                                new_room: DisplayedRoom::Room(room_id.clone()),
-                                            };
-                                            change_room_handler(&event, window, cx);
-                                        })
-                                        .into_any_element()
-                                })
-                                .flex()
-                                .flex_col()
-                                .h_full(),
-                            ),
-                        )
-                        .into_any_element(),
+                self.pages.iter().fold(
+                    pager("sidebar-pager", self.current_page)
+                        .animation(SlideHorizontalAnimation::new())
+                        .flex_grow(),
+                    |pager, page| match page {
+                        SidebarPage::Root(root_sidebar_page) => {
+                            pager.page(root_sidebar_page.clone().into_any_element())
+                        }
+                        SidebarPage::Space(space_sidebar_page) => {
+                            pager.page(space_sidebar_page.clone().into_any_element())
+                        }
+                    },
                 ),
             )
             .child(current_notification)

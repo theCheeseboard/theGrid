@@ -8004,6 +8004,7 @@ dependencies = [
  "gpui",
  "gpui_tokio",
  "image",
+ "imbl",
  "ini",
  "log",
  "matrix-sdk",

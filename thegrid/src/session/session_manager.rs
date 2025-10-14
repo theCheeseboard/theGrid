@@ -20,6 +20,7 @@ use matrix_sdk::{Client, Error, HttpError, LoopCtrl, RumaApiError};
 use std::fs::{create_dir_all, read_dir, remove_dir_all};
 use std::path::PathBuf;
 use uuid::Uuid;
+use crate::session::room_cache::RoomCache;
 
 pub struct SessionManager {
     current_session: Option<Session>,
@@ -226,6 +227,10 @@ impl SessionManager {
 
     pub fn media(&self) -> &MediaCache {
         &self.current_caches.as_ref().unwrap().media_cache
+    }
+    
+    pub fn rooms(&self) -> Entity<RoomCache> {
+        self.current_caches.as_ref().unwrap().room_cache.clone()
     }
 }
 

@@ -28,6 +28,7 @@ chrono = { workspace = true }
 unicode-segmentation = { workspace = true }
 emojis = { workspace = true }
 directories = { workspace = true }
+imbl = { workspace = true }
 
 [build-dependencies]
 cntp_i18n_gen = { workspace = true }

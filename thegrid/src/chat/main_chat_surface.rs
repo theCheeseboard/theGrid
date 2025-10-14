@@ -3,7 +3,7 @@ use crate::actions::{AccountSettings, AccountSwitcher, LogOut};
 use crate::auth::logout_popover::logout_popover;
 use crate::chat::chat_room::ChatRoom;
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::sidebar::sidebar;
+use crate::chat::sidebar::Sidebar;
 use crate::main_window::{
     MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
 };
@@ -26,6 +26,8 @@ pub struct ChangeRoomEvent {
 }
 
 pub struct MainChatSurface {
+    sidebar: Entity<Sidebar>,
+
     displayed_room: DisplayedRoom,
     chat_room: Option<Entity<ChatRoom>>,
     focus_handle: FocusHandle,
@@ -48,7 +50,19 @@ impl MainChatSurface {
             // })
             // .detach();
 
+            let change_room_handler = cx.listener(Self::on_change_room);
+            let surface_change_handler =
+                cx.listener(|this, event: &SurfaceChangeEvent, window, cx| {
+                    (this.on_surface_change)(event, window, cx)
+                });
+
             MainChatSurface {
+                sidebar: cx.new(|cx| {
+                    let mut sidebar = Sidebar::new(cx);
+                    sidebar.on_change_room(change_room_handler);
+                    sidebar.on_surface_change(surface_change_handler);
+                    sidebar
+                }),
                 displayed_room: DisplayedRoom::None,
                 chat_room: None,
                 focus_handle: cx.focus_handle(),
@@ -109,15 +123,7 @@ impl Render for MainChatSurface {
             .size_full()
             .flex()
             .gap(px(2.))
-            .child(
-                sidebar()
-                    .on_change_room(cx.listener(|this, event: &ChangeRoomEvent, window, cx| {
-                        this.on_change_room(event, window, cx);
-                    }))
-                    .on_surface_change(cx.listener(|this, event, window, cx| {
-                        (this.on_surface_change)(event, window, cx)
-                    })),
-            )
+            .child(self.sidebar.clone())
             .child(
                 div()
                     .child(match &self.displayed_room {
