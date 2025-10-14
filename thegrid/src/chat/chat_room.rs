@@ -258,8 +258,9 @@ impl ChatRoom {
 
 impl Render for ChatRoom {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let root_list_state =
-            window.use_state(cx, |_, _| ListState::new(0, ListAlignment::Top, px(200.)));
+        let root_list_state = window.use_state(cx, |_, _| {
+            ListState::new(0, ListAlignment::Bottom, px(200.))
+        });
         let root_list_state = root_list_state.read(cx);
 
         let session_manager = cx.global::<SessionManager>();

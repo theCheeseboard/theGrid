@@ -553,7 +553,7 @@
   },
   "MESSAGE_DECRYPTION_FAILURE": {
     "context": "timeline_event.rs",
-    "definedIn": "src/chat/timeline_event.rs:84",
+    "definedIn": "src/chat/timeline_event.rs:89",
     "plural": false,
     "description": null
   },
@@ -713,21 +713,75 @@
     "plural": false,
     "description": null
   },
+  "ROOM_STATE_ROOM_MEMBER_BANNED": {
+    "context": "room_state_event.rs",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:82",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_STATE_ROOM_MEMBER_INVITED": {
+    "context": "room_state_event.rs",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:97",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_STATE_ROOM_MEMBER_JOINED": {
+    "context": "room_state_event.rs",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:72",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_STATE_ROOM_MEMBER_KICKED": {
+    "context": "room_state_event.rs",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:92",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_STATE_ROOM_MEMBER_KICKED_AND_BANNED": {
+    "context": "room_state_event.rs",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:102",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_STATE_ROOM_MEMBER_KNOCKED": {
+    "context": "room_state_event.rs",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:107",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_STATE_ROOM_MEMBER_LEFT": {
+    "context": "room_state_event.rs",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:77",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_STATE_ROOM_MEMBER_UNBANNED": {
+    "context": "room_state_event.rs",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:87",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_STATE_ROOM_NAME": {
+    "context": "room_state_event.rs",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:43",
+    "plural": false,
+    "description": null
+  },
   "ROOM_TOMBSTONED_NAVIGATE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:351",
+    "definedIn": "src/chat/chat_room.rs:352",
     "plural": false,
     "description": null
   },
   "ROOM_TOMBSTONED_TEXT": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:342",
+    "definedIn": "src/chat/chat_room.rs:343",
     "plural": false,
     "description": null
   },
   "ROOM_TOMBSTONED_TITLE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:335",
+    "definedIn": "src/chat/chat_room.rs:336",
     "plural": false,
     "description": null
   },
@@ -829,25 +883,25 @@
   },
   "TYPING_NOTIFICATION": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:425",
+    "definedIn": "src/chat/chat_room.rs:426",
     "plural": true,
     "description": null
   },
   "TYPING_NOTIFICATION_ONE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:386",
+    "definedIn": "src/chat/chat_room.rs:387",
     "plural": false,
     "description": null
   },
   "TYPING_NOTIFICATION_THREE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:408",
+    "definedIn": "src/chat/chat_room.rs:409",
     "plural": false,
     "description": null
   },
   "TYPING_NOTIFICATION_TWO": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:395",
+    "definedIn": "src/chat/chat_room.rs:396",
     "plural": false,
     "description": null
   },
@@ -883,7 +937,7 @@
   },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:275",
+    "definedIn": "src/chat/chat_room.rs:276",
     "plural": false,
     "description": null
   },

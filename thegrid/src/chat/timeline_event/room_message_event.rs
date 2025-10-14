@@ -31,7 +31,7 @@ where
 }
 
 #[derive(Clone)]
-enum CachedRoomMember {
+pub enum CachedRoomMember {
     RoomMember(RoomMember),
     UserId(OwnedUserId),
 }
