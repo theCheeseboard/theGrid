@@ -1,5 +1,6 @@
 use cntp_i18n::tr;
 use contemporary::application::Details;
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
@@ -16,7 +17,6 @@ use gpui::{
 };
 use gpui_tokio::Tokio;
 use std::fs::remove_dir_all;
-use thegrid::admonition::{AdmonitionSeverity, admonition};
 use thegrid::session::session_manager::SessionManager;
 
 enum LogoutPopoverState {

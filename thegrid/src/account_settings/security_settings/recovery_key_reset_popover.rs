@@ -1,4 +1,5 @@
 use cntp_i18n::tr;
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
@@ -20,7 +21,6 @@ use matrix_sdk::crypto::KeyExportError;
 use matrix_sdk::encryption::RoomKeyImportError;
 use matrix_sdk::encryption::recovery::{RecoveryError, RecoveryState};
 use std::path::PathBuf;
-use thegrid::admonition::{AdmonitionSeverity, admonition};
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
 use tracing::error;

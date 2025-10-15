@@ -2,18 +2,15 @@ use crate::chat::join_room::create_room_popover::CreateRoomPopover;
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
 use gpui::{
-    Context, ElementId, Entity, InteractiveElement, IntoElement, ParentElement, Render, Styled,
-    Window, div, px,
+    Context, Entity, InteractiveElement, IntoElement, ParentElement, Render, Styled, Window, div,
+    px,
 };
-use std::rc::Rc;
-use thegrid::admonition::{AdmonitionSeverity, admonition};
 
 pub mod create_room_popover;
 

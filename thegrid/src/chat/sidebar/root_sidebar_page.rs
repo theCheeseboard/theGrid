@@ -2,9 +2,10 @@ use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
 use crate::chat::sidebar::{Sidebar, SidebarPage};
 use crate::mxc_image::{SizePolicy, mxc_image};
-use cntp_i18n::tr;
+use cntp_i18n::{tr, trn};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
+use contemporary::components::layer::layer;
 use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
@@ -153,25 +154,46 @@ impl Render for RootSidebarPage {
                             };
 
                             match item {
-                                SidebarItem::Create => div()
-                                    .id("create-join")
-                                    .m(px(2.))
-                                    .p(px(2.))
-                                    .gap(px(4.))
-                                    .rounded(theme.border_radius)
-                                    .flex()
-                                    .w_full()
-                                    .items_center()
-                                    .child(icon("list-add".into()))
-                                    .child(tr!("SIDEBAR_CREATE_JOIN", "Create or Join"))
-                                    .when(
-                                        matches!(displayed_room, DisplayedRoom::CreateRoom),
-                                        |david| david.bg(theme.button_background),
-                                    )
-                                    .on_click(cx.listener(move |this, _, window, cx| {
-                                        this.displayed_room.write(cx, DisplayedRoom::CreateRoom);
-                                    }))
-                                    .into_any_element(),
+                                SidebarItem::Create => {
+                                    let session_manager = cx.global::<SessionManager>();
+                                    let room_cache = session_manager.rooms().read(cx);
+                                    let invited_rooms = room_cache.invited_rooms(cx);
+
+                                    div()
+                                        .id("create-join")
+                                        .m(px(2.))
+                                        .p(px(2.))
+                                        .gap(px(4.))
+                                        .rounded(theme.border_radius)
+                                        .flex()
+                                        .w_full()
+                                        .items_center()
+                                        .child(icon("list-add".into()))
+                                        .child(tr!("SIDEBAR_CREATE_JOIN", "Create or Join"))
+                                        .when(!invited_rooms.is_empty(), |david| {
+                                            david.child(
+                                                div()
+                                                    .rounded(theme.border_radius)
+                                                    .bg(theme.info_accent_color)
+                                                    .p(px(2.))
+                                                    .child(trn!(
+                                                        "SIDEBAR_PENDING_INVITES",
+                                                        "{{count}} invite",
+                                                        "{{count}} invites",
+                                                        count = invited_rooms.len() as isize
+                                                    )),
+                                            )
+                                        })
+                                        .when(
+                                            matches!(displayed_room, DisplayedRoom::CreateRoom),
+                                            |david| david.bg(theme.button_background),
+                                        )
+                                        .on_click(cx.listener(move |this, _, window, cx| {
+                                            this.displayed_room
+                                                .write(cx, DisplayedRoom::CreateRoom);
+                                        }))
+                                        .into_any_element()
+                                }
                                 SidebarItem::Heading(heading) => {
                                     div().pt(px(4.)).child(subtitle(heading)).into_any_element()
                                 }

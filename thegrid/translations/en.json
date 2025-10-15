@@ -159,6 +159,10 @@
   "SETUP_RECOVERY_DESCRIPTION": "Set up a recovery key for your account so you don't lose access to your encrypted messages",
   "SETUP_RECOVERY_NOW": "Set up now",
   "SIDEBAR_CREATE_JOIN": "Create or Join",
+  "SIDEBAR_PENDING_INVITES": {
+    "one": "{{count}} invite",
+    "other": "{{count}} invites"
+  },
   "SORRY": "Sorry",
   "TERMINAL_ERROR_UNKNOWN_ERROR": "An unknown error occurred.",
   "TERMINAL_ERROR_UNKNOWN_TOKEN": "This session was logged out by another device.",

@@ -1,5 +1,5 @@
-use crate::auth::logout_popover::LogoutPopover;
 use cntp_i18n::tr;
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
@@ -12,13 +12,10 @@ use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::TextField;
 use directories::UserDirs;
-use gpui::prelude::FluentBuilder;
 use gpui::{
     App, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
     div, px,
 };
-use std::path::PathBuf;
-use thegrid::admonition::{AdmonitionSeverity, admonition};
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
 

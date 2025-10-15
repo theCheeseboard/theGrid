@@ -223,7 +223,7 @@
   },
   "CREATE_ROOM_OPTIONS": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:60",
+    "definedIn": "src/chat/join_room.rs:57",
     "plural": false,
     "description": null
   },
@@ -403,37 +403,37 @@
   },
   "JOIN_ROOM": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:44",
+    "definedIn": "src/chat/join_room.rs:41",
     "plural": false,
     "description": null
   },
   "KEY_EXPORT_DESCRIPTION": {
     "context": "key_export_popover.rs",
-    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:163",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:160",
     "plural": false,
     "description": null
   },
   "KEY_EXPORT_OPTIONS": {
     "context": "key_export_popover.rs",
-    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:154",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:151",
     "plural": false,
     "description": null
   },
   "KEY_EXPORT_PASSWORD": {
     "context": "key_export_popover.rs",
-    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:38",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:35",
     "plural": false,
     "description": null
   },
   "KEY_EXPORT_PASSWORD_CONFIRM": {
     "context": "key_export_popover.rs",
-    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:44",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:41",
     "plural": false,
     "description": null
   },
   "KEY_EXPORT_TITLE": {
     "context": "key_export_popover.rs",
-    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:140",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:137",
     "plural": false,
     "description": null
   },
@@ -775,7 +775,7 @@
   },
   "ROOMS_SPACES": {
     "context": "root_sidebar_page.rs",
-    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:137",
+    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:138",
     "plural": false,
     "description": null
   },
@@ -865,13 +865,13 @@
   },
   "ROOT_SIDEBAR_ROOMS": {
     "context": "root_sidebar_page.rs",
-    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:117",
+    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:118",
     "plural": false,
     "description": null
   },
   "ROOT_SIDEBAR_SPACES": {
     "context": "root_sidebar_page.rs",
-    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:111",
+    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:112",
     "plural": false,
     "description": null
   },
@@ -919,7 +919,7 @@
   },
   "SECURITY_KEY_EXPORT_WARNING": {
     "context": "key_export_popover.rs",
-    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:175",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:172",
     "plural": false,
     "description": null
   },
@@ -955,8 +955,14 @@
   },
   "SIDEBAR_CREATE_JOIN": {
     "context": "root_sidebar_page.rs",
-    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:166",
+    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:172",
     "plural": false,
+    "description": null
+  },
+  "SIDEBAR_PENDING_INVITES": {
+    "context": "root_sidebar_page.rs",
+    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:180",
+    "plural": true,
     "description": null
   },
   "SORRY": {

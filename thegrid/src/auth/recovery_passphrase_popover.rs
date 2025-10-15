@@ -1,4 +1,5 @@
 use cntp_i18n::tr;
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
@@ -15,7 +16,6 @@ use gpui::{
     div, px,
 };
 use matrix_sdk::encryption::recovery::RecoveryState::Enabled;
-use thegrid::admonition::{AdmonitionSeverity, admonition};
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
 

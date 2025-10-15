@@ -91,6 +91,17 @@ impl RoomCache {
         &self.joined_rooms
     }
 
+    pub fn invited_rooms(&self, cx: &App) -> Vec<Entity<CachedRoom>> {
+        self.cached_rooms
+            .values()
+            .filter(|&room| {
+                let room = room.read(cx);
+                room.inner.state() == RoomState::Invited
+            })
+            .cloned()
+            .collect()
+    }
+
     pub fn rooms_in_category(&self, category: RoomCategory, cx: &App) -> Vec<Entity<CachedRoom>> {
         match category {
             RoomCategory::Root => self
@@ -98,14 +109,17 @@ impl RoomCache {
                 .values()
                 .filter(|&room| {
                     let room = room.read(cx);
-                    room.parent_spaces.is_empty()
+                    room.parent_spaces.is_empty() && room.inner.state() == RoomState::Joined
                 })
                 .cloned()
                 .collect(),
             RoomCategory::Space(room_id) => self
                 .cached_rooms
                 .values()
-                .filter(|&room| room.read(cx).parent_spaces.contains(&room_id))
+                .filter(|&room| {
+                    let room = room.read(cx);
+                    room.parent_spaces.contains(&room_id) && room.inner.state() == RoomState::Joined
+                })
                 .cloned()
                 .collect(),
         }
@@ -141,11 +155,10 @@ impl CachedRoom {
                                 _ => None,
                             })
                             .collect::<Vec<_>>();
-                        let _ = weak_this
-                            .update(cx, |this, cx| {
-                                this.parent_spaces = parent_spaces;
-                                cx.notify();
-                            });
+                        let _ = weak_this.update(cx, |this, cx| {
+                            this.parent_spaces = parent_spaces;
+                            cx.notify();
+                        });
                     }
                 },
             )
