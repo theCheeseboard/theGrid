@@ -145,9 +145,11 @@ impl Render for RootSidebarPage {
                             let theme = cx.global::<Theme>();
                             let item = &this.items[i];
 
-                            let current_room = match this.displayed_room.read(cx) {
-                                DisplayedRoom::None => None,
+                            let displayed_room = this.displayed_room.read(cx);
+
+                            let current_room = match displayed_room {
                                 DisplayedRoom::Room(room_id) => Some(room_id.clone()),
+                                _ => None,
                             };
 
                             match item {
@@ -158,10 +160,17 @@ impl Render for RootSidebarPage {
                                     .gap(px(4.))
                                     .rounded(theme.border_radius)
                                     .flex()
+                                    .w_full()
                                     .items_center()
                                     .child(icon("list-add".into()))
                                     .child(tr!("SIDEBAR_CREATE_JOIN", "Create or Join"))
-                                    .on_click(cx.listener(move |this, _, window, cx| {}))
+                                    .when(
+                                        matches!(displayed_room, DisplayedRoom::CreateRoom),
+                                        |david| david.bg(theme.button_background),
+                                    )
+                                    .on_click(cx.listener(move |this, _, window, cx| {
+                                        this.displayed_room.write(cx, DisplayedRoom::CreateRoom);
+                                    }))
                                     .into_any_element(),
                                 SidebarItem::Heading(heading) => {
                                     div().pt(px(4.)).child(subtitle(heading)).into_any_element()

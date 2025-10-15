@@ -30,6 +30,7 @@ impl RenderOnce for RoomHead {
                 div()
                     .flex()
                     .flex_col()
+                    .child(div().h(px(200.)))
                     .child(
                         mxc_image(room.inner.avatar_url())
                             .size(px(128.))

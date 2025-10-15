@@ -3,6 +3,7 @@ use crate::actions::{AccountSettings, AccountSwitcher, CreateRoom, LogOut};
 use crate::auth::logout_popover::logout_popover;
 use crate::chat::chat_room::ChatRoom;
 use crate::chat::displayed_room::DisplayedRoom;
+use crate::chat::join_room::JoinRoom;
 use crate::chat::join_room::create_room_popover::CreateRoomPopover;
 use crate::chat::sidebar::Sidebar;
 use crate::main_window::{MainWindowSurface, SurfaceChangeEvent, SurfaceChangeHandler};
@@ -13,7 +14,6 @@ use gpui::{
     App, AppContext, BorrowAppContext, Context, Entity, FocusHandle, InteractiveElement,
     IntoElement, ParentElement, Render, Styled, Window, div, px,
 };
-use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::Prompt::Create;
 use std::rc::Rc;
 use thegrid::session::session_manager::SessionManager;
 
@@ -22,6 +22,7 @@ pub struct MainChatSurface {
 
     displayed_room: Entity<DisplayedRoom>,
     chat_room: Option<Entity<ChatRoom>>,
+    join_room: Entity<JoinRoom>,
     focus_handle: FocusHandle,
 
     logout_popover_visible: Entity<bool>,
@@ -49,6 +50,8 @@ impl MainChatSurface {
             })
             .detach();
 
+            let create_room_popover = cx.new(|cx| CreateRoomPopover::new(cx));
+
             MainChatSurface {
                 sidebar: cx.new(|cx| {
                     let mut sidebar = Sidebar::new(cx, displayed_room.clone());
@@ -60,7 +63,8 @@ impl MainChatSurface {
                 focus_handle: cx.focus_handle(),
                 logout_popover_visible: cx.new(|_| false),
                 on_surface_change: Rc::new(Box::new(on_surface_change)),
-                create_room_popover: cx.new(|cx| CreateRoomPopover::new(cx)),
+                join_room: cx.new(|cx| JoinRoom::new(cx, create_room_popover.clone())),
+                create_room_popover,
             }
         })
     }
@@ -146,6 +150,7 @@ impl Render for MainChatSurface {
                         DisplayedRoom::Room(_) => {
                             self.chat_room.as_ref().unwrap().clone().into_any_element()
                         }
+                        DisplayedRoom::CreateRoom => self.join_room.clone().into_any_element(),
                     })
                     .flex_grow(),
             )

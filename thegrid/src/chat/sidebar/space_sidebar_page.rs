@@ -100,8 +100,8 @@ impl Render for SpaceSidebarPage {
                             let room_id = room.inner.room_id().to_owned();
 
                             let current_room = match this.displayed_room.read(cx) {
-                                DisplayedRoom::None => None,
                                 DisplayedRoom::Room(room_id) => Some(room_id.clone()),
+                                _ => None,
                             };
 
                             div()

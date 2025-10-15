@@ -4,4 +4,5 @@ use matrix_sdk::ruma::{OwnedRoomId, RoomId};
 pub enum DisplayedRoom {
     None,
     Room(OwnedRoomId),
+    CreateRoom,
 }
