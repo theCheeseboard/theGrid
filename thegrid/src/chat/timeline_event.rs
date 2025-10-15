@@ -1,3 +1,4 @@
+pub mod room_head;
 mod room_message_event;
 mod room_state_event;
 

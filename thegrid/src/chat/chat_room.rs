@@ -1,6 +1,7 @@
 use crate::auth::emoji_flyout::{EmojiFlyout, EmojiSelectedEvent};
 use crate::chat::chat_input::ChatInput;
 use crate::chat::displayed_room::DisplayedRoom;
+use crate::chat::timeline_event::room_head::room_head;
 use crate::chat::timeline_event::timeline_event;
 use cntp_i18n::{tr, trn};
 use contemporary::components::button::button;
@@ -8,6 +9,7 @@ use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
+use contemporary::components::spinner::spinner;
 use contemporary::components::text_field::TextField;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
@@ -279,18 +281,21 @@ impl Render for ChatRoom {
 
         let room_clone = room.clone();
         let events = self.events.clone();
-        if events.len() != root_list_state.item_count() {
-            root_list_state.reset(events.len());
+        if events.len() + 1 != root_list_state.item_count() {
+            root_list_state.reset(events.len() + 1);
             root_list_state.scroll_to(ListOffset {
-                item_ix: events.len(),
+                item_ix: events.len() + 1,
                 offset_in_item: px(0.),
             })
         }
+
+        let pagination_status = self.pagination_status.read(cx).clone();
 
         let window_size = window.viewport_size();
         let inset = window.client_inset().unwrap_or_else(|| px(0.));
 
         let typing_users = &self.typing_users;
+        let room_id = self.room_id.clone();
 
         div()
             .flex()
@@ -309,14 +314,35 @@ impl Render for ChatRoom {
             .child(
                 div().flex_grow().child(
                     list(root_list_state.clone(), move |i, _, cx| {
-                        let event = events[i].clone();
-                        let previous_event = if i == 0 {
-                            None
+                        if i == 0 {
+                            match pagination_status {
+                                RoomPaginationStatus::Idle { hit_timeline_start } => {
+                                    if hit_timeline_start {
+                                        room_head(room_id.clone()).into_any_element()
+                                    } else {
+                                        div().child("Not Paginating").into_any_element()
+                                    }
+                                }
+                                RoomPaginationStatus::Paginating => div()
+                                    .w_full()
+                                    .flex()
+                                    .py(px(12.))
+                                    .items_center()
+                                    .justify_center()
+                                    .child(spinner())
+                                    .into_any_element(),
+                            }
                         } else {
-                            events.get(i - 1).cloned()
-                        };
+                            let event = events[i - 1].clone();
+                            let previous_event = if i == 0 {
+                                None
+                            } else {
+                                events.get(i - 1).cloned()
+                            };
 
-                        timeline_event(event, previous_event, room_clone.clone()).into_any_element()
+                            timeline_event(event, previous_event, room_clone.clone())
+                                .into_any_element()
+                        }
                     })
                     .flex()
                     .flex_col()

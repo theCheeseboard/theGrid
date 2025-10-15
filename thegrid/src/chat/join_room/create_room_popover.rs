@@ -136,7 +136,7 @@ impl CreateRoomPopover {
                         .flex()
                         .flex_col()
                         .gap(px(8.))
-                        .child(tr!("CREATE_ROOM_DESCRIPTION", "Create a room!"))
+                        .child(tr!("CREATE_ROOM_DESCRIPTION", "Create a room to chat in"))
                         .child(self.name_field.clone())
                         .child(
                             layer()
