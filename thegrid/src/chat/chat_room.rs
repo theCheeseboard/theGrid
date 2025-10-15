@@ -334,10 +334,10 @@ impl Render for ChatRoom {
                             }
                         } else {
                             let event = events[i - 1].clone();
-                            let previous_event = if i == 0 {
+                            let previous_event = if i == 1 {
                                 None
                             } else {
-                                events.get(i - 1).cloned()
+                                events.get(i - 2).cloned()
                             };
 
                             timeline_event(event, previous_event, room_clone.clone())
