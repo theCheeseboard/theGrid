@@ -6,6 +6,7 @@ use cntp_i18n::tr;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
+use gpui::prelude::FluentBuilder;
 use gpui::{
     AppContext, Context, ElementId, Entity, InteractiveElement, IntoElement, ListAlignment,
     ListState, ParentElement, Render, StatefulInteractiveElement, Styled, Subscription, Window,
@@ -141,9 +142,14 @@ impl Render for RootSidebarPage {
                             let theme = cx.global::<Theme>();
                             let item = &this.items[i];
 
+                            let current_room = match this.displayed_room.read(cx) {
+                                DisplayedRoom::None => None,
+                                DisplayedRoom::Room(room_id) => Some(room_id.clone()),
+                            };
+
                             match item {
                                 SidebarItem::Heading(heading) => {
-                                    div().child(subtitle(heading)).into_any_element()
+                                    div().pt(px(4.)).child(subtitle(heading)).into_any_element()
                                 }
                                 SidebarItem::Room(room) => {
                                     let room = room.read(cx);
@@ -152,7 +158,15 @@ impl Render for RootSidebarPage {
                                         .id(ElementId::Name(
                                             room.inner.room_id().to_string().into(),
                                         ))
+                                        .m(px(2.))
                                         .p(px(2.))
+                                        .rounded(theme.border_radius)
+                                        .when(
+                                            current_room.is_some_and(|current_room| {
+                                                current_room == room_id
+                                            }),
+                                            |david| david.bg(theme.button_background),
+                                        )
                                         .child(
                                             room.inner
                                                 .cached_display_name()
@@ -174,6 +188,7 @@ impl Render for RootSidebarPage {
                                         .id(ElementId::Name(
                                             room.inner.room_id().to_string().into(),
                                         ))
+                                        .m(px(2.))
                                         .p(px(2.))
                                         .gap(px(2.))
                                         .child(

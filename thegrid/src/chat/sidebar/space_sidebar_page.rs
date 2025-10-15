@@ -1,6 +1,8 @@
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::{Sidebar, SidebarPage};
 use contemporary::components::grandstand::grandstand;
+use contemporary::styling::theme::Theme;
+use gpui::prelude::FluentBuilder;
 use gpui::{
     App, AppContext, Context, ElementId, Entity, InteractiveElement, IntoElement, ListAlignment,
     ListState, ParentElement, Render, StatefulInteractiveElement, Styled, Window, div, list, px,
@@ -92,12 +94,26 @@ impl Render for SpaceSidebarPage {
                     list(
                         self.list_state.clone(),
                         cx.processor(move |this, i, _, cx| {
+                            let theme = cx.global::<Theme>();
                             let room: &Entity<CachedRoom> = &root_rooms[i];
                             let room = room.read(cx);
                             let room_id = room.inner.room_id().to_owned();
+
+                            let current_room = match this.displayed_room.read(cx) {
+                                DisplayedRoom::None => None,
+                                DisplayedRoom::Room(room_id) => Some(room_id.clone()),
+                            };
+
                             div()
                                 .id(ElementId::Name(room.inner.room_id().to_string().into()))
+                                .m(px(2.))
                                 .p(px(2.))
+                                .rounded(theme.border_radius)
+                                .when(
+                                    current_room
+                                        .is_some_and(|current_room| current_room == room_id),
+                                    |david| david.bg(theme.button_background),
+                                )
                                 .child(
                                     room.inner
                                         .cached_display_name()

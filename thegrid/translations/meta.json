@@ -709,7 +709,7 @@
   },
   "ROOMS_SPACES": {
     "context": "root_sidebar_page.rs",
-    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:133",
+    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:134",
     "plural": false,
     "description": null
   },
@@ -787,13 +787,13 @@
   },
   "ROOT_SIDEBAR_ROOMS": {
     "context": "root_sidebar_page.rs",
-    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:113",
+    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:114",
     "plural": false,
     "description": null
   },
   "ROOT_SIDEBAR_SPACES": {
     "context": "root_sidebar_page.rs",
-    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:107",
+    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:108",
     "plural": false,
     "description": null
   },
