@@ -1,8 +1,9 @@
 use crate::account_settings::AccountSettingsPage;
-use crate::actions::{AccountSettings, AccountSwitcher, LogOut};
+use crate::actions::{AccountSettings, AccountSwitcher, CreateRoom, LogOut};
 use crate::auth::logout_popover::logout_popover;
 use crate::chat::chat_room::ChatRoom;
 use crate::chat::displayed_room::DisplayedRoom;
+use crate::chat::join_room::create_room_popover::CreateRoomPopover;
 use crate::chat::sidebar::Sidebar;
 use crate::main_window::{MainWindowSurface, SurfaceChangeEvent, SurfaceChangeHandler};
 use cntp_i18n::{i18n_manager, tr};
@@ -12,6 +13,7 @@ use gpui::{
     App, AppContext, BorrowAppContext, Context, Entity, FocusHandle, InteractiveElement,
     IntoElement, ParentElement, Render, Styled, Window, div, px,
 };
+use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::Prompt::Create;
 use std::rc::Rc;
 use thegrid::session::session_manager::SessionManager;
 
@@ -23,6 +25,7 @@ pub struct MainChatSurface {
     focus_handle: FocusHandle,
 
     logout_popover_visible: Entity<bool>,
+    create_room_popover: Entity<CreateRoomPopover>,
 
     on_surface_change: Rc<Box<SurfaceChangeHandler>>,
 }
@@ -57,8 +60,46 @@ impl MainChatSurface {
                 focus_handle: cx.focus_handle(),
                 logout_popover_visible: cx.new(|_| false),
                 on_surface_change: Rc::new(Box::new(on_surface_change)),
+                create_room_popover: cx.new(|cx| CreateRoomPopover::new(cx)),
             }
         })
+    }
+
+    pub fn log_out(&mut self, _: &LogOut, _: &mut Window, cx: &mut Context<Self>) {
+        self.logout_popover_visible.write(cx, true);
+        cx.notify()
+    }
+
+    pub fn account_settings(
+        &mut self,
+        _: &AccountSettings,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        (self.on_surface_change)(
+            &SurfaceChangeEvent {
+                change: MainWindowSurface::AccountSettings(AccountSettingsPage::Profile).into(),
+            },
+            window,
+            cx,
+        );
+    }
+
+    pub fn account_switcher(
+        &mut self,
+        _: &AccountSwitcher,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        cx.update_global::<SessionManager, ()>(|session_manager, cx| {
+            session_manager.clear_session()
+        });
+        cx.notify()
+    }
+
+    pub fn create_room(&mut self, _: &CreateRoom, _: &mut Window, cx: &mut Context<Self>) {
+        self.create_room_popover
+            .update(cx, |create_room_popover, cx| create_room_popover.open(cx))
     }
 }
 
@@ -70,26 +111,10 @@ impl Render for MainChatSurface {
 
         div()
             .track_focus(&self.focus_handle)
-            .on_action(cx.listener(|this, _: &LogOut, _, cx| {
-                this.logout_popover_visible.write(cx, true);
-                cx.notify()
-            }))
-            .on_action(cx.listener(|this, _: &AccountSettings, window, cx| {
-                (this.on_surface_change)(
-                    &SurfaceChangeEvent {
-                        change: MainWindowSurface::AccountSettings(AccountSettingsPage::Profile)
-                            .into(),
-                    },
-                    window,
-                    cx,
-                );
-            }))
-            .on_action(cx.listener(|_, _: &AccountSwitcher, _, cx| {
-                cx.update_global::<SessionManager, ()>(|session_manager, cx| {
-                    session_manager.clear_session()
-                });
-                cx.notify()
-            }))
+            .on_action(cx.listener(Self::log_out))
+            .on_action(cx.listener(Self::account_settings))
+            .on_action(cx.listener(Self::account_switcher))
+            .on_action(cx.listener(Self::create_room))
             .size_full()
             .flex()
             .gap(px(2.))
@@ -125,5 +150,6 @@ impl Render for MainChatSurface {
                     .flex_grow(),
             )
             .child(logout_popover(self.logout_popover_visible.clone()))
+            .child(self.create_room_popover.clone())
     }
 }

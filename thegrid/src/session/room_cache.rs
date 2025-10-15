@@ -141,12 +141,11 @@ impl CachedRoom {
                                 _ => None,
                             })
                             .collect::<Vec<_>>();
-                        weak_this
+                        let _ = weak_this
                             .update(cx, |this, cx| {
                                 this.parent_spaces = parent_spaces;
                                 cx.notify();
-                            })
-                            .unwrap();
+                            });
                     }
                 },
             )

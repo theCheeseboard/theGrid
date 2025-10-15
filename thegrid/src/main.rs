@@ -12,7 +12,7 @@ mod identity_reset;
 mod mxc_image;
 mod uiaa_client;
 
-use crate::actions::{AccountSettings, AccountSwitcher, LogOut, register_actions};
+use crate::actions::{AccountSettings, AccountSwitcher, CreateRoom, LogOut, register_actions};
 use crate::chat::chat_input::bind_chat_input_keys;
 use crate::main_window::MainWindow;
 use cntp_i18n::{I18N_MANAGER, tr, tr_load};
@@ -73,21 +73,30 @@ fn mane() {
                             .into(),
                         },
                         menus: ContemporaryMenus {
-                            menus: vec![Menu {
-                                name: tr!("MENU_ACCOUNT", "Account").into(),
-                                items: vec![
-                                    MenuItem::action(
-                                        tr!("ACCOUNT_ACCOUNT_SETTINGS", "Account Settings..."),
-                                        AccountSettings,
-                                    ),
-                                    MenuItem::separator(),
-                                    MenuItem::action(
-                                        tr!("ACCOUNT_ACCOUNT_SWITCHER", "Switch Accounts..."),
-                                        AccountSwitcher,
-                                    ),
-                                    MenuItem::action(tr!("ACCOUNT_LOG_OUT", "Log Out"), LogOut),
-                                ],
-                            }],
+                            menus: vec![
+                                Menu {
+                                    name: tr!("MENU_ACCOUNT", "Account").into(),
+                                    items: vec![
+                                        MenuItem::action(
+                                            tr!("ACCOUNT_ACCOUNT_SETTINGS", "Account Settings..."),
+                                            AccountSettings,
+                                        ),
+                                        MenuItem::separator(),
+                                        MenuItem::action(
+                                            tr!("ACCOUNT_ACCOUNT_SWITCHER", "Switch Accounts..."),
+                                            AccountSwitcher,
+                                        ),
+                                        MenuItem::action(tr!("ACCOUNT_LOG_OUT", "Log Out"), LogOut),
+                                    ],
+                                },
+                                Menu {
+                                    name: tr!("MENU_ROOMS", "Rooms").into(),
+                                    items: vec![MenuItem::action(
+                                        tr!("ROOMS_CREATE", "Create Room..."),
+                                        CreateRoom,
+                                    )],
+                                },
+                            ],
                             on_about: Rc::new(move |cx| {
                                 weak_window.upgrade().unwrap().update(cx, |window, cx| {
                                     window.about_surface_open(true);
@@ -106,12 +115,6 @@ fn mane() {
         cx.activate(true);
     });
 }
-//
-// main! {
-//     async fn main() {
-//         mane()
-//     }
-// }
 
 #[tokio::main]
 async fn main() {

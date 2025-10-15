@@ -4,13 +4,14 @@ use crate::chat::sidebar::{Sidebar, SidebarPage};
 use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::tr;
 use contemporary::components::grandstand::grandstand;
+use contemporary::components::icon::icon;
 use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AppContext, Context, ElementId, Entity, InteractiveElement, IntoElement, ListAlignment,
-    ListState, ParentElement, Render, StatefulInteractiveElement, Styled, Subscription, Window,
-    div, list, px,
+    AppContext, Context, Element, ElementId, Entity, InteractiveElement, IntoElement,
+    ListAlignment, ListState, ParentElement, Render, StatefulInteractiveElement, Styled,
+    Subscription, Window, div, list, px,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use thegrid::session::room_cache::{CachedRoom, RoomCategory};
@@ -28,6 +29,7 @@ pub enum SidebarItem {
     Heading(String),
     Room(Entity<CachedRoom>),
     Space(Entity<CachedRoom>),
+    Create,
 }
 
 impl RootSidebarPage {
@@ -103,6 +105,7 @@ impl RootSidebarPage {
             .collect::<Vec<_>>();
 
         let mut vec = Vec::new();
+        vec.push(SidebarItem::Create);
         if !spaces.is_empty() {
             vec.push(SidebarItem::Heading(
                 tr!("ROOT_SIDEBAR_SPACES", "Spaces").into(),
@@ -148,6 +151,18 @@ impl Render for RootSidebarPage {
                             };
 
                             match item {
+                                SidebarItem::Create => div()
+                                    .id("create-join")
+                                    .m(px(2.))
+                                    .p(px(2.))
+                                    .gap(px(4.))
+                                    .rounded(theme.border_radius)
+                                    .flex()
+                                    .items_center()
+                                    .child(icon("list-add".into()))
+                                    .child(tr!("SIDEBAR_CREATE_JOIN", "Create or Join"))
+                                    .on_click(cx.listener(move |this, _, window, cx| {}))
+                                    .into_any_element(),
                                 SidebarItem::Heading(heading) => {
                                     div().pt(px(4.)).child(subtitle(heading)).into_any_element()
                                 }
