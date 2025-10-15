@@ -5,7 +5,7 @@ use crate::account_settings::AccountSettingsPage;
 use crate::account_settings::security_settings::recovery_key_reset_popover::RecoveryKeyResetPopover;
 use crate::auth::recovery_passphrase_popover::RecoveryPassphrasePopover;
 use crate::auth::verification_popover::VerificationPopover;
-use crate::chat::main_chat_surface::{ChangeRoomEvent, ChangeRoomHandler};
+use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::root_sidebar_page::RootSidebarPage;
 use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
 use crate::main_window::{MainWindowSurface, SurfaceChangeEvent, SurfaceChangeHandler};
@@ -37,7 +37,7 @@ use thegrid::session::verification_requests_cache::VerificationRequestDetails;
 use thegrid::tokio_helper::TokioHelper;
 
 pub struct Sidebar {
-    on_change_room: Option<Rc<Box<ChangeRoomHandler>>>,
+    displayed_room: Entity<DisplayedRoom>,
     on_surface_change: Option<Rc<Box<SurfaceChangeHandler>>>,
 
     current_page: usize,
@@ -60,30 +60,18 @@ enum SidebarAlert {
 }
 
 impl Sidebar {
-    pub fn new(cx: &mut Context<Self>) -> Self {
-        let change_room_handler = cx.listener(|this, event, window, cx| {
-            if let Some(on_change_room) = this.on_change_room.clone() {
-                on_change_room(event, window, cx)
-            }
-        });
-
+    pub fn new(cx: &mut Context<Self>, displayed_room: Entity<DisplayedRoom>) -> Self {
         let self_entity = cx.entity();
+        let displayed_room_clone = displayed_room.clone();
 
         Sidebar {
-            on_change_room: None,
+            displayed_room,
             on_surface_change: None,
             current_page: 0,
             pages: vec![SidebarPage::Root(cx.new(|cx| {
-                RootSidebarPage::new(cx, self_entity, change_room_handler)
+                RootSidebarPage::new(self_entity, displayed_room_clone, cx)
             }))],
         }
-    }
-
-    pub fn on_change_room(
-        &mut self,
-        on_change_room: impl Fn(&ChangeRoomEvent, &mut Window, &mut App) + 'static,
-    ) {
-        self.on_change_room = Some(Rc::new(Box::new(on_change_room)));
     }
 
     pub fn on_surface_change(
@@ -174,7 +162,6 @@ impl Render for Sidebar {
             root_list_state.reset(root_rooms.len());
         }
 
-        let change_room_handler = self.on_change_room.clone().unwrap();
         let account = session_manager.current_account().read(cx);
 
         let theme = cx.global::<Theme>();

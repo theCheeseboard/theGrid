@@ -98,7 +98,7 @@ impl RoomCache {
                 .values()
                 .filter(|&room| {
                     let room = room.read(cx);
-                    room.inner.is_space() || room.parent_spaces.is_empty()
+                    room.parent_spaces.is_empty()
                 })
                 .cloned()
                 .collect(),

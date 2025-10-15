@@ -1,34 +1,61 @@
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::main_chat_surface::{ChangeRoomEvent, ChangeRoomHandler};
 use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
 use crate::chat::sidebar::{Sidebar, SidebarPage};
+use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::tr;
 use contemporary::components::grandstand::grandstand;
+use contemporary::components::subtitle::subtitle;
+use contemporary::styling::theme::Theme;
 use gpui::{
-    App, AppContext, Context, ElementId, Entity, InteractiveElement, IntoElement, ListAlignment,
-    ListState, ParentElement, Render, StatefulInteractiveElement, Styled, Window, div, list, px,
+    AppContext, Context, ElementId, Entity, InteractiveElement, IntoElement, ListAlignment,
+    ListState, ParentElement, Render, StatefulInteractiveElement, Styled, Subscription, Window,
+    div, list, px,
 };
 use matrix_sdk::ruma::OwnedRoomId;
-use std::rc::Rc;
 use thegrid::session::room_cache::{CachedRoom, RoomCategory};
 use thegrid::session::session_manager::SessionManager;
 
 pub struct RootSidebarPage {
     list_state: ListState,
     sidebar: Entity<Sidebar>,
-    on_change_room: Rc<Box<ChangeRoomHandler>>,
+    displayed_room: Entity<DisplayedRoom>,
+    items: Vec<SidebarItem>,
+    room_cache_subscription: Option<Subscription>,
+}
+
+pub enum SidebarItem {
+    Heading(String),
+    Room(Entity<CachedRoom>),
+    Space(Entity<CachedRoom>),
 }
 
 impl RootSidebarPage {
     pub fn new(
-        cx: &mut App,
         sidebar: Entity<Sidebar>,
-        on_change_room: impl Fn(&ChangeRoomEvent, &mut Window, &mut App) + 'static,
+        displayed_room: Entity<DisplayedRoom>,
+        cx: &mut Context<Self>,
     ) -> Self {
+        cx.observe_global::<SessionManager>(|this, cx| {
+            this.update_sidebar_rooms(cx);
+
+            let session_manager = cx.global::<SessionManager>();
+            if session_manager.client().is_none() {
+                this.room_cache_subscription = None;
+                return;
+            }
+
+            let room_cache = session_manager.rooms();
+            this.room_cache_subscription =
+                Some(cx.observe(&room_cache, |this, _, cx| this.update_sidebar_rooms(cx)));
+        })
+        .detach();
+
         Self {
             list_state: ListState::new(0, ListAlignment::Top, px(200.)),
             sidebar,
-            on_change_room: Rc::new(Box::new(on_change_room)),
+            displayed_room,
+            items: Vec::new(),
+            room_cache_subscription: None,
         }
     }
 
@@ -39,43 +66,64 @@ impl RootSidebarPage {
         let room = room_cache.room(&room_id).unwrap().read(cx);
         if room.inner.is_space() {
             let sidebar = self.sidebar.clone();
-            let on_change_room = self.on_change_room.clone();
             let sidebar_page = cx.new(|cx| {
-                let on_change_room = on_change_room.clone();
-                let page = SpaceSidebarPage::new(
-                    cx,
-                    room_id.clone(),
-                    sidebar,
-                    move |event, window, cx| {
-                        on_change_room(&event, window, cx);
-                    },
-                );
-                page
+                SpaceSidebarPage::new(cx, room_id.clone(), sidebar, self.displayed_room.clone())
             });
             self.sidebar.update(cx, |sidebar, cx| {
                 sidebar.push_page(SidebarPage::Space(sidebar_page))
             });
         } else {
-            let event = ChangeRoomEvent {
-                new_room: DisplayedRoom::Room(room_id.clone()),
-            };
-            (self.on_change_room)(&event, window, cx);
+            self.displayed_room
+                .write(cx, DisplayedRoom::Room(room_id.clone()));
         }
+    }
+
+    fn update_sidebar_rooms(&mut self, cx: &mut Context<Self>) {
+        let session_manager = cx.global::<SessionManager>();
+        if session_manager.client().is_none() {
+            self.list_state.reset(0);
+            self.items = Vec::new();
+            return;
+        }
+
+        let room_cache = session_manager.rooms().read(cx);
+        let root_rooms: Vec<Entity<CachedRoom>> =
+            room_cache.rooms_in_category(RoomCategory::Root, cx).clone();
+
+        let mut spaces = root_rooms
+            .iter()
+            .filter(|room| room.read(cx).inner.is_space())
+            .map(|room| SidebarItem::Space(room.clone()))
+            .collect::<Vec<_>>();
+        let mut rooms = root_rooms
+            .iter()
+            .filter(|room| !room.read(cx).inner.is_space())
+            .map(|room| SidebarItem::Room(room.clone()))
+            .collect::<Vec<_>>();
+
+        let mut vec = Vec::new();
+        if !spaces.is_empty() {
+            vec.push(SidebarItem::Heading(
+                tr!("ROOT_SIDEBAR_SPACES", "Spaces").into(),
+            ));
+            vec.append(&mut spaces);
+        }
+        if !rooms.is_empty() {
+            vec.push(SidebarItem::Heading(
+                tr!("ROOT_SIDEBAR_ROOMS", "Rooms").into(),
+            ));
+            vec.append(&mut rooms);
+        }
+
+        if self.list_state.item_count() != vec.len() {
+            self.list_state.reset(vec.len());
+        }
+        self.items = vec;
     }
 }
 
 impl Render for RootSidebarPage {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let session_manager = cx.global::<SessionManager>();
-        let room_cache = session_manager.rooms().read(cx);
-
-        let root_rooms: Vec<Entity<CachedRoom>> =
-            room_cache.rooms_in_category(RoomCategory::Root, cx).clone();
-
-        if root_rooms.len() != self.list_state.item_count() {
-            self.list_state.reset(root_rooms.len());
-        }
-
         div()
             .flex()
             .flex_col()
@@ -90,23 +138,63 @@ impl Render for RootSidebarPage {
                     list(
                         self.list_state.clone(),
                         cx.processor(move |this, i, _, cx| {
-                            let room: &Entity<CachedRoom> = &root_rooms[i];
-                            let room = room.read(cx);
-                            let room_id = room.inner.room_id().to_owned();
-                            div()
-                                .id(ElementId::Name(room.inner.room_id().to_string().into()))
-                                .p(px(2.))
-                                .child(
-                                    room.inner
-                                        .cached_display_name()
-                                        .map(|name| name.to_string())
-                                        .or_else(|| room.inner.name())
-                                        .unwrap_or_default(),
-                                )
-                                .on_click(cx.listener(move |this, _, window, cx| {
-                                    this.change_room(room_id.clone(), window, cx);
-                                }))
-                                .into_any_element()
+                            let theme = cx.global::<Theme>();
+                            let item = &this.items[i];
+
+                            match item {
+                                SidebarItem::Heading(heading) => {
+                                    div().child(subtitle(heading)).into_any_element()
+                                }
+                                SidebarItem::Room(room) => {
+                                    let room = room.read(cx);
+                                    let room_id = room.inner.room_id().to_owned();
+                                    div()
+                                        .id(ElementId::Name(
+                                            room.inner.room_id().to_string().into(),
+                                        ))
+                                        .p(px(2.))
+                                        .child(
+                                            room.inner
+                                                .cached_display_name()
+                                                .map(|name| name.to_string())
+                                                .or_else(|| room.inner.name())
+                                                .unwrap_or_default(),
+                                        )
+                                        .on_click(cx.listener(move |this, _, window, cx| {
+                                            this.change_room(room_id.clone(), window, cx);
+                                        }))
+                                        .into_any_element()
+                                }
+                                SidebarItem::Space(room) => {
+                                    let room = room.read(cx);
+                                    let room_id = room.inner.room_id().to_owned();
+                                    div()
+                                        .flex()
+                                        .items_center()
+                                        .id(ElementId::Name(
+                                            room.inner.room_id().to_string().into(),
+                                        ))
+                                        .p(px(2.))
+                                        .gap(px(2.))
+                                        .child(
+                                            mxc_image(room.inner.avatar_url())
+                                                .size(px(32.))
+                                                .size_policy(SizePolicy::Fit)
+                                                .rounded(theme.border_radius),
+                                        )
+                                        .child(
+                                            room.inner
+                                                .cached_display_name()
+                                                .map(|name| name.to_string())
+                                                .or_else(|| room.inner.name())
+                                                .unwrap_or_default(),
+                                        )
+                                        .on_click(cx.listener(move |this, _, window, cx| {
+                                            this.change_room(room_id.clone(), window, cx);
+                                        }))
+                                        .into_any_element()
+                                }
+                            }
                         }),
                     )
                     .flex()

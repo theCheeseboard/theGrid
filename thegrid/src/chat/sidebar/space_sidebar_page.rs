@@ -1,14 +1,11 @@
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::main_chat_surface::{ChangeRoomEvent, ChangeRoomHandler};
 use crate::chat::sidebar::{Sidebar, SidebarPage};
-use cntp_i18n::tr;
 use contemporary::components::grandstand::grandstand;
 use gpui::{
     App, AppContext, Context, ElementId, Entity, InteractiveElement, IntoElement, ListAlignment,
     ListState, ParentElement, Render, StatefulInteractiveElement, Styled, Window, div, list, px,
 };
 use matrix_sdk::ruma::OwnedRoomId;
-use std::rc::Rc;
 use thegrid::session::room_cache::{CachedRoom, RoomCategory};
 use thegrid::session::session_manager::SessionManager;
 
@@ -16,7 +13,7 @@ pub struct SpaceSidebarPage {
     room_id: OwnedRoomId,
     list_state: ListState,
     sidebar: Entity<Sidebar>,
-    on_change_room: Rc<Box<ChangeRoomHandler>>,
+    displayed_room: Entity<DisplayedRoom>,
 }
 
 impl SpaceSidebarPage {
@@ -24,13 +21,13 @@ impl SpaceSidebarPage {
         cx: &mut App,
         room_id: OwnedRoomId,
         sidebar: Entity<Sidebar>,
-        on_change_room: impl Fn(&ChangeRoomEvent, &mut Window, &mut App) + 'static,
+        displayed_room: Entity<DisplayedRoom>,
     ) -> Self {
         Self {
             list_state: ListState::new(0, ListAlignment::Top, px(200.)),
             room_id,
             sidebar,
-            on_change_room: Rc::new(Box::new(on_change_room)),
+            displayed_room,
         }
     }
 
@@ -41,16 +38,12 @@ impl SpaceSidebarPage {
         let room = room_cache.room(&room_id).unwrap().read(cx);
         if room.inner.is_space() {
             let sidebar = self.sidebar.clone();
-            let on_change_room = self.on_change_room.clone();
             let sidebar_page = cx.new(|cx| {
-                let on_change_room = on_change_room.clone();
                 let page = SpaceSidebarPage::new(
                     cx,
                     room_id.clone(),
                     sidebar,
-                    move |event, window, cx| {
-                        on_change_room(&event, window, cx);
-                    },
+                    self.displayed_room.clone(),
                 );
                 page
             });
@@ -58,10 +51,8 @@ impl SpaceSidebarPage {
                 sidebar.push_page(SidebarPage::Space(sidebar_page))
             });
         } else {
-            let event = ChangeRoomEvent {
-                new_room: DisplayedRoom::Room(room_id.clone()),
-            };
-            (self.on_change_room)(&event, window, cx);
+            self.displayed_room
+                .write(cx, DisplayedRoom::Room(room_id.clone()));
         }
     }
 }
@@ -80,8 +71,6 @@ impl Render for SpaceSidebarPage {
         if root_rooms.len() != self.list_state.item_count() {
             self.list_state.reset(root_rooms.len());
         }
-
-        let on_change_room = self.on_change_room.clone();
 
         div()
             .flex()

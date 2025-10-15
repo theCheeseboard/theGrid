@@ -1,5 +1,7 @@
-use crate::chat::main_chat_surface::{ChangeRoomHandler, MainChatSurface};
-use crate::main_window::{SurfaceChangeEvent, SurfaceChangeHandler};
+use crate::actions::{AccountSettings, AccountSwitcher, LogOut};
+use crate::chat::displayed_room::DisplayedRoom;
+use crate::chat::main_chat_surface::MainChatSurface;
+use crate::main_window::SurfaceChangeEvent;
 use cntp_i18n::tr;
 use contemporary::application::Details;
 use contemporary::components::application_menu::ApplicationMenu;
@@ -12,16 +14,25 @@ use contemporary::components::spinner::spinner;
 use contemporary::styling::theme::Theme;
 use contemporary::surface::surface;
 use gpui::prelude::FluentBuilder;
-use gpui::{App, AppContext, BorrowAppContext, Context, Entity, InteractiveElement, IntoElement, Menu, ParentElement, Render, Styled, Window, div, px, MenuItem};
+use gpui::{
+    App, AppContext, BorrowAppContext, Context, Entity, InteractiveElement, IntoElement, Menu,
+    MenuItem, ParentElement, Render, Styled, Window, div, px,
+};
 use std::fs::remove_dir_all;
-use std::rc::Rc;
 use thegrid::session::error_handling::ClientError;
 use thegrid::session::session_manager::SessionManager;
-use crate::actions::{AccountSettings, AccountSwitcher, LogOut};
+
+pub type ChangeRoomHandler = dyn Fn(&ChangeRoomEvent, &mut Window, &mut App) + 'static;
+
+#[derive(Clone)]
+pub struct ChangeRoomEvent {
+    pub new_room: DisplayedRoom,
+}
 
 pub struct ChatSurface {
     application_menu: Entity<ApplicationMenu>,
     main_chat_surface: Entity<MainChatSurface>,
+    displayed_room: Entity<DisplayedRoom>,
 }
 
 impl ChatSurface {
@@ -29,27 +40,22 @@ impl ChatSurface {
         cx: &mut App,
         on_surface_change: impl Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static,
     ) -> Entity<ChatSurface> {
+        let displayed_room = cx.new(|_| DisplayedRoom::None);
         cx.new(|cx| ChatSurface {
             application_menu: ApplicationMenu::new(
                 cx,
                 Menu {
                     name: "Application Menu".into(),
                     items: vec![
-                        MenuItem::action(
-                            tr!("ACCOUNT_ACCOUNT_SETTINGS"),
-                            AccountSettings,
-                        ),
+                        MenuItem::action(tr!("ACCOUNT_ACCOUNT_SETTINGS"), AccountSettings),
                         MenuItem::separator(),
-                        MenuItem::action(
-                            tr!("ACCOUNT_ACCOUNT_SWITCHER"),
-                            AccountSwitcher,
-                        ),
+                        MenuItem::action(tr!("ACCOUNT_ACCOUNT_SWITCHER"), AccountSwitcher),
                         MenuItem::action(tr!("ACCOUNT_LOG_OUT"), LogOut),
                     ],
                 },
             ),
-
-            main_chat_surface: MainChatSurface::new(cx, on_surface_change),
+            main_chat_surface: MainChatSurface::new(cx, displayed_room.clone(), on_surface_change),
+            displayed_room,
         })
     }
 }

@@ -1,7 +1,6 @@
 use crate::auth::emoji_flyout::{EmojiFlyout, EmojiSelectedEvent};
 use crate::chat::chat_input::ChatInput;
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::main_chat_surface::{ChangeRoomEvent, ChangeRoomHandler};
 use crate::chat::timeline_event::timeline_event;
 use cntp_i18n::{tr, trn};
 use contemporary::components::button::button;
@@ -35,7 +34,7 @@ pub struct ChatRoom {
     room_id: OwnedRoomId,
     events: Vec<TimelineEvent>,
     pagination_status: Entity<RoomPaginationStatus>,
-    on_change_room: Option<Rc<Box<ChangeRoomHandler>>>,
+    displayed_room: Entity<DisplayedRoom>,
     chat_input: Entity<ChatInput>,
     emoji_flyout: Option<Entity<EmojiFlyout>>,
     typing_users: Vec<RoomMember>,
@@ -44,7 +43,7 @@ pub struct ChatRoom {
 impl ChatRoom {
     pub fn new(
         room_id: OwnedRoomId,
-        on_change_room: impl Fn(&ChangeRoomEvent, &mut Window, &mut App) + 'static,
+        displayed_room: Entity<DisplayedRoom>,
         cx: &mut App,
     ) -> Entity<Self> {
         cx.new(|cx| {
@@ -74,7 +73,7 @@ impl ChatRoom {
                     room_id,
                     events: Vec::new(),
                     pagination_status: pagination_status.clone(),
-                    on_change_room: Some(Rc::new(Box::new(on_change_room))),
+                    displayed_room,
                     chat_input,
                     emoji_flyout: None,
                     typing_users: Vec::new(),
@@ -204,7 +203,7 @@ impl ChatRoom {
                 room_id,
                 events: Vec::new(),
                 pagination_status: pagination_status.clone(),
-                on_change_room: Some(Rc::new(Box::new(on_change_room))),
+                displayed_room,
                 chat_input,
                 emoji_flyout: None,
                 typing_users: Vec::new(),
@@ -356,20 +355,14 @@ impl Render for ChatRoom {
                                                     ))
                                                     .on_click(cx.listener(
                                                         move |this, _, window, cx| {
-                                                            if let Some(change_room_handler) =
-                                                                &this.on_change_room
-                                                            {
-                                                                let event = ChangeRoomEvent {
-                                                                    new_room: DisplayedRoom::Room(
-                                                                        tombstone_content
-                                                                            .replacement_room
-                                                                            .clone(),
-                                                                    ),
-                                                                };
-                                                                change_room_handler(
-                                                                    &event, window, cx,
-                                                                );
-                                                            }
+                                                            this.displayed_room.write(
+                                                                cx,
+                                                                DisplayedRoom::Room(
+                                                                    tombstone_content
+                                                                        .replacement_room
+                                                                        .clone(),
+                                                                ),
+                                                            );
                                                         },
                                                     )),
                                             ),

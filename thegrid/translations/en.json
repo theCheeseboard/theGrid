@@ -130,6 +130,8 @@
   "ROOM_TOMBSTONED_NAVIGATE": "Go to new room",
   "ROOM_TOMBSTONED_TEXT": "Join the new room to keep the conversation going.",
   "ROOM_TOMBSTONED_TITLE": "This room has been replaced",
+  "ROOT_SIDEBAR_ROOMS": "Rooms",
+  "ROOT_SIDEBAR_SPACES": "Spaces",
   "SECURITY_ENCRYPTION": "Encryption",
   "SECURITY_ENCRYPTION_DESCRIPTION": "Set up a recovery key to ensure you don't lose access to your encrypted messages",
   "SECURITY_IDENTITY_RESET": "Reset Cryptographic Identity",
