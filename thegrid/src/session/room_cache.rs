@@ -1,7 +1,9 @@
 use crate::tokio_helper::TokioHelper;
-use gpui::{App, AppContext, AsyncApp, Entity, WeakEntity};
+use gpui::http_client::anyhow;
+use gpui::private::anyhow;
+use gpui::{App, AppContext, AsyncApp, Context, Entity, WeakEntity};
 use imbl::Vector;
-use matrix_sdk::room::ParentSpace;
+use matrix_sdk::room::{Invite, ParentSpace};
 use matrix_sdk::ruma::{OwnedRoomId, RoomId};
 use matrix_sdk::{Client, Room, RoomState};
 use smol::stream::StreamExt;
@@ -96,7 +98,7 @@ impl RoomCache {
             .values()
             .filter(|&room| {
                 let room = room.read(cx);
-                room.inner.state() == RoomState::Invited
+                room.inner.state() == RoomState::Invited && room.invite_details.is_some()
             })
             .cloned()
             .collect()
@@ -129,45 +131,116 @@ impl RoomCache {
 pub struct CachedRoom {
     pub inner: Room,
     parent_spaces: Vec<OwnedRoomId>,
+    invite_details: Option<Invite>,
 }
 
 impl CachedRoom {
     pub fn new(inner: Room, cx: &mut App) -> Entity<Self> {
-        let inner_clone = inner.clone();
         cx.new(|cx| {
+            let mut room = Self {
+                inner,
+                parent_spaces: Vec::new(),
+                invite_details: None,
+            };
+
+            room.sync_changes(cx);
+
+            let (sync_changes_tx, sync_changes_rx) = async_channel::bounded(1);
+
             cx.spawn(
                 async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                    let inner = inner_clone.clone();
-                    if let Ok(parents) = cx
-                        .spawn_tokio(async move {
-                            match inner.parent_spaces().await {
-                                Ok(parents) => Ok(parents.collect::<Vec<_>>().await),
-                                Err(e) => Err(e),
-                            }
-                        })
-                        .await
-                    {
-                        let parent_spaces = parents
-                            .into_iter()
-                            .filter_map(|space| space.ok())
-                            .filter_map(|space| match space {
-                                ParentSpace::Reciprocal(room) => Some(room.room_id().to_owned()),
-                                _ => None,
+                    loop {
+                        if sync_changes_rx.recv().await.is_err() {
+                            return;
+                        }
+
+                        if weak_this
+                            .update(cx, |this, cx| {
+                                this.sync_changes(cx);
                             })
-                            .collect::<Vec<_>>();
-                        let _ = weak_this.update(cx, |this, cx| {
-                            this.parent_spaces = parent_spaces;
-                            cx.notify();
-                        });
+                            .is_err()
+                        {
+                            return;
+                        }
                     }
                 },
             )
             .detach();
 
-            Self {
-                inner,
-                parent_spaces: Vec::new(),
-            }
+            let room_inner = room.inner.clone();
+            cx.spawn(
+                async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                    let _: anyhow::Result<()> = cx
+                        .spawn_tokio(async move {
+                            let mut updates = room_inner.subscribe_to_updates();
+                            while updates.recv().await.is_ok() {
+                                if sync_changes_tx.send(()).await.is_err() {
+                                    return Err(anyhow!("Update stream closed"));
+                                }
+                            }
+
+                            Err(anyhow!("Update stream closed"))
+                        })
+                        .await;
+                },
+            )
+            .detach();
+
+            room
         })
+    }
+
+    fn sync_changes(&mut self, cx: &mut Context<Self>) {
+        let inner = self.inner.clone();
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                let inner_clone = inner.clone();
+                if let Ok(parents) = cx
+                    .spawn_tokio(async move {
+                        match inner_clone.parent_spaces().await {
+                            Ok(parents) => Ok(parents.collect::<Vec<_>>().await),
+                            Err(e) => Err(e),
+                        }
+                    })
+                    .await
+                {
+                    let parent_spaces = parents
+                        .into_iter()
+                        .filter_map(|space| space.ok())
+                        .filter_map(|space| match space {
+                            ParentSpace::Reciprocal(room) => Some(room.room_id().to_owned()),
+                            _ => None,
+                        })
+                        .collect::<Vec<_>>();
+                    let _ = weak_this.update(cx, |this, cx| {
+                        this.parent_spaces = parent_spaces;
+                        cx.notify();
+                    });
+                }
+
+                let inner_clone = inner.clone();
+                let invite = cx
+                    .spawn_tokio(async move { inner_clone.invite_details().await })
+                    .await
+                    .ok();
+                let _ = weak_this.update(cx, |this, cx| {
+                    this.invite_details = invite;
+                    cx.notify();
+                });
+            },
+        )
+        .detach();
+    }
+
+    pub fn invite_details(&self) -> Option<Invite> {
+        self.invite_details.clone()
+    }
+
+    pub fn display_name(&self) -> String {
+        self.inner
+            .cached_display_name()
+            .map(|name| name.to_string())
+            .or_else(|| self.inner.name())
+            .unwrap_or_default()
     }
 }

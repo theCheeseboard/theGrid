@@ -223,7 +223,7 @@
   },
   "CREATE_ROOM_OPTIONS": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:57",
+    "definedIn": "src/chat/join_room.rs:146",
     "plural": false,
     "description": null
   },
@@ -401,9 +401,33 @@
     "plural": false,
     "description": null
   },
+  "INVITE_ACCEPT": {
+    "context": "join_room.rs",
+    "definedIn": "src/chat/join_room.rs:278",
+    "plural": false,
+    "description": null
+  },
+  "INVITE_DECLINE": {
+    "context": "join_room.rs",
+    "definedIn": "src/chat/join_room.rs:262",
+    "plural": false,
+    "description": null
+  },
+  "INVITE_INVITED_BY": {
+    "context": "join_room.rs",
+    "definedIn": "src/chat/join_room.rs:246",
+    "plural": false,
+    "description": null
+  },
   "JOIN_ROOM": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:41",
+    "definedIn": "src/chat/join_room.rs:97",
+    "plural": false,
+    "description": null
+  },
+  "JOIN_ROOM_INVITATIONS": {
+    "context": "join_room.rs",
+    "definedIn": "src/chat/join_room.rs:115",
     "plural": false,
     "description": null
   },
@@ -631,13 +655,13 @@
   },
   "NO_DISPLAYED_ROOM_MESSAGE": {
     "context": "main_chat_surface.rs",
-    "definedIn": "src/chat/main_chat_surface.rs:143",
+    "definedIn": "src/chat/main_chat_surface.rs:145",
     "plural": false,
     "description": null
   },
   "NO_DISPLAYED_ROOM_TITLE": {
     "context": "main_chat_surface.rs",
-    "definedIn": "src/chat/main_chat_surface.rs:132",
+    "definedIn": "src/chat/main_chat_surface.rs:134",
     "plural": false,
     "description": null
   },

@@ -58,12 +58,14 @@ impl MainChatSurface {
                     sidebar.on_surface_change(surface_change_handler);
                     sidebar
                 }),
+                join_room: cx.new(|cx| {
+                    JoinRoom::new(cx, displayed_room.clone(), create_room_popover.clone())
+                }),
                 displayed_room,
                 chat_room: None,
                 focus_handle: cx.focus_handle(),
                 logout_popover_visible: cx.new(|_| false),
                 on_surface_change: Rc::new(Box::new(on_surface_change)),
-                join_room: cx.new(|cx| JoinRoom::new(cx, create_room_popover.clone())),
                 create_room_popover,
             }
         })
