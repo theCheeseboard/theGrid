@@ -7,30 +7,34 @@ use crate::chat::timeline_event::room_state_event::room_state_event;
 use cntp_i18n::tr;
 use gpui::http_client::anyhow;
 use gpui::{
-    App, ElementId, InteractiveElement, IntoElement, ParentElement, RenderOnce, Window, div,
+    App, ElementId, Entity, InteractiveElement, IntoElement, ParentElement, RenderOnce, Window, div,
 };
+use gpui::private::anyhow;
 use matrix_sdk::Room;
 use matrix_sdk::deserialized_responses::{TimelineEvent, TimelineEventKind};
+use matrix_sdk::event_cache::RoomEventCache;
 use matrix_sdk::linked_chunk::relational::IndexableItem;
-use matrix_sdk::ruma::OwnedRoomId;
-use matrix_sdk::ruma::events::{AnyMessageLikeEvent, AnyStateEventContent, AnyTimelineEvent};
-use url::quirks::origin;
+use matrix_sdk::ruma::events::{AnyMessageLikeEvent, AnyTimelineEvent};
+use matrix_sdk::ruma::RoomId;
 
 #[derive(IntoElement)]
 pub struct TimelineRow {
     event: TimelineEvent,
     previous_event: Option<TimelineEvent>,
+    event_cache: Entity<RoomEventCache>,
     room: Room,
 }
 
 pub fn timeline_event(
     event: TimelineEvent,
     previous_event: Option<TimelineEvent>,
+    event_cache: Entity<RoomEventCache>,
     room: Room,
 ) -> TimelineRow {
     TimelineRow {
         event,
         previous_event,
+        event_cache,
         room,
     }
 }
@@ -39,17 +43,7 @@ impl RenderOnce for TimelineRow {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let id = self.event.id().to_string();
 
-        let event = match &self.event.kind {
-            TimelineEventKind::Decrypted(decrypted) => match decrypted.event.deserialize() {
-                Ok(event) => Ok(event),
-                Err(_) => Err(anyhow!("Unknown Error")),
-            },
-            TimelineEventKind::UnableToDecrypt { .. } => Err(anyhow!("Unable to decrypt")),
-            TimelineEventKind::PlainText { event } => match event.deserialize() {
-                Ok(event) => Ok(event.into_full_event(self.room.room_id().to_owned())),
-                Err(_) => Err(anyhow!("Unknown Error")),
-            },
-        };
+        let event = resolve_event(&self.event, self.room.room_id());
 
         div()
             .id(ElementId::Name(id.into()))
@@ -75,6 +69,7 @@ impl RenderOnce for TimelineRow {
                                     self.room,
                                     event,
                                     self.previous_event,
+                                    self.event_cache,
                                 )
                                 .into_any_element(),
                             }
@@ -94,5 +89,19 @@ impl RenderOnce for TimelineRow {
                     .into_any_element(),
             })
             .into_any_element()
+    }
+}
+
+pub fn resolve_event(event: &TimelineEvent, room_id: &RoomId) -> anyhow::Result<AnyTimelineEvent> {
+    match &event.kind {
+        TimelineEventKind::Decrypted(decrypted) => match decrypted.event.deserialize() {
+            Ok(event) => Ok(event),
+            Err(_) => Err(anyhow!("Unknown Error")),
+        },
+        TimelineEventKind::UnableToDecrypt { .. } => Err(anyhow!("Unable to decrypt")),
+        TimelineEventKind::PlainText { event } => match event.deserialize() {
+            Ok(event) => Ok(event.into_full_event(room_id.to_owned())),
+            Err(_) => Err(anyhow!("Unknown Error")),
+        },
     }
 }

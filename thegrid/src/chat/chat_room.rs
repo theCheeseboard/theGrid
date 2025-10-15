@@ -22,7 +22,7 @@ use gpui::{
 use gpui_tokio::Tokio;
 use log::{error, info};
 use matrix_sdk::deserialized_responses::TimelineEvent;
-use matrix_sdk::event_cache::RoomPaginationStatus;
+use matrix_sdk::event_cache::{RoomEventCache, RoomPaginationStatus};
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::{OwnedRoomId, OwnedUserId};
@@ -35,6 +35,7 @@ use tokio::sync::broadcast::error::RecvError;
 pub struct ChatRoom {
     room_id: OwnedRoomId,
     events: Vec<TimelineEvent>,
+    event_cache: Option<Entity<RoomEventCache>>,
     pagination_status: Entity<RoomPaginationStatus>,
     displayed_room: Entity<DisplayedRoom>,
     chat_input: Entity<ChatInput>,
@@ -79,6 +80,7 @@ impl ChatRoom {
                     chat_input,
                     emoji_flyout: None,
                     typing_users: Vec::new(),
+                    event_cache: None,
                 };
             };
 
@@ -126,6 +128,12 @@ impl ChatRoom {
                 .unwrap();
 
                 if let Ok((event_cache, _)) = event_cache {
+                    this.update(cx, |this, cx| {
+                        let event_cache_entity = cx.new(|_| event_cache.clone());
+                        this.event_cache = Some(event_cache_entity)
+                    })
+                    .unwrap();
+
                     let event_cache_clone = event_cache.clone();
                     cx.spawn(async move |cx: &mut AsyncApp| {
                         cx.spawn_tokio(async move {
@@ -209,6 +217,7 @@ impl ChatRoom {
                 chat_input,
                 emoji_flyout: None,
                 typing_users: Vec::new(),
+                event_cache: None,
             }
         })
     }
@@ -313,37 +322,48 @@ impl Render for ChatRoom {
             )
             .child(
                 div().flex_grow().child(
-                    list(root_list_state.clone(), move |i, _, cx| {
-                        if i == 0 {
-                            match pagination_status {
-                                RoomPaginationStatus::Idle { hit_timeline_start } => {
-                                    if hit_timeline_start {
-                                        room_head(room_id.clone()).into_any_element()
-                                    } else {
-                                        div().child("Not Paginating").into_any_element()
+                    list(
+                        root_list_state.clone(),
+                        cx.processor(move |this, i, _, cx| {
+                            if i == 0 {
+                                match pagination_status {
+                                    RoomPaginationStatus::Idle { hit_timeline_start } => {
+                                        if hit_timeline_start {
+                                            room_head(room_id.clone()).into_any_element()
+                                        } else {
+                                            div().child("Not Paginating").into_any_element()
+                                        }
                                     }
+                                    RoomPaginationStatus::Paginating => div()
+                                        .w_full()
+                                        .flex()
+                                        .py(px(12.))
+                                        .items_center()
+                                        .justify_center()
+                                        .child(spinner())
+                                        .into_any_element(),
                                 }
-                                RoomPaginationStatus::Paginating => div()
-                                    .w_full()
-                                    .flex()
-                                    .py(px(12.))
-                                    .items_center()
-                                    .justify_center()
-                                    .child(spinner())
-                                    .into_any_element(),
-                            }
-                        } else {
-                            let event = events[i - 1].clone();
-                            let previous_event = if i == 1 {
-                                None
                             } else {
-                                events.get(i - 2).cloned()
-                            };
+                                let event: &TimelineEvent = &events[i - 1];
+                                let event = event.clone();
+                                let previous_event = if i == 1 {
+                                    None
+                                } else {
+                                    events.get(i - 2).cloned()
+                                };
 
-                            timeline_event(event, previous_event, room_clone.clone())
+                                let event_cache = this.event_cache.clone().unwrap();
+
+                                timeline_event(
+                                    event,
+                                    previous_event,
+                                    event_cache,
+                                    room_clone.clone(),
+                                )
                                 .into_any_element()
-                        }
-                    })
+                            }
+                        }),
+                    )
                     .flex()
                     .flex_col()
                     .h_full(),

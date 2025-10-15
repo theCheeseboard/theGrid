@@ -1,20 +1,28 @@
+use crate::chat::timeline_event::resolve_event;
 use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::tr;
-use contemporary::styling::theme::Theme;
+use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
+use gpui::private::anyhow;
 use gpui::{
-    App, AsyncApp, InteractiveElement, IntoElement, ParentElement, RenderOnce, Styled, Window, div,
-    px, relative, rgb, rgba,
+    AnyElement, App, AsyncApp, Context, Element, Entity, InteractiveElement, IntoElement,
+    ParentElement, RenderOnce, Styled, WeakEntity, Window, div, px, relative, rgb, rgba,
 };
+use log::info;
 use matrix_sdk::Room;
+use matrix_sdk::crypto::types::events::room::Event;
 use matrix_sdk::deserialized_responses::{TimelineEvent, TimelineEventKind};
+use matrix_sdk::event_cache::RoomEventCache;
 use matrix_sdk::room::RoomMember;
-use matrix_sdk::ruma::events::room::message::{MessageType, RoomMessageEventContent};
+use matrix_sdk::ruma::events::room::message::{
+    MessageType, Relation, RoomMessageEventContent, RoomMessageEventContentWithoutRelation,
+};
 use matrix_sdk::ruma::events::{
     AnyMessageLikeEvent, AnyTimelineEvent, MessageLikeEventContent, OriginalMessageLikeEvent,
 };
-use matrix_sdk::ruma::{OwnedMxcUri, OwnedUserId};
+use matrix_sdk::ruma::{OwnedMxcUri, OwnedRoomId, OwnedUserId, RoomId};
+use std::rc::Rc;
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
 use tokio::io::AsyncReadExt;
@@ -28,6 +36,7 @@ where
     room: Room,
     timeline_event: AnyTimelineEvent,
     previous_event: Option<TimelineEvent>,
+    event_cache: Entity<RoomEventCache>,
 }
 
 #[derive(Clone)]
@@ -69,6 +78,7 @@ pub fn room_message_event<T>(
     room: Room,
     timeline_event: AnyTimelineEvent,
     previous_event: Option<TimelineEvent>,
+    event_cache: Entity<RoomEventCache>,
 ) -> RoomMessageEvent<T>
 where
     T: RoomMessageEventRenderable,
@@ -78,6 +88,7 @@ where
         room,
         timeline_event,
         previous_event,
+        event_cache,
     }
 }
 
@@ -86,6 +97,34 @@ where
     T: RoomMessageEventRenderable + 'static,
 {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        let event_id = self.event.event_id.clone();
+        let relations_entity = window.use_state(cx, |_, cx| {
+            let event_cache = self.event_cache.read(cx).clone();
+            cx.spawn(
+                async move |weak_this: WeakEntity<Vec<TimelineEvent>>, cx: &mut AsyncApp| {
+                    if let Ok(related) = cx
+                        .spawn_tokio(async move {
+                            event_cache
+                                .find_event_with_relations(&event_id, None)
+                                .await
+                                .ok_or(anyhow!("Error"))
+                        })
+                        .await
+                    {
+                        if let Some(this) = weak_this.upgrade() {
+                            info!("related: {:?}", related.1);
+                            let _ = this.write(cx, related.1);
+                        }
+                    };
+                },
+            )
+            .detach();
+
+            Vec::<TimelineEvent>::new()
+        });
+
+        // TODO: Invalidate relations_entity when new data comes through the event cache
+
         let cached_author = window.use_state(cx, |_, _| None);
         if cached_author.read(cx).is_none() {
             let author = self.timeline_event.sender().to_owned();
@@ -110,22 +149,11 @@ where
             .detach();
         }
 
-        let theme = cx.global::<Theme>();
         let author = cached_author.read(cx).clone().unwrap();
         let author_id = author.user_id();
 
         let is_head_event = if let Some(previous_event) = self.previous_event {
-            let event = match &previous_event.kind {
-                TimelineEventKind::Decrypted(decrypted) => match decrypted.event.deserialize() {
-                    Ok(event) => Ok(event),
-                    Err(_) => Err(anyhow!("Unknown Error")),
-                },
-                TimelineEventKind::UnableToDecrypt { .. } => Err(anyhow!("Unable to decrypt")),
-                TimelineEventKind::PlainText { event } => match event.deserialize() {
-                    Ok(event) => Ok(event.into_full_event(self.room.room_id().to_owned())),
-                    Err(_) => Err(anyhow!("Unknown Error")),
-                },
-            };
+            let event = resolve_event(&previous_event, self.room.room_id());
 
             match event {
                 Ok(AnyTimelineEvent::MessageLike(message_like)) => match message_like {
@@ -145,6 +173,43 @@ where
             }
         } else {
             true
+        };
+
+        if !self.event.content.should_render() {
+            return div().id("room-message");
+        }
+
+        let theme = cx.global::<Theme>();
+        let content = || {
+            for relation in relations_entity.read(cx).iter() {
+                if let Ok(resolved) = resolve_event(relation, self.room.room_id())
+                    && let AnyTimelineEvent::MessageLike(AnyMessageLikeEvent::RoomMessage(
+                        room_message,
+                    )) = resolved
+                    && let Some(original) = room_message.as_original()
+                    && let Some(Relation::Replacement(replacement_relation)) =
+                        &original.content.relates_to
+                {
+                    return div()
+                        .flex()
+                        .flex_col()
+                        .child(msgtype_to_message_line(
+                            &replacement_relation.new_content.msgtype,
+                            theme,
+                        ))
+                        .child(
+                            div()
+                                .flex()
+                                .text_color(theme.foreground.disabled())
+                                .text_size(theme.system_font_size * 0.8)
+                                // TODO: RTL?
+                                .child("⬑ ")
+                                .child(tr!("EDITED_MESSAGE_INDICATOR", "(edited)")),
+                        )
+                        .into_any_element();
+                }
+            }
+            self.event.content.message_line(theme).into_any_element()
         };
 
         div()
@@ -168,11 +233,11 @@ where
                                     .rounded(theme.border_radius),
                             )
                             .child(
-                                div().id("content").flex().flex_col().child(
-                                    div()
-                                        .child(author.display_name())
-                                        .child(self.event.content.message_line(theme)),
-                                ),
+                                div()
+                                    .id("content")
+                                    .flex()
+                                    .flex_col()
+                                    .child(div().child(author.display_name()).child(content())),
                             ),
                     )
                 },
@@ -181,7 +246,7 @@ where
                         .flex()
                         .gap(px(4.))
                         .child(div().w(px(40.)).mx(px(2.)))
-                        .child(div().child(self.event.content.message_line(theme)))
+                        .child(div().child(content()))
                 },
             )
     }
@@ -189,31 +254,47 @@ where
 
 trait RoomMessageEventRenderable: MessageLikeEventContent {
     fn message_line(&self, theme: &Theme) -> impl IntoElement;
+    fn should_render(&self) -> bool;
 }
 
 impl RoomMessageEventRenderable for RoomMessageEventContent {
     fn message_line(&self, theme: &Theme) -> impl IntoElement {
-        div().child(match &self.msgtype {
-            MessageType::Emote(emote) => div().child(emote.body.clone()).into_any_element(),
-            MessageType::Image(image) => div()
-                .child(
-                    mxc_image(image.source.clone())
-                        .min_w(px(100.))
-                        .min_h(px(30.))
-                        .size_policy(SizePolicy::Constrain(500., 500.)),
-                )
-                .into_any_element(),
-            MessageType::Text(text) => div()
-                .p(px(2.))
-                .bg(rgba(0x00C8FF10))
-                .rounded(theme.border_radius)
-                .max_w(relative(0.8))
-                .child(text.body.clone())
-                .into_any_element(),
-            MessageType::VerificationRequest(verification_request) => {
-                "Key Verification Request".into_any_element()
-            }
-            _ => "Unknown Message".into_any_element(),
-        })
+        div().child(msgtype_to_message_line(&self.msgtype, theme))
+    }
+
+    fn should_render(&self) -> bool {
+        self.relates_to
+            .as_ref()
+            .map(|relates_to| match relates_to {
+                Relation::Reply { .. } => true,
+                Relation::Replacement(_) => false,
+                _ => true,
+            })
+            .unwrap_or(true)
+    }
+}
+
+fn msgtype_to_message_line(msgtype: &MessageType, theme: &Theme) -> impl IntoElement {
+    match msgtype {
+        MessageType::Emote(emote) => div().child(emote.body.clone()).into_any_element(),
+        MessageType::Image(image) => div()
+            .child(
+                mxc_image(image.source.clone())
+                    .min_w(px(100.))
+                    .min_h(px(30.))
+                    .size_policy(SizePolicy::Constrain(500., 500.)),
+            )
+            .into_any_element(),
+        MessageType::Text(text) => div()
+            .p(px(2.))
+            .bg(rgba(0x00C8FF10))
+            .rounded(theme.border_radius)
+            .max_w(relative(0.8))
+            .child(text.body.clone())
+            .into_any_element(),
+        MessageType::VerificationRequest(verification_request) => {
+            "Key Verification Request".into_any_element()
+        }
+        _ => "Unknown Message".into_any_element(),
     }
 }
