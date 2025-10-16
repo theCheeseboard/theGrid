@@ -1,21 +1,24 @@
+pub mod queued_event;
 pub mod room_head;
+mod room_message_element;
 mod room_message_event;
+mod room_message_event_renderable;
 mod room_state_event;
 
 use crate::chat::timeline_event::room_message_event::room_message_event;
 use crate::chat::timeline_event::room_state_event::room_state_event;
 use cntp_i18n::tr;
 use gpui::http_client::anyhow;
+use gpui::private::anyhow;
 use gpui::{
     App, ElementId, Entity, InteractiveElement, IntoElement, ParentElement, RenderOnce, Window, div,
 };
-use gpui::private::anyhow;
 use matrix_sdk::Room;
 use matrix_sdk::deserialized_responses::{TimelineEvent, TimelineEventKind};
 use matrix_sdk::event_cache::RoomEventCache;
 use matrix_sdk::linked_chunk::relational::IndexableItem;
-use matrix_sdk::ruma::events::{AnyMessageLikeEvent, AnyTimelineEvent};
 use matrix_sdk::ruma::RoomId;
+use matrix_sdk::ruma::events::{AnyMessageLikeEvent, AnyTimelineEvent};
 
 #[derive(IntoElement)]
 pub struct TimelineRow {
@@ -65,11 +68,13 @@ impl RenderOnce for TimelineRow {
                             match room_message.as_original() {
                                 None => div().into_any_element(),
                                 Some(original_message) => room_message_event(
-                                    original_message.clone(),
+                                    original_message.content.clone(),
+                                    Some(original_message.event_id.clone()),
                                     self.room,
-                                    event,
+                                    event.sender().to_owned(),
                                     self.previous_event,
-                                    self.event_cache,
+                                    Some(self.event_cache),
+                                    false,
                                 )
                                 .into_any_element(),
                             }

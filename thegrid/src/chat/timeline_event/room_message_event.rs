@@ -1,4 +1,8 @@
 use crate::chat::timeline_event::resolve_event;
+use crate::chat::timeline_event::room_message_element::RoomMessageElement;
+use crate::chat::timeline_event::room_message_event_renderable::{
+    RoomMessageEventRenderable, msgtype_to_message_line,
+};
 use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::tr;
 use contemporary::styling::theme::{Theme, VariableColor};
@@ -21,7 +25,7 @@ use matrix_sdk::ruma::events::room::message::{
 use matrix_sdk::ruma::events::{
     AnyMessageLikeEvent, AnyTimelineEvent, MessageLikeEventContent, OriginalMessageLikeEvent,
 };
-use matrix_sdk::ruma::{OwnedMxcUri, OwnedRoomId, OwnedUserId, RoomId};
+use matrix_sdk::ruma::{OwnedEventId, OwnedMxcUri, OwnedRoomId, OwnedUserId, RoomId};
 use std::rc::Rc;
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
@@ -32,11 +36,13 @@ pub struct RoomMessageEvent<T>
 where
     T: RoomMessageEventRenderable + 'static,
 {
-    event: OriginalMessageLikeEvent<T>,
+    event: T,
+    event_id: Option<OwnedEventId>,
     room: Room,
-    timeline_event: AnyTimelineEvent,
+    author: OwnedUserId,
     previous_event: Option<TimelineEvent>,
-    event_cache: Entity<RoomEventCache>,
+    event_cache: Option<Entity<RoomEventCache>>,
+    force_not_head_event: bool,
 }
 
 #[derive(Clone)]
@@ -74,21 +80,25 @@ impl CachedRoomMember {
 }
 
 pub fn room_message_event<T>(
-    event: OriginalMessageLikeEvent<T>,
+    event: T,
+    event_id: Option<OwnedEventId>,
     room: Room,
-    timeline_event: AnyTimelineEvent,
+    author: OwnedUserId,
     previous_event: Option<TimelineEvent>,
-    event_cache: Entity<RoomEventCache>,
+    event_cache: Option<Entity<RoomEventCache>>,
+    force_not_head_event: bool,
 ) -> RoomMessageEvent<T>
 where
     T: RoomMessageEventRenderable,
 {
     RoomMessageEvent {
         event,
+        event_id,
         room,
-        timeline_event,
+        author,
         previous_event,
         event_cache,
+        force_not_head_event,
     }
 }
 
@@ -97,28 +107,33 @@ where
     T: RoomMessageEventRenderable + 'static,
 {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
-        let event_id = self.event.event_id.clone();
+        let event_id = self.event_id.clone();
         let relations_entity = window.use_state(cx, |_, cx| {
-            let event_cache = self.event_cache.read(cx).clone();
-            cx.spawn(
-                async move |weak_this: WeakEntity<Vec<TimelineEvent>>, cx: &mut AsyncApp| {
-                    if let Ok(related) = cx
-                        .spawn_tokio(async move {
-                            event_cache
-                                .find_event_with_relations(&event_id, None)
+            if let Some(event_cache) = self.event_cache {
+                let event_cache = event_cache.read(cx).clone();
+                if let Some(event_id) = event_id {
+                    cx.spawn(
+                        async move |weak_this: WeakEntity<Vec<TimelineEvent>>,
+                                    cx: &mut AsyncApp| {
+                            if let Ok(related) = cx
+                                .spawn_tokio(async move {
+                                    event_cache
+                                        .find_event_with_relations(&event_id, None)
+                                        .await
+                                        .ok_or(anyhow!("Error"))
+                                })
                                 .await
-                                .ok_or(anyhow!("Error"))
-                        })
-                        .await
-                    {
-                        if let Some(this) = weak_this.upgrade() {
-                            info!("related: {:?}", related.1);
-                            let _ = this.write(cx, related.1);
-                        }
-                    };
-                },
-            )
-            .detach();
+                            {
+                                if let Some(this) = weak_this.upgrade() {
+                                    info!("related: {:?}", related.1);
+                                    let _ = this.write(cx, related.1);
+                                }
+                            };
+                        },
+                    )
+                    .detach();
+                }
+            }
 
             Vec::<TimelineEvent>::new()
         });
@@ -127,13 +142,13 @@ where
 
         let cached_author = window.use_state(cx, |_, _| None);
         if cached_author.read(cx).is_none() {
-            let author = self.timeline_event.sender().to_owned();
             let room = self.room.clone();
 
-            cached_author.write(cx, Some(CachedRoomMember::UserId(author.to_owned())));
+            cached_author.write(cx, Some(CachedRoomMember::UserId(self.author.clone())));
 
             let cached_author_clone = cached_author.clone();
 
+            let author = self.author.clone();
             cx.spawn(async move |cx: &mut AsyncApp| {
                 let room_member = cx
                     .spawn_tokio(async move { room.get_member(&author).await })
@@ -152,7 +167,9 @@ where
         let author = cached_author.read(cx).clone().unwrap();
         let author_id = author.user_id();
 
-        let is_head_event = if let Some(previous_event) = self.previous_event {
+        let is_head_event = if self.force_not_head_event {
+            false
+        } else if let Some(previous_event) = self.previous_event {
             let event = resolve_event(&previous_event, self.room.room_id());
 
             match event {
@@ -175,8 +192,8 @@ where
             true
         };
 
-        if !self.event.content.should_render() {
-            return div().id("room-message");
+        if !self.event.should_render() {
+            return div().id("room-message").into_any_element();
         }
 
         let theme = cx.global::<Theme>();
@@ -209,92 +226,13 @@ where
                         .into_any_element();
                 }
             }
-            self.event.content.message_line(theme).into_any_element()
+            self.event.message_line(theme).into_any_element()
         };
 
-        div()
-            .id("room-message")
-            .flex()
-            .m(px(2.))
-            .max_w(relative(100.))
-            .when_else(
-                is_head_event,
-                |david| {
-                    david.child(
-                        div()
-                            .id("container")
-                            .flex()
-                            .gap(px(4.))
-                            .child(
-                                mxc_image(author.avatar())
-                                    .size(px(40.))
-                                    .m(px(2.))
-                                    .size_policy(SizePolicy::Fit)
-                                    .rounded(theme.border_radius),
-                            )
-                            .child(
-                                div()
-                                    .id("content")
-                                    .flex()
-                                    .flex_col()
-                                    .child(div().child(author.display_name()).child(content())),
-                            ),
-                    )
-                },
-                |david| {
-                    david
-                        .flex()
-                        .gap(px(4.))
-                        .child(div().w(px(40.)).mx(px(2.)))
-                        .child(div().child(content()))
-                },
-            )
-    }
-}
-
-trait RoomMessageEventRenderable: MessageLikeEventContent {
-    fn message_line(&self, theme: &Theme) -> impl IntoElement;
-    fn should_render(&self) -> bool;
-}
-
-impl RoomMessageEventRenderable for RoomMessageEventContent {
-    fn message_line(&self, theme: &Theme) -> impl IntoElement {
-        div().child(msgtype_to_message_line(&self.msgtype, theme))
-    }
-
-    fn should_render(&self) -> bool {
-        self.relates_to
-            .as_ref()
-            .map(|relates_to| match relates_to {
-                Relation::Reply { .. } => true,
-                Relation::Replacement(_) => false,
-                _ => true,
-            })
-            .unwrap_or(true)
-    }
-}
-
-fn msgtype_to_message_line(msgtype: &MessageType, theme: &Theme) -> impl IntoElement {
-    match msgtype {
-        MessageType::Emote(emote) => div().child(emote.body.clone()).into_any_element(),
-        MessageType::Image(image) => div()
-            .child(
-                mxc_image(image.source.clone())
-                    .min_w(px(100.))
-                    .min_h(px(30.))
-                    .size_policy(SizePolicy::Constrain(500., 500.)),
-            )
-            .into_any_element(),
-        MessageType::Text(text) => div()
-            .p(px(2.))
-            .bg(rgba(0x00C8FF10))
-            .rounded(theme.border_radius)
-            .max_w(relative(0.8))
-            .child(text.body.clone())
-            .into_any_element(),
-        MessageType::VerificationRequest(verification_request) => {
-            "Key Verification Request".into_any_element()
+        RoomMessageElement {
+            author: if is_head_event { Some(author) } else { None },
+            content: content(),
         }
-        _ => "Unknown Message".into_any_element(),
+        .into_any_element()
     }
 }

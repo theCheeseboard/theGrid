@@ -1,6 +1,7 @@
 use crate::auth::emoji_flyout::{EmojiFlyout, EmojiSelectedEvent};
 use crate::chat::chat_input::ChatInput;
 use crate::chat::displayed_room::DisplayedRoom;
+use crate::chat::timeline_event::queued_event::QueuedEvent;
 use crate::chat::timeline_event::room_head::room_head;
 use crate::chat::timeline_event::timeline_event;
 use cntp_i18n::{tr, trn};
@@ -26,6 +27,7 @@ use matrix_sdk::event_cache::{RoomEventCache, RoomPaginationStatus};
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::{OwnedRoomId, OwnedUserId};
+use matrix_sdk::send_queue::{LocalEcho, RoomSendQueueUpdate};
 use std::rc::Rc;
 use std::time::Duration;
 use thegrid::session::session_manager::SessionManager;
@@ -35,6 +37,7 @@ use tokio::sync::broadcast::error::RecvError;
 pub struct ChatRoom {
     room_id: OwnedRoomId,
     events: Vec<TimelineEvent>,
+    queued: Vec<Entity<QueuedEvent>>,
     event_cache: Option<Entity<RoomEventCache>>,
     pagination_status: Entity<RoomPaginationStatus>,
     displayed_room: Entity<DisplayedRoom>,
@@ -81,6 +84,7 @@ impl ChatRoom {
                     emoji_flyout: None,
                     typing_users: Vec::new(),
                     event_cache: None,
+                    queued: Vec::new(),
                 };
             };
 
@@ -118,14 +122,11 @@ impl ChatRoom {
             .detach();
 
             let pagination_status_clone = pagination_status.clone();
+            let room_clone = room.clone();
             cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let room_clone = room.clone();
-                let event_cache = Tokio::spawn(cx, async move {
-                    room_clone.event_cache().await.map_err(|e| anyhow!(e))
-                })
-                .unwrap()
-                .await
-                .unwrap();
+                let event_cache = cx
+                    .spawn_tokio(async move { room_clone.event_cache().await })
+                    .await;
 
                 if let Ok((event_cache, _)) = event_cache {
                     this.update(cx, |this, cx| {
@@ -209,6 +210,114 @@ impl ChatRoom {
             })
             .detach();
 
+            let room_clone = room.clone();
+            cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                let room = room_clone.clone();
+                let send_queue = room.send_queue();
+                let Ok((queue, mut rx)) = cx
+                    .spawn_tokio(async move { send_queue.subscribe().await })
+                    .await
+                else {
+                    return;
+                };
+
+                let room = room_clone.clone();
+                let _ = this.update(cx, |this, cx| {
+                    this.queued = queue
+                        .into_iter()
+                        .map(|event| cx.new(|cx| QueuedEvent::new(event, room.clone(), cx)))
+                        .collect();
+                    cx.notify();
+                });
+
+                let room = room_clone.clone();
+                loop {
+                    let Ok(update) = rx.recv().await else {
+                        return;
+                    };
+
+                    if this
+                        .update(cx, |this, cx| match update {
+                            RoomSendQueueUpdate::NewLocalEvent(event) => this
+                                .queued
+                                .push(cx.new(|cx| QueuedEvent::new(event, room.clone(), cx))),
+                            RoomSendQueueUpdate::CancelledLocalEvent { transaction_id } => {
+                                this.queued.retain(|event| {
+                                    event.read(cx).transaction_id() != transaction_id
+                                });
+                            }
+                            RoomSendQueueUpdate::ReplacedLocalEvent {
+                                transaction_id,
+                                new_content,
+                            } => {
+                                for queue_item in &this.queued {
+                                    if queue_item.read(cx).transaction_id() == transaction_id {
+                                        queue_item.update(cx, |queue_item, cx| {
+                                            queue_item.notify_content_replaced(new_content, cx);
+                                        });
+                                        return;
+                                    }
+                                }
+                            }
+                            RoomSendQueueUpdate::SendError {
+                                transaction_id,
+                                is_recoverable,
+                                ..
+                            } => {
+                                for queue_item in &this.queued {
+                                    if queue_item.read(cx).transaction_id() == transaction_id {
+                                        queue_item.update(cx, |queue_item, cx| {
+                                            queue_item.notify_send_error(is_recoverable, cx);
+                                        });
+                                        return;
+                                    }
+                                }
+                            }
+                            RoomSendQueueUpdate::RetryEvent { transaction_id } => {
+                                for queue_item in &this.queued {
+                                    if queue_item.read(cx).transaction_id() == transaction_id {
+                                        queue_item.update(cx, |queue_item, cx| {
+                                            queue_item.notify_unwedged(cx);
+                                            cx.notify()
+                                        });
+                                        return;
+                                    }
+                                }
+                            }
+                            RoomSendQueueUpdate::SentEvent {
+                                transaction_id,
+                                event_id,
+                            } => {
+                                this.queued.retain(|event| {
+                                    event.read(cx).transaction_id() != transaction_id
+                                });
+                            }
+                            RoomSendQueueUpdate::MediaUpload {
+                                related_to,
+                                file,
+                                index,
+                                progress,
+                            } => {
+                                for queue_item in &this.queued {
+                                    if queue_item.read(cx).transaction_id() == related_to {
+                                        queue_item.update(cx, |queue_item, cx| {
+                                            queue_item
+                                                .notify_upload_progress(file, index, progress, cx);
+                                            cx.notify()
+                                        });
+                                        return;
+                                    }
+                                }
+                            }
+                        })
+                        .is_err()
+                    {
+                        return;
+                    }
+                }
+            })
+            .detach();
+
             Self {
                 room_id,
                 events: Vec::new(),
@@ -218,6 +327,7 @@ impl ChatRoom {
                 emoji_flyout: None,
                 typing_users: Vec::new(),
                 event_cache: None,
+                queued: Vec::new(),
             }
         })
     }
@@ -226,7 +336,7 @@ impl ChatRoom {
         let chat_input = self.chat_input.clone();
         let room_id = self.room_id.clone();
 
-        cx.on_next_frame(window, move |_, window, cx| {
+        cx.on_next_frame(window, move |_, _, cx| {
             let message = chat_input.read(cx).text();
             if message.is_empty() {
                 return;
@@ -237,10 +347,11 @@ impl ChatRoom {
             let session_manager = cx.global::<SessionManager>();
             let client = session_manager.client().unwrap().read(cx);
             let room = client.get_room(&room_id).unwrap();
+            let send_queue = room.send_queue();
 
             cx.spawn(async move |_, cx: &mut AsyncApp| {
                 let _ = cx
-                    .spawn_tokio(async move { room.send(content).await })
+                    .spawn_tokio(async move { send_queue.send(content.into()).await })
                     .await;
             })
             .detach();
@@ -290,8 +401,8 @@ impl Render for ChatRoom {
 
         let room_clone = room.clone();
         let events = self.events.clone();
-        if events.len() + 1 != root_list_state.item_count() {
-            root_list_state.reset(events.len() + 1);
+        if events.len() + self.queued.len() + 1 != root_list_state.item_count() {
+            root_list_state.reset(events.len() + self.queued.len() + 1);
             root_list_state.scroll_to(ListOffset {
                 item_ix: events.len() + 1,
                 offset_in_item: px(0.),
@@ -343,7 +454,7 @@ impl Render for ChatRoom {
                                         .child(spinner())
                                         .into_any_element(),
                                 }
-                            } else {
+                            } else if i < events.len() + 1 {
                                 let event: &TimelineEvent = &events[i - 1];
                                 let event = event.clone();
                                 let previous_event = if i == 1 {
@@ -361,6 +472,20 @@ impl Render for ChatRoom {
                                     room_clone.clone(),
                                 )
                                 .into_any_element()
+                            } else {
+                                let event: &Entity<QueuedEvent> =
+                                    &this.queued[i - events.len() - 1];
+                                let previous_event = if i == 1 {
+                                    None
+                                } else {
+                                    events.get(i - 2).cloned()
+                                };
+
+                                event.update(cx, |event, cx| {
+                                    event.previous_event = previous_event;
+                                });
+
+                                event.clone().into_any_element()
                             }
                         }),
                     )

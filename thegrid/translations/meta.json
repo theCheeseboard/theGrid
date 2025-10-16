@@ -301,7 +301,7 @@
   },
   "EDITED_MESSAGE_INDICATOR": {
     "context": "room_message_event.rs",
-    "definedIn": "src/chat/timeline_event/room_message_event.rs:207",
+    "definedIn": "src/chat/timeline_event/room_message_event.rs:224",
     "plural": false,
     "description": null
   },
@@ -643,7 +643,7 @@
   },
   "MESSAGE_DECRYPTION_FAILURE": {
     "context": "timeline_event.rs",
-    "definedIn": "src/chat/timeline_event.rs:85",
+    "definedIn": "src/chat/timeline_event.rs:90",
     "plural": false,
     "description": null
   },
@@ -877,19 +877,19 @@
   },
   "ROOM_TOMBSTONED_NAVIGATE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:397",
+    "definedIn": "src/chat/chat_room.rs:522",
     "plural": false,
     "description": null
   },
   "ROOM_TOMBSTONED_TEXT": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:388",
+    "definedIn": "src/chat/chat_room.rs:513",
     "plural": false,
     "description": null
   },
   "ROOM_TOMBSTONED_TITLE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:381",
+    "definedIn": "src/chat/chat_room.rs:506",
     "plural": false,
     "description": null
   },
@@ -1015,25 +1015,25 @@
   },
   "TYPING_NOTIFICATION": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:465",
+    "definedIn": "src/chat/chat_room.rs:590",
     "plural": true,
     "description": null
   },
   "TYPING_NOTIFICATION_ONE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:426",
+    "definedIn": "src/chat/chat_room.rs:551",
     "plural": false,
     "description": null
   },
   "TYPING_NOTIFICATION_THREE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:448",
+    "definedIn": "src/chat/chat_room.rs:573",
     "plural": false,
     "description": null
   },
   "TYPING_NOTIFICATION_TWO": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:435",
+    "definedIn": "src/chat/chat_room.rs:560",
     "plural": false,
     "description": null
   },
@@ -1069,7 +1069,7 @@
   },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:286",
+    "definedIn": "src/chat/chat_room.rs:397",
     "plural": false,
     "description": null
   },
