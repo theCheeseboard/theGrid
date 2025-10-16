@@ -1,8 +1,11 @@
 use crate::chat::timeline_event::room_message_element::RoomMessageElement;
 use crate::chat::timeline_event::room_message_event::room_message_event;
-use gpui::{Context, Entity, IntoElement, ParentElement, Render, Window, div};
-use matrix_sdk::deserialized_responses::TimelineEvent;
+use gpui::{
+    Context, Entity, InteractiveElement, IntoElement, ParentElement, Render, SharedString, Styled,
+    Window, div,
+};
 use matrix_sdk::Room;
+use matrix_sdk::deserialized_responses::TimelineEvent;
 use matrix_sdk::event_cache::RoomEventCache;
 use matrix_sdk::ruma::events::OriginalMessageLikeEvent;
 use matrix_sdk::ruma::events::room::MediaSource;
@@ -14,12 +17,16 @@ use thegrid::session::session_manager::SessionManager;
 pub struct QueuedEvent {
     local_echo: LocalEcho,
     room: Room,
-    pub previous_event: Option<TimelineEvent>
+    pub previous_event: Option<TimelineEvent>,
 }
 
 impl QueuedEvent {
     pub fn new(local_echo: LocalEcho, room: Room, cx: &mut Context<QueuedEvent>) -> Self {
-        Self { local_echo, room, previous_event: None }
+        Self {
+            local_echo,
+            room,
+            previous_event: None,
+        }
     }
 
     pub fn transaction_id(&self) -> &TransactionId {
@@ -58,16 +65,21 @@ impl Render for QueuedEvent {
                 let session_manager = cx.global::<SessionManager>();
                 let client = session_manager.client().unwrap().read(cx);
                 let deserialized_event = serialized_event.deserialize().unwrap();
-                room_message_event(
-                    deserialized_event,
-                    None,
-                    self.room.clone(),
-                    client.user_id().unwrap().to_owned(),
-                    self.previous_event.clone(),
-                    None,
-                    self.previous_event.is_none(),
-                )
-                .into_any_element()
+                let transaction_id = self.local_echo.transaction_id.to_string();
+
+                div()
+                    .id(SharedString::from(transaction_id))
+                    .opacity(0.7)
+                    .child(room_message_event(
+                        deserialized_event,
+                        None,
+                        self.room.clone(),
+                        client.user_id().unwrap().to_owned(),
+                        self.previous_event.clone(),
+                        None,
+                        self.previous_event.is_none(),
+                    ))
+                    .into_any_element()
             }
             LocalEchoContent::React { .. } => div().into_any_element(),
         }
