@@ -1,5 +1,6 @@
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
+use crate::chat::sidebar::standard_room_element::StandardRoomElement;
 use crate::chat::sidebar::{Sidebar, SidebarPage};
 use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::{tr, trn};
@@ -15,6 +16,7 @@ use gpui::{
     Subscription, Window, div, list, px,
 };
 use matrix_sdk::ruma::OwnedRoomId;
+use std::rc::Rc;
 use thegrid::session::room_cache::{CachedRoom, RoomCategory};
 use thegrid::session::session_manager::SessionManager;
 
@@ -197,66 +199,23 @@ impl Render for RootSidebarPage {
                                 SidebarItem::Heading(heading) => {
                                     div().pt(px(4.)).child(subtitle(heading)).into_any_element()
                                 }
-                                SidebarItem::Room(room) => {
-                                    let room = room.read(cx);
+                                SidebarItem::Room(room_entity) => {
+                                    let room = room_entity.read(cx);
                                     let room_id = room.inner.room_id().to_owned();
 
                                     div()
-                                        .flex()
-                                        .w_full()
-                                        .items_center()
                                         .id(ElementId::Name(
                                             room.inner.room_id().to_string().into(),
                                         ))
-                                        .m(px(2.))
-                                        .p(px(2.))
-                                        .rounded(theme.border_radius)
-                                        .when(
-                                            current_room.is_some_and(|current_room| {
-                                                current_room == room_id
-                                            }),
-                                            |david| david.bg(theme.button_background),
-                                        )
-                                        .child(
-                                            room.inner
-                                                .cached_display_name()
-                                                .map(|name| name.to_string())
-                                                .or_else(|| room.inner.name())
-                                                .unwrap_or_default(),
-                                        )
-                                        .child(div().flex_grow())
-                                        .when_else(
-                                            room.inner.num_unread_notifications() > 0,
-                                            |david| {
-                                                david.child(
-                                                    div()
-                                                        .rounded(theme.border_radius)
-                                                        .bg(theme.error_accent_color)
-                                                        .p(px(2.))
-                                                        .child(
-                                                            room.inner
-                                                                .num_unread_notifications()
-                                                                .to_string(),
-                                                        ),
-                                                )
-                                            },
-                                            |david| {
-                                                david.when(
-                                                    room.inner.num_unread_messages() > 0,
-                                                    |david| {
-                                                        david.child(
-                                                            div()
-                                                                .bg(theme.foreground)
-                                                                .size(px(8.))
-                                                                .rounded(px(4.)),
-                                                        )
-                                                    },
-                                                )
-                                            },
-                                        )
-                                        .on_click(cx.listener(move |this, _, window, cx| {
-                                            this.change_room(room_id.clone(), window, cx);
-                                        }))
+                                        .child(StandardRoomElement {
+                                            room: room_entity.clone(),
+                                            current_room,
+                                            on_click: Rc::new(Box::new(cx.listener(
+                                                move |this, _, window, cx| {
+                                                    this.change_room(room_id.clone(), window, cx);
+                                                },
+                                            ))),
+                                        })
                                         .into_any_element()
                                 }
                                 SidebarItem::Space(room) => {

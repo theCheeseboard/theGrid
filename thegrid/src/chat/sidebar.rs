@@ -1,5 +1,6 @@
 mod root_sidebar_page;
 mod space_sidebar_page;
+mod standard_room_element;
 
 use crate::account_settings::AccountSettingsPage;
 use crate::account_settings::security_settings::recovery_key_reset_popover::RecoveryKeyResetPopover;
