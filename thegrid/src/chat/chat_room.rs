@@ -17,14 +17,17 @@ use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
     App, AppContext, AsyncApp, Context, Entity, InteractiveElement, IntoElement, ListAlignment,
-    ListOffset, ListState, ParentElement, Point, Render, Styled, WeakEntity, Window, anchored,
-    deferred, div, list, px,
+    ListOffset, ListScrollEvent, ListState, ParentElement, Point, Render, Styled, WeakEntity,
+    Window, anchored, deferred, div, list, px,
 };
 use gpui_tokio::Tokio;
 use log::{error, info};
 use matrix_sdk::deserialized_responses::TimelineEvent;
 use matrix_sdk::event_cache::{RoomEventCache, RoomPaginationStatus};
 use matrix_sdk::room::RoomMember;
+use matrix_sdk::ruma::api::client::receipt::create_receipt::v3::ReceiptType;
+use matrix_sdk::ruma::events::fully_read::FullyReadEventContent;
+use matrix_sdk::ruma::events::receipt::ReceiptThread;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::{OwnedRoomId, OwnedUserId};
 use matrix_sdk::send_queue::{LocalEcho, RoomSendQueueUpdate};
@@ -44,6 +47,7 @@ pub struct ChatRoom {
     chat_input: Entity<ChatInput>,
     emoji_flyout: Option<Entity<EmojiFlyout>>,
     typing_users: Vec<RoomMember>,
+    list_state: ListState,
 }
 
 impl ChatRoom {
@@ -70,6 +74,13 @@ impl ChatRoom {
                 chat_input
             });
 
+            let list_state = ListState::new(0, ListAlignment::Bottom, px(200.));
+            list_state.set_scroll_handler(cx.listener(|this, event: &ListScrollEvent, _, cx| {
+                if event.visible_range.end == this.events.len() {
+                    this.send_read_receipt(cx);
+                }
+            }));
+
             let session_manager = cx.global::<SessionManager>();
             let client = session_manager.client().unwrap();
             let client = client.read(cx);
@@ -85,6 +96,7 @@ impl ChatRoom {
                     typing_users: Vec::new(),
                     event_cache: None,
                     queued: Vec::new(),
+                    list_state,
                 };
             };
 
@@ -129,11 +141,15 @@ impl ChatRoom {
                     .await;
 
                 if let Ok((event_cache, _)) = event_cache {
-                    this.update(cx, |this, cx| {
-                        let event_cache_entity = cx.new(|_| event_cache.clone());
-                        this.event_cache = Some(event_cache_entity)
-                    })
-                    .unwrap();
+                    if this
+                        .update(cx, |this, cx| {
+                            let event_cache_entity = cx.new(|_| event_cache.clone());
+                            this.event_cache = Some(event_cache_entity)
+                        })
+                        .is_err()
+                    {
+                        return;
+                    }
 
                     let event_cache_clone = event_cache.clone();
                     cx.spawn(async move |cx: &mut AsyncApp| {
@@ -328,6 +344,7 @@ impl ChatRoom {
                 typing_users: Vec::new(),
                 event_cache: None,
                 queued: Vec::new(),
+                list_state,
             }
         })
     }
@@ -375,15 +392,38 @@ impl ChatRoom {
             .detach();
         });
     }
+
+    fn send_read_receipt(&mut self, cx: &mut Context<Self>) {
+        let room_id = self.room_id.clone();
+        let session_manager = cx.global::<SessionManager>();
+        let client = session_manager.client().unwrap().read(cx);
+        let room = client.get_room(&room_id).unwrap();
+
+        let Some(latest_event) = self.events.last() else {
+            return;
+        };
+        let Some(latest_event_id) = latest_event.event_id() else {
+            return;
+        };
+
+        cx.spawn(async move |_, cx: &mut AsyncApp| {
+            let _ = cx
+                .spawn_tokio(async move {
+                    room.send_single_receipt(
+                        ReceiptType::Read,
+                        ReceiptThread::Unthreaded,
+                        latest_event_id,
+                    )
+                    .await
+                })
+                .await;
+        })
+        .detach();
+    }
 }
 
 impl Render for ChatRoom {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let root_list_state = window.use_state(cx, |_, _| {
-            ListState::new(0, ListAlignment::Bottom, px(200.))
-        });
-        let root_list_state = root_list_state.read(cx);
-
         let session_manager = cx.global::<SessionManager>();
         let Some(client) = session_manager.client() else {
             return div();
@@ -401,15 +441,15 @@ impl Render for ChatRoom {
 
         let room_clone = room.clone();
         let events = self.events.clone();
-        if events.len() + self.queued.len() + 1 != root_list_state.item_count() {
-            root_list_state.reset(events.len() + self.queued.len() + 1);
-            root_list_state.scroll_to(ListOffset {
+        if events.len() + self.queued.len() + 1 != self.list_state.item_count() {
+            self.list_state.reset(events.len() + self.queued.len() + 1);
+            self.list_state.scroll_to(ListOffset {
                 item_ix: events.len() + 1,
                 offset_in_item: px(0.),
             })
         }
 
-        let pagination_status = self.pagination_status.read(cx).clone();
+        let pagination_status = *self.pagination_status.read(cx);
 
         let window_size = window.viewport_size();
         let inset = window.client_inset().unwrap_or_else(|| px(0.));
@@ -434,7 +474,7 @@ impl Render for ChatRoom {
             .child(
                 div().flex_grow().child(
                     list(
-                        root_list_state.clone(),
+                        self.list_state.clone(),
                         cx.processor(move |this, i, _, cx| {
                             if i == 0 {
                                 match pagination_status {

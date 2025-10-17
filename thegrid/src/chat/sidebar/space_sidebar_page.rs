@@ -4,8 +4,9 @@ use contemporary::components::grandstand::grandstand;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, Context, ElementId, Entity, InteractiveElement, IntoElement, ListAlignment,
-    ListState, ParentElement, Render, StatefulInteractiveElement, Styled, Window, div, list, px,
+    App, AppContext, Context, ElementId, Entity, FontWeight, InteractiveElement, IntoElement,
+    ListAlignment, ListState, ParentElement, Render, StatefulInteractiveElement, Styled, Window,
+    div, list, px,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use thegrid::session::room_cache::{CachedRoom, RoomCategory};
@@ -105,6 +106,9 @@ impl Render for SpaceSidebarPage {
                             };
 
                             div()
+                                .flex()
+                                .w_full()
+                                .items_center()
                                 .id(ElementId::Name(room.inner.room_id().to_string().into()))
                                 .m(px(2.))
                                 .p(px(2.))
@@ -120,6 +124,34 @@ impl Render for SpaceSidebarPage {
                                         .map(|name| name.to_string())
                                         .or_else(|| room.inner.name())
                                         .unwrap_or_default(),
+                                )
+                                .child(div().flex_grow())
+                                .when_else(
+                                    room.inner.unread_notification_counts().notification_count > 0,
+                                    |david| {
+                                        david.font_weight(FontWeight::BOLD).child(
+                                            div()
+                                                .rounded(theme.border_radius)
+                                                .bg(theme.error_accent_color)
+                                                .p(px(2.))
+                                                .child(
+                                                    room.inner
+                                                        .unread_notification_counts()
+                                                        .notification_count
+                                                        .to_string(),
+                                                ),
+                                        )
+                                    },
+                                    |david| {
+                                        david.when(room.inner.num_unread_messages() > 0, |david| {
+                                            david.child(
+                                                div()
+                                                    .bg(theme.foreground)
+                                                    .size(px(8.))
+                                                    .rounded(px(4.)),
+                                            )
+                                        })
+                                    },
                                 )
                                 .on_click(cx.listener(move |this, _, window, cx| {
                                     this.change_room(room_id.clone(), window, cx);

@@ -200,7 +200,11 @@ impl Render for RootSidebarPage {
                                 SidebarItem::Room(room) => {
                                     let room = room.read(cx);
                                     let room_id = room.inner.room_id().to_owned();
+
                                     div()
+                                        .flex()
+                                        .w_full()
+                                        .items_center()
                                         .id(ElementId::Name(
                                             room.inner.room_id().to_string().into(),
                                         ))
@@ -219,6 +223,36 @@ impl Render for RootSidebarPage {
                                                 .map(|name| name.to_string())
                                                 .or_else(|| room.inner.name())
                                                 .unwrap_or_default(),
+                                        )
+                                        .child(div().flex_grow())
+                                        .when_else(
+                                            room.inner.num_unread_notifications() > 0,
+                                            |david| {
+                                                david.child(
+                                                    div()
+                                                        .rounded(theme.border_radius)
+                                                        .bg(theme.error_accent_color)
+                                                        .p(px(2.))
+                                                        .child(
+                                                            room.inner
+                                                                .num_unread_notifications()
+                                                                .to_string(),
+                                                        ),
+                                                )
+                                            },
+                                            |david| {
+                                                david.when(
+                                                    room.inner.num_unread_messages() > 0,
+                                                    |david| {
+                                                        david.child(
+                                                            div()
+                                                                .bg(theme.foreground)
+                                                                .size(px(8.))
+                                                                .rounded(px(4.)),
+                                                        )
+                                                    },
+                                                )
+                                            },
                                         )
                                         .on_click(cx.listener(move |this, _, window, cx| {
                                             this.change_room(room_id.clone(), window, cx);
