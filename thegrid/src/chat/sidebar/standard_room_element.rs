@@ -6,13 +6,17 @@ use contemporary::components::icon_text::icon_text;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, ClickEvent, ElementId, Entity, FontWeight, InteractiveElement, IntoElement,
-    ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window, div, px,
+    App, AsyncApp, ClickEvent, ClipboardItem, ElementId, Entity, FontWeight, InteractiveElement,
+    IntoElement, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window, div, px,
 };
+use matrix_sdk::RoomMemberships;
 use matrix_sdk::ruma::OwnedRoomId;
+use std::collections::HashMap;
 use std::rc::Rc;
 use thegrid::session::room_cache::CachedRoom;
+use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
+use url::Url;
 
 #[derive(IntoElement)]
 pub struct StandardRoomElement {
@@ -36,6 +40,7 @@ impl RenderOnce for StandardRoomElement {
         let room_id = room.inner.room_id().to_owned();
         let on_click = self.on_click;
         let matrix_room = room.inner.clone();
+        let matrix_room_2 = room.inner.clone();
 
         let current_dialog_box_2 = current_dialog_box.clone();
         let current_dialog_box_3 = current_dialog_box.clone();
@@ -70,7 +75,59 @@ impl RenderOnce for StandardRoomElement {
             ContextMenuItem::menu_item()
                 .label(tr!("ROOM_COPY_LINK", "Copy link to room"))
                 .icon("edit-copy")
-                .disabled()
+                .on_triggered(move |_, _, cx| {
+                    let matrix_room = matrix_room_2.clone();
+                    let room_id = matrix_room.room_id().to_owned();
+                    cx.spawn(async move |cx: &mut AsyncApp| {
+                        let mut vias = Vec::new();
+                        // TODO: Pick the server of the highest power level user
+
+                        // Pick the three most popular servers
+                        let Ok(members) = cx
+                            .spawn_tokio(async move {
+                                matrix_room.members_no_sync(RoomMemberships::ACTIVE).await
+                            })
+                            .await
+                        else {
+                            // TODO: What to do?
+                            return;
+                        };
+
+                        let mut popular_servers = HashMap::new();
+                        for member in members {
+                            let server = member.user_id().server_name().to_owned();
+                            let count = popular_servers.entry(server).or_insert(0);
+                            *count += 1;
+                        }
+
+                        while vias.len() < 3 && !popular_servers.is_empty() {
+                            let popular_server = popular_servers
+                                .iter()
+                                .max_by_key(|(_, count)| *count)
+                                .map(|(server, _)| server)
+                                .unwrap()
+                                .clone();
+                            popular_servers.remove(&popular_server);
+
+                            // Ban IP literals
+                            if popular_server.is_ip_literal() {
+                                continue;
+                            }
+                            vias.push(popular_server);
+                        }
+
+                        // Return at most 3 vias
+                        vias.truncate(3);
+
+                        cx.update(|cx| {
+                            cx.write_to_clipboard(ClipboardItem::new_string(
+                                room_id.matrix_to_uri_via(vias).to_string(),
+                            ))
+                        })
+                        .unwrap();
+                    })
+                    .detach();
+                })
                 .build(),
             ContextMenuItem::separator().build(),
             ContextMenuItem::menu_item()

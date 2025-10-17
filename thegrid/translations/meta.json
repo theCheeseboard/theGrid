@@ -319,7 +319,7 @@
   },
   "FOR_ROOM": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:52",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:57",
     "plural": false,
     "description": null
   },
@@ -595,19 +595,19 @@
   },
   "LEAVE_ROOM_INFORMATIONAL_NOT_PUBLIC": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:150",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:207",
     "plural": false,
     "description": null
   },
   "LEAVE_ROOM_INFORMATIONAL_PUBLIC": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:144",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:201",
     "plural": false,
     "description": null
   },
   "LEAVE_ROOM_TEXT": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:137",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:194",
     "plural": false,
     "description": null
   },
@@ -835,7 +835,7 @@
   },
   "ROOM_COPY_LINK": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:71",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:76",
     "plural": false,
     "description": null
   },
@@ -847,19 +847,19 @@
   },
   "ROOM_INVITE": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:66",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:71",
     "plural": false,
     "description": null
   },
   "ROOM_LEAVE": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:82",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:139",
     "plural": false,
     "description": null
   },
   "ROOM_MARK_READ": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:55",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:60",
     "plural": false,
     "description": null
   },
@@ -871,13 +871,13 @@
   },
   "ROOM_NOTIFICATIONS": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:60",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:65",
     "plural": false,
     "description": null
   },
   "ROOM_SETTINGS": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:77",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:134",
     "plural": false,
     "description": null
   },
