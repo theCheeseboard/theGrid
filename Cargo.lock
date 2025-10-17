@@ -1108,7 +1108,7 @@ dependencies = [
 [[package]]
 name = "cntp_config"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#d5ebc4ad5cc3b3bc97891bb84dcd47ca8c8ac76c"
+source = "git+https://github.com/vicr123/contemporary-rs#c7b0de1eddb2f409559f8b0d4dac6e04a4e934d8"
 dependencies = [
  "serde",
  "serde_json",
@@ -1119,7 +1119,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#d5ebc4ad5cc3b3bc97891bb84dcd47ca8c8ac76c"
+source = "git+https://github.com/vicr123/contemporary-rs#c7b0de1eddb2f409559f8b0d4dac6e04a4e934d8"
 dependencies = [
  "cntp_i18n_core",
  "cntp_i18n_macros",
@@ -1133,7 +1133,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_core"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#d5ebc4ad5cc3b3bc97891bb84dcd47ca8c8ac76c"
+source = "git+https://github.com/vicr123/contemporary-rs#c7b0de1eddb2f409559f8b0d4dac6e04a4e934d8"
 dependencies = [
  "anyhow",
  "cntp_localesupport",
@@ -1147,7 +1147,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_gen"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#d5ebc4ad5cc3b3bc97891bb84dcd47ca8c8ac76c"
+source = "git+https://github.com/vicr123/contemporary-rs#c7b0de1eddb2f409559f8b0d4dac6e04a4e934d8"
 dependencies = [
  "cntp_i18n_core",
  "cntp_i18n_parse",
@@ -1163,7 +1163,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#d5ebc4ad5cc3b3bc97891bb84dcd47ca8c8ac76c"
+source = "git+https://github.com/vicr123/contemporary-rs#c7b0de1eddb2f409559f8b0d4dac6e04a4e934d8"
 dependencies = [
  "cntp_i18n_core",
  "cntp_i18n_parse",
@@ -1177,7 +1177,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_parse"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#d5ebc4ad5cc3b3bc97891bb84dcd47ca8c8ac76c"
+source = "git+https://github.com/vicr123/contemporary-rs#c7b0de1eddb2f409559f8b0d4dac6e04a4e934d8"
 dependencies = [
  "syn 2.0.106",
 ]
@@ -1185,7 +1185,7 @@ dependencies = [
 [[package]]
 name = "cntp_icon_tool_core"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#d5ebc4ad5cc3b3bc97891bb84dcd47ca8c8ac76c"
+source = "git+https://github.com/vicr123/contemporary-rs#c7b0de1eddb2f409559f8b0d4dac6e04a4e934d8"
 dependencies = [
  "regex",
 ]
@@ -1193,7 +1193,7 @@ dependencies = [
 [[package]]
 name = "cntp_icon_tool_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#d5ebc4ad5cc3b3bc97891bb84dcd47ca8c8ac76c"
+source = "git+https://github.com/vicr123/contemporary-rs#c7b0de1eddb2f409559f8b0d4dac6e04a4e934d8"
 dependencies = [
  "cntp_config",
  "cntp_icon_tool_core",
@@ -1204,7 +1204,7 @@ dependencies = [
 [[package]]
 name = "cntp_localesupport"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#d5ebc4ad5cc3b3bc97891bb84dcd47ca8c8ac76c"
+source = "git+https://github.com/vicr123/contemporary-rs#c7b0de1eddb2f409559f8b0d4dac6e04a4e934d8"
 dependencies = [
  "chrono",
  "icu",
@@ -1217,7 +1217,7 @@ dependencies = [
 [[package]]
 name = "cntp_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#d5ebc4ad5cc3b3bc97891bb84dcd47ca8c8ac76c"
+source = "git+https://github.com/vicr123/contemporary-rs#c7b0de1eddb2f409559f8b0d4dac6e04a4e934d8"
 dependencies = [
  "cntp_config",
  "quote",
@@ -1299,7 +1299,7 @@ dependencies = [
 [[package]]
 name = "collections"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#b0b83ef5aa8e3e0682186aefe185fa93804d4e80"
+source = "git+https://github.com/zed-industries/zed#45a0d0853560da364a5fb58b6edfad5930f63269"
 dependencies = [
  "indexmap",
  "rustc-hash 2.1.1",
@@ -1399,7 +1399,7 @@ checksum = "7c74b8349d32d297c9134b8c88677813a227df8f779daa29bfc29c183fe3dca6"
 [[package]]
 name = "contemporary"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#d5ebc4ad5cc3b3bc97891bb84dcd47ca8c8ac76c"
+source = "git+https://github.com/vicr123/contemporary-rs#c7b0de1eddb2f409559f8b0d4dac6e04a4e934d8"
 dependencies = [
  "ashpd 0.11.0",
  "async-channel 2.5.0",
@@ -1887,7 +1887,7 @@ dependencies = [
 [[package]]
 name = "derive_refineable"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#b0b83ef5aa8e3e0682186aefe185fa93804d4e80"
+source = "git+https://github.com/zed-industries/zed#45a0d0853560da364a5fb58b6edfad5930f63269"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2776,9 +2776,9 @@ checksum = "0cc23270f6e1808e30a928bdc84dea0b9b4136a8bc82338574f23baf47bbd280"
 
 [[package]]
 name = "globset"
-version = "0.4.16"
+version = "0.4.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54a1028dfc5f5df5da8a56a73e6c153c9a9708ec57232470703592a3f18e49f5"
+checksum = "eab69130804d941f8075cfd713bf8848a2c3b3f201a9457a11e6f87e1ab62305"
 dependencies = [
  "aho-corasick",
  "bstr",
@@ -2857,7 +2857,7 @@ dependencies = [
 [[package]]
 name = "gpui"
 version = "0.2.1"
-source = "git+https://github.com/zed-industries/zed#b0b83ef5aa8e3e0682186aefe185fa93804d4e80"
+source = "git+https://github.com/zed-industries/zed#45a0d0853560da364a5fb58b6edfad5930f63269"
 dependencies = [
  "anyhow",
  "as-raw-xcb-connection",
@@ -2951,7 +2951,7 @@ dependencies = [
 [[package]]
 name = "gpui_macros"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#b0b83ef5aa8e3e0682186aefe185fa93804d4e80"
+source = "git+https://github.com/zed-industries/zed#45a0d0853560da364a5fb58b6edfad5930f63269"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
@@ -2963,7 +2963,7 @@ dependencies = [
 [[package]]
 name = "gpui_tokio"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#b0b83ef5aa8e3e0682186aefe185fa93804d4e80"
+source = "git+https://github.com/zed-industries/zed#45a0d0853560da364a5fb58b6edfad5930f63269"
 dependencies = [
  "anyhow",
  "gpui",
@@ -3209,7 +3209,7 @@ dependencies = [
 [[package]]
 name = "http_client"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#b0b83ef5aa8e3e0682186aefe185fa93804d4e80"
+source = "git+https://github.com/zed-industries/zed#45a0d0853560da364a5fb58b6edfad5930f63269"
 dependencies = [
  "anyhow",
  "async-compression",
@@ -4801,7 +4801,7 @@ dependencies = [
 [[package]]
 name = "media"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#b0b83ef5aa8e3e0682186aefe185fa93804d4e80"
+source = "git+https://github.com/zed-industries/zed#45a0d0853560da364a5fb58b6edfad5930f63269"
 dependencies = [
  "anyhow",
  "bindgen",
@@ -5473,9 +5473,9 @@ dependencies = [
 
 [[package]]
 name = "openssl"
-version = "0.10.73"
+version = "0.10.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8505734d46c8ab1e19a1dce3aef597ad87dcb4c37e7188231769bd6bd51cebf8"
+checksum = "24ad14dd45412269e1a30f52ad8f0664f0f4f4a89ee8fe28c3b3527021ebb654"
 dependencies = [
  "bitflags 2.9.4",
  "cfg-if",
@@ -5505,9 +5505,9 @@ checksum = "d05e27ee213611ffe7d6348b942e8f942b37114c00cc03cec254295a4a17852e"
 
 [[package]]
 name = "openssl-sys"
-version = "0.9.109"
+version = "0.9.110"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90096e2e47630d78b7d1c20952dc621f957103f8bc2c8359ec81290d75238571"
+checksum = "0a9f0075ba3c21b09f8e8b2026584b1d18d49388648f2fbbf3c97ea8deced8e2"
 dependencies = [
  "cc",
  "libc",
@@ -5619,7 +5619,7 @@ checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 [[package]]
 name = "perf"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#b0b83ef5aa8e3e0682186aefe185fa93804d4e80"
+source = "git+https://github.com/zed-industries/zed#45a0d0853560da364a5fb58b6edfad5930f63269"
 dependencies = [
  "collections",
  "serde",
@@ -6387,7 +6387,7 @@ dependencies = [
 [[package]]
 name = "refineable"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#b0b83ef5aa8e3e0682186aefe185fa93804d4e80"
+source = "git+https://github.com/zed-industries/zed#45a0d0853560da364a5fb58b6edfad5930f63269"
 dependencies = [
  "derive_refineable",
  "workspace-hack",
@@ -7045,7 +7045,7 @@ checksum = "0f7d95a54511e0c7be3f51e8867aa8cf35148d7b9445d44de2f943e2b206e749"
 [[package]]
 name = "semantic_version"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#b0b83ef5aa8e3e0682186aefe185fa93804d4e80"
+source = "git+https://github.com/zed-industries/zed#45a0d0853560da364a5fb58b6edfad5930f63269"
 dependencies = [
  "anyhow",
  "serde",
@@ -7596,7 +7596,7 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 [[package]]
 name = "sum_tree"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#b0b83ef5aa8e3e0682186aefe185fa93804d4e80"
+source = "git+https://github.com/zed-industries/zed#45a0d0853560da364a5fb58b6edfad5930f63269"
 dependencies = [
  "arrayvec",
  "log",
@@ -8758,7 +8758,7 @@ checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
 [[package]]
 name = "util"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#b0b83ef5aa8e3e0682186aefe185fa93804d4e80"
+source = "git+https://github.com/zed-industries/zed#45a0d0853560da364a5fb58b6edfad5930f63269"
 dependencies = [
  "anyhow",
  "async-fs",
@@ -8794,7 +8794,7 @@ dependencies = [
 [[package]]
 name = "util_macros"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#b0b83ef5aa8e3e0682186aefe185fa93804d4e80"
+source = "git+https://github.com/zed-industries/zed#45a0d0853560da364a5fb58b6edfad5930f63269"
 dependencies = [
  "perf",
  "quote",
@@ -9944,9 +9944,9 @@ dependencies = [
 
 [[package]]
 name = "zbus"
-version = "5.11.0"
+version = "5.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d07e46d035fb8e375b2ce63ba4e4ff90a7f73cf2ffb0138b29e1158d2eaadf7"
+checksum = "b622b18155f7a93d1cd2dc8c01d2d6a44e08fb9ebb7b3f9e6ed101488bad6c91"
 dependencies = [
  "async-broadcast",
  "async-executor",
@@ -9968,7 +9968,8 @@ dependencies = [
  "serde_repr",
  "tracing",
  "uds_windows",
- "windows-sys 0.60.2",
+ "uuid",
+ "windows-sys 0.61.2",
  "winnow",
  "zbus_macros",
  "zbus_names",
@@ -9977,9 +9978,9 @@ dependencies = [
 
 [[package]]
 name = "zbus_macros"
-version = "5.11.0"
+version = "5.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57e797a9c847ed3ccc5b6254e8bcce056494b375b511b3d6edcec0aeb4defaca"
+checksum = "1cdb94821ca8a87ca9c298b5d1cbd80e2a8b67115d99f6e4551ac49e42b6a314"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -10263,9 +10264,9 @@ dependencies = [
 
 [[package]]
 name = "zvariant"
-version = "5.7.0"
+version = "5.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "999dd3be73c52b1fccd109a4a81e4fcd20fab1d3599c8121b38d04e1419498db"
+checksum = "2be61892e4f2b1772727be11630a62664a1826b62efa43a6fe7449521cb8744c"
 dependencies = [
  "endi",
  "enumflags2",
@@ -10278,9 +10279,9 @@ dependencies = [
 
 [[package]]
 name = "zvariant_derive"
-version = "5.7.0"
+version = "5.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6643fd0b26a46d226bd90d3f07c1b5321fe9bb7f04673cb37ac6d6883885b68e"
+checksum = "da58575a1b2b20766513b1ec59d8e2e68db2745379f961f86650655e862d2006"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",

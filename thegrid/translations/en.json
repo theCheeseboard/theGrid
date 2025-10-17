@@ -36,7 +36,7 @@
   "CREATE_ROOM_DESCRIPTION": "Create a room to chat in",
   "CREATE_ROOM_ENCRYPT": "Enable Encryption",
   "CREATE_ROOM_ENCRYPT_SUBTEXT": "Once enabled, encryption cannot be disabled",
-  "CREATE_ROOM_OPTIONS": "Room Options",
+  "CREATE_ROOM_OPTIONS": "Create Room",
   "CREATE_ROOM_TITLE": "Create Room",
   "CREATE_ROOM_VISIBILITY_PRIVATE": "Create Private Room",
   "CREATE_ROOM_VISIBILITY_PUBLIC": "Create Public Room",
