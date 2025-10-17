@@ -175,11 +175,12 @@ impl CachedRoom {
                             let mut updates = room_inner.subscribe_to_updates();
                             while updates.recv().await.is_ok() {
                                 if sync_changes_tx.send(()).await.is_err() {
-                                    return Err(anyhow!("Update stream closed"));
+                                    // Sync stream is closed so there's nothing else to do here
+                                    return Ok(());
                                 }
                             }
 
-                            Err(anyhow!("Update stream closed"))
+                            Ok(())
                         })
                         .await;
                 },

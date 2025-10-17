@@ -26,6 +26,8 @@ impl TokioHelper for AsyncApp {
         Tokio::spawn_result(self, async move { f.await.map_err(|e| anyhow!(e)) })
             .unwrap()
             .await
-            .map_err(|e| e.downcast::<E>().unwrap())
+            .map_err(|e| e.downcast::<E>().unwrap_or_else(|e| {
+                panic!("error should be an anyhow error downcastable to E: {e:?}");
+            }))
     }
 }

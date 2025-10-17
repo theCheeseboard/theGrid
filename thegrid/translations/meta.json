@@ -222,8 +222,8 @@
     "description": null
   },
   "CREATE_ROOM_OPTIONS": {
-    "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:146",
+    "context": "create_room_popover.rs",
+    "definedIn": "src/chat/join_room/create_room_popover.rs:133",
     "plural": false,
     "description": null
   },
