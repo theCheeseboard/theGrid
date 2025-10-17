@@ -123,6 +123,7 @@ impl Render for JoinRoom {
                                                 &this.invitations[i];
                                             div()
                                                 .id(i)
+                                                .py(px(2.))
                                                 .child(Invitation {
                                                     room: invitation.clone(),
                                                     displayed_room: displayed_room.clone(),
@@ -130,10 +131,7 @@ impl Render for JoinRoom {
                                                 .into_any_element()
                                         }),
                                     )
-                                    .with_sizing_behavior(ListSizingBehavior::Infer)
-                                    .flex()
-                                    .flex_col()
-                                    .gap(px(2.)),
+                                    .with_sizing_behavior(ListSizingBehavior::Infer),
                                 ),
                         )
                     })

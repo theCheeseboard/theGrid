@@ -223,7 +223,7 @@
   },
   "CREATE_ROOM_OPTIONS": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:146",
+    "definedIn": "src/chat/join_room.rs:144",
     "plural": false,
     "description": null
   },
@@ -415,19 +415,19 @@
   },
   "INVITE_ACCEPT": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:284",
+    "definedIn": "src/chat/join_room.rs:282",
     "plural": false,
     "description": null
   },
   "INVITE_DECLINE": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:268",
+    "definedIn": "src/chat/join_room.rs:266",
     "plural": false,
     "description": null
   },
   "INVITE_INVITED_BY": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:252",
+    "definedIn": "src/chat/join_room.rs:250",
     "plural": false,
     "description": null
   },
@@ -955,13 +955,13 @@
   },
   "ROOM_TYPE_ROOM": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:247",
+    "definedIn": "src/chat/join_room.rs:245",
     "plural": false,
     "description": null
   },
   "ROOM_TYPE_SPACE": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:246",
+    "definedIn": "src/chat/join_room.rs:244",
     "plural": false,
     "description": null
   },
