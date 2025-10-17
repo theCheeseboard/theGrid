@@ -148,6 +148,8 @@
   "ROOM_TOMBSTONED_NAVIGATE": "Go to new room",
   "ROOM_TOMBSTONED_TEXT": "Join the new room to keep the conversation going.",
   "ROOM_TOMBSTONED_TITLE": "This room has been replaced",
+  "ROOM_TYPE_ROOM": "Room",
+  "ROOM_TYPE_SPACE": "Space",
   "ROOT_SIDEBAR_ROOMS": "Rooms",
   "ROOT_SIDEBAR_SPACES": "Spaces",
   "SECURITY_ENCRYPTION": "Encryption",

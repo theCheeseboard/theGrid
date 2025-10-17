@@ -409,19 +409,19 @@
   },
   "INVITE_ACCEPT": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:278",
+    "definedIn": "src/chat/join_room.rs:284",
     "plural": false,
     "description": null
   },
   "INVITE_DECLINE": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:262",
+    "definedIn": "src/chat/join_room.rs:268",
     "plural": false,
     "description": null
   },
   "INVITE_INVITED_BY": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:246",
+    "definedIn": "src/chat/join_room.rs:252",
     "plural": false,
     "description": null
   },
@@ -890,6 +890,18 @@
   "ROOM_TOMBSTONED_TITLE": {
     "context": "chat_room.rs",
     "definedIn": "src/chat/chat_room.rs:506",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_TYPE_ROOM": {
+    "context": "join_room.rs",
+    "definedIn": "src/chat/join_room.rs:247",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_TYPE_SPACE": {
+    "context": "join_room.rs",
+    "definedIn": "src/chat/join_room.rs:246",
     "plural": false,
     "description": null
   },

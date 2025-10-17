@@ -240,7 +240,13 @@ impl RenderOnce for Invitation {
                 div()
                     .flex()
                     .flex_col()
-                    .child(room.display_name())
+                    .child(div().flex().gap(px(8.)).child(room.display_name()).child(
+                        div().text_color(theme.foreground.disabled()).when_else(
+                            room.inner.is_space(),
+                            |david| david.child(tr!("ROOM_TYPE_SPACE", "Space")),
+                            |david| david.child(tr!("ROOM_TYPE_ROOM", "Room")),
+                        ),
+                    ))
                     .when_some(inviter, |david, inviter| {
                         david.child(div().text_color(theme.foreground.disabled()).child(tr!(
                             "INVITE_INVITED_BY",
