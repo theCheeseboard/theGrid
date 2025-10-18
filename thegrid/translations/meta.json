@@ -1105,25 +1105,25 @@
   },
   "TYPING_NOTIFICATION": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:808",
+    "definedIn": "src/chat/chat_room.rs:879",
     "plural": true,
     "description": null
   },
   "TYPING_NOTIFICATION_ONE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:769",
+    "definedIn": "src/chat/chat_room.rs:840",
     "plural": false,
     "description": null
   },
   "TYPING_NOTIFICATION_THREE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:791",
+    "definedIn": "src/chat/chat_room.rs:862",
     "plural": false,
     "description": null
   },
   "TYPING_NOTIFICATION_TWO": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:778",
+    "definedIn": "src/chat/chat_room.rs:849",
     "plural": false,
     "description": null
   },

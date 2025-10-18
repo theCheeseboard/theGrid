@@ -763,58 +763,8 @@ impl Render for ChatRoom {
                 |david| {
                     david
                         .child(
-                            div().flex().child(match typing_users.len() {
-                                0 => "".to_string(),
-                                1 => tr!(
-                                    "TYPING_NOTIFICATION_ONE",
-                                    "{{user}} is typing...",
-                                    user = typing_users[0]
-                                        .display_name()
-                                        .unwrap_or_default()
-                                        .to_string()
-                                )
-                                .into(),
-                                2 => tr!(
-                                    "TYPING_NOTIFICATION_TWO",
-                                    "{{user}} and {{user2}} are typing...",
-                                    user = typing_users[0]
-                                        .display_name()
-                                        .unwrap_or_default()
-                                        .to_string(),
-                                    user2 = typing_users[1]
-                                        .display_name()
-                                        .unwrap_or_default()
-                                        .to_string()
-                                )
-                                .into(),
-                                3 => tr!(
-                                    "TYPING_NOTIFICATION_THREE",
-                                    "{{user}}, {{user2}} and {{user3}} are typing...",
-                                    user = typing_users[0]
-                                        .display_name()
-                                        .unwrap_or_default()
-                                        .to_string(),
-                                    user2 = typing_users[1]
-                                        .display_name()
-                                        .unwrap_or_default()
-                                        .to_string(),
-                                    user3 = typing_users[2]
-                                        .display_name()
-                                        .unwrap_or_default()
-                                        .to_string()
-                                )
-                                .into(),
-                                _ => trn!(
-                                    "TYPING_NOTIFICATION",
-                                    "{{count}} user is typing...",
-                                    "{{count}} users are typing...",
-                                    count = typing_users.len() as isize
-                                )
-                                .into(),
-                            }),
-                        )
-                        .child(
                             layer()
+                                .m(px(2.))
                                 .p(px(2.))
                                 .gap(px(2.))
                                 .flex()
@@ -882,6 +832,57 @@ impl Render for ChatRoom {
                                         ),
                                     ))
                                 }),
+                        )
+                        .child(
+                            div().flex().child(match typing_users.len() {
+                                0 => "".to_string(),
+                                1 => tr!(
+                                    "TYPING_NOTIFICATION_ONE",
+                                    "{{user}} is typing...",
+                                    user = typing_users[0]
+                                        .display_name()
+                                        .unwrap_or_default()
+                                        .to_string()
+                                )
+                                .into(),
+                                2 => tr!(
+                                    "TYPING_NOTIFICATION_TWO",
+                                    "{{user}} and {{user2}} are typing...",
+                                    user = typing_users[0]
+                                        .display_name()
+                                        .unwrap_or_default()
+                                        .to_string(),
+                                    user2 = typing_users[1]
+                                        .display_name()
+                                        .unwrap_or_default()
+                                        .to_string()
+                                )
+                                .into(),
+                                3 => tr!(
+                                    "TYPING_NOTIFICATION_THREE",
+                                    "{{user}}, {{user2}} and {{user3}} are typing...",
+                                    user = typing_users[0]
+                                        .display_name()
+                                        .unwrap_or_default()
+                                        .to_string(),
+                                    user2 = typing_users[1]
+                                        .display_name()
+                                        .unwrap_or_default()
+                                        .to_string(),
+                                    user3 = typing_users[2]
+                                        .display_name()
+                                        .unwrap_or_default()
+                                        .to_string()
+                                )
+                                .into(),
+                                _ => trn!(
+                                    "TYPING_NOTIFICATION",
+                                    "{{count}} user is typing...",
+                                    "{{count}} users are typing...",
+                                    count = typing_users.len() as isize
+                                )
+                                .into(),
+                            }),
                         )
                 },
             )
