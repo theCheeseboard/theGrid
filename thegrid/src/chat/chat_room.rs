@@ -19,10 +19,10 @@ use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::private::anyhow;
 use gpui::{
-    App, AppContext, AsyncApp, ClipboardEntry, Context, Entity, InteractiveElement, IntoElement,
-    ListAlignment, ListOffset, ListScrollEvent, ListState, ParentElement, PathPromptOptions, Point,
-    Render, StatefulInteractiveElement, Styled, WeakEntity, Window, anchored, deferred, div, list,
-    px, relative,
+    App, AppContext, AsyncApp, ClipboardEntry, Context, Entity, ExternalPaths, InteractiveElement,
+    IntoElement, ListAlignment, ListOffset, ListScrollEvent, ListState, ParentElement,
+    PathPromptOptions, Point, Render, StatefulInteractiveElement, Styled, WeakEntity, Window,
+    anchored, deferred, div, list, px, relative,
 };
 use gpui_tokio::Tokio;
 use log::{error, info};
@@ -884,6 +884,18 @@ impl Render for ChatRoom {
                                 }),
                         )
                 },
+            )
+            .child(
+                div()
+                    .absolute()
+                    .left_0()
+                    .top_0()
+                    .size_full()
+                    .on_drop(cx.listener(|this, event: &ExternalPaths, _, cx| {
+                        for path in event.paths() {
+                            this.attach_from_disk(path.clone(), cx);
+                        }
+                    })),
             )
     }
 }
