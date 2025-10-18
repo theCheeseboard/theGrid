@@ -10,6 +10,8 @@
   "ACCOUNT_SETTINGS_TITLE": "Account Settings",
   "ACCOUNT_SWITCHER_ERROR": "Account Switcher",
   "ATTACHMENTS_TITLE": "Attachments",
+  "ATTACH_ERROR": "Attachment Error",
+  "ATTACH_PROMPT": "Attach",
   "AUTH_ADVANCED_LOG_IN": "Advanced Login...",
   "AUTH_HOMESERVER_PLACEHOLDER": "Homeserver",
   "AUTH_LOG_IN": "Log In",

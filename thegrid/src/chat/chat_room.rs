@@ -17,11 +17,12 @@ use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::Theme;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
+use gpui::private::anyhow;
 use gpui::{
     App, AppContext, AsyncApp, ClipboardEntry, Context, Entity, InteractiveElement, IntoElement,
-    ListAlignment, ListOffset, ListScrollEvent, ListState, ParentElement, Point, Render,
-    StatefulInteractiveElement, Styled, WeakEntity, Window, anchored, deferred, div, list, px,
-    relative,
+    ListAlignment, ListOffset, ListScrollEvent, ListState, ParentElement, PathPromptOptions, Point,
+    Render, StatefulInteractiveElement, Styled, WeakEntity, Window, anchored, deferred, div, list,
+    px, relative,
 };
 use gpui_tokio::Tokio;
 use log::{error, info};
@@ -36,7 +37,9 @@ use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::{OwnedRoomId, OwnedUserId};
 use matrix_sdk::send_queue::{LocalEcho, RoomSendQueueUpdate};
 use mime2ext::mime2ext;
+use std::fs::read;
 use std::mem;
+use std::path::PathBuf;
 use std::rc::Rc;
 use std::time::Duration;
 use thegrid::session::session_manager::SessionManager;
@@ -60,7 +63,7 @@ pub struct ChatRoom {
 struct PendingAttachment {
     filename: String,
     mime_type: String,
-    data: Vec<u8>,
+    data: anyhow::Result<Vec<u8>>,
 }
 
 impl ChatRoom {
@@ -380,19 +383,21 @@ impl ChatRoom {
 
             cx.spawn(async move |_, cx: &mut AsyncApp| {
                 for attachment in attachments.into_iter() {
-                    let send_queue = send_queue.clone();
-                    let _ = cx
-                        .spawn_tokio(async move {
-                            send_queue
-                                .send_attachment(
-                                    attachment.filename,
-                                    attachment.mime_type.parse().unwrap(),
-                                    attachment.data,
-                                    Default::default(),
-                                )
-                                .await
-                        })
-                        .await;
+                    if let Ok(data) = attachment.data {
+                        let send_queue = send_queue.clone();
+                        let _ = cx
+                            .spawn_tokio(async move {
+                                send_queue
+                                    .send_attachment(
+                                        attachment.filename,
+                                        attachment.mime_type.parse().unwrap(),
+                                        data,
+                                        Default::default(),
+                                    )
+                                    .await
+                            })
+                            .await;
+                    }
                 }
 
                 if let Some(content) = content {
@@ -453,7 +458,7 @@ impl ChatRoom {
         .detach();
     }
 
-    fn paste_rich(&mut self, event: &PasteRichEvent, window: &mut Window, cx: &mut Context<Self>) {
+    fn paste_rich(&mut self, event: &PasteRichEvent, _: &mut Window, cx: &mut Context<Self>) {
         for entry in event.clipboard_item.entries() {
             match entry {
                 ClipboardEntry::String(_) => {
@@ -470,7 +475,7 @@ impl ChatRoom {
                             }
                         },
                         mime_type: image.format.mime_type().into(),
-                        data: image.bytes.clone(),
+                        data: Ok(image.bytes.clone()),
                     });
                 }
             }
@@ -511,24 +516,80 @@ impl ChatRoom {
                                 div().id(i).child(
                                     layer()
                                         .flex()
-                                        .items_center()
+                                        .flex_col()
                                         .p(px(2.))
-                                        .child(attachment.filename.clone())
-                                        .child(div().flex_grow())
                                         .child(
-                                            button("delete-button")
-                                                .flat()
-                                                .child(icon("edit-delete".into()))
-                                                .on_click(cx.listener(move |this, _, _, cx| {
-                                                    this.pending_attachments.remove(i);
-                                                    cx.notify()
-                                                })),
-                                        ),
+                                            div()
+                                                .flex()
+                                                .items_center()
+                                                .child(attachment.filename.clone())
+                                                .child(div().flex_grow())
+                                                .child(
+                                                    button("delete-button")
+                                                        .flat()
+                                                        .child(icon("edit-delete".into()))
+                                                        .on_click(cx.listener(
+                                                            move |this, _, _, cx| {
+                                                                this.pending_attachments.remove(i);
+                                                                cx.notify()
+                                                            },
+                                                        )),
+                                                ),
+                                        )
+                                        .when(attachment.data.is_err(), |david| {
+                                            david.child(
+                                                admonition()
+                                                    .severity(AdmonitionSeverity::Error)
+                                                    .title(tr!("ATTACH_ERROR", "Attachment Error"))
+                                                    .child(
+                                                        attachment
+                                                            .data
+                                                            .as_ref()
+                                                            .unwrap_err()
+                                                            .to_string(),
+                                                    ),
+                                            )
+                                        }),
                                 ),
                             )
                         },
                     )),
             )
+    }
+
+    fn show_attach_dialog(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let prompt = cx.prompt_for_paths(PathPromptOptions {
+            multiple: true,
+            files: true,
+            directories: false,
+            prompt: Some(tr!("ATTACH_PROMPT", "Attach").into()),
+        });
+
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                if let Some(path) = prompt.await.ok().and_then(|result| result.ok()).flatten() {
+                    weak_this
+                        .update(cx, |this, cx| {
+                            for path in path {
+                                this.attach_from_disk(path, cx);
+                            }
+                            cx.notify()
+                        })
+                        .unwrap();
+                };
+            },
+        )
+        .detach();
+    }
+
+    fn attach_from_disk(&mut self, path: PathBuf, cx: &mut Context<Self>) {
+        let file_contents = read(&path);
+
+        self.pending_attachments.push(PendingAttachment {
+            filename: path.file_name().unwrap().to_string_lossy().to_string(),
+            mime_type: "application/octet-stream".into(),
+            data: file_contents.map_err(|e| anyhow!(e)),
+        });
     }
 }
 
@@ -757,6 +818,14 @@ impl Render for ChatRoom {
                                 .p(px(2.))
                                 .gap(px(2.))
                                 .flex()
+                                .child(
+                                    button("attach_button")
+                                        .child(icon("mail-attachment".into()))
+                                        .flat()
+                                        .on_click(cx.listener(move |this, _, window, cx| {
+                                            this.show_attach_dialog(window, cx)
+                                        })),
+                                )
                                 .child(self.chat_input.clone().into_any_element())
                                 .child(button("emoji").child("😀").flat().on_click(cx.listener(
                                     |this, _, _, cx| {
