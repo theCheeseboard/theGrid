@@ -1,5 +1,5 @@
 use crate::auth::emoji_flyout::{EmojiFlyout, EmojiSelectedEvent};
-use crate::chat::chat_input::ChatInput;
+use crate::chat::chat_input::{ChatInput, PasteRichEvent};
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::timeline_event::queued_event::QueuedEvent;
 use crate::chat::timeline_event::room_head::room_head;
@@ -12,16 +12,20 @@ use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::spinner::spinner;
+use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::TextField;
+use contemporary::styling::theme::Theme;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, Context, Entity, InteractiveElement, IntoElement, ListAlignment,
-    ListOffset, ListScrollEvent, ListState, ParentElement, Point, Render, Styled, WeakEntity,
-    Window, anchored, deferred, div, list, px,
+    App, AppContext, AsyncApp, ClipboardEntry, Context, Entity, InteractiveElement, IntoElement,
+    ListAlignment, ListOffset, ListScrollEvent, ListState, ParentElement, Point, Render,
+    StatefulInteractiveElement, Styled, WeakEntity, Window, anchored, deferred, div, list, px,
+    relative,
 };
 use gpui_tokio::Tokio;
 use log::{error, info};
+use matrix_sdk::attachment::AttachmentConfig;
 use matrix_sdk::deserialized_responses::TimelineEvent;
 use matrix_sdk::event_cache::{RoomEventCache, RoomPaginationStatus};
 use matrix_sdk::room::RoomMember;
@@ -31,6 +35,8 @@ use matrix_sdk::ruma::events::receipt::ReceiptThread;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::{OwnedRoomId, OwnedUserId};
 use matrix_sdk::send_queue::{LocalEcho, RoomSendQueueUpdate};
+use mime2ext::mime2ext;
+use std::mem;
 use std::rc::Rc;
 use std::time::Duration;
 use thegrid::session::session_manager::SessionManager;
@@ -48,6 +54,13 @@ pub struct ChatRoom {
     emoji_flyout: Option<Entity<EmojiFlyout>>,
     typing_users: Vec<RoomMember>,
     list_state: ListState,
+    pending_attachments: Vec<PendingAttachment>,
+}
+
+struct PendingAttachment {
+    filename: String,
+    mime_type: String,
+    data: Vec<u8>,
 }
 
 impl ChatRoom {
@@ -67,10 +80,12 @@ impl ChatRoom {
             let text_changed_listener = cx.listener(|this: &mut Self, _, window, cx| {
                 this.text_changed(window, cx);
             });
+            let paste_rich_listener = cx.listener(Self::paste_rich);
             let chat_input = cx.new(|cx| {
                 let mut chat_input = ChatInput::new(cx);
                 chat_input.on_enter_press(enter_press_listener);
                 chat_input.on_text_changed(text_changed_listener);
+                chat_input.on_paste_rich(paste_rich_listener);
                 chat_input
             });
 
@@ -85,19 +100,22 @@ impl ChatRoom {
             let client = session_manager.client().unwrap();
             let client = client.read(cx);
 
+            let self_return = Self {
+                room_id: room_id.clone(),
+                events: Vec::new(),
+                pagination_status: pagination_status.clone(),
+                displayed_room,
+                chat_input,
+                emoji_flyout: None,
+                typing_users: Vec::new(),
+                event_cache: None,
+                queued: Vec::new(),
+                list_state,
+                pending_attachments: Vec::new(),
+            };
+
             let Some(room) = client.get_room(&room_id) else {
-                return Self {
-                    room_id,
-                    events: Vec::new(),
-                    pagination_status: pagination_status.clone(),
-                    displayed_room,
-                    chat_input,
-                    emoji_flyout: None,
-                    typing_users: Vec::new(),
-                    event_cache: None,
-                    queued: Vec::new(),
-                    list_state,
-                };
+                return self_return;
             };
 
             let (typing_notification_guard, mut typing_notification) =
@@ -334,32 +352,26 @@ impl ChatRoom {
             })
             .detach();
 
-            Self {
-                room_id,
-                events: Vec::new(),
-                pagination_status: pagination_status.clone(),
-                displayed_room,
-                chat_input,
-                emoji_flyout: None,
-                typing_users: Vec::new(),
-                event_cache: None,
-                queued: Vec::new(),
-                list_state,
-            }
+            self_return
         })
     }
 
     pub fn send_pending_message(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let chat_input = self.chat_input.clone();
         let room_id = self.room_id.clone();
+        let attachments = mem::take(&mut self.pending_attachments);
 
         cx.on_next_frame(window, move |_, _, cx| {
             let message = chat_input.read(cx).text();
-            if message.is_empty() {
+            if message.is_empty() && attachments.is_empty() {
                 return;
             }
 
-            let content = RoomMessageEventContent::text_plain(message.to_string());
+            let content = if message.is_empty() {
+                None
+            } else {
+                Some(RoomMessageEventContent::text_plain(message.to_string()))
+            };
 
             let session_manager = cx.global::<SessionManager>();
             let client = session_manager.client().unwrap().read(cx);
@@ -367,14 +379,34 @@ impl ChatRoom {
             let send_queue = room.send_queue();
 
             cx.spawn(async move |_, cx: &mut AsyncApp| {
-                let _ = cx
-                    .spawn_tokio(async move { send_queue.send(content.into()).await })
-                    .await;
+                for attachment in attachments.into_iter() {
+                    let send_queue = send_queue.clone();
+                    let _ = cx
+                        .spawn_tokio(async move {
+                            send_queue
+                                .send_attachment(
+                                    attachment.filename,
+                                    attachment.mime_type.parse().unwrap(),
+                                    attachment.data,
+                                    Default::default(),
+                                )
+                                .await
+                        })
+                        .await;
+                }
+
+                if let Some(content) = content {
+                    let _ = cx
+                        .spawn_tokio(async move { send_queue.send(content.into()).await })
+                        .await;
+                }
             })
             .detach();
 
             chat_input.update(cx, |message_field, _| message_field.reset())
         });
+
+        cx.notify();
     }
 
     pub fn text_changed(&mut self, window: &mut Window, cx: &mut Context<Self>) {
@@ -420,6 +452,84 @@ impl ChatRoom {
         })
         .detach();
     }
+
+    fn paste_rich(&mut self, event: &PasteRichEvent, window: &mut Window, cx: &mut Context<Self>) {
+        for entry in event.clipboard_item.entries() {
+            match entry {
+                ClipboardEntry::String(_) => {
+                    // noop
+                }
+                ClipboardEntry::Image(image) => {
+                    let suggested_extension = mime2ext(image.format.mime_type());
+
+                    self.pending_attachments.push(PendingAttachment {
+                        filename: match suggested_extension {
+                            None => "image".into(),
+                            Some(suggested_extension) => {
+                                format!("image.{suggested_extension}")
+                            }
+                        },
+                        mime_type: image.format.mime_type().into(),
+                        data: image.bytes.clone(),
+                    });
+                }
+            }
+        }
+
+        cx.notify();
+    }
+
+    fn render_attachments(&self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let theme = cx.global::<Theme>();
+        div()
+            .absolute()
+            .left_0()
+            .top_0()
+            .size_full()
+            .flex()
+            .items_end()
+            .justify_end()
+            .child(
+                div()
+                    .id("attachment-list")
+                    .rounded(theme.border_radius)
+                    .bg(theme.background)
+                    .border(px(1.))
+                    .border_color(theme.border_color)
+                    .occlude()
+                    .m(px(8.))
+                    .p(px(4.))
+                    .gap(px(4.))
+                    .w(px(400.))
+                    .max_h(relative(0.7))
+                    .overflow_y_scroll()
+                    .child(subtitle(tr!("ATTACHMENTS_TITLE", "Attachments")))
+                    .child(self.pending_attachments.iter().enumerate().fold(
+                        div().flex().flex_col().gap(px(4.)),
+                        |david, (i, attachment)| {
+                            david.child(
+                                div().id(i).child(
+                                    layer()
+                                        .flex()
+                                        .items_center()
+                                        .p(px(2.))
+                                        .child(attachment.filename.clone())
+                                        .child(div().flex_grow())
+                                        .child(
+                                            button("delete-button")
+                                                .flat()
+                                                .child(icon("edit-delete".into()))
+                                                .on_click(cx.listener(move |this, _, _, cx| {
+                                                    this.pending_attachments.remove(i);
+                                                    cx.notify()
+                                                })),
+                                        ),
+                                ),
+                            )
+                        },
+                    )),
+            )
+    }
 }
 
 impl Render for ChatRoom {
@@ -457,6 +567,8 @@ impl Render for ChatRoom {
         let typing_users = &self.typing_users;
         let room_id = self.room_id.clone();
 
+        let theme = cx.global::<Theme>();
+
         div()
             .flex()
             .flex_col()
@@ -472,67 +584,72 @@ impl Render for ChatRoom {
                     .pt(px(36.)),
             )
             .child(
-                div().flex_grow().child(
-                    list(
-                        self.list_state.clone(),
-                        cx.processor(move |this, i, _, cx| {
-                            if i == 0 {
-                                match pagination_status {
-                                    RoomPaginationStatus::Idle { hit_timeline_start } => {
-                                        if hit_timeline_start {
-                                            room_head(room_id.clone()).into_any_element()
-                                        } else {
-                                            div().child("Not Paginating").into_any_element()
+                div()
+                    .flex_grow()
+                    .child(
+                        list(
+                            self.list_state.clone(),
+                            cx.processor(move |this, i, _, cx| {
+                                if i == 0 {
+                                    match pagination_status {
+                                        RoomPaginationStatus::Idle { hit_timeline_start } => {
+                                            if hit_timeline_start {
+                                                room_head(room_id.clone()).into_any_element()
+                                            } else {
+                                                div().child("Not Paginating").into_any_element()
+                                            }
                                         }
+                                        RoomPaginationStatus::Paginating => div()
+                                            .w_full()
+                                            .flex()
+                                            .py(px(12.))
+                                            .items_center()
+                                            .justify_center()
+                                            .child(spinner())
+                                            .into_any_element(),
                                     }
-                                    RoomPaginationStatus::Paginating => div()
-                                        .w_full()
-                                        .flex()
-                                        .py(px(12.))
-                                        .items_center()
-                                        .justify_center()
-                                        .child(spinner())
-                                        .into_any_element(),
+                                } else if i < events.len() + 1 {
+                                    let event: &TimelineEvent = &events[i - 1];
+                                    let event = event.clone();
+                                    let previous_event = if i == 1 {
+                                        None
+                                    } else {
+                                        events.get(i - 2).cloned()
+                                    };
+
+                                    let event_cache = this.event_cache.clone().unwrap();
+
+                                    timeline_event(
+                                        event,
+                                        previous_event,
+                                        event_cache,
+                                        room_clone.clone(),
+                                    )
+                                    .into_any_element()
+                                } else {
+                                    let event: &Entity<QueuedEvent> =
+                                        &this.queued[i - events.len() - 1];
+                                    let previous_event = if i == 1 {
+                                        None
+                                    } else {
+                                        events.get(i - 2).cloned()
+                                    };
+
+                                    event.update(cx, |event, cx| {
+                                        event.previous_event = previous_event;
+                                    });
+
+                                    event.clone().into_any_element()
                                 }
-                            } else if i < events.len() + 1 {
-                                let event: &TimelineEvent = &events[i - 1];
-                                let event = event.clone();
-                                let previous_event = if i == 1 {
-                                    None
-                                } else {
-                                    events.get(i - 2).cloned()
-                                };
-
-                                let event_cache = this.event_cache.clone().unwrap();
-
-                                timeline_event(
-                                    event,
-                                    previous_event,
-                                    event_cache,
-                                    room_clone.clone(),
-                                )
-                                .into_any_element()
-                            } else {
-                                let event: &Entity<QueuedEvent> =
-                                    &this.queued[i - events.len() - 1];
-                                let previous_event = if i == 1 {
-                                    None
-                                } else {
-                                    events.get(i - 2).cloned()
-                                };
-
-                                event.update(cx, |event, cx| {
-                                    event.previous_event = previous_event;
-                                });
-
-                                event.clone().into_any_element()
-                            }
-                        }),
+                            }),
+                        )
+                        .flex()
+                        .flex_col()
+                        .h_full(),
                     )
-                    .flex()
-                    .flex_col()
-                    .h_full(),
-                ),
+                    .when(!self.pending_attachments.is_empty(), |david| {
+                        david.child(self.render_attachments(window, cx))
+                    }),
             )
             .when_else(
                 room.is_tombstoned(),

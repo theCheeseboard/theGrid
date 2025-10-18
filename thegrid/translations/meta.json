@@ -59,6 +59,12 @@
     "plural": false,
     "description": null
   },
+  "ATTACHMENTS_TITLE": {
+    "context": "chat_room.rs",
+    "definedIn": "src/chat/chat_room.rs:506",
+    "plural": false,
+    "description": null
+  },
   "AUTH_ADVANCED_LOG_IN": {
     "context": "auth_surface.rs",
     "definedIn": "src/auth/auth_surface.rs:713",
@@ -937,19 +943,19 @@
   },
   "ROOM_TOMBSTONED_NAVIGATE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:562",
+    "definedIn": "src/chat/chat_room.rs:679",
     "plural": false,
     "description": null
   },
   "ROOM_TOMBSTONED_TEXT": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:553",
+    "definedIn": "src/chat/chat_room.rs:670",
     "plural": false,
     "description": null
   },
   "ROOM_TOMBSTONED_TITLE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:546",
+    "definedIn": "src/chat/chat_room.rs:663",
     "plural": false,
     "description": null
   },
@@ -1087,25 +1093,25 @@
   },
   "TYPING_NOTIFICATION": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:630",
+    "definedIn": "src/chat/chat_room.rs:747",
     "plural": true,
     "description": null
   },
   "TYPING_NOTIFICATION_ONE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:591",
+    "definedIn": "src/chat/chat_room.rs:708",
     "plural": false,
     "description": null
   },
   "TYPING_NOTIFICATION_THREE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:613",
+    "definedIn": "src/chat/chat_room.rs:730",
     "plural": false,
     "description": null
   },
   "TYPING_NOTIFICATION_TWO": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:600",
+    "definedIn": "src/chat/chat_room.rs:717",
     "plural": false,
     "description": null
   },
@@ -1141,7 +1147,7 @@
   },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:437",
+    "definedIn": "src/chat/chat_room.rs:547",
     "plural": false,
     "description": null
   },
