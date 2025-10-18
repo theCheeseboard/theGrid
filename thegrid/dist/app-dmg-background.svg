@@ -85,10 +85,10 @@
      inkscape:window-width="1760"
      units="px"
      showgrid="true"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="layer1-8"
      inkscape:document-units="mm"
      inkscape:cy="195.51478"
-     inkscape:cx="236.47576"
+     inkscape:cx="236.89804"
      inkscape:zoom="1.1840537"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
@@ -156,16 +156,13 @@
          height="37.041664"
          x="26.458336"
          y="212.33331" />
-      <image
-         y="212.33331"
-         x="146.31459"
+      <rect
+         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.85208;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          id="applications"
-         xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJMAAACTCAIAAAAFh7xCAAAAA3NCSVQICAjb4U/gAAABxUlEQVR4 nO3WwY0VMQBEwTGeYObgxB2lSWAFfAnt8FBVBC29S1/nnL33WmvOefFvm3Outfbe55xr7z3GeHsS Hxhj7L2vtdbbS/jYWuu67/vtGXxMNYA/9PWrPOd88w5+4cvz/+P7d/BXKFelXJVyVcpVKVelXJVy VcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpV KVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVel XJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVy VcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpV KVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyVcpVKVelXJVyAPzX7vt+ ewIfu+/7x/M8b8/gY8/zXHvvMcbbS/jAGGPvfZ1z9t5rrTnn25P4jTnnWmvvfc75Cf3NJEAoQ8sD AAAAAElFTkSuQmCC "
-         style="image-rendering:optimizeSpeed"
-         preserveAspectRatio="none"
-         height="38.893749"
-         width="38.893753"
-         inkscape:svg-dpi="1" />
+         width="49.389336"
+         height="37.041664"
+         x="147.24063"
+         y="213.25935" />
       <path
          style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
          d="m 89.958341,222.91663 v 15.87501 H 103.1875 v 10.58335 l 18.52084,-18.52084 -18.52084,-18.52083 v 10.58332 z"
