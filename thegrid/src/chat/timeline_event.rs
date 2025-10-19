@@ -1,3 +1,4 @@
+mod author_flyout;
 pub mod queued_event;
 pub mod room_head;
 mod room_message_element;

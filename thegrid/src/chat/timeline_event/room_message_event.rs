@@ -206,13 +206,11 @@ where
                     && let Some(Relation::Replacement(replacement_relation)) =
                         &original.content.relates_to
                 {
-                    let msgtype_to_message_line = msgtype_to_message_line(
-                        &replacement_relation.new_content.msgtype,
-                        cx
-                    );
-                    
+                    let msgtype_to_message_line =
+                        msgtype_to_message_line(&replacement_relation.new_content.msgtype, cx);
+
                     let theme = cx.global::<Theme>();
-                    
+
                     return div()
                         .flex()
                         .flex_col()
@@ -234,6 +232,7 @@ where
 
         RoomMessageElement {
             author: if is_head_event { Some(author) } else { None },
+            room: self.room.clone(),
             content: content(),
         }
         .into_any_element()

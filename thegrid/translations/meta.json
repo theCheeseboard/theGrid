@@ -77,6 +77,12 @@
     "plural": false,
     "description": null
   },
+  "AUTHOR_STATUS_POWER_LEVEL": {
+    "context": "author_flyout.rs",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:106",
+    "plural": false,
+    "description": null
+  },
   "AUTH_ADVANCED_LOG_IN": {
     "context": "auth_surface.rs",
     "definedIn": "src/auth/auth_surface.rs:713",
@@ -209,6 +215,12 @@
     "plural": false,
     "description": null
   },
+  "CHANGE_POWER_LEVEL": {
+    "context": "author_flyout.rs",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:152",
+    "plural": false,
+    "description": null
+  },
   "CLOSE": {
     "context": "recovery_passphrase_popover.rs",
     "definedIn": "src/auth/recovery_passphrase_popover.rs:249",
@@ -319,7 +331,7 @@
   },
   "EDITED_MESSAGE_INDICATOR": {
     "context": "room_message_event.rs",
-    "definedIn": "src/chat/timeline_event/room_message_event.rs:227",
+    "definedIn": "src/chat/timeline_event/room_message_event.rs:225",
     "plural": false,
     "description": null
   },
@@ -464,6 +476,12 @@
   "INVITE_INVITED_BY": {
     "context": "join_room.rs",
     "definedIn": "src/chat/join_room.rs:250",
+    "plural": false,
+    "description": null
+  },
+  "IN_ROOM": {
+    "context": "author_flyout.rs",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:98",
     "plural": false,
     "description": null
   },
@@ -703,7 +721,7 @@
   },
   "MESSAGE_DECRYPTION_FAILURE": {
     "context": "timeline_event.rs",
-    "definedIn": "src/chat/timeline_event.rs:90",
+    "definedIn": "src/chat/timeline_event.rs:91",
     "plural": false,
     "description": null
   },
@@ -764,6 +782,24 @@
   "POPOVER_VERIFY": {
     "context": "verification_popover.rs",
     "definedIn": "src/auth/verification_popover.rs:470",
+    "plural": false,
+    "description": null
+  },
+  "POWER_LEVEL_ADMINISTRATOR": {
+    "context": "author_flyout.rs",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:128",
+    "plural": false,
+    "description": null
+  },
+  "POWER_LEVEL_INFINITE": {
+    "context": "author_flyout.rs",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:111",
+    "plural": false,
+    "description": null
+  },
+  "POWER_LEVEL_MODERATOR": {
+    "context": "author_flyout.rs",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:143",
     "plural": false,
     "description": null
   },
