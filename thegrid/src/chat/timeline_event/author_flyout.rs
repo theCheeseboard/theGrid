@@ -15,14 +15,29 @@ use gpui::{
     Window, div, px,
 };
 use matrix_sdk::Room;
-use matrix_sdk::room::RoomMemberRole;
+use matrix_sdk::room::{RoomMember, RoomMemberRole};
 use matrix_sdk::ruma::events::room::power_levels::UserPowerLevel;
+use std::rc::Rc;
 
 pub type AuthorFlyoutCloseListener =
     dyn Fn(&AuthorFlyoutCloseEvent, &mut Window, &mut App) + 'static;
+pub type AuthorFlyoutUserActionListener =
+    dyn Fn(&AuthorFlyoutUserActionEvent, &mut Window, &mut App) + 'static;
 
 #[derive(Clone)]
 pub struct AuthorFlyoutCloseEvent;
+
+#[derive(Clone)]
+pub struct AuthorFlyoutUserActionEvent {
+    pub action: UserAction,
+    pub user: RoomMember,
+    pub room: Room,
+}
+
+#[derive(Clone)]
+pub enum UserAction {
+    ChangePowerLevel,
+}
 
 #[derive(IntoElement)]
 pub struct AuthorFlyout {
@@ -31,6 +46,7 @@ pub struct AuthorFlyout {
     author: CachedRoomMember,
     room: Room,
     on_close: Box<AuthorFlyoutCloseListener>,
+    on_user_action: Box<AuthorFlyoutUserActionListener>,
 }
 
 pub fn author_flyout(
@@ -39,6 +55,7 @@ pub fn author_flyout(
     author: CachedRoomMember,
     room: Room,
     on_close: impl Fn(&AuthorFlyoutCloseEvent, &mut Window, &mut App) + 'static,
+    on_user_action: impl Fn(&AuthorFlyoutUserActionEvent, &mut Window, &mut App) + 'static,
 ) -> AuthorFlyout {
     AuthorFlyout {
         bounds,
@@ -46,12 +63,17 @@ pub fn author_flyout(
         author,
         room,
         on_close: Box::new(on_close),
+        on_user_action: Box::new(on_user_action),
     }
 }
 
 impl RenderOnce for AuthorFlyout {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
-        let on_close = self.on_close;
+        let on_close = Rc::new(self.on_close);
+        let on_close_2 = on_close.clone();
+
+        let on_user_action = Rc::new(self.on_user_action);
+
         let theme = cx.global::<Theme>();
 
         let display_name = self
@@ -61,11 +83,14 @@ impl RenderOnce for AuthorFlyout {
             .or_else(|| self.room.name())
             .unwrap_or_default();
 
+        let room = self.room.clone();
+
         flyout(self.bounds)
             .visible(self.visible)
             .anchor_top_right()
             .child(match &self.author {
                 CachedRoomMember::RoomMember(room_member) => {
+                    let room_member = room_member.clone();
                     let suggested_role = room_member.suggested_role_for_power_level();
                     div()
                         .occlude()
@@ -124,10 +149,7 @@ impl RenderOnce for AuthorFlyout {
                                                         .rounded(theme.border_radius)
                                                         .bg(theme.error_accent_color)
                                                         .p(px(2.))
-                                                        .child(tr!(
-                                                            "POWER_LEVEL_ADMINISTRATOR",
-                                                            "Administrator"
-                                                        )),
+                                                        .child(tr!("POWER_LEVEL_ADMINISTRATOR",)),
                                                 )
                                             },
                                         )
@@ -139,17 +161,26 @@ impl RenderOnce for AuthorFlyout {
                                                         .rounded(theme.border_radius)
                                                         .bg(theme.info_accent_color)
                                                         .p(px(2.))
-                                                        .child(tr!(
-                                                            "POWER_LEVEL_MODERATOR",
-                                                            "Moderator"
-                                                        )),
+                                                        .child(tr!("POWER_LEVEL_MODERATOR",)),
                                                 )
                                             },
                                         )
                                         .child(div().flex_grow())
                                         .child(
                                             button("change-power-level")
-                                                .child(tr!("CHANGE_POWER_LEVEL", "Change...")),
+                                                .child(tr!("CHANGE_POWER_LEVEL", "Change..."))
+                                                .on_click(move |_, window, cx| {
+                                                    on_close_2(&AuthorFlyoutCloseEvent, window, cx);
+                                                    on_user_action(
+                                                        &AuthorFlyoutUserActionEvent {
+                                                            action: UserAction::ChangePowerLevel,
+                                                            room: room.clone(),
+                                                            user: room_member.clone(),
+                                                        },
+                                                        window,
+                                                        cx,
+                                                    );
+                                                }),
                                         ),
                                 ),
                         )

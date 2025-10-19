@@ -1,4 +1,4 @@
-use crate::chat::timeline_event::author_flyout::author_flyout;
+use crate::chat::timeline_event::author_flyout::{AuthorFlyoutUserActionListener, author_flyout};
 use crate::chat::timeline_event::room_message_event::CachedRoomMember;
 use crate::mxc_image::{SizePolicy, mxc_image};
 use contemporary::components::anchorer::WithAnchorer;
@@ -18,6 +18,7 @@ where
     pub author: Option<CachedRoomMember>,
     pub room: Room,
     pub content: T,
+    pub on_user_action: Box<AuthorFlyoutUserActionListener>,
 }
 
 impl<T: gpui::IntoElement> RenderOnce for RoomMessageElement<T> {
@@ -68,6 +69,7 @@ impl<T: gpui::IntoElement> RenderOnce for RoomMessageElement<T> {
                                             move |_, _, cx| {
                                                 author_flyout_open_entity_2.write(cx, false);
                                             },
+                                            self.on_user_action,
                                         ))
                                     })
                                     .on_click(move |_, _, cx| {

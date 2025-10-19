@@ -78,6 +78,7 @@ impl Render for QueuedEvent {
                         self.previous_event.clone(),
                         None,
                         self.previous_event.is_none(),
+                        |_, _, _| {},
                     ))
                     .into_any_element()
             }

@@ -1,4 +1,4 @@
-mod author_flyout;
+pub mod author_flyout;
 pub mod queued_event;
 pub mod room_head;
 mod room_message_element;
@@ -6,6 +6,9 @@ mod room_message_event;
 mod room_message_event_renderable;
 mod room_state_event;
 
+use crate::chat::timeline_event::author_flyout::{
+    AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener,
+};
 use crate::chat::timeline_event::room_message_event::room_message_event;
 use crate::chat::timeline_event::room_state_event::room_state_event;
 use cntp_i18n::tr;
@@ -27,6 +30,7 @@ pub struct TimelineRow {
     previous_event: Option<TimelineEvent>,
     event_cache: Entity<RoomEventCache>,
     room: Room,
+    on_user_action: Box<AuthorFlyoutUserActionListener>,
 }
 
 pub fn timeline_event(
@@ -34,12 +38,14 @@ pub fn timeline_event(
     previous_event: Option<TimelineEvent>,
     event_cache: Entity<RoomEventCache>,
     room: Room,
+    on_user_action: impl Fn(&AuthorFlyoutUserActionEvent, &mut Window, &mut App) + 'static,
 ) -> TimelineRow {
     TimelineRow {
         event,
         previous_event,
         event_cache,
         room,
+        on_user_action: Box::new(on_user_action),
     }
 }
 
@@ -76,6 +82,7 @@ impl RenderOnce for TimelineRow {
                                     self.previous_event,
                                     Some(self.event_cache),
                                     false,
+                                    self.on_user_action,
                                 )
                                 .into_any_element(),
                             }

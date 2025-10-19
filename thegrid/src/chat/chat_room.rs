@@ -1,6 +1,10 @@
+mod user_action_dialogs;
+
 use crate::auth::emoji_flyout::{EmojiFlyout, EmojiSelectedEvent};
 use crate::chat::chat_input::{ChatInput, PasteRichEvent};
+use crate::chat::chat_room::user_action_dialogs::UserActionDialogs;
 use crate::chat::displayed_room::DisplayedRoom;
+use crate::chat::timeline_event::author_flyout::AuthorFlyoutUserActionEvent;
 use crate::chat::timeline_event::queued_event::QueuedEvent;
 use crate::chat::timeline_event::room_head::room_head;
 use crate::chat::timeline_event::timeline_event;
@@ -58,6 +62,7 @@ pub struct ChatRoom {
     typing_users: Vec<RoomMember>,
     list_state: ListState,
     pending_attachments: Vec<PendingAttachment>,
+    user_action_dialogs: Entity<UserActionDialogs>,
 }
 
 struct PendingAttachment {
@@ -99,6 +104,8 @@ impl ChatRoom {
                 }
             }));
 
+            let user_action_dialogs = cx.new(|cx| UserActionDialogs::new(room_id.clone(), cx));
+
             let session_manager = cx.global::<SessionManager>();
             let client = session_manager.client().unwrap();
             let client = client.read(cx);
@@ -115,6 +122,7 @@ impl ChatRoom {
                 queued: Vec::new(),
                 list_state,
                 pending_attachments: Vec::new(),
+                user_action_dialogs,
             };
 
             let Some(room) = client.get_room(&room_id) else {
@@ -591,6 +599,19 @@ impl ChatRoom {
             data: file_contents.map_err(|e| anyhow!(e)),
         });
     }
+
+    fn trigger_user_action(
+        &mut self,
+        user_action: &AuthorFlyoutUserActionEvent,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.user_action_dialogs
+            .update(cx, |user_action_dialogs, cx| {
+                user_action_dialogs.open_power_level_dialog(user_action.user.clone());
+                cx.notify()
+            })
+    }
 }
 
 impl Render for ChatRoom {
@@ -627,8 +648,6 @@ impl Render for ChatRoom {
 
         let typing_users = &self.typing_users;
         let room_id = self.room_id.clone();
-
-        let theme = cx.global::<Theme>();
 
         div()
             .flex()
@@ -685,6 +704,7 @@ impl Render for ChatRoom {
                                         previous_event,
                                         event_cache,
                                         room_clone.clone(),
+                                        cx.listener(Self::trigger_user_action),
                                     )
                                     .into_any_element()
                                 } else {
@@ -898,5 +918,6 @@ impl Render for ChatRoom {
                         }
                     })),
             )
+            .child(self.user_action_dialogs.clone())
     }
 }

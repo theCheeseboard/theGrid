@@ -1,3 +1,6 @@
+use crate::chat::timeline_event::author_flyout::{
+    AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener,
+};
 use crate::chat::timeline_event::resolve_event;
 use crate::chat::timeline_event::room_message_element::RoomMessageElement;
 use crate::chat::timeline_event::room_message_event_renderable::{
@@ -43,6 +46,7 @@ where
     previous_event: Option<TimelineEvent>,
     event_cache: Option<Entity<RoomEventCache>>,
     force_not_head_event: bool,
+    on_user_action: Box<AuthorFlyoutUserActionListener>,
 }
 
 #[derive(Clone)]
@@ -87,6 +91,7 @@ pub fn room_message_event<T>(
     previous_event: Option<TimelineEvent>,
     event_cache: Option<Entity<RoomEventCache>>,
     force_not_head_event: bool,
+    on_user_action: impl Fn(&AuthorFlyoutUserActionEvent, &mut Window, &mut App) + 'static,
 ) -> RoomMessageEvent<T>
 where
     T: RoomMessageEventRenderable,
@@ -99,6 +104,7 @@ where
         previous_event,
         event_cache,
         force_not_head_event,
+        on_user_action: Box::new(on_user_action),
     }
 }
 
@@ -233,6 +239,7 @@ where
         RoomMessageElement {
             author: if is_head_event { Some(author) } else { None },
             room: self.room.clone(),
+            on_user_action: self.on_user_action,
             content: content(),
         }
         .into_any_element()
