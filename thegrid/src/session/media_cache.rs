@@ -1,4 +1,6 @@
 use crate::tokio_helper::TokioHelper;
+use cntp_i18n::tr;
+use contemporary::jobs::standard_job::StandardJob;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{App, AppContext, AsyncApp, Context, Entity, RenderImage, WeakEntity};
@@ -11,6 +13,7 @@ use smallvec::smallvec;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::hash::Hash;
+use std::rc::Rc;
 use std::sync::{Arc, Mutex, Weak};
 
 pub struct MediaCache {
@@ -108,7 +111,26 @@ impl MediaCache {
         self.tracked_files
             .borrow_mut()
             .entry(media_cache_entry.clone())
-            .or_insert_with(|| MediaFile::new(self.client.clone(), media_source.clone(), cx))
+            .or_insert_with(|| MediaFile::new(self.client.clone(), media_source.clone(), true, cx))
+            .to_owned()
+    }
+
+    pub fn media_file_lazy(
+        &self,
+        media_cache_entry: MediaCacheEntry,
+        cx: &mut App,
+    ) -> Entity<MediaFile> {
+        let media_source = match &media_cache_entry {
+            MediaCacheEntry::MediaSource(media_source) => media_source,
+            MediaCacheEntry::None => {
+                panic!("Tried to get media file for None")
+            }
+        };
+
+        self.tracked_files
+            .borrow_mut()
+            .entry(media_cache_entry.clone())
+            .or_insert_with(|| MediaFile::new(self.client.clone(), media_source.clone(), false, cx))
             .to_owned()
     }
 }
@@ -121,13 +143,19 @@ pub struct MediaFile {
 }
 
 pub enum MediaState {
+    Idle,
     Loading,
     Loaded(MediaFileHandle),
     Failed,
 }
 
 impl MediaFile {
-    pub fn new(client: Client, mxc_uri: MediaSource, cx: &mut App) -> Entity<Self> {
+    pub fn new(
+        client: Client,
+        mxc_uri: MediaSource,
+        start_request_immediately: bool,
+        cx: &mut App,
+    ) -> Entity<Self> {
         cx.new(|cx| {
             let mut media_file = Self {
                 client,
@@ -135,13 +163,18 @@ impl MediaFile {
                 media_state: MediaState::Failed,
                 read_image: Mutex::new(Weak::new()),
             };
-            media_file.request_media(cx);
+
+            if start_request_immediately {
+                media_file.request_media(None, None, false, cx);
+            }
             media_file
         })
     }
 
-    pub fn request_media(&mut self, cx: &mut Context<Self>) {
+    pub fn request_media(&mut self, filename: Option<String>, mime_type: Option<String>, spawn_job: bool, cx: &mut Context<Self>) {
         self.media_state = MediaState::Loading;
+
+        // TODO: Spawn job
 
         let media_client = self.client.media();
         let mxc_uri = self.mxc_uri.clone();
@@ -155,8 +188,8 @@ impl MediaFile {
                                     source: mxc_uri,
                                     format: MediaFormat::File,
                                 },
-                                None,
-                                &"application/octet-stream".parse().unwrap(),
+                                filename,
+                                &mime_type.unwrap_or("application/octet-stream".into()).parse().unwrap(),
                                 true,
                                 None,
                             )

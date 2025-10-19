@@ -196,8 +196,7 @@ where
             return div().id("room-message").into_any_element();
         }
 
-        let theme = cx.global::<Theme>();
-        let content = || {
+        let mut content = || {
             for relation in relations_entity.read(cx).iter() {
                 if let Ok(resolved) = resolve_event(relation, self.room.room_id())
                     && let AnyTimelineEvent::MessageLike(AnyMessageLikeEvent::RoomMessage(
@@ -207,13 +206,17 @@ where
                     && let Some(Relation::Replacement(replacement_relation)) =
                         &original.content.relates_to
                 {
+                    let msgtype_to_message_line = msgtype_to_message_line(
+                        &replacement_relation.new_content.msgtype,
+                        cx
+                    );
+                    
+                    let theme = cx.global::<Theme>();
+                    
                     return div()
                         .flex()
                         .flex_col()
-                        .child(msgtype_to_message_line(
-                            &replacement_relation.new_content.msgtype,
-                            theme,
-                        ))
+                        .child(msgtype_to_message_line)
                         .child(
                             div()
                                 .flex()
@@ -226,7 +229,7 @@ where
                         .into_any_element();
                 }
             }
-            self.event.message_line(theme).into_any_element()
+            self.event.message_line(cx).into_any_element()
         };
 
         RoomMessageElement {

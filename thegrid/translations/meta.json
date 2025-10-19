@@ -319,7 +319,7 @@
   },
   "EDITED_MESSAGE_INDICATOR": {
     "context": "room_message_event.rs",
-    "definedIn": "src/chat/timeline_event/room_message_event.rs:224",
+    "definedIn": "src/chat/timeline_event/room_message_event.rs:227",
     "plural": false,
     "description": null
   },
@@ -332,6 +332,24 @@
   "EMOJI_NO_MATCH": {
     "context": "verification_popover.rs",
     "definedIn": "src/auth/verification_popover.rs:375",
+    "plural": false,
+    "description": null
+  },
+  "FILE_OPEN": {
+    "context": "room_message_event_renderable.rs",
+    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:139",
+    "plural": false,
+    "description": null
+  },
+  "FILE_OPEN_MENU_HEADER": {
+    "context": "room_message_event_renderable.rs",
+    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:133",
+    "plural": false,
+    "description": null
+  },
+  "FILE_SAVE_AS": {
+    "context": "room_message_event_renderable.rs",
+    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:154",
     "plural": false,
     "description": null
   },
