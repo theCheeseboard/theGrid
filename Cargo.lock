@@ -1108,7 +1108,7 @@ dependencies = [
 [[package]]
 name = "cntp_config"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#be23b86fda4fd3b5272cb3e3e2ec4269056d84f1"
+source = "git+https://github.com/vicr123/contemporary-rs#a74c9f57dc1a8524c735ee8fc02cea840c035768"
 dependencies = [
  "serde",
  "serde_json",
@@ -1119,7 +1119,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#be23b86fda4fd3b5272cb3e3e2ec4269056d84f1"
+source = "git+https://github.com/vicr123/contemporary-rs#a74c9f57dc1a8524c735ee8fc02cea840c035768"
 dependencies = [
  "cntp_i18n_core",
  "cntp_i18n_macros",
@@ -1133,7 +1133,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_core"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#be23b86fda4fd3b5272cb3e3e2ec4269056d84f1"
+source = "git+https://github.com/vicr123/contemporary-rs#a74c9f57dc1a8524c735ee8fc02cea840c035768"
 dependencies = [
  "anyhow",
  "cntp_localesupport",
@@ -1147,7 +1147,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_gen"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#be23b86fda4fd3b5272cb3e3e2ec4269056d84f1"
+source = "git+https://github.com/vicr123/contemporary-rs#a74c9f57dc1a8524c735ee8fc02cea840c035768"
 dependencies = [
  "cntp_i18n_core",
  "cntp_i18n_parse",
@@ -1163,7 +1163,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#be23b86fda4fd3b5272cb3e3e2ec4269056d84f1"
+source = "git+https://github.com/vicr123/contemporary-rs#a74c9f57dc1a8524c735ee8fc02cea840c035768"
 dependencies = [
  "cntp_i18n_core",
  "cntp_i18n_parse",
@@ -1177,7 +1177,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_parse"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#be23b86fda4fd3b5272cb3e3e2ec4269056d84f1"
+source = "git+https://github.com/vicr123/contemporary-rs#a74c9f57dc1a8524c735ee8fc02cea840c035768"
 dependencies = [
  "syn 2.0.107",
 ]
@@ -1185,7 +1185,7 @@ dependencies = [
 [[package]]
 name = "cntp_icon_tool_core"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#be23b86fda4fd3b5272cb3e3e2ec4269056d84f1"
+source = "git+https://github.com/vicr123/contemporary-rs#a74c9f57dc1a8524c735ee8fc02cea840c035768"
 dependencies = [
  "regex",
 ]
@@ -1193,7 +1193,7 @@ dependencies = [
 [[package]]
 name = "cntp_icon_tool_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#be23b86fda4fd3b5272cb3e3e2ec4269056d84f1"
+source = "git+https://github.com/vicr123/contemporary-rs#a74c9f57dc1a8524c735ee8fc02cea840c035768"
 dependencies = [
  "cntp_config",
  "cntp_icon_tool_core",
@@ -1204,7 +1204,7 @@ dependencies = [
 [[package]]
 name = "cntp_localesupport"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#be23b86fda4fd3b5272cb3e3e2ec4269056d84f1"
+source = "git+https://github.com/vicr123/contemporary-rs#a74c9f57dc1a8524c735ee8fc02cea840c035768"
 dependencies = [
  "chrono",
  "icu",
@@ -1217,7 +1217,7 @@ dependencies = [
 [[package]]
 name = "cntp_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#be23b86fda4fd3b5272cb3e3e2ec4269056d84f1"
+source = "git+https://github.com/vicr123/contemporary-rs#a74c9f57dc1a8524c735ee8fc02cea840c035768"
 dependencies = [
  "cntp_config",
  "quote",
@@ -1300,7 +1300,7 @@ dependencies = [
 [[package]]
 name = "collections"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#3aee14378dc9d2fe3387cbb550c55cbb7363a859"
+source = "git+https://github.com/zed-industries/zed#fd4682c8d1a3af412002e2e66a5e3137635c5e86"
 dependencies = [
  "indexmap",
  "rustc-hash 2.1.1",
@@ -1399,7 +1399,7 @@ checksum = "7c74b8349d32d297c9134b8c88677813a227df8f779daa29bfc29c183fe3dca6"
 [[package]]
 name = "contemporary"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#be23b86fda4fd3b5272cb3e3e2ec4269056d84f1"
+source = "git+https://github.com/vicr123/contemporary-rs#a74c9f57dc1a8524c735ee8fc02cea840c035768"
 dependencies = [
  "ashpd 0.11.0",
  "async-channel 2.5.0",
@@ -1887,7 +1887,7 @@ dependencies = [
 [[package]]
 name = "derive_refineable"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#3aee14378dc9d2fe3387cbb550c55cbb7363a859"
+source = "git+https://github.com/zed-industries/zed#fd4682c8d1a3af412002e2e66a5e3137635c5e86"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2856,7 +2856,7 @@ dependencies = [
 [[package]]
 name = "gpui"
 version = "0.2.1"
-source = "git+https://github.com/zed-industries/zed#3aee14378dc9d2fe3387cbb550c55cbb7363a859"
+source = "git+https://github.com/zed-industries/zed#fd4682c8d1a3af412002e2e66a5e3137635c5e86"
 dependencies = [
  "anyhow",
  "as-raw-xcb-connection",
@@ -2951,7 +2951,7 @@ dependencies = [
 [[package]]
 name = "gpui_macros"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#3aee14378dc9d2fe3387cbb550c55cbb7363a859"
+source = "git+https://github.com/zed-industries/zed#fd4682c8d1a3af412002e2e66a5e3137635c5e86"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
@@ -2962,7 +2962,7 @@ dependencies = [
 [[package]]
 name = "gpui_tokio"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#3aee14378dc9d2fe3387cbb550c55cbb7363a859"
+source = "git+https://github.com/zed-industries/zed#fd4682c8d1a3af412002e2e66a5e3137635c5e86"
 dependencies = [
  "anyhow",
  "gpui",
@@ -3207,7 +3207,7 @@ dependencies = [
 [[package]]
 name = "http_client"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#3aee14378dc9d2fe3387cbb550c55cbb7363a859"
+source = "git+https://github.com/zed-industries/zed#fd4682c8d1a3af412002e2e66a5e3137635c5e86"
 dependencies = [
  "anyhow",
  "async-compression",
@@ -4798,7 +4798,7 @@ dependencies = [
 [[package]]
 name = "media"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#3aee14378dc9d2fe3387cbb550c55cbb7363a859"
+source = "git+https://github.com/zed-industries/zed#fd4682c8d1a3af412002e2e66a5e3137635c5e86"
 dependencies = [
  "anyhow",
  "bindgen",
@@ -5615,7 +5615,7 @@ checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 [[package]]
 name = "perf"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#3aee14378dc9d2fe3387cbb550c55cbb7363a859"
+source = "git+https://github.com/zed-industries/zed#fd4682c8d1a3af412002e2e66a5e3137635c5e86"
 dependencies = [
  "collections",
  "serde",
@@ -6382,7 +6382,7 @@ dependencies = [
 [[package]]
 name = "refineable"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#3aee14378dc9d2fe3387cbb550c55cbb7363a859"
+source = "git+https://github.com/zed-industries/zed#fd4682c8d1a3af412002e2e66a5e3137635c5e86"
 dependencies = [
  "derive_refineable",
 ]
@@ -7039,7 +7039,7 @@ checksum = "0f7d95a54511e0c7be3f51e8867aa8cf35148d7b9445d44de2f943e2b206e749"
 [[package]]
 name = "semantic_version"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#3aee14378dc9d2fe3387cbb550c55cbb7363a859"
+source = "git+https://github.com/zed-industries/zed#fd4682c8d1a3af412002e2e66a5e3137635c5e86"
 dependencies = [
  "anyhow",
  "serde",
@@ -7589,7 +7589,7 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 [[package]]
 name = "sum_tree"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#3aee14378dc9d2fe3387cbb550c55cbb7363a859"
+source = "git+https://github.com/zed-industries/zed#fd4682c8d1a3af412002e2e66a5e3137635c5e86"
 dependencies = [
  "arrayvec",
  "log",
@@ -8751,7 +8751,7 @@ checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
 [[package]]
 name = "util"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#3aee14378dc9d2fe3387cbb550c55cbb7363a859"
+source = "git+https://github.com/zed-industries/zed#fd4682c8d1a3af412002e2e66a5e3137635c5e86"
 dependencies = [
  "anyhow",
  "async-fs",
@@ -8786,7 +8786,7 @@ dependencies = [
 [[package]]
 name = "util_macros"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#3aee14378dc9d2fe3387cbb550c55cbb7363a859"
+source = "git+https://github.com/zed-industries/zed#fd4682c8d1a3af412002e2e66a5e3137635c5e86"
 dependencies = [
  "perf",
  "quote",
