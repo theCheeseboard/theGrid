@@ -117,10 +117,12 @@ impl ChatBar {
                                 })
                                 .is_err()
                             {
+                                drop(typing_notification_guard);
                                 return;
                             };
                         }
                         Err(_) => {
+                            drop(typing_notification_guard);
                             return;
                         }
                     }
