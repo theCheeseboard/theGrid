@@ -1,7 +1,9 @@
+mod chat_bar;
 mod user_action_dialogs;
 
 use crate::auth::emoji_flyout::{EmojiFlyout, EmojiSelectedEvent};
 use crate::chat::chat_input::{ChatInput, PasteRichEvent};
+use crate::chat::chat_room::chat_bar::ChatBar;
 use crate::chat::chat_room::user_action_dialogs::UserActionDialogs;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::timeline_event::author_flyout::AuthorFlyoutUserActionEvent;
@@ -57,12 +59,10 @@ pub struct ChatRoom {
     event_cache: Option<Entity<RoomEventCache>>,
     pagination_status: Entity<RoomPaginationStatus>,
     displayed_room: Entity<DisplayedRoom>,
-    chat_input: Entity<ChatInput>,
-    emoji_flyout: Option<Entity<EmojiFlyout>>,
-    typing_users: Vec<RoomMember>,
     list_state: ListState,
-    pending_attachments: Vec<PendingAttachment>,
+    pending_attachments: Entity<Vec<PendingAttachment>>,
     user_action_dialogs: Entity<UserActionDialogs>,
+    chat_bar: Entity<ChatBar>,
 }
 
 struct PendingAttachment {
@@ -82,29 +82,26 @@ impl ChatRoom {
                 hit_timeline_start: false,
             });
 
-            let enter_press_listener = cx.listener(|this: &mut Self, _, window, cx| {
-                this.send_pending_message(window, cx);
-            });
-            let text_changed_listener = cx.listener(|this: &mut Self, _, window, cx| {
-                this.text_changed(window, cx);
-            });
-            let paste_rich_listener = cx.listener(Self::paste_rich);
-            let chat_input = cx.new(|cx| {
-                let mut chat_input = ChatInput::new(cx);
-                chat_input.on_enter_press(enter_press_listener);
-                chat_input.on_text_changed(text_changed_listener);
-                chat_input.on_paste_rich(paste_rich_listener);
-                chat_input
-            });
-
             let list_state = ListState::new(0, ListAlignment::Bottom, px(200.));
-            list_state.set_scroll_handler(cx.listener(|this, event: &ListScrollEvent, _, cx| {
-                if event.visible_range.end == this.events.len() {
-                    this.send_read_receipt(cx);
-                }
-            }));
+            list_state.set_scroll_handler(cx.listener(
+                |this: &mut Self, event: &ListScrollEvent, _, cx| {
+                    if event.visible_range.end == this.events.len() {
+                        this.send_read_receipt(cx);
+                    }
+                },
+            ));
+
+            let pending_attachments = cx.new(|_| Vec::new());
 
             let user_action_dialogs = cx.new(|cx| UserActionDialogs::new(room_id.clone(), cx));
+            let chat_bar = cx.new(|cx| {
+                ChatBar::new(
+                    room_id.clone(),
+                    displayed_room.clone(),
+                    pending_attachments.clone(),
+                    cx,
+                )
+            });
 
             let session_manager = cx.global::<SessionManager>();
             let client = session_manager.client().unwrap();
@@ -115,52 +112,17 @@ impl ChatRoom {
                 events: Vec::new(),
                 pagination_status: pagination_status.clone(),
                 displayed_room,
-                chat_input,
-                emoji_flyout: None,
-                typing_users: Vec::new(),
                 event_cache: None,
                 queued: Vec::new(),
                 list_state,
-                pending_attachments: Vec::new(),
+                pending_attachments,
                 user_action_dialogs,
+                chat_bar,
             };
 
             let Some(room) = client.get_room(&room_id) else {
                 return self_return;
             };
-
-            let (typing_notification_guard, mut typing_notification) =
-                room.subscribe_to_typing_notifications();
-            let room_clone = room.clone();
-            cx.spawn(
-                async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                    loop {
-                        match typing_notification.recv().await {
-                            Ok(notification) => {
-                                let mut typing_users = Vec::new();
-                                for user in notification {
-                                    let member =
-                                        room_clone.get_member(&user).await.unwrap().unwrap();
-                                    typing_users.push(member);
-                                }
-                                if weak_this
-                                    .update(cx, |this, cx| {
-                                        this.typing_users = typing_users;
-                                        cx.notify();
-                                    })
-                                    .is_err()
-                                {
-                                    return;
-                                };
-                            }
-                            Err(_) => {
-                                return;
-                            }
-                        }
-                    }
-                },
-            )
-            .detach();
 
             let pagination_status_clone = pagination_status.clone();
             let room_clone = room.clone();
@@ -249,9 +211,6 @@ impl ChatRoom {
                 } else {
                     error!("Unable to get event cache for room")
                 }
-
-                // Manually drop this here to move it into the closure
-                drop(typing_notification_guard);
             })
             .detach();
 
@@ -367,77 +326,6 @@ impl ChatRoom {
         })
     }
 
-    pub fn send_pending_message(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let chat_input = self.chat_input.clone();
-        let room_id = self.room_id.clone();
-        let attachments = mem::take(&mut self.pending_attachments);
-
-        cx.on_next_frame(window, move |_, _, cx| {
-            let message = chat_input.read(cx).text();
-            if message.is_empty() && attachments.is_empty() {
-                return;
-            }
-
-            let content = if message.is_empty() {
-                None
-            } else {
-                Some(RoomMessageEventContent::text_plain(message.to_string()))
-            };
-
-            let session_manager = cx.global::<SessionManager>();
-            let client = session_manager.client().unwrap().read(cx);
-            let room = client.get_room(&room_id).unwrap();
-            let send_queue = room.send_queue();
-
-            cx.spawn(async move |_, cx: &mut AsyncApp| {
-                for attachment in attachments.into_iter() {
-                    if let Ok(data) = attachment.data {
-                        let send_queue = send_queue.clone();
-                        let _ = cx
-                            .spawn_tokio(async move {
-                                send_queue
-                                    .send_attachment(
-                                        attachment.filename,
-                                        attachment.mime_type.parse().unwrap(),
-                                        data,
-                                        Default::default(),
-                                    )
-                                    .await
-                            })
-                            .await;
-                    }
-                }
-
-                if let Some(content) = content {
-                    let _ = cx
-                        .spawn_tokio(async move { send_queue.send(content.into()).await })
-                        .await;
-                }
-            })
-            .detach();
-
-            chat_input.update(cx, |message_field, _| message_field.reset())
-        });
-
-        cx.notify();
-    }
-
-    pub fn text_changed(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let room_id = self.room_id.clone();
-        cx.on_next_frame(window, move |_, window, cx| {
-            let session_manager = cx.global::<SessionManager>();
-            let client = session_manager.client().unwrap().read(cx);
-            let room = client.get_room(&room_id).unwrap();
-
-            cx.spawn(async move |_, cx: &mut AsyncApp| {
-                let _ = cx
-                    .spawn_tokio(async move { room.typing_notice(true).await })
-                    .await;
-            })
-            .detach();
-        });
-    }
-
     fn send_read_receipt(&mut self, cx: &mut Context<Self>) {
         let room_id = self.room_id.clone();
         let session_manager = cx.global::<SessionManager>();
@@ -466,34 +354,10 @@ impl ChatRoom {
         .detach();
     }
 
-    fn paste_rich(&mut self, event: &PasteRichEvent, _: &mut Window, cx: &mut Context<Self>) {
-        for entry in event.clipboard_item.entries() {
-            match entry {
-                ClipboardEntry::String(_) => {
-                    // noop
-                }
-                ClipboardEntry::Image(image) => {
-                    let suggested_extension = mime2ext(image.format.mime_type());
-
-                    self.pending_attachments.push(PendingAttachment {
-                        filename: match suggested_extension {
-                            None => "image".into(),
-                            Some(suggested_extension) => {
-                                format!("image.{suggested_extension}")
-                            }
-                        },
-                        mime_type: image.format.mime_type().into(),
-                        data: Ok(image.bytes.clone()),
-                    });
-                }
-            }
-        }
-
-        cx.notify();
-    }
-
     fn render_attachments(&self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.global::<Theme>();
+        let pending_attachments = self.pending_attachments.read(cx);
+
         div()
             .absolute()
             .left_0()
@@ -517,7 +381,7 @@ impl ChatRoom {
                     .max_h(relative(0.7))
                     .overflow_y_scroll()
                     .child(subtitle(tr!("ATTACHMENTS_TITLE", "Attachments")))
-                    .child(self.pending_attachments.iter().enumerate().fold(
+                    .child(pending_attachments.iter().enumerate().fold(
                         div().flex().flex_col().gap(px(4.)),
                         |david, (i, attachment)| {
                             david.child(
@@ -538,8 +402,14 @@ impl ChatRoom {
                                                         .child(icon("edit-delete".into()))
                                                         .on_click(cx.listener(
                                                             move |this, _, _, cx| {
-                                                                this.pending_attachments.remove(i);
-                                                                cx.notify()
+                                                                this.pending_attachments.update(
+                                                                    cx,
+                                                                    |pending_attachments, cx| {
+                                                                        pending_attachments
+                                                                            .remove(i);
+                                                                        cx.notify()
+                                                                    },
+                                                                );
                                                             },
                                                         )),
                                                 ),
@@ -563,41 +433,6 @@ impl ChatRoom {
                         },
                     )),
             )
-    }
-
-    fn show_attach_dialog(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let prompt = cx.prompt_for_paths(PathPromptOptions {
-            multiple: true,
-            files: true,
-            directories: false,
-            prompt: Some(tr!("ATTACH_PROMPT", "Attach").into()),
-        });
-
-        cx.spawn(
-            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                if let Some(path) = prompt.await.ok().and_then(|result| result.ok()).flatten() {
-                    weak_this
-                        .update(cx, |this, cx| {
-                            for path in path {
-                                this.attach_from_disk(path, cx);
-                            }
-                            cx.notify()
-                        })
-                        .unwrap();
-                };
-            },
-        )
-        .detach();
-    }
-
-    fn attach_from_disk(&mut self, path: PathBuf, cx: &mut Context<Self>) {
-        let file_contents = read(&path);
-
-        self.pending_attachments.push(PendingAttachment {
-            filename: path.file_name().unwrap().to_string_lossy().to_string(),
-            mime_type: "application/octet-stream".into(),
-            data: file_contents.map_err(|e| anyhow!(e)),
-        });
     }
 
     fn trigger_user_action(
@@ -642,11 +477,8 @@ impl Render for ChatRoom {
         }
 
         let pagination_status = *self.pagination_status.read(cx);
+        let pending_attachments = self.pending_attachments.read(cx);
 
-        let window_size = window.viewport_size();
-        let inset = window.client_inset().unwrap_or_else(|| px(0.));
-
-        let typing_users = &self.typing_users;
         let room_id = self.room_id.clone();
 
         div()
@@ -728,184 +560,11 @@ impl Render for ChatRoom {
                         .flex_col()
                         .h_full(),
                     )
-                    .when(!self.pending_attachments.is_empty(), |david| {
+                    .when(!pending_attachments.is_empty(), |david| {
                         david.child(self.render_attachments(window, cx))
                     }),
             )
-            .when_else(
-                room.is_tombstoned(),
-                |david| {
-                    let tombstone_content = room.tombstone_content().unwrap();
-
-                    david.child(
-                        div().p(px(2.)).child(
-                            admonition()
-                                .severity(AdmonitionSeverity::Info)
-                                .title(tr!("ROOM_TOMBSTONED_TITLE", "This room has been replaced"))
-                                .child(
-                                    div()
-                                        .flex()
-                                        .flex_col()
-                                        .gap(px(4.))
-                                        .child(tr!(
-                                            "ROOM_TOMBSTONED_TEXT",
-                                            "Join the new room to keep the conversation going."
-                                        ))
-                                        .child(
-                                            div().flex().child(div().flex_grow()).child(
-                                                button("view-replaced-room-button")
-                                                    .child(icon_text(
-                                                        "arrow-right".into(),
-                                                        tr!(
-                                                            "ROOM_TOMBSTONED_NAVIGATE",
-                                                            "Go to new room"
-                                                        )
-                                                        .into(),
-                                                    ))
-                                                    .on_click(cx.listener(
-                                                        move |this, _, window, cx| {
-                                                            this.displayed_room.write(
-                                                                cx,
-                                                                DisplayedRoom::Room(
-                                                                    tombstone_content
-                                                                        .replacement_room
-                                                                        .clone(),
-                                                                ),
-                                                            );
-                                                        },
-                                                    )),
-                                            ),
-                                        ),
-                                ),
-                        ),
-                    )
-                },
-                |david| {
-                    david
-                        .child(
-                            layer()
-                                .m(px(2.))
-                                .p(px(2.))
-                                .gap(px(2.))
-                                .flex()
-                                .child(
-                                    button("attach_button")
-                                        .child(icon("mail-attachment".into()))
-                                        .flat()
-                                        .on_click(cx.listener(move |this, _, window, cx| {
-                                            this.show_attach_dialog(window, cx)
-                                        })),
-                                )
-                                .child(self.chat_input.clone().into_any_element())
-                                .child(button("emoji").child("😀").flat().on_click(cx.listener(
-                                    |this, _, _, cx| {
-                                        let chat_input = this.chat_input.clone();
-                                        this.emoji_flyout = Some(cx.new(|cx| {
-                                            let mut emoji_flyout = EmojiFlyout::new(cx);
-                                            emoji_flyout.set_emoji_selected_listener(
-                                                move |event, window, cx| {
-                                                    chat_input.update(cx, |chat_input, cx| {
-                                                        chat_input.type_string(
-                                                            &event.emoji,
-                                                            window,
-                                                            cx,
-                                                        );
-                                                    });
-                                                },
-                                            );
-                                            emoji_flyout
-                                        }));
-                                        cx.notify()
-                                    },
-                                )))
-                                .child(
-                                    button("send_button")
-                                        .child(icon("mail-send".into()))
-                                        .on_click(cx.listener(move |this, _, window, cx| {
-                                            this.send_pending_message(window, cx);
-                                        })),
-                                )
-                                .when_some(self.emoji_flyout.clone(), |david, emoji_flyout| {
-                                    david.child(deferred(
-                                        anchored().position(Point::new(px(0.), px(0.))).child(
-                                            div()
-                                                .top_0()
-                                                .left_0()
-                                                .w(window_size.width - inset - inset)
-                                                .h(window_size.height - inset - inset)
-                                                .m(inset)
-                                                .occlude()
-                                                .on_any_mouse_down(cx.listener(
-                                                    move |this, _, _, cx| {
-                                                        this.emoji_flyout = None;
-                                                        cx.notify()
-                                                    },
-                                                ))
-                                                .child(
-                                                    anchored()
-                                                        .position(Point::new(
-                                                            window_size.width,
-                                                            window_size.height,
-                                                        ))
-                                                        .child(emoji_flyout.into_any_element()),
-                                                ),
-                                        ),
-                                    ))
-                                }),
-                        )
-                        .child(
-                            div().flex().child(match typing_users.len() {
-                                0 => "".to_string(),
-                                1 => tr!(
-                                    "TYPING_NOTIFICATION_ONE",
-                                    "{{user}} is typing...",
-                                    user = typing_users[0]
-                                        .display_name()
-                                        .unwrap_or_default()
-                                        .to_string()
-                                )
-                                .into(),
-                                2 => tr!(
-                                    "TYPING_NOTIFICATION_TWO",
-                                    "{{user}} and {{user2}} are typing...",
-                                    user = typing_users[0]
-                                        .display_name()
-                                        .unwrap_or_default()
-                                        .to_string(),
-                                    user2 = typing_users[1]
-                                        .display_name()
-                                        .unwrap_or_default()
-                                        .to_string()
-                                )
-                                .into(),
-                                3 => tr!(
-                                    "TYPING_NOTIFICATION_THREE",
-                                    "{{user}}, {{user2}} and {{user3}} are typing...",
-                                    user = typing_users[0]
-                                        .display_name()
-                                        .unwrap_or_default()
-                                        .to_string(),
-                                    user2 = typing_users[1]
-                                        .display_name()
-                                        .unwrap_or_default()
-                                        .to_string(),
-                                    user3 = typing_users[2]
-                                        .display_name()
-                                        .unwrap_or_default()
-                                        .to_string()
-                                )
-                                .into(),
-                                _ => trn!(
-                                    "TYPING_NOTIFICATION",
-                                    "{{count}} user is typing...",
-                                    "{{count}} users are typing...",
-                                    count = typing_users.len() as isize
-                                )
-                                .into(),
-                            }),
-                        )
-                },
-            )
+            .child(self.chat_bar.clone())
             .child(
                 div()
                     .absolute()
@@ -913,9 +572,11 @@ impl Render for ChatRoom {
                     .top_0()
                     .size_full()
                     .on_drop(cx.listener(|this, event: &ExternalPaths, _, cx| {
-                        for path in event.paths() {
-                            this.attach_from_disk(path.clone(), cx);
-                        }
+                        this.chat_bar.update(cx, |chat_bar, cx| {
+                            for path in event.paths() {
+                                chat_bar.attach_from_disk(path.clone(), cx);
+                            }
+                        });
                     })),
             )
             .child(self.user_action_dialogs.clone())
