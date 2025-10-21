@@ -98,7 +98,7 @@ impl OpenRoom {
             return self_return;
         };
         self_return.room = Some(room.clone());
-        
+
         self_return.setup_acquire_own_user(cx);
         self_return.setup_event_cache(cx);
         self_return.setup_send_queue(cx);
@@ -133,7 +133,7 @@ impl OpenRoom {
         })
         .detach();
     }
-    
+
     fn setup_acquire_own_user(&mut self, cx: &mut Context<Self>) {
         let room = self.room.clone().unwrap();
         cx.spawn(
@@ -153,9 +153,9 @@ impl OpenRoom {
                 }
             },
         )
-            .detach();
+        .detach();
     }
-    
+
     fn setup_event_cache(&mut self, cx: &mut Context<Self>) {
         let room = self.room.clone().unwrap();
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
@@ -182,9 +182,9 @@ impl OpenRoom {
                             .run_backwards_until(100)
                             .await
                     })
-                        .await
+                    .await
                 })
-                    .detach();
+                .detach();
 
                 let event_cache_clone = event_cache.clone();
                 let this_clone = this.clone();
@@ -202,6 +202,7 @@ impl OpenRoom {
                             })
                             .await
                         else {
+                            error!("Event cache closed");
                             return;
                         };
 
@@ -215,7 +216,7 @@ impl OpenRoom {
                         }
                     }
                 })
-                    .detach();
+                .detach();
 
                 let (events, mut subscriber) = event_cache.subscribe().await;
 
@@ -247,9 +248,9 @@ impl OpenRoom {
                 error!("Unable to get event cache for room")
             }
         })
-            .detach();
+        .detach();
     }
-    
+
     fn setup_send_queue(&mut self, cx: &mut Context<Self>) {
         let room_clone = self.room.clone().unwrap();
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
@@ -355,7 +356,7 @@ impl OpenRoom {
                 }
             }
         })
-            .detach();
+        .detach();
     }
 
     fn setup_typing_users_listener(&mut self, cx: &mut Context<Self>) {

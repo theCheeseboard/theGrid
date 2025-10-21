@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["thegrid"]
+members = ["thegrid", "thegrid_text_rendering"]
 
 [workspace.dependencies]
 gpui = { git = "https://github.com/zed-industries/zed" }

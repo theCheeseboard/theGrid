@@ -1,0 +1,54 @@
+[package]
+name = "thegrid_text_rendering"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gpui = { workspace = true }
+contemporary = { workspace = true }
+smol = { workspace = true }
+serde = { workspace = true }
+tracing = { workspace = true }
+anyhow = "1"
+ropey = { version = "=2.0.0-beta.1", features = [
+    "metric_lines_lf",
+    "metric_utf16",
+] }
+markdown = "1.0.0"
+html5ever = "0.27"
+markup5ever_rcdom = "0.3.0"
+schemars = "1"
+serde_repr = "0.1"
+enum-iterator = "2.1.0"
+sum-tree = { version = "0.2.0", package = "zed-sum-tree" }
+lsp-types = "0.97.0"
+tree-sitter = "0.25.4"
+tree-sitter-bash = { version = "0.23.3" }
+tree-sitter-c = { version = "0.24.1" }
+tree-sitter-c-sharp = { version = "0.23.1" }
+tree-sitter-cmake = { version = "0.7.1" }
+tree-sitter-cpp = { version = "0.23.4" }
+tree-sitter-css = { version = "0.23.2" }
+tree-sitter-diff = { version = "0.1.0" }
+tree-sitter-elixir = { version = "0.3" }
+tree-sitter-embedded-template = { version = "0.23.0" }
+tree-sitter-go = { version = "0.23.4" }
+tree-sitter-graphql = { version = "0.1.0" }
+tree-sitter-html = { version = "0.23.2" }
+tree-sitter-java = { version = "0.23.5" }
+tree-sitter-javascript = { version = "0.23.1" }
+tree-sitter-jsdoc = { version = "0.23.2" }
+tree-sitter-json = "0.24.8"
+tree-sitter-make = { version = "1.1.1" }
+tree-sitter-md = { version = "0.5.1" }
+tree-sitter-proto = { version = "0.2.0" }
+tree-sitter-python = { version = "0.23.6" }
+tree-sitter-ruby = { version = "0.23.1" }
+tree-sitter-rust = { version = "0.24.0" }
+tree-sitter-scala = { version = "0.23.4" }
+tree-sitter-sequel = { version = "0.3.8" }
+tree-sitter-swift = { version = "0.7.0" }
+tree-sitter-toml-ng = { version = "0.7.0" }
+tree-sitter-typescript = { version = "0.23.2" }
+tree-sitter-yaml = { version = "0.7.1" }
+tree-sitter-zig = { version = "1.1.2" }

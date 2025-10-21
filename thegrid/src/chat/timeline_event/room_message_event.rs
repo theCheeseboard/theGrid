@@ -115,7 +115,7 @@ where
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let event_id = self.event_id.clone();
         let relations_entity = window.use_state(cx, |_, cx| {
-            if let Some(event_cache) = self.event_cache {
+            if let Some(event_cache) = &self.event_cache {
                 let event_cache = event_cache.read(cx).clone();
                 if let Some(event_id) = event_id {
                     cx.spawn(
@@ -203,37 +203,63 @@ where
         }
 
         let mut content = || {
-            for relation in relations_entity.read(cx).iter() {
+            let mut message_line = self.event.message_line(window, cx).into_any_element();
+            let mut is_edited = false;
+            let mut reply = None;
+
+            let relations = relations_entity.read(cx).clone();
+            for relation in relations.iter() {
                 if let Ok(resolved) = resolve_event(relation, self.room.room_id())
                     && let AnyTimelineEvent::MessageLike(AnyMessageLikeEvent::RoomMessage(
                         room_message,
                     )) = resolved
                     && let Some(original) = room_message.as_original()
-                    && let Some(Relation::Replacement(replacement_relation)) =
-                        &original.content.relates_to
                 {
-                    let msgtype_to_message_line =
-                        msgtype_to_message_line(&replacement_relation.new_content.msgtype, cx);
-
-                    let theme = cx.global::<Theme>();
-
-                    return div()
-                        .flex()
-                        .flex_col()
-                        .child(msgtype_to_message_line)
-                        .child(
-                            div()
-                                .flex()
-                                .text_color(theme.foreground.disabled())
-                                .text_size(theme.system_font_size * 0.8)
-                                // TODO: RTL?
-                                .child("⬑ ")
-                                .child(tr!("EDITED_MESSAGE_INDICATOR", "(edited)")),
-                        )
-                        .into_any_element();
+                    match &original.content.relates_to {
+                        Some(Relation::Replacement(replacement_relation)) => {
+                            message_line = msgtype_to_message_line(
+                                &replacement_relation.new_content.msgtype,
+                                window,
+                                cx,
+                            )
+                            .into_any_element();
+                            is_edited = true;
+                        }
+                        Some(Relation::Reply { in_reply_to }) => reply = Some(()),
+                        _ => {}
+                    }
                 }
             }
-            self.event.message_line(cx).into_any_element()
+
+            let theme = cx.global::<Theme>();
+
+            div()
+                .flex()
+                .flex_col()
+                .when_some(reply, |david, reply| {
+                    david.child(
+                        div()
+                            .flex()
+                            .text_color(theme.foreground.disabled())
+                            .text_size(theme.system_font_size * 0.8)
+                            // TODO: RTL?
+                            .child("⬐ ")
+                            .child("reply content"),
+                    )
+                })
+                .child(message_line)
+                .when(is_edited, |david| {
+                    david.child(
+                        div()
+                            .flex()
+                            .text_color(theme.foreground.disabled())
+                            .text_size(theme.system_font_size * 0.8)
+                            // TODO: RTL?
+                            .child("⬑ ")
+                            .child(tr!("EDITED_MESSAGE_INDICATOR", "(edited)")),
+                    )
+                })
+                .into_any_element()
         };
 
         RoomMessageElement {

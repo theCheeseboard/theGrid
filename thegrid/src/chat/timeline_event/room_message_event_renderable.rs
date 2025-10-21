@@ -7,11 +7,11 @@ use contemporary::components::spinner::spinner;
 use contemporary::styling::theme::Theme;
 use directories::UserDirs;
 use gpui::{
-    App, AsyncApp, BorrowAppContext, Entity, IntoElement, ParentElement, Styled, WeakEntity, div,
-    px, relative, rgba,
+    App, AsyncApp, BorrowAppContext, Entity, IntoElement, ParentElement, Styled, WeakEntity,
+    Window, div, px, relative, rgba,
 };
 use matrix_sdk::ruma::events::room::message::{
-    FileMessageEventContent, MessageType, Relation, RoomMessageEventContent,
+    FileMessageEventContent, FormattedBody, MessageType, Relation, RoomMessageEventContent,
 };
 use matrix_sdk::ruma::events::{
     AnyMessageLikeEvent, AnyMessageLikeEventContent, MessageLikeEventContent,
@@ -19,15 +19,16 @@ use matrix_sdk::ruma::events::{
 use std::fs::copy;
 use thegrid::session::media_cache::{MediaCacheEntry, MediaFile, MediaState};
 use thegrid::session::session_manager::SessionManager;
+use thegrid_text_rendering::TextView;
 
 pub trait RoomMessageEventRenderable: MessageLikeEventContent {
-    fn message_line(&self, cx: &mut App) -> impl IntoElement;
+    fn message_line(&self, window: &mut Window, cx: &mut App) -> impl IntoElement;
     fn should_render(&self) -> bool;
 }
 
 impl RoomMessageEventRenderable for RoomMessageEventContent {
-    fn message_line(&self, cx: &mut App) -> impl IntoElement {
-        div().child(msgtype_to_message_line(&self.msgtype, cx))
+    fn message_line(&self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        div().child(msgtype_to_message_line(&self.msgtype, window, cx))
     }
 
     fn should_render(&self) -> bool {
@@ -43,10 +44,10 @@ impl RoomMessageEventRenderable for RoomMessageEventContent {
 }
 
 impl RoomMessageEventRenderable for AnyMessageLikeEventContent {
-    fn message_line(&self, cx: &mut App) -> impl IntoElement {
+    fn message_line(&self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         match self {
             AnyMessageLikeEventContent::RoomMessage(msg) => div()
-                .child(msgtype_to_message_line(&msg.msgtype, cx))
+                .child(msgtype_to_message_line(&msg.msgtype, window, cx))
                 .into_any_element(),
             _ => div().into_any_element(),
         }
@@ -57,10 +58,11 @@ impl RoomMessageEventRenderable for AnyMessageLikeEventContent {
     }
 }
 
-pub fn msgtype_to_message_line<'a, 'b>(
+pub fn msgtype_to_message_line<'a>(
     msgtype: &MessageType,
-    cx: &'a mut App,
-) -> impl IntoElement + 'b {
+    window: &mut Window,
+    cx: &mut App,
+) -> impl IntoElement + 'a {
     match msgtype {
         MessageType::Emote(emote) => div().child(emote.body.clone()).into_any_element(),
         MessageType::Image(image) => div()
@@ -72,13 +74,18 @@ pub fn msgtype_to_message_line<'a, 'b>(
             )
             .into_any_element(),
         MessageType::Text(text) => {
+            let body = match &text.formatted {
+                None => text.body.clone().into_any_element(),
+                Some(formatted) => TextView::html("html-text", formatted.body.clone(), window, cx)
+                    .into_any_element(),
+            };
+
             let theme = cx.global::<Theme>();
             div()
                 .p(px(2.))
                 .bg(rgba(0x00C8FF10))
                 .rounded(theme.border_radius)
-                .max_w(relative(0.8))
-                .child(text.body.clone())
+                .child(body)
                 .into_any_element()
         }
         MessageType::File(file) => {

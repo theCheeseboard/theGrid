@@ -1,19 +1,19 @@
 {
   "ACCOUNT_ACCOUNT_SETTINGS": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:81",
+    "definedIn": "src/main.rs:82",
     "plural": false,
     "description": null
   },
   "ACCOUNT_ACCOUNT_SWITCHER": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:86",
+    "definedIn": "src/main.rs:87",
     "plural": false,
     "description": null
   },
   "ACCOUNT_LOG_OUT": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:89",
+    "definedIn": "src/main.rs:90",
     "plural": false,
     "description": null
   },
@@ -73,7 +73,7 @@
   },
   "ATTACH_PROMPT": {
     "context": "open_room.rs",
-    "definedIn": "src/chat/chat_room/open_room.rs:415",
+    "definedIn": "src/chat/chat_room/open_room.rs:416",
     "plural": false,
     "description": null
   },
@@ -331,7 +331,7 @@
   },
   "EDITED_MESSAGE_INDICATOR": {
     "context": "room_message_event.rs",
-    "definedIn": "src/chat/timeline_event/room_message_event.rs:231",
+    "definedIn": "src/chat/timeline_event/room_message_event.rs:259",
     "plural": false,
     "description": null
   },
@@ -349,19 +349,19 @@
   },
   "FILE_OPEN": {
     "context": "room_message_event_renderable.rs",
-    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:139",
+    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:146",
     "plural": false,
     "description": null
   },
   "FILE_OPEN_MENU_HEADER": {
     "context": "room_message_event_renderable.rs",
-    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:133",
+    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:140",
     "plural": false,
     "description": null
   },
   "FILE_SAVE_AS": {
     "context": "room_message_event_renderable.rs",
-    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:154",
+    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:161",
     "plural": false,
     "description": null
   },
@@ -709,13 +709,13 @@
   },
   "MENU_ACCOUNT": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:78",
+    "definedIn": "src/main.rs:79",
     "plural": false,
     "description": null
   },
   "MENU_ROOMS": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:93",
+    "definedIn": "src/main.rs:94",
     "plural": false,
     "description": null
   },
@@ -931,7 +931,7 @@
   },
   "ROOMS_CREATE": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:95",
+    "definedIn": "src/main.rs:96",
     "plural": false,
     "description": null
   },
