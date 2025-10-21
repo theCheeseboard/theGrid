@@ -331,7 +331,7 @@
   },
   "EDITED_MESSAGE_INDICATOR": {
     "context": "room_message_event.rs",
-    "definedIn": "src/chat/timeline_event/room_message_event.rs:259",
+    "definedIn": "src/chat/timeline_event/room_message_event.rs:306",
     "plural": false,
     "description": null
   },
@@ -349,19 +349,19 @@
   },
   "FILE_OPEN": {
     "context": "room_message_event_renderable.rs",
-    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:146",
+    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:178",
     "plural": false,
     "description": null
   },
   "FILE_OPEN_MENU_HEADER": {
     "context": "room_message_event_renderable.rs",
-    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:140",
+    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:172",
     "plural": false,
     "description": null
   },
   "FILE_SAVE_AS": {
     "context": "room_message_event_renderable.rs",
-    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:161",
+    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:193",
     "plural": false,
     "description": null
   },

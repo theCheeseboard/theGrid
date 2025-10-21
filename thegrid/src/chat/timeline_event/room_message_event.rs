@@ -131,7 +131,6 @@ where
                                 .await
                             {
                                 if let Some(this) = weak_this.upgrade() {
-                                    info!("related: {:?}", related.1);
                                     let _ = this.write(cx, related.1);
                                 }
                             };
@@ -145,6 +144,33 @@ where
         });
 
         // TODO: Invalidate relations_entity when new data comes through the event cache
+
+        let reply_message = window.use_state(cx, |_, cx| {
+            if let Some(event_cache) = &self.event_cache {
+                let event_cache = event_cache.read(cx).clone();
+                let reply = self.event.reply_to();
+                if let Some(reply) = reply {
+                    cx.spawn(
+                        async move |weak_this: WeakEntity<Option<TimelineEvent>>,
+                                    cx: &mut AsyncApp| {
+                            if let Ok(reply_event) = cx
+                                .spawn_tokio(async move {
+                                    event_cache.find_event(&reply).await.ok_or(anyhow!("Error"))
+                                })
+                                .await
+                            {
+                                if let Some(this) = weak_this.upgrade() {
+                                    let _ = this.write(cx, Some(reply_event));
+                                }
+                            };
+                        },
+                    )
+                    .detach();
+                }
+            }
+
+            None
+        });
 
         let cached_author = window.use_state(cx, |_, _| None);
         if cached_author.read(cx).is_none() {
@@ -202,10 +228,35 @@ where
             return div().id("room-message").into_any_element();
         }
 
-        let mut content = || {
+        let reply = reply_message.update(cx, |reply_message, cx| {
+            reply_message.as_ref().and_then(|reply| {
+                if let Ok(resolved) = resolve_event(reply, self.room.room_id())
+                    && let AnyTimelineEvent::MessageLike(AnyMessageLikeEvent::RoomMessage(
+                        room_message,
+                    )) = resolved
+                    && let Some(original) = room_message.as_original()
+                {
+                    Some(
+                        div()
+                            .flex()
+                            .mb(px(2.))
+                            .child(msgtype_to_message_line(
+                                &original.content.msgtype,
+                                true,
+                                window,
+                                cx,
+                            ))
+                            .into_any_element(),
+                    )
+                } else {
+                    None
+                }
+            })
+        });
+
+        let content = || {
             let mut message_line = self.event.message_line(window, cx).into_any_element();
             let mut is_edited = false;
-            let mut reply = None;
 
             let relations = relations_entity.read(cx).clone();
             for relation in relations.iter() {
@@ -214,20 +265,17 @@ where
                         room_message,
                     )) = resolved
                     && let Some(original) = room_message.as_original()
+                    && let Some(Relation::Replacement(replacement_relation)) =
+                        &original.content.relates_to
                 {
-                    match &original.content.relates_to {
-                        Some(Relation::Replacement(replacement_relation)) => {
-                            message_line = msgtype_to_message_line(
-                                &replacement_relation.new_content.msgtype,
-                                window,
-                                cx,
-                            )
-                            .into_any_element();
-                            is_edited = true;
-                        }
-                        Some(Relation::Reply { in_reply_to }) => reply = Some(()),
-                        _ => {}
-                    }
+                    message_line = msgtype_to_message_line(
+                        &replacement_relation.new_content.msgtype,
+                        false,
+                        window,
+                        cx,
+                    )
+                    .into_any_element();
+                    is_edited = true;
                 }
             }
 
@@ -244,7 +292,7 @@ where
                             .text_size(theme.system_font_size * 0.8)
                             // TODO: RTL?
                             .child("⬐ ")
-                            .child("reply content"),
+                            .child(reply),
                     )
                 })
                 .child(message_line)

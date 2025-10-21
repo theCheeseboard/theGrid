@@ -6,12 +6,15 @@ use contemporary::components::icon::icon;
 use contemporary::components::spinner::spinner;
 use contemporary::styling::theme::Theme;
 use directories::UserDirs;
+use gpui::prelude::FluentBuilder;
 use gpui::{
     App, AsyncApp, BorrowAppContext, Entity, IntoElement, ParentElement, Styled, WeakEntity,
     Window, div, px, relative, rgba,
 };
+use matrix_sdk::ruma::OwnedEventId;
 use matrix_sdk::ruma::events::room::message::{
     FileMessageEventContent, FormattedBody, MessageType, Relation, RoomMessageEventContent,
+    RoomMessageEventContentWithoutRelation,
 };
 use matrix_sdk::ruma::events::{
     AnyMessageLikeEvent, AnyMessageLikeEventContent, MessageLikeEventContent,
@@ -24,11 +27,12 @@ use thegrid_text_rendering::TextView;
 pub trait RoomMessageEventRenderable: MessageLikeEventContent {
     fn message_line(&self, window: &mut Window, cx: &mut App) -> impl IntoElement;
     fn should_render(&self) -> bool;
+    fn reply_to(&self) -> Option<OwnedEventId>;
 }
 
 impl RoomMessageEventRenderable for RoomMessageEventContent {
     fn message_line(&self, window: &mut Window, cx: &mut App) -> impl IntoElement {
-        div().child(msgtype_to_message_line(&self.msgtype, window, cx))
+        div().child(msgtype_to_message_line(&self.msgtype, false, window, cx))
     }
 
     fn should_render(&self) -> bool {
@@ -41,13 +45,22 @@ impl RoomMessageEventRenderable for RoomMessageEventContent {
             })
             .unwrap_or(true)
     }
+
+    fn reply_to(&self) -> Option<OwnedEventId> {
+        self.relates_to
+            .as_ref()
+            .and_then(|relates_to| match relates_to {
+                Relation::Reply { in_reply_to } => Some(in_reply_to.event_id.clone()),
+                _ => None,
+            })
+    }
 }
 
 impl RoomMessageEventRenderable for AnyMessageLikeEventContent {
     fn message_line(&self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         match self {
             AnyMessageLikeEventContent::RoomMessage(msg) => div()
-                .child(msgtype_to_message_line(&msg.msgtype, window, cx))
+                .child(msgtype_to_message_line(&msg.msgtype, false, window, cx))
                 .into_any_element(),
             _ => div().into_any_element(),
         }
@@ -56,10 +69,25 @@ impl RoomMessageEventRenderable for AnyMessageLikeEventContent {
     fn should_render(&self) -> bool {
         true
     }
+
+    fn reply_to(&self) -> Option<OwnedEventId> {
+        match self {
+            AnyMessageLikeEventContent::RoomMessage(msg) => {
+                msg.relates_to
+                    .as_ref()
+                    .and_then(|relation| match &relation {
+                        Relation::Reply { in_reply_to } => Some(in_reply_to.event_id.clone()),
+                        _ => None,
+                    })
+            }
+            _ => None,
+        }
+    }
 }
 
 pub fn msgtype_to_message_line<'a>(
     msgtype: &MessageType,
+    as_reply: bool,
     window: &mut Window,
     cx: &mut App,
 ) -> impl IntoElement + 'a {
@@ -83,7 +111,11 @@ pub fn msgtype_to_message_line<'a>(
             let theme = cx.global::<Theme>();
             div()
                 .p(px(2.))
-                .bg(rgba(0x00C8FF10))
+                .when_else(
+                    as_reply,
+                    |david| david.bg(rgba(0x00C8FF05)),
+                    |david| david.bg(rgba(0x00C8FF10)),
+                )
                 .rounded(theme.border_radius)
                 .child(body)
                 .into_any_element()
