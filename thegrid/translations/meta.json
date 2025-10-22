@@ -331,7 +331,7 @@
   },
   "EDITED_MESSAGE_INDICATOR": {
     "context": "room_message_event.rs",
-    "definedIn": "src/chat/timeline_event/room_message_event.rs:307",
+    "definedIn": "src/chat/timeline_event/room_message_event.rs:311",
     "plural": false,
     "description": null
   },

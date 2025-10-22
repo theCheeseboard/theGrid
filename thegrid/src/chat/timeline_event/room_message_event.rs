@@ -31,6 +31,7 @@ use matrix_sdk::ruma::events::{
 use matrix_sdk::ruma::{OwnedEventId, OwnedMxcUri, OwnedRoomId, OwnedUserId, RoomId};
 use std::rc::Rc;
 use thegrid::session::session_manager::SessionManager;
+use thegrid::thegrid_error::TheGridError;
 use thegrid::tokio_helper::TokioHelper;
 use tokio::io::AsyncReadExt;
 
@@ -155,7 +156,10 @@ where
                                     cx: &mut AsyncApp| {
                             if let Ok(reply_event) = cx
                                 .spawn_tokio(async move {
-                                    event_cache.find_event(&reply).await.ok_or(anyhow!("Error"))
+                                    event_cache
+                                        .find_event(&reply)
+                                        .await
+                                        .ok_or(anyhow!(TheGridError::new("Unable to find reply")))
                                 })
                                 .await
                             {
