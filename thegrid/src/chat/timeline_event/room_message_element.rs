@@ -6,7 +6,7 @@ use contemporary::components::flyout::flyout;
 use contemporary::styling::theme::Theme;
 use gpui::{
     App, InteractiveElement, IntoElement, ParentElement, RenderOnce, StatefulInteractiveElement,
-    Styled, Window, div, px, relative,
+    Styled, Window, div, px, relative, rgb,
 };
 use matrix_sdk::Room;
 
@@ -29,34 +29,34 @@ impl<T: gpui::IntoElement> RenderOnce for RoomMessageElement<T> {
         let room = self.room;
 
         let theme = cx.global::<Theme>();
-        let david = div()
-            .id("room-message")
-            .flex()
-            .m(px(2.))
-            .max_w(relative(100.));
+        let david = div().id("room-message").flex().m(px(2.)).max_w_full();
 
         match self.author {
-            None => david
-                .flex()
-                .gap(px(4.))
-                .child(div().w(px(40.)).mx(px(2.)))
-                .child(div().child(self.content)),
+            None => david.child(
+                div()
+                    .flex()
+                    .w_full()
+                    .max_w_full()
+                    .gap(px(8.))
+                    .child(div().min_w(px(40.)).mx(px(2.)))
+                    .child(div().w_full().max_w_full().child(self.content)),
+            ),
             Some(author) => {
                 let author_clone = author.clone();
                 david.child(
                     div()
                         .id("container")
                         .flex()
-                        .gap(px(4.))
+                        .flex_grow()
+                        .gap(px(8.))
                         .child(
-                            div().flex().flex_col().child(
+                            div().flex().flex_col().min_w(px(40.)).m(px(2.)).child(
                                 div()
                                     .id("author-image")
                                     .cursor_pointer()
                                     .child(
                                         mxc_image(author.avatar())
                                             .size(px(40.))
-                                            .m(px(2.))
                                             .size_policy(SizePolicy::Fit)
                                             .rounded(theme.border_radius),
                                     )
@@ -78,7 +78,7 @@ impl<T: gpui::IntoElement> RenderOnce for RoomMessageElement<T> {
                             ),
                         )
                         .child(
-                            div().id("content").flex().flex_col().child(
+                            div().id("content").flex_grow().flex().flex_col().child(
                                 div().child(author_clone.display_name()).child(self.content),
                             ),
                         ),

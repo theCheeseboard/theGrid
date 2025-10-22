@@ -9,7 +9,7 @@ use directories::UserDirs;
 use gpui::prelude::FluentBuilder;
 use gpui::{
     App, AsyncApp, BorrowAppContext, Entity, IntoElement, ParentElement, Styled, WeakEntity,
-    Window, div, px, relative, rgba,
+    Window, div, px, relative, rgb, rgba,
 };
 use matrix_sdk::ruma::OwnedEventId;
 use matrix_sdk::ruma::events::room::message::{
@@ -110,14 +110,21 @@ pub fn msgtype_to_message_line<'a>(
 
             let theme = cx.global::<Theme>();
             div()
-                .p(px(2.))
-                .when_else(
-                    as_reply,
-                    |david| david.bg(rgba(0x00C8FF05)),
-                    |david| david.bg(rgba(0x00C8FF10)),
+                .flex()
+                .w_full()
+                .max_w_full()
+                .child(
+                    div()
+                        .max_w_full()
+                        .p(px(6.))
+                        .when_else(
+                            as_reply,
+                            |david| david.bg(rgba(0x00C8FF05)),
+                            |david| david.bg(rgba(0x00C8FF10)),
+                        )
+                        .rounded(theme.border_radius)
+                        .child(body),
                 )
-                .rounded(theme.border_radius)
-                .child(body)
                 .into_any_element()
         }
         MessageType::File(file) => {
@@ -138,7 +145,6 @@ pub fn msgtype_to_message_line<'a>(
                 .p(px(2.))
                 .bg(rgba(0x00C8FF10))
                 .rounded(theme.border_radius)
-                .max_w(relative(0.8))
                 .child(
                     div()
                         .flex()
