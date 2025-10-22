@@ -127,7 +127,7 @@ where
                                     event_cache
                                         .find_event_with_relations(&event_id, None)
                                         .await
-                                        .ok_or(anyhow!("Error"))
+                                        .ok_or(TheGridError::new("Unable to find event"))
                                 })
                                 .await
                             {

@@ -26,6 +26,7 @@ use std::fs::read;
 use std::mem;
 use std::path::PathBuf;
 use thegrid::session::session_manager::SessionManager;
+use thegrid::thegrid_error::TheGridError;
 use thegrid::tokio_helper::TokioHelper;
 
 pub struct OpenRoom {
@@ -198,11 +199,11 @@ impl OpenRoom {
                                     .status()
                                     .next()
                                     .await
-                                    .ok_or(anyhow!("Event cache closed"))
+                                    .ok_or(TheGridError::new("Event Cache Closed"))
                             })
                             .await
                         else {
-                            error!("Event cache closed");
+                            TheGridError::new("Event Cache Closed");
                             return;
                         };
 
