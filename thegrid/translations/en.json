@@ -85,6 +85,7 @@
   "INVITE_ACCEPT": "Accept",
   "INVITE_DECLINE": "Decline",
   "INVITE_INVITED_BY": "Invited by {{inviter}}",
+  "INVITE_USER": "Invite",
   "IN_ROOM": "In {{room}}",
   "JOIN_ROOM": "Create or Join Room",
   "JOIN_ROOM_INVITATIONS": "Pending Invitations",

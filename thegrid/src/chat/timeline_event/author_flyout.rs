@@ -13,14 +13,15 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, Bounds, Entity, InteractiveElement, IntoElement, ParentElement, Pixels, RenderOnce,
-    Styled, Window, div, px,
+    App, AsyncApp, Bounds, Entity, InteractiveElement, IntoElement, ParentElement, Pixels,
+    RenderOnce, Styled, Window, div, px,
 };
 use matrix_sdk::Room;
 use matrix_sdk::room::{RoomMember, RoomMemberRole};
 use matrix_sdk::ruma::events::room::member::MembershipState;
 use matrix_sdk::ruma::events::room::power_levels::UserPowerLevel;
 use std::rc::Rc;
+use thegrid::tokio_helper::TokioHelper;
 
 pub type AuthorFlyoutCloseListener =
     dyn Fn(&AuthorFlyoutCloseEvent, &mut Window, &mut App) + 'static;
@@ -78,6 +79,7 @@ impl RenderOnce for AuthorFlyout {
         let on_close_2 = on_close.clone();
         let on_close_3 = on_close.clone();
         let on_close_4 = on_close.clone();
+        let on_close_5 = on_close.clone();
 
         let on_user_action = Rc::new(self.on_user_action);
         let on_user_action_2 = on_user_action.clone();
@@ -95,6 +97,7 @@ impl RenderOnce for AuthorFlyout {
         let room = room.clone();
         let room_2 = room.clone();
         let room_3 = room.clone();
+        let room_4 = room.clone();
 
         flyout(self.bounds)
             .visible(self.visible)
@@ -104,11 +107,13 @@ impl RenderOnce for AuthorFlyout {
                     let room_member = room_member.clone();
                     let room_member_2 = room_member.clone();
                     let room_member_3 = room_member.clone();
+                    let room_member_id = room_member.user_id().to_owned();
                     let suggested_role = room_member.suggested_role_for_power_level();
 
                     let membership = room_member.membership().clone();
                     let joined = membership == MembershipState::Join;
                     let me = self.room.read(cx).current_user.clone().unwrap();
+                    let can_invite = me.can_invite() && membership == MembershipState::Leave;
                     let can_ban =
                         me.can_ban() && me.power_level() > room_member.power_level() && joined;
                     let can_kick =
@@ -224,6 +229,35 @@ impl RenderOnce for AuthorFlyout {
                                         .flex_col()
                                         .bg(theme.destructive_accent_color)
                                         .rounded(theme.border_radius)
+                                        .when(can_invite, |david| {
+                                            david.child(
+                                                button("invite-button")
+                                                    .child(icon_text(
+                                                        "user".into(),
+                                                        tr!("INVITE_USER", "Invite").into(),
+                                                    ))
+                                                    .on_click(move |_, window, cx| {
+                                                        let room = room_4.clone();
+                                                        let room_member_id = room_member_id.clone();
+                                                        on_close_5(
+                                                            &AuthorFlyoutCloseEvent,
+                                                            window,
+                                                            cx,
+                                                        );
+                                                        cx.spawn(async |cx: &mut AsyncApp| {
+                                                            let _ = cx
+                                                                .spawn_tokio(async move {
+                                                                    room.invite_user_by_id(
+                                                                        &room_member_id,
+                                                                    )
+                                                                    .await
+                                                                })
+                                                                .await;
+                                                        })
+                                                        .detach();
+                                                    }),
+                                            )
+                                        })
                                         .when(can_kick, |david| {
                                             david.child(
                                                 button("kick-button")

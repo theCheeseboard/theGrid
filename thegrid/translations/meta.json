@@ -79,7 +79,7 @@
   },
   "AUTHOR_STATUS_POWER_LEVEL": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:154",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:159",
     "plural": false,
     "description": null
   },
@@ -217,7 +217,7 @@
   },
   "BAN": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:259",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:293",
     "plural": false,
     "description": null
   },
@@ -247,7 +247,7 @@
   },
   "CHANGE_POWER_LEVEL": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:197",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:202",
     "plural": false,
     "description": null
   },
@@ -515,9 +515,15 @@
     "plural": false,
     "description": null
   },
+  "INVITE_USER": {
+    "context": "author_flyout.rs",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:237",
+    "plural": false,
+    "description": null
+  },
   "IN_ROOM": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:145",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:150",
     "plural": false,
     "description": null
   },
@@ -685,7 +691,7 @@
   },
   "KICK": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:233",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:267",
     "plural": false,
     "description": null
   },
@@ -865,7 +871,7 @@
   },
   "POWER_LEVEL_INFINITE": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:159",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:164",
     "plural": false,
     "description": null
   },
@@ -1345,7 +1351,7 @@
   },
   "USER_BANNED_PROMPT": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:219",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:224",
     "plural": false,
     "description": null
   },
