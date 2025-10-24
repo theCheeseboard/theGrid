@@ -1,3 +1,4 @@
+use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::timeline_event::author_flyout::{AuthorFlyoutUserActionListener, author_flyout};
 use crate::chat::timeline_event::room_message_event::CachedRoomMember;
 use crate::mxc_image::{SizePolicy, mxc_image};
@@ -5,8 +6,8 @@ use contemporary::components::anchorer::WithAnchorer;
 use contemporary::components::flyout::flyout;
 use contemporary::styling::theme::Theme;
 use gpui::{
-    App, InteractiveElement, IntoElement, ParentElement, RenderOnce, StatefulInteractiveElement,
-    Styled, Window, div, px, relative, rgb,
+    App, Entity, InteractiveElement, IntoElement, ParentElement, RenderOnce,
+    StatefulInteractiveElement, Styled, Window, div, px, relative, rgb,
 };
 use matrix_sdk::Room;
 
@@ -16,7 +17,7 @@ where
     T: IntoElement + 'static,
 {
     pub author: Option<CachedRoomMember>,
-    pub room: Room,
+    pub room: Entity<OpenRoom>,
     pub content: T,
     pub on_user_action: Box<AuthorFlyoutUserActionListener>,
 }

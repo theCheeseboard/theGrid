@@ -23,13 +23,14 @@ use matrix_sdk::event_cache::RoomEventCache;
 use matrix_sdk::linked_chunk::relational::IndexableItem;
 use matrix_sdk::ruma::RoomId;
 use matrix_sdk::ruma::events::{AnyMessageLikeEvent, AnyTimelineEvent};
+use crate::chat::chat_room::open_room::OpenRoom;
 
 #[derive(IntoElement)]
 pub struct TimelineRow {
     event: TimelineEvent,
     previous_event: Option<TimelineEvent>,
     event_cache: Entity<RoomEventCache>,
-    room: Room,
+    room: Entity<OpenRoom>,
     on_user_action: Box<AuthorFlyoutUserActionListener>,
 }
 
@@ -37,7 +38,7 @@ pub fn timeline_event(
     event: TimelineEvent,
     previous_event: Option<TimelineEvent>,
     event_cache: Entity<RoomEventCache>,
-    room: Room,
+    room: Entity<OpenRoom>,
     on_user_action: impl Fn(&AuthorFlyoutUserActionEvent, &mut Window, &mut App) + 'static,
 ) -> TimelineRow {
     TimelineRow {
@@ -53,7 +54,7 @@ impl RenderOnce for TimelineRow {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let id = self.event.id().to_string();
 
-        let event = resolve_event(&self.event, self.room.room_id());
+        let event = resolve_event(&self.event, &self.room.read(cx).room_id);
 
         div()
             .id(ElementId::Name(id.into()))

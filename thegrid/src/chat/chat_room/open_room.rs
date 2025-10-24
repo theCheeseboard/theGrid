@@ -266,9 +266,10 @@ impl OpenRoom {
 
             let room = room_clone.clone();
             let _ = this.update(cx, |this, cx| {
+                let this_entity = cx.entity();
                 this.queued = queue
                     .into_iter()
-                    .map(|event| cx.new(|cx| QueuedEvent::new(event, room.clone(), cx)))
+                    .map(|event| cx.new(|cx| QueuedEvent::new(event, this_entity.clone(), cx)))
                     .collect();
                 cx.notify();
             });
@@ -280,73 +281,78 @@ impl OpenRoom {
                 };
 
                 if this
-                    .update(cx, |this, cx| match update {
-                        RoomSendQueueUpdate::NewLocalEvent(event) => this
-                            .queued
-                            .push(cx.new(|cx| QueuedEvent::new(event, room.clone(), cx))),
-                        RoomSendQueueUpdate::CancelledLocalEvent { transaction_id } => {
-                            this.queued
-                                .retain(|event| event.read(cx).transaction_id() != transaction_id);
-                        }
-                        RoomSendQueueUpdate::ReplacedLocalEvent {
-                            transaction_id,
-                            new_content,
-                        } => {
-                            for queue_item in &this.queued {
-                                if queue_item.read(cx).transaction_id() == transaction_id {
-                                    queue_item.update(cx, |queue_item, cx| {
-                                        queue_item.notify_content_replaced(new_content, cx);
-                                    });
-                                    return;
+                    .update(cx, |this, cx| {
+                        let this_entity = cx.entity();
+                        match update {
+                            RoomSendQueueUpdate::NewLocalEvent(event) => this
+                                .queued
+                                .push(cx.new(|cx| QueuedEvent::new(event, this_entity, cx))),
+                            RoomSendQueueUpdate::CancelledLocalEvent { transaction_id } => {
+                                this.queued.retain(|event| {
+                                    event.read(cx).transaction_id() != transaction_id
+                                });
+                            }
+                            RoomSendQueueUpdate::ReplacedLocalEvent {
+                                transaction_id,
+                                new_content,
+                            } => {
+                                for queue_item in &this.queued {
+                                    if queue_item.read(cx).transaction_id() == transaction_id {
+                                        queue_item.update(cx, |queue_item, cx| {
+                                            queue_item.notify_content_replaced(new_content, cx);
+                                        });
+                                        return;
+                                    }
                                 }
                             }
-                        }
-                        RoomSendQueueUpdate::SendError {
-                            transaction_id,
-                            is_recoverable,
-                            ..
-                        } => {
-                            for queue_item in &this.queued {
-                                if queue_item.read(cx).transaction_id() == transaction_id {
-                                    queue_item.update(cx, |queue_item, cx| {
-                                        queue_item.notify_send_error(is_recoverable, cx);
-                                    });
-                                    return;
+                            RoomSendQueueUpdate::SendError {
+                                transaction_id,
+                                is_recoverable,
+                                ..
+                            } => {
+                                for queue_item in &this.queued {
+                                    if queue_item.read(cx).transaction_id() == transaction_id {
+                                        queue_item.update(cx, |queue_item, cx| {
+                                            queue_item.notify_send_error(is_recoverable, cx);
+                                        });
+                                        return;
+                                    }
                                 }
                             }
-                        }
-                        RoomSendQueueUpdate::RetryEvent { transaction_id } => {
-                            for queue_item in &this.queued {
-                                if queue_item.read(cx).transaction_id() == transaction_id {
-                                    queue_item.update(cx, |queue_item, cx| {
-                                        queue_item.notify_unwedged(cx);
-                                        cx.notify()
-                                    });
-                                    return;
+                            RoomSendQueueUpdate::RetryEvent { transaction_id } => {
+                                for queue_item in &this.queued {
+                                    if queue_item.read(cx).transaction_id() == transaction_id {
+                                        queue_item.update(cx, |queue_item, cx| {
+                                            queue_item.notify_unwedged(cx);
+                                            cx.notify()
+                                        });
+                                        return;
+                                    }
                                 }
                             }
-                        }
-                        RoomSendQueueUpdate::SentEvent {
-                            transaction_id,
-                            event_id,
-                        } => {
-                            this.queued
-                                .retain(|event| event.read(cx).transaction_id() != transaction_id);
-                        }
-                        RoomSendQueueUpdate::MediaUpload {
-                            related_to,
-                            file,
-                            index,
-                            progress,
-                        } => {
-                            for queue_item in &this.queued {
-                                if queue_item.read(cx).transaction_id() == related_to {
-                                    queue_item.update(cx, |queue_item, cx| {
-                                        queue_item
-                                            .notify_upload_progress(file, index, progress, cx);
-                                        cx.notify()
-                                    });
-                                    return;
+                            RoomSendQueueUpdate::SentEvent {
+                                transaction_id,
+                                event_id,
+                            } => {
+                                this.queued.retain(|event| {
+                                    event.read(cx).transaction_id() != transaction_id
+                                });
+                            }
+                            RoomSendQueueUpdate::MediaUpload {
+                                related_to,
+                                file,
+                                index,
+                                progress,
+                            } => {
+                                for queue_item in &this.queued {
+                                    if queue_item.read(cx).transaction_id() == related_to {
+                                        queue_item.update(cx, |queue_item, cx| {
+                                            queue_item
+                                                .notify_upload_progress(file, index, progress, cx);
+                                            cx.notify()
+                                        });
+                                        return;
+                                    }
                                 }
                             }
                         }

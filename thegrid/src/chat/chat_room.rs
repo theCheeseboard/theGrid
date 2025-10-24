@@ -1,13 +1,13 @@
 mod attachments_view;
 mod chat_bar;
-mod open_room;
+pub mod open_room;
 mod user_action_dialogs;
 
 use crate::chat::chat_room::attachments_view::AttachmentsView;
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::user_action_dialogs::UserActionDialogs;
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::timeline_event::author_flyout::AuthorFlyoutUserActionEvent;
+use crate::chat::timeline_event::author_flyout::{AuthorFlyoutUserActionEvent, UserAction};
 use crate::chat::timeline_event::queued_event::QueuedEvent;
 use crate::chat::timeline_event::room_head::room_head;
 use crate::chat::timeline_event::timeline_event;
@@ -69,7 +69,18 @@ impl ChatRoom {
     ) {
         self.user_action_dialogs
             .update(cx, |user_action_dialogs, cx| {
-                user_action_dialogs.open_power_level_dialog(user_action.user.clone());
+                match user_action.action {
+                    UserAction::ChangePowerLevel => {
+                        user_action_dialogs.open_power_level_dialog(user_action.user.clone());
+                    }
+                    UserAction::Kick => {
+                        user_action_dialogs.open_kick_dialog(user_action.user.clone());
+                    }
+                    UserAction::Ban => {
+                        user_action_dialogs.open_ban_dialog(user_action.user.clone());
+                    }
+                }
+
                 cx.notify()
             })
     }
@@ -93,7 +104,7 @@ impl Render for ChatRoom {
             );
         };
 
-        let room_clone = room.clone();
+        let room_clone = self.open_room.clone();
         let events = open_room.events.clone();
         let queued = &open_room.queued;
         if events.len() + queued.len() + 1 != self.list_state.item_count() {

@@ -1,3 +1,4 @@
+use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::timeline_event::room_message_event::CachedRoomMember;
 use crate::main_window::SurfaceChange;
 use crate::mxc_image::{SizePolicy, mxc_image};
@@ -5,14 +6,15 @@ use cntp_i18n::{Quote, tr, trn};
 use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::flyout::flyout;
+use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, Bounds, InteractiveElement, IntoElement, ParentElement, Pixels, RenderOnce, Styled,
-    Window, div, px,
+    App, Bounds, Entity, InteractiveElement, IntoElement, ParentElement, Pixels, RenderOnce,
+    Styled, Window, div, px,
 };
 use matrix_sdk::Room;
 use matrix_sdk::room::{RoomMember, RoomMemberRole};
@@ -37,6 +39,8 @@ pub struct AuthorFlyoutUserActionEvent {
 #[derive(Clone)]
 pub enum UserAction {
     ChangePowerLevel,
+    Kick,
+    Ban,
 }
 
 #[derive(IntoElement)]
@@ -44,7 +48,7 @@ pub struct AuthorFlyout {
     bounds: Bounds<Pixels>,
     visible: bool,
     author: CachedRoomMember,
-    room: Room,
+    room: Entity<OpenRoom>,
     on_close: Box<AuthorFlyoutCloseListener>,
     on_user_action: Box<AuthorFlyoutUserActionListener>,
 }
@@ -53,7 +57,7 @@ pub fn author_flyout(
     bounds: Bounds<Pixels>,
     visible: bool,
     author: CachedRoomMember,
-    room: Room,
+    room: Entity<OpenRoom>,
     on_close: impl Fn(&AuthorFlyoutCloseEvent, &mut Window, &mut App) + 'static,
     on_user_action: impl Fn(&AuthorFlyoutUserActionEvent, &mut Window, &mut App) + 'static,
 ) -> AuthorFlyout {
@@ -71,19 +75,25 @@ impl RenderOnce for AuthorFlyout {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let on_close = Rc::new(self.on_close);
         let on_close_2 = on_close.clone();
+        let on_close_3 = on_close.clone();
+        let on_close_4 = on_close.clone();
 
         let on_user_action = Rc::new(self.on_user_action);
+        let on_user_action_2 = on_user_action.clone();
+        let on_user_action_3 = on_user_action.clone();
 
         let theme = cx.global::<Theme>();
+        let room = self.room.read(cx).room.clone().unwrap();
 
-        let display_name = self
-            .room
+        let display_name = room
             .cached_display_name()
             .map(|name| name.to_string())
-            .or_else(|| self.room.name())
+            .or_else(|| room.name())
             .unwrap_or_default();
 
-        let room = self.room.clone();
+        let room = room.clone();
+        let room_2 = room.clone();
+        let room_3 = room.clone();
 
         flyout(self.bounds)
             .visible(self.visible)
@@ -91,7 +101,14 @@ impl RenderOnce for AuthorFlyout {
             .child(match &self.author {
                 CachedRoomMember::RoomMember(room_member) => {
                     let room_member = room_member.clone();
+                    let room_member_2 = room_member.clone();
+                    let room_member_3 = room_member.clone();
                     let suggested_role = room_member.suggested_role_for_power_level();
+
+                    let me = self.room.read(cx).current_user.clone().unwrap();
+                    let can_ban = me.can_ban() && me.power_level() > room_member.power_level();
+                    let can_kick = me.can_kick() && me.power_level() > room_member.power_level();
+
                     div()
                         .occlude()
                         .flex()
@@ -182,6 +199,65 @@ impl RenderOnce for AuthorFlyout {
                                                     );
                                                 }),
                                         ),
+                                )
+                                .child(
+                                    div()
+                                        .flex()
+                                        .flex_col()
+                                        .bg(theme.destructive_accent_color)
+                                        .rounded(theme.border_radius)
+                                        .when(can_kick, |david| {
+                                            david.child(
+                                                button("kick-button")
+                                                    .destructive()
+                                                    .child(icon_text(
+                                                        "im-kick-user".into(),
+                                                        tr!("KICK", "Kick").into(),
+                                                    ))
+                                                    .on_click(move |_, window, cx| {
+                                                        on_close_3(
+                                                            &AuthorFlyoutCloseEvent,
+                                                            window,
+                                                            cx,
+                                                        );
+                                                        on_user_action_2(
+                                                            &AuthorFlyoutUserActionEvent {
+                                                                action: UserAction::Kick,
+                                                                room: room_2.clone(),
+                                                                user: room_member_2.clone(),
+                                                            },
+                                                            window,
+                                                            cx,
+                                                        );
+                                                    }),
+                                            )
+                                        })
+                                        .when(can_ban, |david| {
+                                            david.child(
+                                                button("ban-button")
+                                                    .destructive()
+                                                    .child(icon_text(
+                                                        "im-ban-user".into(),
+                                                        tr!("BAN", "Ban").into(),
+                                                    ))
+                                                    .on_click(move |_, window, cx| {
+                                                        on_close_4(
+                                                            &AuthorFlyoutCloseEvent,
+                                                            window,
+                                                            cx,
+                                                        );
+                                                        on_user_action_3(
+                                                            &AuthorFlyoutUserActionEvent {
+                                                                action: UserAction::Ban,
+                                                                room: room_3.clone(),
+                                                                user: room_member_3.clone(),
+                                                            },
+                                                            window,
+                                                            cx,
+                                                        );
+                                                    }),
+                                            )
+                                        }),
                                 ),
                         )
                         .into_any_element()

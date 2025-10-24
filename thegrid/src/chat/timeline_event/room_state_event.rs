@@ -1,9 +1,6 @@
 use crate::chat::timeline_event::room_message_event::CachedRoomMember;
 use cntp_i18n::{I18nString, Quote, tr};
-use gpui::{
-    App, AsyncApp, InteractiveElement, IntoElement, ParentElement, RenderOnce, Styled, Window, div,
-    px, relative,
-};
+use gpui::{App, AsyncApp, InteractiveElement, IntoElement, ParentElement, RenderOnce, Styled, Window, div, px, relative, Entity};
 use matrix_sdk::Room;
 use matrix_sdk::ruma::events::room::member::{
     MembershipChange, MembershipDetails, MembershipState, PossiblyRedactedRoomMemberEventContent,
@@ -12,14 +9,15 @@ use matrix_sdk::ruma::events::room::member::{
 use matrix_sdk::ruma::events::{AnyFullStateEventContent, AnyStateEvent, FullStateEventContent};
 use matrix_sdk::ruma::{OwnedUserId, UserId};
 use thegrid::tokio_helper::TokioHelper;
+use crate::chat::chat_room::open_room::OpenRoom;
 
 #[derive(IntoElement)]
 pub struct RoomStateEvent {
     event: AnyStateEvent,
-    room: Room,
+    room: Entity<OpenRoom>,
 }
 
-pub fn room_state_event(event: AnyStateEvent, room: Room) -> RoomStateEvent {
+pub fn room_state_event(event: AnyStateEvent, room: Entity<OpenRoom>) -> RoomStateEvent {
     RoomStateEvent { event, room }
 }
 
@@ -121,7 +119,7 @@ impl RenderOnce for RoomStateEvent {
         let cached_author = window.use_state(cx, |_, _| None);
         if cached_author.read(cx).is_none() {
             let author = self.event.sender().to_owned();
-            let room = self.room.clone();
+            let room = self.room.read(cx).room.clone().unwrap();
 
             cached_author.write(cx, Some(CachedRoomMember::UserId(author.to_owned())));
 

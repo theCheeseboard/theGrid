@@ -34,6 +34,7 @@ use thegrid::session::session_manager::SessionManager;
 use thegrid::thegrid_error::TheGridError;
 use thegrid::tokio_helper::TokioHelper;
 use tokio::io::AsyncReadExt;
+use crate::chat::chat_room::open_room::OpenRoom;
 
 #[derive(IntoElement)]
 pub struct RoomMessageEvent<T>
@@ -42,7 +43,7 @@ where
 {
     event: T,
     event_id: Option<OwnedEventId>,
-    room: Room,
+    room: Entity<OpenRoom>,
     author: OwnedUserId,
     previous_event: Option<TimelineEvent>,
     event_cache: Option<Entity<RoomEventCache>>,
@@ -87,7 +88,7 @@ impl CachedRoomMember {
 pub fn room_message_event<T>(
     event: T,
     event_id: Option<OwnedEventId>,
-    room: Room,
+    room: Entity<OpenRoom>,
     author: OwnedUserId,
     previous_event: Option<TimelineEvent>,
     event_cache: Option<Entity<RoomEventCache>>,
@@ -175,10 +176,12 @@ where
 
             None
         });
+        
+        let room = self.room.read(cx).room.clone().unwrap();
 
         let cached_author = window.use_state(cx, |_, _| None);
         if cached_author.read(cx).is_none() {
-            let room = self.room.clone();
+            let room = room.clone();
 
             cached_author.write(cx, Some(CachedRoomMember::UserId(self.author.clone())));
 
@@ -206,7 +209,7 @@ where
         let is_head_event = if self.force_not_head_event {
             false
         } else if let Some(previous_event) = self.previous_event {
-            let event = resolve_event(&previous_event, self.room.room_id());
+            let event = resolve_event(&previous_event, room.room_id());
 
             match event {
                 Ok(AnyTimelineEvent::MessageLike(message_like)) => match message_like {
@@ -234,7 +237,7 @@ where
 
         let reply = reply_message.update(cx, |reply_message, cx| {
             reply_message.as_ref().and_then(|reply| {
-                if let Ok(resolved) = resolve_event(reply, self.room.room_id())
+                if let Ok(resolved) = resolve_event(reply, room.room_id())
                     && let AnyTimelineEvent::MessageLike(AnyMessageLikeEvent::RoomMessage(
                         room_message,
                     )) = resolved
@@ -264,7 +267,7 @@ where
 
             let relations = relations_entity.read(cx).clone();
             for relation in relations.iter() {
-                if let Ok(resolved) = resolve_event(relation, self.room.room_id())
+                if let Ok(resolved) = resolve_event(relation, room.room_id())
                     && let AnyTimelineEvent::MessageLike(AnyMessageLikeEvent::RoomMessage(
                         room_message,
                     )) = resolved

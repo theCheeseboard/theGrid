@@ -1,3 +1,4 @@
+use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::timeline_event::room_message_element::RoomMessageElement;
 use crate::chat::timeline_event::room_message_event::room_message_event;
 use gpui::{
@@ -16,12 +17,16 @@ use thegrid::session::session_manager::SessionManager;
 
 pub struct QueuedEvent {
     local_echo: LocalEcho,
-    room: Room,
+    room: Entity<OpenRoom>,
     pub previous_event: Option<TimelineEvent>,
 }
 
 impl QueuedEvent {
-    pub fn new(local_echo: LocalEcho, room: Room, cx: &mut Context<QueuedEvent>) -> Self {
+    pub fn new(
+        local_echo: LocalEcho,
+        room: Entity<OpenRoom>,
+        cx: &mut Context<QueuedEvent>,
+    ) -> Self {
         Self {
             local_echo,
             room,
