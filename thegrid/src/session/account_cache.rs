@@ -1,3 +1,4 @@
+use crate::thegrid_error::TheGridError;
 use crate::tokio_helper::TokioHelper;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
@@ -7,7 +8,6 @@ use matrix_sdk::ruma::OwnedMxcUri;
 use matrix_sdk::ruma::events::room::member::SyncRoomMemberEvent;
 use matrix_sdk::{Client, Room};
 use std::time::Duration;
-use crate::thegrid_error::TheGridError;
 
 pub struct AccountCache {
     display_name: Option<String>,

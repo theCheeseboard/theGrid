@@ -159,7 +159,7 @@ where
                                     event_cache
                                         .find_event(&reply)
                                         .await
-                                        .ok_or(anyhow!(TheGridError::new("Unable to find reply")))
+                                        .ok_or(TheGridError::new("Unable to find reply"))
                                 })
                                 .await
                             {

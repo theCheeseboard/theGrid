@@ -73,13 +73,13 @@
   },
   "ATTACH_PROMPT": {
     "context": "open_room.rs",
-    "definedIn": "src/chat/chat_room/open_room.rs:416",
+    "definedIn": "src/chat/chat_room/open_room.rs:417",
     "plural": false,
     "description": null
   },
   "AUTHOR_STATUS_POWER_LEVEL": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:131",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:146",
     "plural": false,
     "description": null
   },
@@ -215,9 +215,15 @@
     "plural": false,
     "description": null
   },
+  "BAN": {
+    "context": "author_flyout.rs",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:229",
+    "plural": false,
+    "description": null
+  },
   "CHANGE_POWER_LEVEL": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:171",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:186",
     "plural": false,
     "description": null
   },
@@ -481,7 +487,7 @@
   },
   "IN_ROOM": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:123",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:138",
     "plural": false,
     "description": null
   },
@@ -647,6 +653,30 @@
     "plural": false,
     "description": null
   },
+  "KICK": {
+    "context": "author_flyout.rs",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:207",
+    "plural": false,
+    "description": null
+  },
+  "KICK_ACTION": {
+    "context": "user_action_dialogs.rs",
+    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:335",
+    "plural": false,
+    "description": null
+  },
+  "KICK_TEXT": {
+    "context": "user_action_dialogs.rs",
+    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:319",
+    "plural": false,
+    "description": null
+  },
+  "KICK_TITLE": {
+    "context": "user_action_dialogs.rs",
+    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:316",
+    "plural": false,
+    "description": null
+  },
   "LEAVE_ROOM_INFORMATIONAL_NOT_PUBLIC": {
     "context": "standard_room_element.rs",
     "definedIn": "src/chat/sidebar/standard_room_element.rs:207",
@@ -787,55 +817,55 @@
   },
   "POWER_LEVEL_ADMINISTRATOR": {
     "context": "user_action_dialogs.rs",
-    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:168",
+    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:171",
     "plural": false,
     "description": null
   },
   "POWER_LEVEL_INFINITE": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:136",
+    "definedIn": "src/chat/timeline_event/author_flyout.rs:151",
     "plural": false,
     "description": null
   },
   "POWER_LEVEL_MODERATOR": {
     "context": "user_action_dialogs.rs",
-    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:195",
+    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:198",
     "plural": false,
     "description": null
   },
   "POWER_LEVEL_UPDATE_ACTION": {
     "context": "user_action_dialogs.rs",
-    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:286",
+    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:289",
     "plural": false,
     "description": null
   },
   "POWER_LEVEL_UPDATE_DEMOTION_WARNING": {
     "context": "user_action_dialogs.rs",
-    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:265",
+    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:268",
     "plural": false,
     "description": null
   },
   "POWER_LEVEL_UPDATE_PROMOTION_WARNING": {
     "context": "user_action_dialogs.rs",
-    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:247",
+    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:250",
     "plural": false,
     "description": null
   },
   "POWER_LEVEL_UPDATE_TEXT": {
     "context": "user_action_dialogs.rs",
-    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:156",
+    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:159",
     "plural": false,
     "description": null
   },
   "POWER_LEVEL_UPDATE_TITLE": {
     "context": "user_action_dialogs.rs",
-    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:145",
+    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:148",
     "plural": false,
     "description": null
   },
   "POWER_LEVEL_USER": {
     "context": "user_action_dialogs.rs",
-    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:220",
+    "definedIn": "src/chat/chat_room/user_action_dialogs.rs:223",
     "plural": false,
     "description": null
   },
