@@ -18,6 +18,7 @@ use gpui::{
 };
 use matrix_sdk::Room;
 use matrix_sdk::room::{RoomMember, RoomMemberRole};
+use matrix_sdk::ruma::events::room::member::MembershipState;
 use matrix_sdk::ruma::events::room::power_levels::UserPowerLevel;
 use std::rc::Rc;
 
@@ -105,9 +106,13 @@ impl RenderOnce for AuthorFlyout {
                     let room_member_3 = room_member.clone();
                     let suggested_role = room_member.suggested_role_for_power_level();
 
+                    let membership = room_member.membership().clone();
+                    let joined = membership == MembershipState::Join;
                     let me = self.room.read(cx).current_user.clone().unwrap();
-                    let can_ban = me.can_ban() && me.power_level() > room_member.power_level();
-                    let can_kick = me.can_kick() && me.power_level() > room_member.power_level();
+                    let can_ban =
+                        me.can_ban() && me.power_level() > room_member.power_level() && joined;
+                    let can_kick =
+                        me.can_kick() && me.power_level() > room_member.power_level() && joined;
 
                     div()
                         .occlude()
@@ -139,67 +144,80 @@ impl RenderOnce for AuthorFlyout {
                                 .child(subtitle(
                                     tr!("IN_ROOM", "In {{room}}", room:Quote = display_name),
                                 ))
-                                .child(
-                                    div()
-                                        .flex()
-                                        .gap(px(4.))
-                                        .items_center()
-                                        .child(tr!(
-                                            "AUTHOR_STATUS_POWER_LEVEL",
-                                            "Power Level: {{power_level}}",
-                                            power_level = match room_member.normalized_power_level()
-                                            {
-                                                UserPowerLevel::Infinite => {
-                                                    tr!("POWER_LEVEL_INFINITE", "Infinite").into()
-                                                }
-                                                UserPowerLevel::Int(power_level) => {
-                                                    power_level.to_string()
-                                                }
-                                                _ => "?".into(),
-                                            }
-                                        ))
-                                        .when(
-                                            suggested_role == RoomMemberRole::Administrator,
-                                            |david| {
-                                                david.child(
-                                                    div()
-                                                        .rounded(theme.border_radius)
-                                                        .bg(theme.error_accent_color)
-                                                        .p(px(2.))
-                                                        .child(tr!("POWER_LEVEL_ADMINISTRATOR",)),
-                                                )
-                                            },
-                                        )
-                                        .when(
-                                            suggested_role == RoomMemberRole::Moderator,
-                                            |david| {
-                                                david.child(
-                                                    div()
-                                                        .rounded(theme.border_radius)
-                                                        .bg(theme.info_accent_color)
-                                                        .p(px(2.))
-                                                        .child(tr!("POWER_LEVEL_MODERATOR",)),
-                                                )
-                                            },
-                                        )
-                                        .child(div().flex_grow())
-                                        .child(
-                                            button("change-power-level")
-                                                .child(tr!("CHANGE_POWER_LEVEL", "Change..."))
-                                                .on_click(move |_, window, cx| {
-                                                    on_close_2(&AuthorFlyoutCloseEvent, window, cx);
-                                                    on_user_action(
-                                                        &AuthorFlyoutUserActionEvent {
-                                                            action: UserAction::ChangePowerLevel,
-                                                            room: room.clone(),
-                                                            user: room_member.clone(),
-                                                        },
-                                                        window,
-                                                        cx,
-                                                    );
-                                                }),
-                                        ),
-                                )
+                                .when(joined, |david| {
+                                    david.child(
+                                        div()
+                                            .flex()
+                                            .gap(px(4.))
+                                            .items_center()
+                                            .child(tr!(
+                                                "AUTHOR_STATUS_POWER_LEVEL",
+                                                "Power Level: {{power_level}}",
+                                                power_level =
+                                                    match room_member.normalized_power_level() {
+                                                        UserPowerLevel::Infinite => {
+                                                            tr!("POWER_LEVEL_INFINITE", "Infinite")
+                                                                .into()
+                                                        }
+                                                        UserPowerLevel::Int(power_level) => {
+                                                            power_level.to_string()
+                                                        }
+                                                        _ => "?".into(),
+                                                    }
+                                            ))
+                                            .when(
+                                                suggested_role == RoomMemberRole::Administrator,
+                                                |david| {
+                                                    david.child(
+                                                        div()
+                                                            .rounded(theme.border_radius)
+                                                            .bg(theme.error_accent_color)
+                                                            .p(px(2.))
+                                                            .child(tr!(
+                                                                "POWER_LEVEL_ADMINISTRATOR",
+                                                            )),
+                                                    )
+                                                },
+                                            )
+                                            .when(
+                                                suggested_role == RoomMemberRole::Moderator,
+                                                |david| {
+                                                    david.child(
+                                                        div()
+                                                            .rounded(theme.border_radius)
+                                                            .bg(theme.info_accent_color)
+                                                            .p(px(2.))
+                                                            .child(tr!("POWER_LEVEL_MODERATOR",)),
+                                                    )
+                                                },
+                                            )
+                                            .child(div().flex_grow())
+                                            .child(
+                                                button("change-power-level")
+                                                    .child(tr!("CHANGE_POWER_LEVEL", "Change..."))
+                                                    .on_click(move |_, window, cx| {
+                                                        on_close_2(
+                                                            &AuthorFlyoutCloseEvent,
+                                                            window,
+                                                            cx,
+                                                        );
+                                                        on_user_action(
+                                                            &AuthorFlyoutUserActionEvent {
+                                                                action:
+                                                                    UserAction::ChangePowerLevel,
+                                                                room: room.clone(),
+                                                                user: room_member.clone(),
+                                                            },
+                                                            window,
+                                                            cx,
+                                                        );
+                                                    }),
+                                            ),
+                                    )
+                                })
+                                .when(membership == MembershipState::Ban, |david| {
+                                    david.child(tr!("USER_BANNED_PROMPT", "This user is banned"))
+                                })
                                 .child(
                                     div()
                                         .flex()

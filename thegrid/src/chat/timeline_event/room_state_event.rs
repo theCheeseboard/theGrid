@@ -1,6 +1,10 @@
+use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::timeline_event::room_message_event::CachedRoomMember;
 use cntp_i18n::{I18nString, Quote, tr};
-use gpui::{App, AsyncApp, InteractiveElement, IntoElement, ParentElement, RenderOnce, Styled, Window, div, px, relative, Entity};
+use gpui::{
+    App, AsyncApp, Entity, InteractiveElement, IntoElement, ParentElement, RenderOnce, Styled,
+    Window, div, px, relative,
+};
 use matrix_sdk::Room;
 use matrix_sdk::ruma::events::room::member::{
     MembershipChange, MembershipDetails, MembershipState, PossiblyRedactedRoomMemberEventContent,
@@ -9,7 +13,6 @@ use matrix_sdk::ruma::events::room::member::{
 use matrix_sdk::ruma::events::{AnyFullStateEventContent, AnyStateEvent, FullStateEventContent};
 use matrix_sdk::ruma::{OwnedUserId, UserId};
 use thegrid::tokio_helper::TokioHelper;
-use crate::chat::chat_room::open_room::OpenRoom;
 
 #[derive(IntoElement)]
 pub struct RoomStateEvent {
@@ -76,29 +79,36 @@ impl RoomStateEvent {
                         "{{user}} left the room",
                         user = author
                     )),
-                    MembershipChange::Banned => StateDisplay::Text(tr!(
-                        "ROOM_STATE_ROOM_MEMBER_BANNED",
-                        "{{user}} was banned from the room",
-                        user = author
-                    )),
+                    MembershipChange::Banned | MembershipChange::KickedAndBanned => {
+                        StateDisplay::Text(tr!(
+                            "ROOM_STATE_ROOM_MEMBER_BANNED",
+                            "{{moderator_user}} banned {{user}} from the room: {{reason}}",
+                            moderator_user = author,
+                            user = state_key.to_string(),
+                            reason = event.reason.unwrap_or_else(|| tr!(
+                                "EVENT_REASON_NONE",
+                                "No reason was provided."
+                            )
+                            .into())
+                        ))
+                    }
                     MembershipChange::Unbanned => StateDisplay::Text(tr!(
                         "ROOM_STATE_ROOM_MEMBER_UNBANNED",
                         "{{user}} was unbanned from the room",
-                        user = author
+                        user = state_key.to_string(),
                     )),
                     MembershipChange::Kicked => StateDisplay::Text(tr!(
                         "ROOM_STATE_ROOM_MEMBER_KICKED",
-                        "{{user}} was kicked from the room",
-                        user = author
+                        "{{moderator_user}} kicked {{user}} from the room: {{reason}}",
+                        moderator_user = author,
+                        user = state_key.to_string(),
+                        reason = event
+                            .reason
+                            .unwrap_or_else(|| tr!("EVENT_REASON_NONE").into())
                     )),
                     MembershipChange::Invited => StateDisplay::Text(tr!(
                         "ROOM_STATE_ROOM_MEMBER_INVITED",
                         "{{user}} was invited to the room",
-                        user = author
-                    )),
-                    MembershipChange::KickedAndBanned => StateDisplay::Text(tr!(
-                        "ROOM_STATE_ROOM_MEMBER_KICKED_AND_BANNED",
-                        "{{user}} was kicked and banned from the room",
                         user = author
                     )),
                     MembershipChange::Knocked => StateDisplay::Text(tr!(
