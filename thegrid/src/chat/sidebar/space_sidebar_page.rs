@@ -1,5 +1,6 @@
+use crate::chat::chat_room::invite_popover::InvitePopover;
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::sidebar::standard_room_element::StandardRoomElement;
+use crate::chat::sidebar::standard_room_element::{InviteEvent, StandardRoomElement};
 use crate::chat::sidebar::{Sidebar, SidebarPage};
 use cntp_i18n::tr;
 use contemporary::components::context_menu::ContextMenuItem;
@@ -21,6 +22,7 @@ pub struct SpaceSidebarPage {
     list_state: ListState,
     sidebar: Entity<Sidebar>,
     displayed_room: Entity<DisplayedRoom>,
+    invite_popover: Entity<InvitePopover>,
 }
 
 impl SpaceSidebarPage {
@@ -30,11 +32,14 @@ impl SpaceSidebarPage {
         sidebar: Entity<Sidebar>,
         displayed_room: Entity<DisplayedRoom>,
     ) -> Self {
+        let invite_popover = cx.new(|cx| InvitePopover::new(cx));
+
         Self {
             list_state: ListState::new(0, ListAlignment::Top, px(200.)),
             room_id,
             sidebar,
             displayed_room,
+            invite_popover,
         }
     }
 
@@ -61,6 +66,12 @@ impl SpaceSidebarPage {
             self.displayed_room
                 .write(cx, DisplayedRoom::Room(room_id.clone()));
         }
+    }
+
+    fn invite_to_room(&mut self, event: &InviteEvent, window: &mut Window, cx: &mut Context<Self>) {
+        self.invite_popover.update(cx, |invite_popover, cx| {
+            invite_popover.open_invite_popover(event.room_id.clone(), cx)
+        })
     }
 }
 
@@ -117,6 +128,7 @@ impl Render for SpaceSidebarPage {
                                             this.change_room(room_id.clone(), window, cx);
                                         },
                                     ))),
+                                    on_invite: Rc::new(Box::new(cx.listener(Self::invite_to_room))),
                                 })
                                 .into_any_element()
                         }),
@@ -126,5 +138,6 @@ impl Render for SpaceSidebarPage {
                     .h_full(),
                 ),
             )
+            .child(self.invite_popover.clone())
     }
 }

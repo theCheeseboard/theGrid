@@ -1,5 +1,6 @@
 mod attachments_view;
 mod chat_bar;
+pub mod invite_popover;
 pub mod open_room;
 mod room_settings;
 mod user_action_dialogs;

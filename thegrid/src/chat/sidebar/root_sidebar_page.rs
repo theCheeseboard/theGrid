@@ -1,19 +1,19 @@
+use crate::chat::chat_room::invite_popover::InvitePopover;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
-use crate::chat::sidebar::standard_room_element::StandardRoomElement;
+use crate::chat::sidebar::standard_room_element::{InviteEvent, StandardRoomElement};
 use crate::chat::sidebar::{Sidebar, SidebarPage};
 use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::{tr, trn};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
-use contemporary::components::layer::layer;
 use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AppContext, Context, Element, ElementId, Entity, InteractiveElement, IntoElement,
-    ListAlignment, ListState, ParentElement, Render, StatefulInteractiveElement, Styled,
-    Subscription, Window, div, list, px,
+    AppContext, Context, ElementId, Entity, InteractiveElement, IntoElement, ListAlignment,
+    ListState, ParentElement, Render, StatefulInteractiveElement, Styled, Subscription, Window,
+    div, list, px,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use std::rc::Rc;
@@ -26,6 +26,7 @@ pub struct RootSidebarPage {
     displayed_room: Entity<DisplayedRoom>,
     items: Vec<SidebarItem>,
     room_cache_subscription: Option<Subscription>,
+    invite_popover: Entity<InvitePopover>,
 }
 
 pub enum SidebarItem {
@@ -56,12 +57,15 @@ impl RootSidebarPage {
         })
         .detach();
 
+        let invite_popover = cx.new(|cx| InvitePopover::new(cx));
+
         Self {
             list_state: ListState::new(0, ListAlignment::Top, px(200.)),
             sidebar,
             displayed_room,
             items: Vec::new(),
             room_cache_subscription: None,
+            invite_popover,
         }
     }
 
@@ -82,6 +86,12 @@ impl RootSidebarPage {
             self.displayed_room
                 .write(cx, DisplayedRoom::Room(room_id.clone()));
         }
+    }
+
+    fn invite_to_room(&mut self, event: &InviteEvent, window: &mut Window, cx: &mut Context<Self>) {
+        self.invite_popover.update(cx, |invite_popover, cx| {
+            invite_popover.open_invite_popover(event.room_id.clone(), cx)
+        })
     }
 
     fn update_sidebar_rooms(&mut self, cx: &mut Context<Self>) {
@@ -215,6 +225,9 @@ impl Render for RootSidebarPage {
                                                     this.change_room(room_id.clone(), window, cx);
                                                 },
                                             ))),
+                                            on_invite: Rc::new(Box::new(
+                                                cx.listener(Self::invite_to_room),
+                                            )),
                                         })
                                         .into_any_element()
                                 }
@@ -256,5 +269,6 @@ impl Render for RootSidebarPage {
                     .h_full(),
                 ),
             )
+            .child(self.invite_popover.clone())
     }
 }

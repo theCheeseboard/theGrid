@@ -18,11 +18,16 @@ use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
 use url::Url;
 
+pub struct InviteEvent {
+    pub room_id: OwnedRoomId,
+}
+
 #[derive(IntoElement)]
 pub struct StandardRoomElement {
     pub room: Entity<CachedRoom>,
     pub current_room: Option<OwnedRoomId>,
     pub on_click: Rc<Box<dyn Fn(&ClickEvent, &mut Window, &mut App)>>,
+    pub on_invite: Rc<Box<dyn Fn(&InviteEvent, &mut Window, &mut App)>>,
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -38,7 +43,9 @@ impl RenderOnce for StandardRoomElement {
         let theme = cx.global::<Theme>();
         let room = self.room.read(cx);
         let room_id = room.inner.room_id().to_owned();
+        let room_id_2 = room_id.clone();
         let on_click = self.on_click;
+        let on_invite = self.on_invite;
         let matrix_room = room.inner.clone();
         let matrix_room_2 = room.inner.clone();
 
@@ -70,7 +77,15 @@ impl RenderOnce for StandardRoomElement {
             ContextMenuItem::menu_item()
                 .label(tr!("ROOM_INVITE", "Invite Someone..."))
                 .icon("user")
-                .disabled()
+                .on_triggered(move |_, window, cx| {
+                    on_invite.clone()(
+                        &InviteEvent {
+                            room_id: room_id_2.clone(),
+                        },
+                        window,
+                        cx,
+                    );
+                })
                 .build(),
             ContextMenuItem::menu_item()
                 .label(tr!("ROOM_COPY_LINK", "Copy link to room"))

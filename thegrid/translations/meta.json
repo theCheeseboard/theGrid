@@ -403,7 +403,7 @@
   },
   "FOR_ROOM": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:57",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:64",
     "plural": false,
     "description": null
   },
@@ -503,15 +503,45 @@
     "plural": false,
     "description": null
   },
+  "INVITE_ACTION": {
+    "context": "invite_popover.rs",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:164",
+    "plural": false,
+    "description": null
+  },
   "INVITE_DECLINE": {
     "context": "join_room.rs",
     "definedIn": "src/chat/join_room.rs:266",
     "plural": false,
     "description": null
   },
+  "INVITE_DESCRIPTION": {
+    "context": "invite_popover.rs",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:138",
+    "plural": false,
+    "description": null
+  },
   "INVITE_INVITED_BY": {
     "context": "join_room.rs",
     "definedIn": "src/chat/join_room.rs:250",
+    "plural": false,
+    "description": null
+  },
+  "INVITE_SEARCH_PLACEHOLDER": {
+    "context": "invite_popover.rs",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:38",
+    "plural": false,
+    "description": null
+  },
+  "INVITE_SUBTITLE": {
+    "context": "invite_popover.rs",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:131",
+    "plural": false,
+    "description": null
+  },
+  "INVITE_TITLE": {
+    "context": "invite_popover.rs",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:118",
     "plural": false,
     "description": null
   },
@@ -721,19 +751,19 @@
   },
   "LEAVE_ROOM_INFORMATIONAL_NOT_PUBLIC": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:207",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:222",
     "plural": false,
     "description": null
   },
   "LEAVE_ROOM_INFORMATIONAL_PUBLIC": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:201",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:216",
     "plural": false,
     "description": null
   },
   "LEAVE_ROOM_TEXT": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:194",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:209",
     "plural": false,
     "description": null
   },
@@ -1015,7 +1045,7 @@
   },
   "ROOMS_SPACES": {
     "context": "root_sidebar_page.rs",
-    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:140",
+    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:150",
     "plural": false,
     "description": null
   },
@@ -1075,7 +1105,7 @@
   },
   "ROOM_COPY_LINK": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:76",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:91",
     "plural": false,
     "description": null
   },
@@ -1117,19 +1147,19 @@
   },
   "ROOM_INVITE": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:71",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:78",
     "plural": false,
     "description": null
   },
   "ROOM_LEAVE": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:139",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:154",
     "plural": false,
     "description": null
   },
   "ROOM_MARK_READ": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:60",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:67",
     "plural": false,
     "description": null
   },
@@ -1147,7 +1177,7 @@
   },
   "ROOM_NOTIFICATIONS": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:65",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:72",
     "plural": false,
     "description": null
   },
@@ -1255,13 +1285,13 @@
   },
   "ROOT_SIDEBAR_ROOMS": {
     "context": "root_sidebar_page.rs",
-    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:120",
+    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:130",
     "plural": false,
     "description": null
   },
   "ROOT_SIDEBAR_SPACES": {
     "context": "root_sidebar_page.rs",
-    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:114",
+    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:124",
     "plural": false,
     "description": null
   },
@@ -1345,13 +1375,13 @@
   },
   "SIDEBAR_CREATE_JOIN": {
     "context": "root_sidebar_page.rs",
-    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:174",
+    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:184",
     "plural": false,
     "description": null
   },
   "SIDEBAR_PENDING_INVITES": {
     "context": "root_sidebar_page.rs",
-    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:182",
+    "definedIn": "src/chat/sidebar/root_sidebar_page.rs:192",
     "plural": true,
     "description": null
   },
@@ -1429,7 +1459,7 @@
   },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:118",
+    "definedIn": "src/chat/chat_room.rs:119",
     "plural": false,
     "description": null
   },
