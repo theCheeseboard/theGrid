@@ -10,11 +10,12 @@ use contemporary::components::layer::layer;
 use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::{Theme, VariableColor};
+use gpui::prelude::FluentBuilder;
 use gpui::{
     App, AsyncApp, ClickEvent, Context, Entity, IntoElement, ParentElement, Render, Styled,
     WeakEntity, Window, div, px,
 };
-use matrix_sdk::RoomInfo;
+use matrix_sdk::{EncryptionState, RoomInfo};
 use std::rc::Rc;
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
@@ -24,6 +25,7 @@ pub struct RoomSettings {
     on_back_click: Rc<Box<dyn Fn(&ClickEvent, &mut Window, &mut App)>>,
     edit_room_name_open: bool,
     new_name_text_field: Entity<TextField>,
+    enable_encryption_open: bool,
     busy: bool,
 }
 
@@ -36,7 +38,6 @@ impl RoomSettings {
         Self {
             open_room,
             on_back_click: Rc::new(Box::new(on_back_click)),
-            edit_room_name_open: false,
 
             new_name_text_field: TextField::new(
                 cx,
@@ -45,6 +46,8 @@ impl RoomSettings {
                 tr!("ROOM_NAME_PLACEHOLDER", "Room Name").into(),
             ),
 
+            edit_room_name_open: false,
+            enable_encryption_open: false,
             busy: false,
         }
     }
@@ -60,6 +63,7 @@ impl Render for RoomSettings {
         };
         let room = room.clone();
         let room_2 = room.clone();
+        let room_3 = room.clone();
 
         div()
             .flex()
@@ -134,6 +138,43 @@ impl Render for RoomSettings {
                                         tr!("ROOM_VIEW_MEMBERS", "Manage Room Members").into(),
                                     ))),
                             ),
+                    )
+                    .child(
+                        layer()
+                            .flex()
+                            .flex_col()
+                            .p(px(8.))
+                            .w_full()
+                            .child(subtitle(tr!("ROOM_ENCRYPTION", "Room Encryption")))
+                            .when_else(
+                                room.encryption_state().is_encrypted(),
+                                |david| {
+                                    david.child(tr!(
+                                        "ROOM_ENCRYPTION_ENABLED_TEXT",
+                                        "Room encryption is enabled. Messages in this room cannot \
+                                        be seen by anyone else - not even the homeserver \
+                                        administrators."
+                                    ))
+                                },
+                                |david| {
+                                    david
+                                        .child(tr!(
+                                            "ROOM_ENCRYPTION_DISABLED_TEXT",
+                                            "Room encryption is disabled."
+                                        ))
+                                        .child(
+                                            button("room-encryption-enable")
+                                                .child(tr!(
+                                                    "ROOM_ENCRYPTION_ENABLE",
+                                                    "Enable Encryption"
+                                                ))
+                                                .on_click(cx.listener(|this, _, _, cx| {
+                                                    this.enable_encryption_open = true;
+                                                    cx.notify();
+                                                })),
+                                        )
+                                },
+                            ),
                     ),
             )
             .child(
@@ -170,7 +211,6 @@ impl Render for RoomSettings {
                                 let room = room_2.clone();
                                 let new_display_name =
                                     this.new_name_text_field.read(cx).current_text(cx);
-                                let session_manager = cx.global::<SessionManager>();
 
                                 this.busy = true;
                                 cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
@@ -189,7 +229,64 @@ impl Render for RoomSettings {
                                     } else {
                                         this.update(cx, |this, cx| {
                                             this.edit_room_name_open = false;
-                                            this.busy = true;
+                                            this.busy = false;
+                                            cx.notify()
+                                        })
+                                    }
+                                })
+                                .detach();
+                                cx.notify()
+                            })),
+                    ),
+            )
+            .child(
+                dialog_box("enable-encryption")
+                    .visible(self.enable_encryption_open)
+                    .processing(self.busy)
+                    .title(tr!("ROOM_ENCRYPTION_ENABLE").into())
+                    .content(
+                        tr!(
+                            "ROOM_ENCRYPTION_ENABLE_DESCRIPTION",
+                            "By enabling encryption, you will prevent anyone joining the room \
+                            from being able to read message history. If there are any bots or \
+                            services in this room, they may also stop working.\n\n\
+                            Once enabled, encryption cannot be turned off.\n\n\
+                            Do you want to enable encryption for this room?"
+                        ),
+                    )
+                    .standard_button(
+                        StandardButton::Cancel,
+                        cx.listener(|this, _, _, cx| {
+                            this.enable_encryption_open = false;
+                            cx.notify()
+                        }),
+                    )
+                    .button(
+                        button("encryption-enable-button")
+                            .destructive()
+                            .child(icon_text(
+                                "dialog-ok".into(),
+                                tr!("ROOM_ENCRYPTION_ENABLE").into(),
+                            ))
+                            .on_click(cx.listener(move |this, _, _, cx| {
+                                let room = room_3.clone();
+
+                                this.busy = true;
+                                cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                                    if cx
+                                        .spawn_tokio(async move { room.enable_encryption().await })
+                                        .await
+                                        .is_err()
+                                    {
+                                        this.update(cx, |this, cx| {
+                                            // TODO: Show the error
+                                            this.busy = false;
+                                            cx.notify()
+                                        })
+                                    } else {
+                                        this.update(cx, |this, cx| {
+                                            this.enable_encryption_open = false;
+                                            this.busy = false;
                                             cx.notify()
                                         })
                                     }
