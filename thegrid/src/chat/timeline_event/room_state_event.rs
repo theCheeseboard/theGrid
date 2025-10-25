@@ -50,6 +50,11 @@ impl RoomStateEvent {
                 content: event,
                 prev_content: previous_event,
             }) => self.room_member_event(author, event, previous_event),
+            AnyFullStateEventContent::RoomEncryption(_) => StateDisplay::Text(tr!(
+                "ROOM_STATE_ROOM_ENCRYPTION",
+                "{{user}} turned on encryption for the room",
+                user = author
+            )),
             _ => StateDisplay::None,
         }
     }

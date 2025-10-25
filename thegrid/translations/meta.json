@@ -379,7 +379,7 @@
   },
   "EVENT_REASON_NONE": {
     "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:89",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:94",
     "plural": false,
     "description": null
   },
@@ -1067,45 +1067,51 @@
     "plural": false,
     "description": null
   },
+  "ROOM_STATE_ROOM_ENCRYPTION": {
+    "context": "room_state_event.rs",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:54",
+    "plural": false,
+    "description": null
+  },
   "ROOM_STATE_ROOM_MEMBER_BANNED": {
     "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:84",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:89",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_INVITED": {
     "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:110",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:115",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_JOINED": {
     "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:73",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:78",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_KICKED": {
     "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:101",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:106",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_KNOCKED": {
     "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:115",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:120",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_LEFT": {
     "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:78",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:83",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_UNBANNED": {
     "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:96",
+    "definedIn": "src/chat/timeline_event/room_state_event.rs:101",
     "plural": false,
     "description": null
   },

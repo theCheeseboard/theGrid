@@ -177,6 +177,7 @@
   "ROOM_NAME": "Room Name",
   "ROOM_NOTIFICATIONS": "Notification Settings...",
   "ROOM_SETTINGS": "Room Settings...",
+  "ROOM_STATE_ROOM_ENCRYPTION": "{{user}} turned on encryption for the room",
   "ROOM_STATE_ROOM_MEMBER_BANNED": "{{moderator_user}} banned {{user}} from the room: {{reason}}",
   "ROOM_STATE_ROOM_MEMBER_INVITED": "{{user}} was invited to the room",
   "ROOM_STATE_ROOM_MEMBER_JOINED": "{{user}} joined the room",
