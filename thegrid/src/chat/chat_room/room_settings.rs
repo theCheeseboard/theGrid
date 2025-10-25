@@ -1,0 +1,203 @@
+use crate::chat::chat_room::open_room::OpenRoom;
+use crate::mxc_image::{SizePolicy, mxc_image};
+use cntp_i18n::tr;
+use contemporary::components::button::button;
+use contemporary::components::constrainer::constrainer;
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::grandstand::grandstand;
+use contemporary::components::icon_text::icon_text;
+use contemporary::components::layer::layer;
+use contemporary::components::subtitle::subtitle;
+use contemporary::components::text_field::TextField;
+use contemporary::styling::theme::{Theme, VariableColor};
+use gpui::{
+    App, AsyncApp, ClickEvent, Context, Entity, IntoElement, ParentElement, Render, Styled,
+    WeakEntity, Window, div, px,
+};
+use matrix_sdk::RoomInfo;
+use std::rc::Rc;
+use thegrid::session::session_manager::SessionManager;
+use thegrid::tokio_helper::TokioHelper;
+
+pub struct RoomSettings {
+    open_room: Entity<OpenRoom>,
+    on_back_click: Rc<Box<dyn Fn(&ClickEvent, &mut Window, &mut App)>>,
+    edit_room_name_open: bool,
+    new_name_text_field: Entity<TextField>,
+    busy: bool,
+}
+
+impl RoomSettings {
+    pub fn new(
+        open_room: Entity<OpenRoom>,
+        on_back_click: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
+        cx: &mut Context<RoomSettings>,
+    ) -> Self {
+        Self {
+            open_room,
+            on_back_click: Rc::new(Box::new(on_back_click)),
+            edit_room_name_open: false,
+
+            new_name_text_field: TextField::new(
+                cx,
+                "new-name",
+                "".into(),
+                tr!("ROOM_NAME_PLACEHOLDER", "Room Name").into(),
+            ),
+
+            busy: false,
+        }
+    }
+}
+
+impl Render for RoomSettings {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let on_back_click = self.on_back_click.clone();
+        let theme = cx.global::<Theme>();
+
+        let Some(room) = self.open_room.read(cx).room.as_ref() else {
+            return div();
+        };
+        let room = room.clone();
+        let room_2 = room.clone();
+
+        div()
+            .flex()
+            .flex_col()
+            .bg(theme.background)
+            .size_full()
+            .child(
+                grandstand("room-settings-grandstand")
+                    .text(tr!("ROOM_SETTINGS", "Room Settings"))
+                    .pt(px(36.))
+                    .on_back_click(move |event, window, cx| {
+                        on_back_click.clone()(event, window, cx);
+                    }),
+            )
+            .child(
+                constrainer("profile")
+                    .flex()
+                    .flex_col()
+                    .w_full()
+                    .p(px(8.))
+                    .gap(px(8.))
+                    .child(
+                        div()
+                            .flex()
+                            .gap(px(4.))
+                            .child(
+                                mxc_image(room.avatar_url())
+                                    .rounded(theme.border_radius)
+                                    .size(px(48.))
+                                    .size_policy(SizePolicy::Fit),
+                            )
+                            .child(
+                                div().flex().flex_col().justify_center().gap(px(4.)).child(
+                                    room.cached_display_name()
+                                        .map(|name| name.to_string())
+                                        .or_else(|| room.name())
+                                        .unwrap_or_default(),
+                                ),
+                            ),
+                    )
+                    .child(
+                        layer()
+                            .flex()
+                            .flex_col()
+                            .p(px(8.))
+                            .w_full()
+                            .child(subtitle(tr!("ACTIONS")))
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .bg(theme.button_background)
+                                    .rounded(theme.border_radius)
+                                    .child(
+                                        button("room-change-display-name")
+                                            .child(icon_text(
+                                                "edit-rename".into(),
+                                                tr!("ROOM_CHANGE_NAME", "Change Room Name").into(),
+                                            ))
+                                            .on_click(cx.listener(|this, _, _, cx| {
+                                                // TODO: Set the text field text to the current display name
+                                                this.edit_room_name_open = true;
+                                                cx.notify()
+                                            })),
+                                    )
+                                    .child(button("room-change-profile-picture").child(icon_text(
+                                        "edit-rename".into(),
+                                        tr!("ROOM_CHANGE_PICTURE", "Change Room Picture").into(),
+                                    )))
+                                    .child(button("room-view-members").child(icon_text(
+                                        "user".into(),
+                                        tr!("ROOM_VIEW_MEMBERS", "Manage Room Members").into(),
+                                    ))),
+                            ),
+                    ),
+            )
+            .child(
+                dialog_box("edit-room-name")
+                    .visible(self.edit_room_name_open)
+                    .processing(self.busy)
+                    .title(tr!("ROOM_CHANGE_NAME").into())
+                    .content(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .w(px(500.))
+                            .gap(px(12.))
+                            .child(tr!(
+                                "ROOM_CHANGE_NAME_DESCRIPTION",
+                                "What do you want to call this room?"
+                            ))
+                            .child(self.new_name_text_field.clone().into_any_element()),
+                    )
+                    .standard_button(
+                        StandardButton::Cancel,
+                        cx.listener(|this, _, _, cx| {
+                            this.edit_room_name_open = false;
+                            cx.notify()
+                        }),
+                    )
+                    .button(
+                        button("change-room_name-button")
+                            .child(icon_text(
+                                "dialog-ok".into(),
+                                tr!("ROOM_CHANGE_NAME").into(),
+                            ))
+                            .on_click(cx.listener(move |this, _, _, cx| {
+                                let room = room_2.clone();
+                                let new_display_name =
+                                    this.new_name_text_field.read(cx).current_text(cx);
+                                let session_manager = cx.global::<SessionManager>();
+
+                                this.busy = true;
+                                cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                                    if cx
+                                        .spawn_tokio(async move {
+                                            room.set_name(new_display_name.to_string()).await
+                                        })
+                                        .await
+                                        .is_err()
+                                    {
+                                        this.update(cx, |this, cx| {
+                                            // TODO: Show the error
+                                            this.busy = false;
+                                            cx.notify()
+                                        })
+                                    } else {
+                                        this.update(cx, |this, cx| {
+                                            this.edit_room_name_open = false;
+                                            this.busy = true;
+                                            cx.notify()
+                                        })
+                                    }
+                                })
+                                .detach();
+                                cx.notify()
+                            })),
+                    ),
+            )
+    }
+}

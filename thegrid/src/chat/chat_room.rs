@@ -1,10 +1,12 @@
 mod attachments_view;
 mod chat_bar;
 pub mod open_room;
+mod room_settings;
 mod user_action_dialogs;
 
 use crate::chat::chat_room::attachments_view::AttachmentsView;
 use crate::chat::chat_room::open_room::OpenRoom;
+use crate::chat::chat_room::room_settings::RoomSettings;
 use crate::chat::chat_room::user_action_dialogs::UserActionDialogs;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::timeline_event::author_flyout::{AuthorFlyoutUserActionEvent, UserAction};
@@ -12,11 +14,15 @@ use crate::chat::timeline_event::queued_event::QueuedEvent;
 use crate::chat::timeline_event::room_head::room_head;
 use crate::chat::timeline_event::timeline_event;
 use cntp_i18n::tr;
+use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
+use contemporary::components::icon::icon;
+use contemporary::components::pager::lift_animation::LiftAnimation;
+use contemporary::components::pager::pager;
 use contemporary::components::spinner::spinner;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, Context, Entity, ExternalPaths, InteractiveElement, IntoElement,
+    AnimationExt, App, AppContext, Context, Entity, ExternalPaths, InteractiveElement, IntoElement,
     ListAlignment, ListOffset, ListScrollEvent, ListState, ParentElement, Render,
     StatefulInteractiveElement, Styled, Window, div, list, px,
 };
@@ -28,8 +34,10 @@ use thegrid::tokio_helper::TokioHelper;
 
 pub struct ChatRoom {
     open_room: Entity<OpenRoom>,
+    room_settings: Entity<RoomSettings>,
     user_action_dialogs: Entity<UserActionDialogs>,
     pub list_state: ListState,
+    show_settings: bool,
 }
 
 impl ChatRoom {
@@ -53,10 +61,18 @@ impl ChatRoom {
                 },
             ));
 
+            let back_click = cx.listener(|this, _, _, cx| {
+                this.show_settings = false;
+                cx.notify();
+            });
+            let room_settings = cx.new(|cx| RoomSettings::new(open_room.clone(), back_click, cx));
+
             Self {
                 open_room,
                 user_action_dialogs,
                 list_state,
+                room_settings,
+                show_settings: false,
             }
         })
     }
@@ -122,108 +138,131 @@ impl Render for ChatRoom {
         let chat_bar = open_room.chat_bar.clone();
 
         div()
-            .flex()
-            .flex_col()
             .size_full()
             .child(
-                grandstand("main-area-grandstand")
-                    .text(
-                        room.cached_display_name()
-                            .map(|name| name.to_string())
-                            .or_else(|| room.name())
-                            .unwrap_or_default(),
-                    )
-                    .pt(px(36.)),
-            )
-            .child(
-                div()
-                    .flex_grow()
-                    .child(
-                        list(
-                            self.list_state.clone(),
-                            cx.processor(move |this, i, _, cx| {
-                                let trigger_user_action_listener =
-                                    cx.listener(Self::trigger_user_action);
-                                this.open_room.update(cx, |open_room, cx| {
-                                    if i == 0 {
-                                        match pagination_status {
-                                            RoomPaginationStatus::Idle { hit_timeline_start } => {
-                                                if hit_timeline_start {
-                                                    room_head(room_id.clone()).into_any_element()
-                                                } else {
-                                                    div().child("Not Paginating").into_any_element()
-                                                }
-                                            }
-                                            RoomPaginationStatus::Paginating => div()
-                                                .w_full()
-                                                .flex()
-                                                .py(px(12.))
-                                                .items_center()
-                                                .justify_center()
-                                                .child(spinner())
-                                                .into_any_element(),
-                                        }
-                                    } else if i < events.len() + 1 {
-                                        let event: &TimelineEvent = &events[i - 1];
-                                        let event = event.clone();
-                                        let previous_event = if i == 1 {
-                                            None
-                                        } else {
-                                            events.get(i - 2).cloned()
-                                        };
-
-                                        let event_cache = open_room.event_cache.clone().unwrap();
-
-                                        timeline_event(
-                                            event,
-                                            previous_event,
-                                            event_cache,
-                                            room_clone.clone(),
-                                            trigger_user_action_listener,
-                                        )
-                                        .into_any_element()
-                                    } else {
-                                        let event: &Entity<QueuedEvent> =
-                                            &open_room.queued[i - events.len() - 1];
-                                        let previous_event = if i == 1 {
-                                            None
-                                        } else {
-                                            events.get(i - 2).cloned()
-                                        };
-
-                                        event.update(cx, |event, cx| {
-                                            event.previous_event = previous_event;
-                                        });
-
-                                        event.clone().into_any_element()
-                                    }
-                                })
-                            }),
-                        )
-                        .flex()
-                        .flex_col()
-                        .h_full(),
-                    )
-                    .when(!pending_attachments.is_empty(), |david| {
-                        david.child(AttachmentsView {
-                            open_room: self.open_room.clone(),
-                        })
-                    }),
-            )
-            .child(chat_bar)
-            .child(
-                div()
-                    .absolute()
-                    .left_0()
-                    .top_0()
+                pager("chat-room-pager", if self.show_settings { 1 } else { 0 })
+                    .animation(LiftAnimation::new())
                     .size_full()
-                    .on_drop(cx.listener(|this, event: &ExternalPaths, _, cx| {
-                        this.open_room.update(cx, |open_room, cx| {
-                            for path in event.paths() {
-                                open_room.attach_from_disk(path.clone(), cx);
-                            }
-                        });
-                    })),
+                    .page(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .size_full()
+                            .child(
+                                grandstand("main-area-grandstand")
+                                    .text(
+                                        room.cached_display_name()
+                                            .map(|name| name.to_string())
+                                            .or_else(|| room.name())
+                                            .unwrap_or_default(),
+                                    )
+                                    .pt(px(36.))
+                                    .child(
+                                        button("room-settings-button")
+                                            .flat()
+                                            .child(icon("configure".into()))
+                                            .on_click(cx.listener(|this, _, _, cx| {
+                                                this.show_settings = true;
+                                                cx.notify()
+                                            })),
+                                    ),
+                            )
+                            .child(
+                                div()
+                                    .flex_grow()
+                                    .child(
+                                        list(
+                                            self.list_state.clone(),
+                                            cx.processor(move |this, i, _, cx| {
+                                                let trigger_user_action_listener =
+                                                    cx.listener(Self::trigger_user_action);
+                                                this.open_room.update(cx, |open_room, cx| {
+                                                    if i == 0 {
+                                                        match pagination_status {
+                                                            RoomPaginationStatus::Idle {
+                                                                hit_timeline_start,
+                                                            } => {
+                                                                if hit_timeline_start {
+                                                                    room_head(room_id.clone())
+                                                                        .into_any_element()
+                                                                } else {
+                                                                    div()
+                                                                        .child("Not Paginating")
+                                                                        .into_any_element()
+                                                                }
+                                                            }
+                                                            RoomPaginationStatus::Paginating => {
+                                                                div()
+                                                                    .w_full()
+                                                                    .flex()
+                                                                    .py(px(12.))
+                                                                    .items_center()
+                                                                    .justify_center()
+                                                                    .child(spinner())
+                                                                    .into_any_element()
+                                                            }
+                                                        }
+                                                    } else if i < events.len() + 1 {
+                                                        let event: &TimelineEvent = &events[i - 1];
+                                                        let event = event.clone();
+                                                        let previous_event = if i == 1 {
+                                                            None
+                                                        } else {
+                                                            events.get(i - 2).cloned()
+                                                        };
+
+                                                        let event_cache =
+                                                            open_room.event_cache.clone().unwrap();
+
+                                                        timeline_event(
+                                                            event,
+                                                            previous_event,
+                                                            event_cache,
+                                                            room_clone.clone(),
+                                                            trigger_user_action_listener,
+                                                        )
+                                                        .into_any_element()
+                                                    } else {
+                                                        let event: &Entity<QueuedEvent> =
+                                                            &open_room.queued[i - events.len() - 1];
+                                                        let previous_event = if i == 1 {
+                                                            None
+                                                        } else {
+                                                            events.get(i - 2).cloned()
+                                                        };
+
+                                                        event.update(cx, |event, cx| {
+                                                            event.previous_event = previous_event;
+                                                        });
+
+                                                        event.clone().into_any_element()
+                                                    }
+                                                })
+                                            }),
+                                        )
+                                        .flex()
+                                        .flex_col()
+                                        .h_full(),
+                                    )
+                                    .when(!pending_attachments.is_empty(), |david| {
+                                        david.child(AttachmentsView {
+                                            open_room: self.open_room.clone(),
+                                        })
+                                    }),
+                            )
+                            .child(chat_bar)
+                            .child(div().absolute().left_0().top_0().size_full().on_drop(
+                                cx.listener(|this, event: &ExternalPaths, _, cx| {
+                                    this.open_room.update(cx, |open_room, cx| {
+                                        for path in event.paths() {
+                                            open_room.attach_from_disk(path.clone(), cx);
+                                        }
+                                    });
+                                }),
+                            ))
+                            .into_any_element(),
+                    )
+                    .page(self.room_settings.clone().into_any_element()),
             )
             .child(self.user_action_dialogs.clone())
     }

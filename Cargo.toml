@@ -1,10 +1,10 @@
 [workspace]
 resolver = "3"
-members = ["thegrid", "thegrid_text_rendering"]
+members = ["gpui_tokio", "thegrid", "thegrid_text_rendering"]
 
 [workspace.dependencies]
-gpui = { git = "https://github.com/zed-industries/zed" }
-gpui_tokio = { git = "https://github.com/zed-industries/zed" }
+gpui = "*"
+gpui_tokio = { path = "gpui_tokio" }
 smol = "2"
 smol-macros = "0.1"
 contemporary = { git = "https://github.com/vicr123/contemporary-rs" }
@@ -28,3 +28,4 @@ emojis = "0.7"
 directories = "6"
 imbl = "5"
 mime2ext = "0.1"
+anyhow = "1"

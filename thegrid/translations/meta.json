@@ -1019,6 +1019,24 @@
     "plural": false,
     "description": null
   },
+  "ROOM_CHANGE_NAME": {
+    "context": "room_settings.rs",
+    "definedIn": "src/chat/chat_room/room_settings.rs:120",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_CHANGE_NAME_DESCRIPTION": {
+    "context": "room_settings.rs",
+    "definedIn": "src/chat/chat_room/room_settings.rs:151",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_CHANGE_PICTURE": {
+    "context": "room_settings.rs",
+    "definedIn": "src/chat/chat_room/room_settings.rs:130",
+    "plural": false,
+    "description": null
+  },
   "ROOM_COPY_LINK": {
     "context": "standard_room_element.rs",
     "definedIn": "src/chat/sidebar/standard_room_element.rs:76",
@@ -1055,6 +1073,12 @@
     "plural": false,
     "description": null
   },
+  "ROOM_NAME_PLACEHOLDER": {
+    "context": "room_settings.rs",
+    "definedIn": "src/chat/chat_room/room_settings.rs:45",
+    "plural": false,
+    "description": null
+  },
   "ROOM_NOTIFICATIONS": {
     "context": "standard_room_element.rs",
     "definedIn": "src/chat/sidebar/standard_room_element.rs:65",
@@ -1062,8 +1086,8 @@
     "description": null
   },
   "ROOM_SETTINGS": {
-    "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:134",
+    "context": "room_settings.rs",
+    "definedIn": "src/chat/chat_room/room_settings.rs:71",
     "plural": false,
     "description": null
   },
@@ -1148,6 +1172,12 @@
   "ROOM_TYPE_SPACE": {
     "context": "join_room.rs",
     "definedIn": "src/chat/join_room.rs:244",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_VIEW_MEMBERS": {
+    "context": "room_settings.rs",
+    "definedIn": "src/chat/chat_room/room_settings.rs:134",
     "plural": false,
     "description": null
   },
@@ -1327,7 +1357,7 @@
   },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:102",
+    "definedIn": "src/chat/chat_room.rs:118",
     "plural": false,
     "description": null
   },
