@@ -1,6 +1,6 @@
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::mxc_image::{SizePolicy, mxc_image};
-use cntp_i18n::tr;
+use cntp_i18n::{tr, trn};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::context_menu::ContextMenuItem;
@@ -107,17 +107,19 @@ impl RoomSettings {
 
     pub fn toggle_room_publish_to_directory(&mut self, cx: &mut Context<Self>) {
         let was_published = self.published_to_directory;
-        
+
         let room = self.open_room.read(cx).room.clone().unwrap();
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
             if cx
-                .spawn_tokio(
-                    async move { room.privacy_settings().update_room_visibility(if was_published {
-                        Visibility::Private
-                    } else {
-                        Visibility::Public
-                    }).await },
-                )
+                .spawn_tokio(async move {
+                    room.privacy_settings()
+                        .update_room_visibility(if was_published {
+                            Visibility::Private
+                        } else {
+                            Visibility::Public
+                        })
+                        .await
+                })
                 .await
                 .is_err()
             {
@@ -128,8 +130,8 @@ impl RoomSettings {
                 });
             }
         })
-            .detach();
-        
+        .detach();
+
         self.published_to_directory = !self.published_to_directory;
         cx.notify()
     }
@@ -178,12 +180,44 @@ impl Render for RoomSettings {
                                     .size_policy(SizePolicy::Fit),
                             )
                             .child(
-                                div().flex().flex_col().justify_center().gap(px(4.)).child(
-                                    room.cached_display_name()
-                                        .map(|name| name.to_string())
-                                        .or_else(|| room.name())
-                                        .unwrap_or_default(),
-                                ),
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .justify_center()
+                                    .gap(px(4.))
+                                    .child(
+                                        room.cached_display_name()
+                                            .map(|name| name.to_string())
+                                            .or_else(|| room.name())
+                                            .unwrap_or_default(),
+                                    )
+                                    .child(div().flex().when_else(
+                                        room.encryption_state().is_encrypted(),
+                                        |david| {
+                                            david.child(
+                                                div()
+                                                    .rounded(theme.border_radius)
+                                                    .bg(theme.info_accent_color)
+                                                    .p(px(2.))
+                                                    .child(tr!(
+                                                        "ROOM_ENCRYPTION_BADGE",
+                                                        "Encrypted",
+                                                    )),
+                                            )
+                                        },
+                                        |david| {
+                                            david.child(
+                                                div()
+                                                    .rounded(theme.border_radius)
+                                                    .bg(theme.warning_accent_color)
+                                                    .p(px(2.))
+                                                    .child(tr!(
+                                                        "ROOM_NO_ENCRYPTION_BADGE",
+                                                        "Not Encrypted",
+                                                    )),
+                                            )
+                                        },
+                                    )),
                             ),
                     )
                     .child(
@@ -218,33 +252,9 @@ impl Render for RoomSettings {
                                     .child(button("room-view-members").child(icon_text(
                                         "user".into(),
                                         tr!("ROOM_VIEW_MEMBERS", "Manage Room Members").into(),
-                                    ))),
-                            ),
-                    )
-                    .child(
-                        layer()
-                            .flex()
-                            .flex_col()
-                            .p(px(8.))
-                            .w_full()
-                            .child(subtitle(tr!("ROOM_ENCRYPTION", "Room Encryption")))
-                            .when_else(
-                                room.encryption_state().is_encrypted(),
-                                |david| {
-                                    david.child(tr!(
-                                        "ROOM_ENCRYPTION_ENABLED_TEXT",
-                                        "Room encryption is enabled. Messages in this room cannot \
-                                        be seen by anyone else - not even the homeserver \
-                                        administrators."
-                                    ))
-                                },
-                                |david| {
-                                    david
-                                        .child(tr!(
-                                            "ROOM_ENCRYPTION_DISABLED_TEXT",
-                                            "Room encryption is disabled."
-                                        ))
-                                        .child(
+                                    )))
+                                    .when(!room.encryption_state().is_encrypted(), |david| {
+                                        david.child(
                                             button("room-encryption-enable")
                                                 .child(tr!(
                                                     "ROOM_ENCRYPTION_ENABLE",
@@ -255,7 +265,7 @@ impl Render for RoomSettings {
                                                     cx.notify();
                                                 })),
                                         )
-                                },
+                                    }),
                             ),
                     )
                     .child(
