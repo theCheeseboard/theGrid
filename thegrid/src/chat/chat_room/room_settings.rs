@@ -3,11 +3,14 @@ use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
+use contemporary::components::context_menu::ContextMenuItem;
 use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::grandstand::grandstand;
+use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::subtitle::subtitle;
+use contemporary::components::switch::switch;
 use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
@@ -15,6 +18,8 @@ use gpui::{
     App, AsyncApp, ClickEvent, Context, Entity, IntoElement, ParentElement, Render, Styled,
     WeakEntity, Window, div, px,
 };
+use matrix_sdk::ruma::api::client::room::Visibility;
+use matrix_sdk::ruma::room::JoinRule;
 use matrix_sdk::{EncryptionState, RoomInfo};
 use std::rc::Rc;
 use thegrid::session::session_manager::SessionManager;
@@ -27,6 +32,7 @@ pub struct RoomSettings {
     new_name_text_field: Entity<TextField>,
     enable_encryption_open: bool,
     busy: bool,
+    published_to_directory: bool,
 }
 
 impl RoomSettings {
@@ -35,6 +41,27 @@ impl RoomSettings {
         on_back_click: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
         cx: &mut Context<RoomSettings>,
     ) -> Self {
+        cx.observe(&open_room, |this, open_room, cx| {
+            if let Some(room) = open_room.read(cx).room.as_ref() {
+                let room = room.clone();
+                cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                    let room_visibility = cx
+                        .spawn_tokio(
+                            async move { room.privacy_settings().get_room_visibility().await },
+                        )
+                        .await;
+
+                    if let Ok(room_visibility) = room_visibility {
+                        let _ = this.update(cx, |this, cx| {
+                            this.published_to_directory = room_visibility == Visibility::Public;
+                        });
+                    }
+                })
+                .detach();
+            }
+        })
+        .detach();
+
         Self {
             open_room,
             on_back_click: Rc::new(Box::new(on_back_click)),
@@ -49,7 +76,62 @@ impl RoomSettings {
             edit_room_name_open: false,
             enable_encryption_open: false,
             busy: false,
+            published_to_directory: false,
         }
+    }
+
+    pub fn set_room_join_rule(&mut self, join_rule: JoinRule, cx: &mut Context<Self>) {
+        let room = self.open_room.read(cx).room.clone().unwrap();
+        cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
+            if cx
+                .spawn_tokio(
+                    async move { room.privacy_settings().update_join_rule(join_rule).await },
+                )
+                .await
+                .is_err()
+            {
+                this.update(cx, |this, cx| {
+                    // TODO: Show the error
+                    this.busy = false;
+                    cx.notify()
+                })
+            } else {
+                this.update(cx, |this, cx| {
+                    this.busy = false;
+                    cx.notify()
+                })
+            }
+        })
+        .detach();
+    }
+
+    pub fn toggle_room_publish_to_directory(&mut self, cx: &mut Context<Self>) {
+        let was_published = self.published_to_directory;
+        
+        let room = self.open_room.read(cx).room.clone().unwrap();
+        cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
+            if cx
+                .spawn_tokio(
+                    async move { room.privacy_settings().update_room_visibility(if was_published {
+                        Visibility::Private
+                    } else {
+                        Visibility::Public
+                    }).await },
+                )
+                .await
+                .is_err()
+            {
+                let _ = this.update(cx, |this, cx| {
+                    // TODO: Show the error
+                    this.published_to_directory = was_published;
+                    cx.notify()
+                });
+            }
+        })
+            .detach();
+        
+        self.published_to_directory = !self.published_to_directory;
+        cx.notify()
     }
 }
 
@@ -175,6 +257,109 @@ impl Render for RoomSettings {
                                         )
                                 },
                             ),
+                    )
+                    .child(
+                        layer()
+                            .flex()
+                            .flex_col()
+                            .p(px(8.))
+                            .w_full()
+                            .child(subtitle(tr!(
+                                "ROOM_ACCESS_VISIBILITY",
+                                "Access and Visibility"
+                            )))
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap(px(2.))
+                                    .child(
+                                        layer()
+                                            .p(px(4.))
+                                            .gap(px(4.))
+                                            .items_center()
+                                            .flex()
+                                            .child(tr!("ROOM_ACCESS", "Room Access"))
+                                            .child(div().flex_grow())
+                                            .child(match room.join_rule() {
+                                                Some(JoinRule::Public) => {
+                                                    tr!("ROOM_ACCESS_PUBLIC", "Public")
+                                                }
+                                                Some(JoinRule::Knock) => {
+                                                    tr!(
+                                                        "ROOM_ACCESS_KNOCK_INVITE",
+                                                        "Knock & Invite"
+                                                    )
+                                                }
+                                                Some(JoinRule::Invite) => {
+                                                    tr!("ROOM_ACCESS_INVITE_ONLY", "Invite Only")
+                                                }
+                                                _ => {
+                                                    tr!("ROOM_ACCESS_UNKNOWN", "Unknown")
+                                                }
+                                            })
+                                            .child(
+                                                button("change-room-access")
+                                                    .child(icon("arrow-down".into()))
+                                                    .with_menu(vec![
+                                                        ContextMenuItem::menu_item()
+                                                            .label(tr!("ROOM_ACCESS_INVITE_ONLY"))
+                                                            .on_triggered(cx.listener(
+                                                                |this, _, _, cx| {
+                                                                    this.set_room_join_rule(
+                                                                        JoinRule::Invite,
+                                                                        cx,
+                                                                    )
+                                                                },
+                                                            ))
+                                                            .build(),
+                                                        ContextMenuItem::menu_item()
+                                                            .label(tr!("ROOM_ACCESS_KNOCK_INVITE"))
+                                                            .on_triggered(cx.listener(
+                                                                |this, _, _, cx| {
+                                                                    this.set_room_join_rule(
+                                                                        JoinRule::Knock,
+                                                                        cx,
+                                                                    )
+                                                                },
+                                                            ))
+                                                            .build(),
+                                                        ContextMenuItem::menu_item()
+                                                            .label(tr!("ROOM_ACCESS_PUBLIC"))
+                                                            .on_triggered(cx.listener(
+                                                                |this, _, _, cx| {
+                                                                    this.set_room_join_rule(
+                                                                        JoinRule::Public,
+                                                                        cx,
+                                                                    )
+                                                                },
+                                                            ))
+                                                            .build(),
+                                                    ]),
+                                            ),
+                                    )
+                                    .child(
+                                        layer()
+                                            .p(px(4.))
+                                            .gap(px(4.))
+                                            .items_center()
+                                            .flex()
+                                            .child(tr!(
+                                                "ROOM_PUBLISH_TO_DIRECTORY",
+                                                "Publish to Server Directory"
+                                            ))
+                                            .child(div().flex_grow())
+                                            .child(
+                                                switch("publish-to-server-directory")
+                                                    .when(self.published_to_directory, |david| {
+                                                        david.checked()
+                                                    })
+                                                    .on_change(cx.listener(|this, _, _, cx| {
+                                                        this.toggle_room_publish_to_directory(cx);
+                                                    })),
+                                            ),
+                                    ),
+                            ),
                     ),
             )
             .child(
@@ -244,16 +429,14 @@ impl Render for RoomSettings {
                     .visible(self.enable_encryption_open)
                     .processing(self.busy)
                     .title(tr!("ROOM_ENCRYPTION_ENABLE").into())
-                    .content(
-                        tr!(
-                            "ROOM_ENCRYPTION_ENABLE_DESCRIPTION",
-                            "By enabling encryption, you will prevent anyone joining the room \
+                    .content(tr!(
+                        "ROOM_ENCRYPTION_ENABLE_DESCRIPTION",
+                        "By enabling encryption, you will prevent anyone joining the room \
                             from being able to read message history. If there are any bots or \
                             services in this room, they may also stop working.\n\n\
                             Once enabled, encryption cannot be turned off.\n\n\
                             Do you want to enable encryption for this room?"
-                        ),
-                    )
+                    ))
                     .standard_button(
                         StandardButton::Cancel,
                         cx.listener(|this, _, _, cx| {
