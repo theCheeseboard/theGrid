@@ -4,7 +4,6 @@ use crate::chat::chat_room::chat_bar::ChatBar;
 use crate::chat::chat_room::timeline::Timeline;
 use crate::chat::chat_room::user_action_dialogs::UserActionDialogs;
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::timeline_event::queued_event::QueuedEvent;
 use cntp_i18n::tr;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
@@ -40,10 +39,6 @@ pub struct OpenRoom {
     pub typing_users: Vec<RoomMember>,
     pub chat_input: Entity<ChatInput>,
     pub room_id: OwnedRoomId,
-    pub events: Vec<TimelineEvent>,
-    pub queued: Vec<Entity<QueuedEvent>>,
-    pub event_cache: Option<Entity<RoomEventCache>>,
-    pub pagination_status: RoomPaginationStatus,
     pub chat_bar: Entity<ChatBar>,
     pub timeline: Option<Entity<Timeline>>,
 }
@@ -85,13 +80,7 @@ impl OpenRoom {
         let mut self_return = Self {
             room: None,
             room_id: room_id.clone(),
-            events: Vec::new(),
-            pagination_status: RoomPaginationStatus::Idle {
-                hit_timeline_start: false,
-            },
             displayed_room,
-            event_cache: None,
-            queued: Vec::new(),
             pending_attachments: Vec::new(),
             chat_bar,
             current_user: None,
@@ -106,8 +95,6 @@ impl OpenRoom {
         self_return.room = Some(room.clone());
 
         self_return.setup_acquire_own_user(cx);
-        self_return.setup_event_cache(cx);
-        self_return.setup_send_queue(cx);
 
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
@@ -125,34 +112,6 @@ impl OpenRoom {
         .detach();
 
         self_return
-    }
-
-    pub fn send_read_receipt(&mut self, cx: &mut Context<Self>) {
-        let room_id = self.room_id.clone();
-        let session_manager = cx.global::<SessionManager>();
-        let client = session_manager.client().unwrap().read(cx);
-        let room = client.get_room(&room_id).unwrap();
-
-        let Some(latest_event) = self.events.last() else {
-            return;
-        };
-        let Some(latest_event_id) = latest_event.event_id() else {
-            return;
-        };
-
-        cx.spawn(async move |_, cx: &mut AsyncApp| {
-            let _ = cx
-                .spawn_tokio(async move {
-                    room.send_single_receipt(
-                        ReceiptType::Read,
-                        ReceiptThread::Unthreaded,
-                        latest_event_id,
-                    )
-                    .await
-                })
-                .await;
-        })
-        .detach();
     }
 
     fn setup_acquire_own_user(&mut self, cx: &mut Context<Self>) {
@@ -174,215 +133,6 @@ impl OpenRoom {
                 }
             },
         )
-        .detach();
-    }
-
-    fn setup_event_cache(&mut self, cx: &mut Context<Self>) {
-        let room = self.room.clone().unwrap();
-        cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
-            let event_cache = cx
-                .spawn_tokio(async move { room.event_cache().await })
-                .await;
-
-            if let Ok((event_cache, _)) = event_cache {
-                if this
-                    .update(cx, |this, cx| {
-                        let event_cache_entity = cx.new(|_| event_cache.clone());
-                        this.event_cache = Some(event_cache_entity)
-                    })
-                    .is_err()
-                {
-                    return;
-                }
-
-                let event_cache_clone = event_cache.clone();
-                cx.spawn(async move |cx: &mut AsyncApp| {
-                    cx.spawn_tokio(async move {
-                        event_cache_clone
-                            .pagination()
-                            .run_backwards_until(100)
-                            .await
-                    })
-                    .await
-                })
-                .detach();
-
-                let event_cache_clone = event_cache.clone();
-                let this_clone = this.clone();
-                cx.spawn(async move |cx: &mut AsyncApp| {
-                    loop {
-                        let event_cache_clone = event_cache_clone.clone();
-                        let Ok(room_pagination_status) = cx
-                            .spawn_tokio(async move {
-                                event_cache_clone
-                                    .pagination()
-                                    .status()
-                                    .next()
-                                    .await
-                                    .ok_or(TheGridError::new("Event Cache Closed"))
-                            })
-                            .await
-                        else {
-                            TheGridError::new("Event Cache Closed");
-                            return;
-                        };
-
-                        if this_clone
-                            .update(cx, |this, cx| {
-                                this.pagination_status = room_pagination_status;
-                            })
-                            .is_err()
-                        {
-                            return;
-                        }
-                    }
-                })
-                .detach();
-
-                let (events, mut subscriber) = event_cache.subscribe().await;
-
-                if this
-                    .update(cx, |this, cx| {
-                        this.events = events;
-                        cx.notify();
-                    })
-                    .is_err()
-                {
-                    return;
-                };
-
-                loop {
-                    subscriber.recv().await.unwrap();
-                    let events = event_cache.events().await;
-                    if this
-                        .update(cx, |this, cx| {
-                            this.events = events;
-                            cx.notify();
-                        })
-                        .is_err()
-                    {
-                        info!("Event cache closed");
-                        return;
-                    };
-                }
-            } else {
-                error!("Unable to get event cache for room")
-            }
-        })
-        .detach();
-    }
-
-    fn setup_send_queue(&mut self, cx: &mut Context<Self>) {
-        let room_clone = self.room.clone().unwrap();
-        cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
-            let room = room_clone.clone();
-            let send_queue = room.send_queue();
-            let Ok((queue, mut rx)) = cx
-                .spawn_tokio(async move { send_queue.subscribe().await })
-                .await
-            else {
-                return;
-            };
-
-            let room = room_clone.clone();
-            let _ = this.update(cx, |this, cx| {
-                let this_entity = cx.entity();
-                this.queued = queue
-                    .into_iter()
-                    .map(|event| cx.new(|cx| QueuedEvent::new(event, this_entity.clone(), cx)))
-                    .collect();
-                cx.notify();
-            });
-
-            let room = room_clone.clone();
-            loop {
-                let Ok(update) = rx.recv().await else {
-                    return;
-                };
-
-                if this
-                    .update(cx, |this, cx| {
-                        let this_entity = cx.entity();
-                        match update {
-                            RoomSendQueueUpdate::NewLocalEvent(event) => this
-                                .queued
-                                .push(cx.new(|cx| QueuedEvent::new(event, this_entity, cx))),
-                            RoomSendQueueUpdate::CancelledLocalEvent { transaction_id } => {
-                                this.queued.retain(|event| {
-                                    event.read(cx).transaction_id() != transaction_id
-                                });
-                            }
-                            RoomSendQueueUpdate::ReplacedLocalEvent {
-                                transaction_id,
-                                new_content,
-                            } => {
-                                for queue_item in &this.queued {
-                                    if queue_item.read(cx).transaction_id() == transaction_id {
-                                        queue_item.update(cx, |queue_item, cx| {
-                                            queue_item.notify_content_replaced(new_content, cx);
-                                        });
-                                        return;
-                                    }
-                                }
-                            }
-                            RoomSendQueueUpdate::SendError {
-                                transaction_id,
-                                is_recoverable,
-                                ..
-                            } => {
-                                for queue_item in &this.queued {
-                                    if queue_item.read(cx).transaction_id() == transaction_id {
-                                        queue_item.update(cx, |queue_item, cx| {
-                                            queue_item.notify_send_error(is_recoverable, cx);
-                                        });
-                                        return;
-                                    }
-                                }
-                            }
-                            RoomSendQueueUpdate::RetryEvent { transaction_id } => {
-                                for queue_item in &this.queued {
-                                    if queue_item.read(cx).transaction_id() == transaction_id {
-                                        queue_item.update(cx, |queue_item, cx| {
-                                            queue_item.notify_unwedged(cx);
-                                            cx.notify()
-                                        });
-                                        return;
-                                    }
-                                }
-                            }
-                            RoomSendQueueUpdate::SentEvent {
-                                transaction_id,
-                                event_id,
-                            } => {
-                                this.queued.retain(|event| {
-                                    event.read(cx).transaction_id() != transaction_id
-                                });
-                            }
-                            RoomSendQueueUpdate::MediaUpload {
-                                related_to,
-                                file,
-                                index,
-                                progress,
-                            } => {
-                                for queue_item in &this.queued {
-                                    if queue_item.read(cx).transaction_id() == related_to {
-                                        queue_item.update(cx, |queue_item, cx| {
-                                            queue_item
-                                                .notify_upload_progress(file, index, progress, cx);
-                                            cx.notify()
-                                        });
-                                        return;
-                                    }
-                                }
-                            }
-                        }
-                    })
-                    .is_err()
-                {
-                    return;
-                }
-            }
-        })
         .detach();
     }
 
@@ -513,21 +263,23 @@ impl OpenRoom {
             } else {
                 Some(RoomMessageEventContent::text_plain(message.to_string()))
             };
-            
+
             cx.spawn(async move |_, cx: &mut AsyncApp| {
                 for attachment in attachments.into_iter() {
                     if let Ok(data) = attachment.data {
                         let timeline = timeline.clone();
                         let _ = cx
                             .spawn_tokio(async move {
-                                timeline.send_attachment(
-                                    AttachmentSource::Data {
-                                        filename: attachment.filename,
-                                        bytes: data
-                                    },
-                                    attachment.mime_type.parse().unwrap(),
-                                    AttachmentConfig::default(),
-                                ).await
+                                timeline
+                                    .send_attachment(
+                                        AttachmentSource::Data {
+                                            filename: attachment.filename,
+                                            bytes: data,
+                                        },
+                                        attachment.mime_type.parse().unwrap(),
+                                        AttachmentConfig::default(),
+                                    )
+                                    .await
                             })
                             .await;
                     }

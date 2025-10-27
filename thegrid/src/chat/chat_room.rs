@@ -13,35 +13,27 @@ use crate::chat::chat_room::room_settings::RoomSettings;
 use crate::chat::chat_room::timeline_view::TimelineView;
 use crate::chat::chat_room::user_action_dialogs::UserActionDialogs;
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::timeline_event::author_flyout::{AuthorFlyoutUserActionEvent, UserAction};
-use crate::chat::timeline_event::queued_event::QueuedEvent;
-use crate::chat::timeline_event::timeline_event;
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
-use contemporary::components::spinner::spinner;
 use gpui::prelude::FluentBuilder;
 use gpui::{
     AnimationExt, App, AppContext, Context, Entity, ExternalPaths, InteractiveElement, IntoElement,
-    ListAlignment, ListOffset, ListScrollEvent, ListState, ParentElement, Render,
-    StatefulInteractiveElement, Styled, Window, div, list, px, rgb,
+    ParentElement, Render, StatefulInteractiveElement, Styled, Window, div, px,
 };
-use matrix_sdk::deserialized_responses::TimelineEvent;
-use matrix_sdk::event_cache::RoomPaginationStatus;
 use matrix_sdk::ruma::OwnedRoomId;
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
-use timeline_view::room_head::room_head;
+use timeline_view::author_flyout::{AuthorFlyoutUserActionEvent, UserAction};
 
 pub struct ChatRoom {
     open_room: Entity<OpenRoom>,
     room_settings: Entity<RoomSettings>,
     user_action_dialogs: Entity<UserActionDialogs>,
     timeline_view: Entity<TimelineView>,
-    pub list_state: ListState,
     show_settings: bool,
 }
 
@@ -55,18 +47,7 @@ impl ChatRoom {
             let open_room = cx.new(|cx| OpenRoom::new(room_id.clone(), displayed_room, cx));
             let user_action_dialogs = cx.new(|cx| UserActionDialogs::new(room_id.clone(), cx));
 
-            let list_state = ListState::new(0, ListAlignment::Bottom, px(200.));
-            list_state.set_scroll_handler(cx.listener(
-                |this: &mut Self, event: &ListScrollEvent, _, cx| {
-                    this.open_room.update(cx, |open_room, cx| {
-                        if event.visible_range.end == open_room.events.len() {
-                            open_room.send_read_receipt(cx);
-                        }
-                    })
-                },
-            ));
-
-            let back_click = cx.listener(|this, _, _, cx| {
+            let back_click = cx.listener(|this: &mut ChatRoom, _, _, cx| {
                 this.show_settings = false;
                 cx.notify();
             });
@@ -78,7 +59,6 @@ impl ChatRoom {
             Self {
                 open_room,
                 user_action_dialogs,
-                list_state,
                 room_settings,
                 show_settings: false,
                 timeline_view,
@@ -130,17 +110,6 @@ impl Render for ChatRoom {
         };
 
         let room_clone = self.open_room.clone();
-        let events = open_room.events.clone();
-        let queued = &open_room.queued;
-        if events.len() + queued.len() + 1 != self.list_state.item_count() {
-            self.list_state.reset(events.len() + queued.len() + 1);
-            self.list_state.scroll_to(ListOffset {
-                item_ix: events.len() + 1,
-                offset_in_item: px(0.),
-            })
-        }
-
-        let pagination_status = open_room.pagination_status;
         let pending_attachments = &open_room.pending_attachments;
 
         let room_id = room.room_id().to_owned();

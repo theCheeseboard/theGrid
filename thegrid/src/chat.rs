@@ -5,4 +5,3 @@ mod displayed_room;
 mod join_room;
 mod main_chat_surface;
 mod sidebar;
-mod timeline_event;

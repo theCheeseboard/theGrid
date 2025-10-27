@@ -73,13 +73,13 @@
   },
   "ATTACH_PROMPT": {
     "context": "open_room.rs",
-    "definedIn": "src/chat/chat_room/open_room.rs:443",
+    "definedIn": "src/chat/chat_room/open_room.rs:193",
     "plural": false,
     "description": null
   },
   "AUTHOR_STATUS_POWER_LEVEL": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:162",
+    "definedIn": "src/chat/chat_room/timeline_view/author_flyout.rs:159",
     "plural": false,
     "description": null
   },
@@ -217,7 +217,7 @@
   },
   "BAN": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:296",
+    "definedIn": "src/chat/chat_room/timeline_view/author_flyout.rs:293",
     "plural": false,
     "description": null
   },
@@ -247,7 +247,7 @@
   },
   "CHANGE_POWER_LEVEL": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:205",
+    "definedIn": "src/chat/chat_room/timeline_view/author_flyout.rs:202",
     "plural": false,
     "description": null
   },
@@ -553,13 +553,13 @@
   },
   "INVITE_USER": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:240",
+    "definedIn": "src/chat/chat_room/timeline_view/author_flyout.rs:237",
     "plural": false,
     "description": null
   },
   "IN_ROOM": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:153",
+    "definedIn": "src/chat/chat_room/timeline_view/author_flyout.rs:150",
     "plural": false,
     "description": null
   },
@@ -727,7 +727,7 @@
   },
   "KICK": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:270",
+    "definedIn": "src/chat/chat_room/timeline_view/author_flyout.rs:267",
     "plural": false,
     "description": null
   },
@@ -827,12 +827,6 @@
     "plural": false,
     "description": null
   },
-  "MESSAGE_DECRYPTION_FAILURE": {
-    "context": "timeline_event.rs",
-    "definedIn": "src/chat/timeline_event.rs:97",
-    "plural": false,
-    "description": null
-  },
   "MESSAGE_UNSUPPORTED": {
     "context": "timeline_item.rs",
     "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:114",
@@ -913,7 +907,7 @@
   },
   "POWER_LEVEL_INFINITE": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:167",
+    "definedIn": "src/chat/chat_room/timeline_view/author_flyout.rs:164",
     "plural": false,
     "description": null
   },
@@ -1259,12 +1253,6 @@
     "plural": false,
     "description": null
   },
-  "ROOM_STATE_ROOM_NAME": {
-    "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:44",
-    "plural": false,
-    "description": null
-  },
   "ROOM_TOMBSTONED_NAVIGATE": {
     "context": "chat_bar.rs",
     "definedIn": "src/chat/chat_room/chat_bar.rs:67",
@@ -1477,7 +1465,7 @@
   },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:127",
+    "definedIn": "src/chat/chat_room.rs:107",
     "plural": false,
     "description": null
   },
@@ -1507,7 +1495,7 @@
   },
   "USER_BANNED_PROMPT": {
     "context": "author_flyout.rs",
-    "definedIn": "src/chat/timeline_event/author_flyout.rs:227",
+    "definedIn": "src/chat/chat_room/timeline_view/author_flyout.rs:224",
     "plural": false,
     "description": null
   },

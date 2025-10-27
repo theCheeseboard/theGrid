@@ -1,9 +1,6 @@
 use crate::chat::chat_room::open_room::OpenRoom;
-use crate::chat::timeline_event::room_message_event::CachedRoomMember;
-use crate::main_window::SurfaceChange;
 use crate::mxc_image::{SizePolicy, mxc_image};
-use cntp_i18n::{Quote, tr, trn};
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use cntp_i18n::{Quote, tr};
 use contemporary::components::button::button;
 use contemporary::components::flyout::flyout;
 use contemporary::components::icon_text::icon_text;

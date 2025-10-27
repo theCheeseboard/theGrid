@@ -1,3 +1,4 @@
+pub mod author_flyout;
 mod membership_change_item;
 pub mod room_head;
 mod state_change_element;
@@ -7,10 +8,10 @@ mod timeline_message_item;
 
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::timeline::Timeline;
-use crate::chat::chat_room::timeline_view::timeline_item::timeline_item;
-use crate::chat::timeline_event::author_flyout::{
+use crate::chat::chat_room::timeline_view::author_flyout::{
     AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener,
 };
+use crate::chat::chat_room::timeline_view::timeline_item::timeline_item;
 use gpui::{
     App, AsyncApp, Context, Element, ElementId, Entity, InteractiveElement, IntoElement,
     ListAlignment, ListOffset, ListScrollEvent, ListSizingBehavior, ListState, ParentElement,
@@ -49,12 +50,13 @@ impl TimelineView {
                     let Some(timeline_entity) = open_room.timeline.as_ref() else {
                         return;
                     };
-                    let timeline = timeline_entity.clone().read(cx).inner.clone();
-                    if event.visible_range.end == open_room.events.len() {
+                    let timeline = timeline_entity.read(cx);
+                    let timeline_inner = timeline_entity.clone().read(cx).inner.clone();
+                    if event.visible_range.end == timeline.timeline_items().len() {
                         cx.spawn(async move |_, cx: &mut AsyncApp| {
                             let _ = cx
                                 .spawn_tokio(async move {
-                                    timeline.mark_as_read(ReceiptType::Read).await
+                                    timeline_inner.mark_as_read(ReceiptType::Read).await
                                 })
                                 .await;
                         })
@@ -64,7 +66,7 @@ impl TimelineView {
                         this.pagination_pending = true;
                         cx.spawn(async move |_, cx: &mut AsyncApp| {
                             let _ = cx
-                                .spawn_tokio(async move { timeline.paginate_backwards(50).await })
+                                .spawn_tokio(async move { timeline_inner.paginate_backwards(50).await })
                                 .await;
                             this_entity.update(cx, |this, cx| {
                                 this.pagination_pending = false;
