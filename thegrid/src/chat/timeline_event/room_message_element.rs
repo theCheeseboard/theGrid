@@ -52,30 +52,12 @@ impl<T: gpui::IntoElement> RenderOnce for RoomMessageElement<T> {
                         .gap(px(8.))
                         .child(
                             div().flex().flex_col().min_w(px(40.)).m(px(2.)).child(
-                                div()
-                                    .id("author-image")
-                                    .cursor_pointer()
-                                    .child(
-                                        mxc_image(author.avatar())
-                                            .size(px(40.))
-                                            .size_policy(SizePolicy::Fit)
-                                            .rounded(theme.border_radius),
-                                    )
-                                    .with_anchorer(move |david, bounds| {
-                                        david.child(author_flyout(
-                                            bounds,
-                                            author_flyout_open,
-                                            author,
-                                            room,
-                                            move |_, _, cx| {
-                                                author_flyout_open_entity_2.write(cx, false);
-                                            },
-                                            self.on_user_action,
-                                        ))
-                                    })
-                                    .on_click(move |_, _, cx| {
-                                        author_flyout_open_entity.write(cx, true);
-                                    }),
+                                div().id("author-image").cursor_pointer().child(
+                                    mxc_image(author.avatar())
+                                        .size(px(40.))
+                                        .size_policy(SizePolicy::Fit)
+                                        .rounded(theme.border_radius),
+                                ),
                             ),
                         )
                         .child(

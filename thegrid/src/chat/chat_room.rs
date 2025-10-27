@@ -70,8 +70,10 @@ impl ChatRoom {
                 this.show_settings = false;
                 cx.notify();
             });
+            let trigger_user_action_listener = cx.listener(Self::trigger_user_action);
             let room_settings = cx.new(|cx| RoomSettings::new(open_room.clone(), back_click, cx));
-            let timeline_view = cx.new(|cx| TimelineView::new(open_room.clone(), cx));
+            let timeline_view =
+                cx.new(|cx| TimelineView::new(open_room.clone(), trigger_user_action_listener, cx));
 
             Self {
                 open_room,
@@ -186,84 +188,6 @@ impl Render for ChatRoom {
                                         })
                                     }),
                             )
-                            // .child(
-                            //     div()
-                            //         .flex_grow()
-                            //         .child(
-                            //             list(
-                            //                 self.list_state.clone(),
-                            //                 cx.processor(move |this, i, _, cx| {
-                            //                     let trigger_user_action_listener =
-                            //                         cx.listener(Self::trigger_user_action);
-                            //                     this.open_room.update(cx, |open_room, cx| {
-                            //                         if i == 0 {
-                            //                             match pagination_status {
-                            //                                 RoomPaginationStatus::Idle {
-                            //                                     hit_timeline_start,
-                            //                                 } => {
-                            //                                     if hit_timeline_start {
-                            //                                         room_head(room_id.clone())
-                            //                                             .into_any_element()
-                            //                                     } else {
-                            //                                         div()
-                            //                                             .child("Not Paginating")
-                            //                                             .into_any_element()
-                            //                                     }
-                            //                                 }
-                            //                                 RoomPaginationStatus::Paginating => {
-                            //                                     div()
-                            //                                         .w_full()
-                            //                                         .flex()
-                            //                                         .py(px(12.))
-                            //                                         .items_center()
-                            //                                         .justify_center()
-                            //                                         .child(spinner())
-                            //                                         .into_any_element()
-                            //                                 }
-                            //                             }
-                            //                         } else if i < events.len() + 1 {
-                            //                             let event: &TimelineEvent = &events[i - 1];
-                            //                             let event = event.clone();
-                            //                             let previous_event = if i == 1 {
-                            //                                 None
-                            //                             } else {
-                            //                                 events.get(i - 2).cloned()
-                            //                             };
-                            //
-                            //                             let event_cache =
-                            //                                 open_room.event_cache.clone().unwrap();
-                            //
-                            //                             timeline_event(
-                            //                                 event,
-                            //                                 previous_event,
-                            //                                 event_cache,
-                            //                                 room_clone.clone(),
-                            //                                 trigger_user_action_listener,
-                            //                             )
-                            //                             .into_any_element()
-                            //                         } else {
-                            //                             let event: &Entity<QueuedEvent> =
-                            //                                 &open_room.queued[i - events.len() - 1];
-                            //                             let previous_event = if i == 1 {
-                            //                                 None
-                            //                             } else {
-                            //                                 events.get(i - 2).cloned()
-                            //                             };
-                            //
-                            //                             event.update(cx, |event, cx| {
-                            //                                 event.previous_event = previous_event;
-                            //                             });
-                            //
-                            //                             event.clone().into_any_element()
-                            //                         }
-                            //                     })
-                            //                 }),
-                            //             )
-                            //             .flex()
-                            //             .flex_col()
-                            //             .h_full(),
-                            //         )
-                            // )
                             .child(chat_bar)
                             .child(div().absolute().left_0().top_0().size_full().on_drop(
                                 cx.listener(|this, event: &ExternalPaths, _, cx| {

@@ -1,28 +1,40 @@
 mod membership_change_item;
 pub mod room_head;
+mod state_change_element;
+mod state_event_item;
 mod timeline_item;
 mod timeline_message_item;
 
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::timeline::Timeline;
 use crate::chat::chat_room::timeline_view::timeline_item::timeline_item;
+use crate::chat::timeline_event::author_flyout::{
+    AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener,
+};
 use gpui::{
-    AsyncApp, Context, Element, ElementId, Entity, InteractiveElement, IntoElement, ListAlignment,
-    ListOffset, ListScrollEvent, ListSizingBehavior, ListState, ParentElement, Render, Styled,
-    Window, div, list, px, rgb,
+    App, AsyncApp, Context, Element, ElementId, Entity, InteractiveElement, IntoElement,
+    ListAlignment, ListOffset, ListScrollEvent, ListSizingBehavior, ListState, ParentElement,
+    Render, Styled, Window, div, list, px, rgb,
 };
 use image::open;
 use log::info;
+use matrix_sdk::ruma::api::client::receipt::create_receipt::v3::ReceiptType;
+use std::rc::Rc;
 use thegrid::tokio_helper::TokioHelper;
 
 pub struct TimelineView {
     open_room: Entity<OpenRoom>,
     list_state: ListState,
     pagination_pending: bool,
+    on_user_action: Box<AuthorFlyoutUserActionListener>,
 }
 
 impl TimelineView {
-    pub fn new(open_room: Entity<OpenRoom>, cx: &mut Context<TimelineView>) -> TimelineView {
+    pub fn new(
+        open_room: Entity<OpenRoom>,
+        on_user_action: impl Fn(&AuthorFlyoutUserActionEvent, &mut Window, &mut App) + 'static,
+        cx: &mut Context<TimelineView>,
+    ) -> TimelineView {
         cx.observe(&open_room, |this, _, cx| {
             this.connect_open_room(cx);
             cx.notify();
@@ -34,14 +46,21 @@ impl TimelineView {
             |this: &mut Self, event: &ListScrollEvent, _, cx| {
                 let this_entity = cx.entity();
                 this.open_room.update(cx, |open_room, cx| {
+                    let Some(timeline_entity) = open_room.timeline.as_ref() else {
+                        return;
+                    };
+                    let timeline = timeline_entity.clone().read(cx).inner.clone();
                     if event.visible_range.end == open_room.events.len() {
-                        // open_room.send_read_receipt(cx);
+                        cx.spawn(async move |_, cx: &mut AsyncApp| {
+                            let _ = cx
+                                .spawn_tokio(async move {
+                                    timeline.mark_as_read(ReceiptType::Read).await
+                                })
+                                .await;
+                        })
+                        .detach();
                     } else if event.visible_range.start < 5 {
                         // Paginate
-                        let Some(timeline_entity) = open_room.timeline.as_ref() else {
-                            return;
-                        };
-                        let timeline = timeline_entity.clone().read(cx).inner.clone();
                         this.pagination_pending = true;
                         cx.spawn(async move |_, cx: &mut AsyncApp| {
                             let _ = cx
@@ -63,6 +82,7 @@ impl TimelineView {
             open_room,
             list_state,
             pagination_pending: false,
+            on_user_action: Box::new(on_user_action),
         };
         this.connect_open_room(cx);
         this
@@ -105,6 +125,8 @@ impl Render for TimelineView {
         let timeline_entity = timeline_entity.clone();
         let room_id = open_room.room_id.clone();
 
+        let open_room = self.open_room.clone();
+
         div()
             .flex_grow()
             .child(
@@ -123,7 +145,14 @@ impl Render for TimelineView {
                         div()
                             .id(ElementId::Name(item.unique_id().0.clone().into()))
                             .py(px(2.))
-                            .child(timeline_item(item, previous_item, room_id.clone()))
+                            .child(timeline_item(
+                                item,
+                                previous_item,
+                                open_room.clone(),
+                                cx.listener(|this, event, window, cx| {
+                                    (this.on_user_action)(event, window, cx)
+                                }),
+                            ))
                             .into_any_element()
                     }),
                 )

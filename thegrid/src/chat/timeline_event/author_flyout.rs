@@ -49,7 +49,7 @@ pub enum UserAction {
 pub struct AuthorFlyout {
     bounds: Bounds<Pixels>,
     visible: bool,
-    author: CachedRoomMember,
+    author: Entity<Option<RoomMember>>,
     room: Entity<OpenRoom>,
     on_close: Box<AuthorFlyoutCloseListener>,
     on_user_action: Box<AuthorFlyoutUserActionListener>,
@@ -58,7 +58,7 @@ pub struct AuthorFlyout {
 pub fn author_flyout(
     bounds: Bounds<Pixels>,
     visible: bool,
-    author: CachedRoomMember,
+    author: Entity<Option<RoomMember>>,
     room: Entity<OpenRoom>,
     on_close: impl Fn(&AuthorFlyoutCloseEvent, &mut Window, &mut App) + 'static,
     on_user_action: impl Fn(&AuthorFlyoutUserActionEvent, &mut Window, &mut App) + 'static,
@@ -102,8 +102,8 @@ impl RenderOnce for AuthorFlyout {
         flyout(self.bounds)
             .visible(self.visible)
             .anchor_top_right()
-            .child(match &self.author {
-                CachedRoomMember::RoomMember(room_member) => {
+            .child(match &self.author.read(cx) {
+                Some(room_member) => {
                     let room_member = room_member.clone();
                     let room_member_2 = room_member.clone();
                     let room_member_3 = room_member.clone();
@@ -126,15 +126,18 @@ impl RenderOnce for AuthorFlyout {
                         .p(px(8.))
                         .gap(px(4.))
                         .child(
-                            mxc_image(self.author.avatar())
+                            mxc_image(room_member.avatar_url().map(|url| url.to_owned()))
                                 .size(px(128.))
                                 .size_policy(SizePolicy::Fit)
                                 .rounded(theme.border_radius),
                         )
                         .child(
-                            div()
-                                .text_size(theme.heading_font_size)
-                                .child(self.author.display_name()),
+                            div().text_size(theme.heading_font_size).child(
+                                room_member
+                                    .display_name()
+                                    .map(|name| name.to_string())
+                                    .unwrap_or_else(|| room_member.user_id().to_string()),
+                            ),
                         )
                         .child(
                             div()
@@ -314,7 +317,7 @@ impl RenderOnce for AuthorFlyout {
                         )
                         .into_any_element()
                 }
-                CachedRoomMember::UserId(_) => div()
+                None => div()
                     .m(px(8.))
                     .flex()
                     .items_center()
