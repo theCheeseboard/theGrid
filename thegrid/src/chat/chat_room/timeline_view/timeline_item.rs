@@ -69,27 +69,24 @@ impl TimelineItem {
             self.previous_timeline_item
                 .as_ref()
                 .and_then(|item| match item.kind() {
-                    TimelineItemKind::Event(e) => Some(e.sender().to_owned()),
+                    TimelineItemKind::Event(e) => {
+                        if is_state_event(e.content()) {
+                            None
+                        } else {
+                            Some(e.sender().to_owned())
+                        }
+                    }
                     TimelineItemKind::Virtual(_) => None,
                 });
 
-        let row_type = match event.content() {
-            TimelineItemContent::MsgLike(_)
-            | TimelineItemContent::FailedToParseMessageLike { .. }
-            | TimelineItemContent::FailedToParseState { .. }
-            | TimelineItemContent::CallInvite
-            | TimelineItemContent::CallNotify => {
-                if let Some(previous_event_author) = previous_event_author
-                    && *author == previous_event_author
-                {
-                    TimelineRowType::MessageWithoutAuthor
-                } else {
-                    TimelineRowType::MessageWithAuthor
-                }
-            }
-            TimelineItemContent::MembershipChange(_)
-            | TimelineItemContent::ProfileChange(_)
-            | TimelineItemContent::OtherState(_) => TimelineRowType::State,
+        let row_type = if is_state_event(event.content()) {
+            TimelineRowType::State
+        } else if let Some(previous_event_author) = previous_event_author
+            && *author == previous_event_author
+        {
+            TimelineRowType::MessageWithoutAuthor
+        } else {
+            TimelineRowType::MessageWithAuthor
         };
 
         let theme = cx.global::<Theme>().clone();
@@ -265,5 +262,18 @@ impl RenderOnce for TimelineItem {
             }
             _ => div().into_any_element(),
         }
+    }
+}
+
+fn is_state_event(content: &TimelineItemContent) -> bool {
+    match content {
+        TimelineItemContent::MsgLike(_)
+        | TimelineItemContent::FailedToParseMessageLike { .. }
+        | TimelineItemContent::FailedToParseState { .. }
+        | TimelineItemContent::CallInvite
+        | TimelineItemContent::CallNotify => false,
+        TimelineItemContent::MembershipChange(_)
+        | TimelineItemContent::ProfileChange(_)
+        | TimelineItemContent::OtherState(_) => true,
     }
 }

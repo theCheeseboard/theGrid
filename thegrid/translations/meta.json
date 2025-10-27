@@ -307,7 +307,7 @@
   },
   "DATE_DIVIDER": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:254",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:251",
     "plural": false,
     "description": null
   },
@@ -367,7 +367,7 @@
   },
   "EDITED_MESSAGE_INDICATOR": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:125",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:122",
     "plural": false,
     "description": null
   },
@@ -385,7 +385,7 @@
   },
   "EVENT_REASON_NONE": {
     "context": "membership_change_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:49",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:50",
     "plural": false,
     "description": null
   },
@@ -829,7 +829,7 @@
   },
   "MESSAGE_UNSUPPORTED": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:114",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:111",
     "plural": false,
     "description": null
   },
@@ -1219,7 +1219,7 @@
   },
   "ROOM_STATE_ROOM_MEMBER_INVITED": {
     "context": "membership_change_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:85",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:86",
     "plural": false,
     "description": null
   },
@@ -1231,13 +1231,13 @@
   },
   "ROOM_STATE_ROOM_MEMBER_KICKED": {
     "context": "membership_change_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:74",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:75",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_KNOCKED": {
     "context": "membership_change_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:94",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:95",
     "plural": false,
     "description": null
   },
@@ -1249,7 +1249,7 @@
   },
   "ROOM_STATE_ROOM_MEMBER_UNBANNED": {
     "context": "membership_change_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:60",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:61",
     "plural": false,
     "description": null
   },
