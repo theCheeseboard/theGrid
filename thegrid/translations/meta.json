@@ -385,7 +385,7 @@
   },
   "EVENT_REASON_NONE": {
     "context": "membership_change_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:50",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:54",
     "plural": false,
     "description": null
   },
@@ -1213,43 +1213,43 @@
   },
   "ROOM_STATE_ROOM_MEMBER_BANNED": {
     "context": "membership_change_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:46",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:50",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_INVITED": {
     "context": "membership_change_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:86",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:90",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_JOINED": {
     "context": "membership_change_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:23",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:27",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_KICKED": {
     "context": "membership_change_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:75",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:79",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_KNOCKED": {
     "context": "membership_change_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:95",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:99",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_LEFT": {
     "context": "membership_change_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:32",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:36",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_UNBANNED": {
     "context": "membership_change_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:61",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:65",
     "plural": false,
     "description": null
   },

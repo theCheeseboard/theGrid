@@ -16,13 +16,17 @@ pub fn membership_change_item(membership_change: RoomMembershipChange) -> Member
 
 impl RenderOnce for MembershipChangeItem {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        let display_name = self
+            .membership_change
+            .display_name()
+            .unwrap_or_else(|| self.membership_change.user_id().to_string());
         match self.membership_change.change() {
             Some(MembershipChange::Joined) => state_change_element(
                 Some("user".into()),
                 tr!(
                     "ROOM_STATE_ROOM_MEMBER_JOINED",
                     "{{user}} joined the room",
-                    user = self.membership_change.display_name().unwrap_or_default()
+                    user = display_name
                 ),
             )
             .into_any_element(),
@@ -31,7 +35,7 @@ impl RenderOnce for MembershipChangeItem {
                 tr!(
                     "ROOM_STATE_ROOM_MEMBER_LEFT",
                     "{{user}} left the room",
-                    user = self.membership_change.display_name().unwrap_or_default()
+                    user = display_name
                 ),
             )
             .into_any_element(),
@@ -45,7 +49,7 @@ impl RenderOnce for MembershipChangeItem {
                     tr!(
                         "ROOM_STATE_ROOM_MEMBER_BANNED",
                         "{{user}} was banned from the room: {{reason}}",
-                        user = self.membership_change.display_name().unwrap_or_default(),
+                        user = display_name,
                         reason = reason.unwrap_or_else(|| tr!(
                             "EVENT_REASON_NONE",
                             "No reason was provided."
@@ -60,7 +64,7 @@ impl RenderOnce for MembershipChangeItem {
                 tr!(
                     "ROOM_STATE_ROOM_MEMBER_UNBANNED",
                     "{{user}} was unbanned from the room",
-                    user = self.membership_change.display_name().unwrap_or_default(),
+                    user = display_name,
                 ),
             )
             .into_any_element(),
@@ -74,7 +78,7 @@ impl RenderOnce for MembershipChangeItem {
                     tr!(
                         "ROOM_STATE_ROOM_MEMBER_KICKED",
                         "{{user}} was kicked from the room: {{reason}}",
-                        user = self.membership_change.display_name().unwrap_or_default(),
+                        user = display_name,
                         reason = reason.unwrap_or_else(|| tr!("EVENT_REASON_NONE").into())
                     ),
                 )
@@ -85,7 +89,7 @@ impl RenderOnce for MembershipChangeItem {
                 tr!(
                     "ROOM_STATE_ROOM_MEMBER_INVITED",
                     "{{user}} was invited to the room",
-                    user = self.membership_change.display_name().unwrap_or_default()
+                    user = display_name
                 ),
             )
             .into_any_element(),
@@ -94,7 +98,7 @@ impl RenderOnce for MembershipChangeItem {
                 tr!(
                     "ROOM_STATE_ROOM_MEMBER_KNOCKED",
                     "{{user}} knocked on the room",
-                    user = self.membership_change.display_name().unwrap_or_default()
+                    user = display_name
                 ),
             )
             .into_any_element(),

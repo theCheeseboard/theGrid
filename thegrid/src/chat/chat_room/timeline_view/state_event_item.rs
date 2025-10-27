@@ -48,7 +48,7 @@ impl RenderOnce for StateEventItem {
                 None,
                 tr!(
                     "ROOM_STATE_POWER_LEVELS",
-                    "{{user}} updated the power levels",
+                    "{{user}} updated permissions in the room",
                     user = sender
                 ),
             )

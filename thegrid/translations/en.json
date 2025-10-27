@@ -199,7 +199,7 @@
   "ROOM_NO_ENCRYPTION_BADGE": "Not Encrypted",
   "ROOM_PUBLISH_TO_DIRECTORY": "Publish to Server Directory",
   "ROOM_SETTINGS": "Room Settings",
-  "ROOM_STATE_POWER_LEVELS": "{{user}} updated the power levels",
+  "ROOM_STATE_POWER_LEVELS": "{{user}} updated permissions in the room",
   "ROOM_STATE_ROOM_ENCRYPTION": "{{user}} enabled encryption for the room",
   "ROOM_STATE_ROOM_MEMBER_BANNED": "{{user}} was banned from the room: {{reason}}",
   "ROOM_STATE_ROOM_MEMBER_INVITED": "{{user}} was invited to the room",
