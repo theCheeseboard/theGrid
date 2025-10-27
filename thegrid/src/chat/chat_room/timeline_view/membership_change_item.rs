@@ -45,6 +45,7 @@ impl RenderOnce for MembershipChangeItem {
                     tr!(
                         "ROOM_STATE_ROOM_MEMBER_BANNED",
                         "{{user}} was banned from the room: {{reason}}",
+                        user = self.membership_change.display_name().unwrap_or_default(),
                         reason = reason.unwrap_or_else(|| tr!(
                             "EVENT_REASON_NONE",
                             "No reason was provided."
