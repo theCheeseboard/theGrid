@@ -18,6 +18,7 @@ serde_json = { workspace = true }
 sysinfo = { workspace = true }
 url = "2.5.7"
 matrix-sdk = { workspace = true }
+matrix-sdk-ui = { workspace = true }
 tokio = { workspace = true }
 log = "0.4.28"
 uuid = { workspace = true }

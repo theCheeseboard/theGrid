@@ -1,6 +1,7 @@
 use crate::auth::emoji_flyout::EmojiFlyout;
 use crate::chat::chat_input::{ChatInput, PasteRichEvent};
 use crate::chat::chat_room::chat_bar::ChatBar;
+use crate::chat::chat_room::timeline::Timeline;
 use crate::chat::chat_room::user_action_dialogs::UserActionDialogs;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::timeline_event::queued_event::QueuedEvent;
@@ -21,6 +22,8 @@ use matrix_sdk::ruma::api::client::receipt::create_receipt::v3::ReceiptType;
 use matrix_sdk::ruma::events::receipt::ReceiptThread;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::send_queue::RoomSendQueueUpdate;
+use matrix_sdk_ui::Timeline as MatrixUiTimeline;
+use matrix_sdk_ui::timeline::{AttachmentConfig, AttachmentSource, Error, RoomExt};
 use mime2ext::mime2ext;
 use std::fs::read;
 use std::mem;
@@ -42,6 +45,7 @@ pub struct OpenRoom {
     pub event_cache: Option<Entity<RoomEventCache>>,
     pub pagination_status: RoomPaginationStatus,
     pub chat_bar: Entity<ChatBar>,
+    pub timeline: Option<Entity<Timeline>>,
 }
 
 pub struct PendingAttachment {
@@ -93,6 +97,7 @@ impl OpenRoom {
             current_user: None,
             typing_users: Vec::new(),
             chat_input,
+            timeline: None,
         };
 
         let Some(room) = client.get_room(&room_id) else {
@@ -103,6 +108,21 @@ impl OpenRoom {
         self_return.setup_acquire_own_user(cx);
         self_return.setup_event_cache(cx);
         self_return.setup_send_queue(cx);
+
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                let timeline = cx.spawn_tokio(async move { room.timeline().await }).await;
+
+                if let Ok(timeline) = timeline {
+                    let _ = weak_this.update(cx, |this, cx| {
+                        let timeline_entity = cx.new(|cx| Timeline::new(timeline, cx));
+                        this.timeline = Some(timeline_entity.clone());
+                        cx.notify()
+                    });
+                }
+            },
+        )
+        .detach();
 
         self_return
     }
@@ -478,8 +498,9 @@ impl OpenRoom {
 
     pub fn send_pending_message(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let chat_input = self.chat_input.clone();
-        let room = self.room.clone().unwrap();
         let attachments = mem::take(&mut self.pending_attachments);
+
+        let timeline = self.timeline.clone().unwrap().read(cx).inner.clone();
 
         cx.on_next_frame(window, move |_, _, cx| {
             let message = chat_input.read(cx).text();
@@ -492,23 +513,21 @@ impl OpenRoom {
             } else {
                 Some(RoomMessageEventContent::text_plain(message.to_string()))
             };
-
-            let send_queue = room.send_queue();
-
+            
             cx.spawn(async move |_, cx: &mut AsyncApp| {
                 for attachment in attachments.into_iter() {
                     if let Ok(data) = attachment.data {
-                        let send_queue = send_queue.clone();
+                        let timeline = timeline.clone();
                         let _ = cx
                             .spawn_tokio(async move {
-                                send_queue
-                                    .send_attachment(
-                                        attachment.filename,
-                                        attachment.mime_type.parse().unwrap(),
-                                        data,
-                                        Default::default(),
-                                    )
-                                    .await
+                                timeline.send_attachment(
+                                    AttachmentSource::Data {
+                                        filename: attachment.filename,
+                                        bytes: data
+                                    },
+                                    attachment.mime_type.parse().unwrap(),
+                                    AttachmentConfig::default(),
+                                ).await
                             })
                             .await;
                     }
@@ -516,7 +535,7 @@ impl OpenRoom {
 
                 if let Some(content) = content {
                     let _ = cx
-                        .spawn_tokio(async move { send_queue.send(content.into()).await })
+                        .spawn_tokio(async move { timeline.send(content.into()).await })
                         .await;
                 }
             })

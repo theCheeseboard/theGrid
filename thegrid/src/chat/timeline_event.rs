@@ -1,11 +1,11 @@
 pub mod author_flyout;
 pub mod queued_event;
-pub mod room_head;
 mod room_message_element;
 mod room_message_event;
 mod room_message_event_renderable;
 mod room_state_event;
 
+use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::timeline_event::author_flyout::{
     AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener,
 };
@@ -17,13 +17,11 @@ use gpui::private::anyhow;
 use gpui::{
     App, ElementId, Entity, InteractiveElement, IntoElement, ParentElement, RenderOnce, Window, div,
 };
-use matrix_sdk::Room;
 use matrix_sdk::deserialized_responses::{TimelineEvent, TimelineEventKind};
 use matrix_sdk::event_cache::RoomEventCache;
 use matrix_sdk::linked_chunk::relational::IndexableItem;
 use matrix_sdk::ruma::RoomId;
 use matrix_sdk::ruma::events::{AnyMessageLikeEvent, AnyTimelineEvent};
-use crate::chat::chat_room::open_room::OpenRoom;
 
 #[derive(IntoElement)]
 pub struct TimelineRow {

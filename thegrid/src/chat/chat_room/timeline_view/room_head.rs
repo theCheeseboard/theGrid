@@ -15,7 +15,7 @@ pub fn room_head(room: OwnedRoomId) -> RoomHead {
 }
 
 impl RenderOnce for RoomHead {
-    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+    fn render(self, _: &mut Window, cx: &mut App) -> impl IntoElement {
         let theme = cx.global::<Theme>();
         let session_manager = cx.global::<SessionManager>();
         let rooms = session_manager.rooms().read(cx);

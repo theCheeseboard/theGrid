@@ -73,7 +73,7 @@
   },
   "ATTACH_PROMPT": {
     "context": "open_room.rs",
-    "definedIn": "src/chat/chat_room/open_room.rs:423",
+    "definedIn": "src/chat/chat_room/open_room.rs:443",
     "plural": false,
     "description": null
   },
@@ -305,6 +305,12 @@
     "plural": false,
     "description": null
   },
+  "DATE_DIVIDER": {
+    "context": "timeline_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:186",
+    "plural": false,
+    "description": null
+  },
   "DEVICES_LOG_OUT_ACTION": {
     "context": "devices_settings.rs",
     "definedIn": "src/account_settings/devices_settings.rs:309",
@@ -360,8 +366,8 @@
     "description": null
   },
   "EDITED_MESSAGE_INDICATOR": {
-    "context": "room_message_event.rs",
-    "definedIn": "src/chat/timeline_event/room_message_event.rs:314",
+    "context": "timeline_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:98",
     "plural": false,
     "description": null
   },
@@ -378,26 +384,26 @@
     "description": null
   },
   "EVENT_REASON_NONE": {
-    "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:94",
+    "context": "membership_change_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:40",
     "plural": false,
     "description": null
   },
   "FILE_OPEN": {
-    "context": "room_message_event_renderable.rs",
-    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:184",
+    "context": "timeline_message_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:181",
     "plural": false,
     "description": null
   },
   "FILE_OPEN_MENU_HEADER": {
-    "context": "room_message_event_renderable.rs",
-    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:178",
+    "context": "timeline_message_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:175",
     "plural": false,
     "description": null
   },
   "FILE_SAVE_AS": {
-    "context": "room_message_event_renderable.rs",
-    "definedIn": "src/chat/timeline_event/room_message_event_renderable.rs:199",
+    "context": "timeline_message_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:196",
     "plural": false,
     "description": null
   },
@@ -823,7 +829,13 @@
   },
   "MESSAGE_DECRYPTION_FAILURE": {
     "context": "timeline_event.rs",
-    "definedIn": "src/chat/timeline_event.rs:99",
+    "definedIn": "src/chat/timeline_event.rs:97",
+    "plural": false,
+    "description": null
+  },
+  "MESSAGE_UNSUPPORTED": {
+    "context": "timeline_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:87",
     "plural": false,
     "description": null
   },
@@ -1037,6 +1049,12 @@
     "plural": false,
     "description": null
   },
+  "REPLY_UNAVAILABLE": {
+    "context": "timeline_message_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:67",
+    "plural": false,
+    "description": null
+  },
   "ROOMS_CREATE": {
     "context": "main.rs",
     "definedIn": "src/main.rs:96",
@@ -1129,7 +1147,7 @@
   },
   "ROOM_HEAD_TEXT": {
     "context": "room_head.rs",
-    "definedIn": "src/chat/timeline_event/room_head.rs:49",
+    "definedIn": "src/chat/chat_room/timeline_view/room_head.rs:49",
     "plural": false,
     "description": null
   },
@@ -1194,44 +1212,44 @@
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_BANNED": {
-    "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:89",
+    "context": "membership_change_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:37",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_INVITED": {
-    "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:115",
+    "context": "membership_change_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:67",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_JOINED": {
-    "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:78",
+    "context": "membership_change_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:20",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_KICKED": {
-    "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:106",
+    "context": "membership_change_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:59",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_KNOCKED": {
-    "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:120",
+    "context": "membership_change_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:73",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_LEFT": {
-    "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:83",
+    "context": "membership_change_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:26",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_MEMBER_UNBANNED": {
-    "context": "room_state_event.rs",
-    "definedIn": "src/chat/timeline_event/room_state_event.rs:101",
+    "context": "membership_change_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:48",
     "plural": false,
     "description": null
   },
@@ -1453,7 +1471,7 @@
   },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:119",
+    "definedIn": "src/chat/chat_room.rs:125",
     "plural": false,
     "description": null
   },
