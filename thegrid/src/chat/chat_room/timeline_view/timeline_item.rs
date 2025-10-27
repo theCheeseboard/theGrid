@@ -3,6 +3,7 @@ use crate::chat::chat_room::timeline_view::author_flyout::{
     AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener, author_flyout,
 };
 use crate::chat::chat_room::timeline_view::membership_change_item::membership_change_item;
+use crate::chat::chat_room::timeline_view::profile_change_item::profile_change_item;
 use crate::chat::chat_room::timeline_view::room_head::room_head;
 use crate::chat::chat_room::timeline_view::state_event_item::state_event_item;
 use crate::chat::chat_room::timeline_view::timeline_message_item::timeline_message_item;
@@ -100,6 +101,9 @@ impl TimelineItem {
                 }
                 TimelineItemContent::MembershipChange(membership_change) => {
                     membership_change_item(membership_change.clone()).into_any_element()
+                }
+                TimelineItemContent::ProfileChange(profile_change) => {
+                    profile_change_item(profile_change.clone()).into_any_element()
                 }
                 TimelineItemContent::OtherState(other_state) => state_event_item(
                     other_state.clone(),

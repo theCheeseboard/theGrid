@@ -1,5 +1,6 @@
 pub mod author_flyout;
 mod membership_change_item;
+mod profile_change_item;
 pub mod room_head;
 mod state_change_element;
 mod state_event_item;
@@ -66,7 +67,9 @@ impl TimelineView {
                         this.pagination_pending = true;
                         cx.spawn(async move |_, cx: &mut AsyncApp| {
                             let _ = cx
-                                .spawn_tokio(async move { timeline_inner.paginate_backwards(50).await })
+                                .spawn_tokio(
+                                    async move { timeline_inner.paginate_backwards(50).await },
+                                )
                                 .await;
                             this_entity.update(cx, |this, cx| {
                                 this.pagination_pending = false;

@@ -307,7 +307,7 @@
   },
   "DATE_DIVIDER": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:251",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:255",
     "plural": false,
     "description": null
   },
@@ -367,7 +367,7 @@
   },
   "EDITED_MESSAGE_INDICATOR": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:122",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:126",
     "plural": false,
     "description": null
   },
@@ -829,7 +829,7 @@
   },
   "MESSAGE_UNSUPPORTED": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:111",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:115",
     "plural": false,
     "description": null
   },
@@ -974,6 +974,24 @@
   "PROFILE_PROFILE": {
     "context": "profile_settings.rs",
     "definedIn": "src/account_settings/profile_settings.rs:95",
+    "plural": false,
+    "description": null
+  },
+  "PROFILE_UPDATE_AVATAR": {
+    "context": "profile_change_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/profile_change_item.rs:50",
+    "plural": false,
+    "description": null
+  },
+  "PROFILE_UPDATE_DISPLAY_NAME": {
+    "context": "profile_change_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/profile_change_item.rs:38",
+    "plural": false,
+    "description": null
+  },
+  "PROFILE_UPDATE_DISPLAY_NAME_AVATAR": {
+    "context": "profile_change_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/profile_change_item.rs:25",
     "plural": false,
     "description": null
   },
