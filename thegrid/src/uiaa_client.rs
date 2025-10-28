@@ -2,11 +2,11 @@ use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::icon_text::icon_text;
-use contemporary::components::text_field::TextField;
+use contemporary::components::text_field::{MaskMode, TextField};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
-    div, px,
+    App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled,
+    WeakEntity, Window, div, px,
 };
 use matrix_sdk::ruma::api::client::uiaa::{
     AuthData, AuthType, FallbackAcknowledgement, Password, UiaaInfo, UserIdentifier,
@@ -74,16 +74,13 @@ impl UiaaClient {
         match this_step {
             Some(AuthType::Password) => {
                 self.uiaa_step_completed = true;
-                let text_field = TextField::new(
-                    cx,
-                    "account-password",
-                    "".into(),
-                    tr!("AUTH_PASSWORD_PLACEHOLDER").into(),
-                );
-                text_field.update(cx, |text_field, cx| {
-                    text_field.password_field(cx, true);
-                });
-                self.current_step = CurrentStep::Password(text_field)
+                self.current_step = CurrentStep::Password(cx.new(|cx| {
+                    let mut text_field = TextField::new("account-password", cx);
+                    text_field.set_mask_mode(MaskMode::password_mask());
+                    text_field
+                        .set_placeholder(tr!("AUTH_PASSWORD_PLACEHOLDER").to_string().as_str());
+                    text_field
+                }))
             }
             Some(auth_type) if uiaa_session.is_some() => {
                 self.uiaa_step_completed = false;
@@ -207,11 +204,11 @@ impl Render for UiaaClient {
                             ))
                             .when(!self.uiaa_step_completed, |david| david.disabled())
                             .on_click(cx.listener(move |this, _, window, cx| {
-                                let password = text_field_clone.read(cx).current_text(cx);
+                                let password = text_field_clone.read(cx).text();
                                 this.send_auth_data(
                                     Some(AuthData::Password(Password::new(
                                         UserIdentifier::UserIdOrLocalpart(user_id.clone().unwrap()),
-                                        password.into(),
+                                        password.to_string(),
                                     ))),
                                     window,
                                     cx,

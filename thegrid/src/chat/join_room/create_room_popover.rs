@@ -13,8 +13,8 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::TextField;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled, WeakEntity, Window, div,
-    px,
+    AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled, WeakEntity,
+    Window, div, px,
 };
 use matrix_sdk::ruma::api::client::room::Visibility;
 use matrix_sdk::ruma::api::client::room::create_room::v3::{CreationContent, Request};
@@ -35,13 +35,14 @@ pub struct CreateRoomPopover {
 
 impl CreateRoomPopover {
     pub fn new(cx: &mut Context<Self>) -> Self {
-        let name_field =
-            TextField::new(cx, "name", "".into(), tr!("ROOM_NAME", "Room Name").into());
-
         Self {
             visible: false,
             processing: false,
-            name_field,
+            name_field: cx.new(|cx| {
+                let mut text_field = TextField::new("name", cx);
+                text_field.set_placeholder(tr!("ROOM_NAME", "Room Name").to_string().as_str());
+                text_field
+            }),
             is_private_room: true,
             encrypt: true,
             federation: true,
@@ -58,7 +59,7 @@ impl CreateRoomPopover {
     }
 
     pub fn create_room(&mut self, cx: &mut Context<Self>) {
-        let room_name = self.name_field.read(cx).current_text(cx);
+        let room_name = self.name_field.read(cx).text();
         if room_name.trim().is_empty() {
             // TODO: Indicate error
             return;

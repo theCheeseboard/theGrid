@@ -14,8 +14,8 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::Theme;
 use gpui::{
-    AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled, WeakEntity, Window, div,
-    px,
+    AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled, WeakEntity,
+    Window, div, px,
 };
 use matrix_sdk::ruma::{OwnedRoomId, OwnedUserId, UserId};
 use thegrid::session::session_manager::SessionManager;
@@ -31,17 +31,18 @@ pub struct InvitePopover {
 
 impl InvitePopover {
     pub fn new(cx: &mut Context<Self>) -> Self {
-        let invite_search = TextField::new(
-            cx,
-            "invite-search",
-            "".into(),
-            tr!("INVITE_SEARCH_PLACEHOLDER", "Search for users...").into(),
-        );
-
         Self {
             room_id: None,
             pending_invites: Vec::new(),
-            invite_search,
+            invite_search: cx.new(|cx| {
+                let mut text_field = TextField::new("invite-search", cx);
+                text_field.set_placeholder(
+                    tr!("INVITE_SEARCH_PLACEHOLDER", "Search for users...")
+                        .to_string()
+                        .as_str(),
+                );
+                text_field
+            }),
 
             busy: false,
         }
@@ -55,7 +56,7 @@ impl InvitePopover {
 
     pub fn perform_invite(&mut self, cx: &mut Context<Self>) {
         // TODO: Remove when we have search
-        let Ok(user_id) = UserId::parse(self.invite_search.read(cx).current_text(cx)) else {
+        let Ok(user_id) = UserId::parse(self.invite_search.read(cx).text()) else {
             return;
         };
         self.pending_invites.push(user_id);

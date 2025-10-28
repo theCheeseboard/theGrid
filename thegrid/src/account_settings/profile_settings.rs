@@ -10,7 +10,10 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
-use gpui::{App, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window, div, px, rgb, AsyncApp, WeakEntity};
+use gpui::{
+    App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled,
+    WeakEntity, Window, div, px, rgb,
+};
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
 
@@ -26,12 +29,15 @@ impl ProfileSettings {
             edit_display_name_open: false,
             edit_profile_picture_open: false,
 
-            new_display_name_text_field: TextField::new(
-                cx,
-                "new-display-name",
-                "".into(),
-                tr!("NEW_DISPLAY_NAME_PLACEHOLDER", "New Display Name").into(),
-            ),
+            new_display_name_text_field: cx.new(|cx| {
+                let mut text_field = TextField::new("new-display-name", cx);
+                text_field.set_placeholder(
+                    tr!("NEW_DISPLAY_NAME_PLACEHOLDER", "New Display Name")
+                        .to_string()
+                        .as_str(),
+                );
+                text_field
+            }),
         })
     }
 }
@@ -107,7 +113,7 @@ impl Render for ProfileSettings {
                                                     "PROFILE_CHANGE_DISPLAY_NAME",
                                                     "Change Display Name"
                                                 )
-                                                    .into(),
+                                                .into(),
                                             ))
                                             .on_click(cx.listener(|this, _, _, cx| {
                                                 // TODO: Set the text field text to the current display name
@@ -122,7 +128,7 @@ impl Render for ProfileSettings {
                                                 "PROFILE_CHANGE_PROFILE_PICTURE",
                                                 "Change Profile Picture"
                                             )
-                                                .into(),
+                                            .into(),
                                         )),
                                     ),
                             ),
@@ -158,13 +164,21 @@ impl Render for ProfileSettings {
                                 tr!("PROFILE_CHANGE_DISPLAY_NAME").into(),
                             ))
                             .on_click(cx.listener(|this, _, _, cx| {
-                                let new_display_name = this.new_display_name_text_field.read(cx).current_text(cx);
+                                let new_display_name =
+                                    this.new_display_name_text_field.read(cx).text().to_string();
                                 let session_manager = cx.global::<SessionManager>();
                                 let client = session_manager.client().unwrap().read(cx).clone();
                                 cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                                    if cx.spawn_tokio(async move {
-                                        client.account().set_display_name(Some(new_display_name.to_string().as_str())).await
-                                    }).await.is_err() {
+                                    if cx
+                                        .spawn_tokio(async move {
+                                            client
+                                                .account()
+                                                .set_display_name(Some(new_display_name.as_str()))
+                                                .await
+                                        })
+                                        .await
+                                        .is_err()
+                                    {
                                         this.update(cx, |this, cx| {
                                             // TODO: Show the error
                                             cx.notify()
@@ -175,7 +189,8 @@ impl Render for ProfileSettings {
                                             cx.notify()
                                         })
                                     }
-                                }).detach();
+                                })
+                                .detach();
                                 cx.notify()
                             })),
                     ),

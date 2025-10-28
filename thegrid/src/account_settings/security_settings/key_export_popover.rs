@@ -10,11 +10,11 @@ use contemporary::components::pager::slide_horizontal_animation::SlideHorizontal
 use contemporary::components::popover::popover;
 use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
-use contemporary::components::text_field::TextField;
+use contemporary::components::text_field::{MaskMode, TextField};
 use directories::UserDirs;
 use gpui::{
-    App, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
-    div, px,
+    App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled,
+    WeakEntity, Window, div, px,
 };
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
@@ -28,30 +28,26 @@ pub struct KeyExportPopover {
 
 impl KeyExportPopover {
     pub fn new(cx: &mut App) -> Self {
-        let password_field = TextField::new(
-            cx,
-            "password-field",
-            "".into(),
-            tr!("KEY_EXPORT_PASSWORD", "Password").into(),
-        );
-        let password_confirm_field = TextField::new(
-            cx,
-            "password-confirm-field",
-            "".into(),
-            tr!("KEY_EXPORT_PASSWORD_CONFIRM", "Confirm Password").into(),
-        );
-        password_field.update(cx, |password_field, cx| {
-            password_field.password_field(cx, true);
-        });
-        password_confirm_field.update(cx, |password_confirm_field, cx| {
-            password_confirm_field.password_field(cx, true);
-        });
-
         Self {
             visible: false,
             processing: false,
-            password_field,
-            password_confirm_field,
+            password_field: cx.new(|cx| {
+                let mut text_field = TextField::new("password", cx);
+                text_field.set_mask_mode(MaskMode::password_mask());
+                text_field
+                    .set_placeholder(tr!("KEY_EXPORT_PASSWORD", "Password").to_string().as_str());
+                text_field
+            }),
+            password_confirm_field: cx.new(|cx| {
+                let mut text_field = TextField::new("password-confirm-field", cx);
+                text_field.set_mask_mode(MaskMode::password_mask());
+                text_field.set_placeholder(
+                    tr!("KEY_EXPORT_PASSWORD_CONFIRM", "Confirm Password")
+                        .to_string()
+                        .as_str(),
+                );
+                text_field
+            }),
         }
     }
 
@@ -60,8 +56,8 @@ impl KeyExportPopover {
     }
 
     fn perform_export(&mut self, cx: &mut Context<Self>) {
-        let password = self.password_field.read(cx).current_text(cx);
-        let password_confirm = self.password_confirm_field.read(cx).current_text(cx);
+        let password = self.password_field.read(cx).text().to_string();
+        let password_confirm = self.password_confirm_field.read(cx).text().to_string();
         if password.is_empty() {
             // TODO: Show error
             return;

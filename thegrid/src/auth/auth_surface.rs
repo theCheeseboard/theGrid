@@ -10,7 +10,7 @@ use contemporary::components::layer::layer;
 use contemporary::components::popover::popover;
 use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
-use contemporary::components::text_field::TextField;
+use contemporary::components::text_field::{MaskMode, TextField};
 use contemporary::surface::surface;
 use gpui::LineFragment::Text;
 use gpui::http_client::anyhow;
@@ -70,50 +70,57 @@ impl AuthSurface {
                 .detach();
 
             let surface = Self {
-                matrix_id_field: TextField::new(
-                    cx,
-                    "matrix_id",
-                    "".into(),
-                    tr!("AUTH_MATRIX_ID_EXAMPLE", "@user:example.org").into(),
-                ),
-                password_field: TextField::new(
-                    cx,
-                    "password",
-                    "".into(),
-                    tr!("AUTH_PASSWORD_PLACEHOLDER", "Password").into(),
-                ),
-                token_field: TextField::new(
-                    cx,
-                    "token",
-                    "".into(),
-                    tr!("AUTH_TOKEN_PLACEHOLDER", "Token").into(),
-                ),
-                username_field: TextField::new(
-                    cx,
-                    "username",
-                    "".into(),
-                    tr!("AUTH_USERNAME_PLACEHOLDER", "Username").into(),
-                ),
-                homeserver_field: TextField::new(
-                    cx,
-                    "homeserver",
-                    "".into(),
-                    tr!("AUTH_HOMESERVER_PLACEHOLDER", "Homeserver").into(),
-                ),
+                matrix_id_field: cx.new(|cx| {
+                    let mut text_field = TextField::new("matrix-id", cx);
+                    text_field.set_placeholder(
+                        tr!("AUTH_MATRIX_ID_EXAMPLE", "@user:example.org")
+                            .to_string()
+                            .as_str(),
+                    );
+                    text_field
+                }),
+                password_field: cx.new(|cx| {
+                    let mut text_field = TextField::new("password", cx);
+                    text_field.set_mask_mode(MaskMode::password_mask());
+                    text_field.set_placeholder(
+                        tr!("AUTH_PASSWORD_PLACEHOLDER", "Password")
+                            .to_string()
+                            .as_str(),
+                    );
+                    text_field
+                }),
+                token_field: cx.new(|cx| {
+                    let mut text_field = TextField::new("token", cx);
+                    text_field.set_mask_mode(MaskMode::password_mask());
+                    text_field.set_placeholder(
+                        tr!("AUTH_TOKEN_PLACEHOLDER", "Token").to_string().as_str(),
+                    );
+                    text_field
+                }),
+                username_field: cx.new(|cx| {
+                    let mut text_field = TextField::new("username", cx);
+                    text_field.set_placeholder(
+                        tr!("AUTH_USERNAME_PLACEHOLDER", "Username")
+                            .to_string()
+                            .as_str(),
+                    );
+                    text_field
+                }),
+                homeserver_field: cx.new(|cx| {
+                    let mut text_field = TextField::new("homeserver", cx);
+                    text_field.set_placeholder(
+                        tr!("AUTH_HOMESERVER_PLACEHOLDER", "Homeserver")
+                            .to_string()
+                            .as_str(),
+                    );
+                    text_field
+                }),
                 state: AuthState::Idle,
                 client: None,
                 user_id: None,
                 login_types: Vec::new(),
                 session_uuid: Uuid::new_v4(),
             };
-            surface.password_field.update(cx, |this, cx| {
-                this.password_field(cx, true);
-                cx.notify();
-            });
-            surface.token_field.update(cx, |this, cx| {
-                this.password_field(cx, true);
-                cx.notify();
-            });
             surface
         })
     }
@@ -127,8 +134,8 @@ impl AuthSurface {
     }
 
     fn login_clicked(&mut self, cx: &mut Context<Self>) {
-        let username = self.matrix_id_field.read(cx).current_text(cx);
-        let user_id = user_id::UserId::parse(username.as_str());
+        let username = self.matrix_id_field.read(cx).text();
+        let user_id = user_id::UserId::parse(username);
         let Ok(user_id) = user_id else {
             error!("user_id not okay");
             return;
@@ -216,7 +223,7 @@ impl AuthSurface {
     fn trigger_advanced_login(&mut self, cx: &mut Context<Self>) {
         let session_dir = self.session_dir(cx);
         let store_dir = session_dir.join("store");
-        let homeserver_url = self.homeserver_field.read(cx).current_text(cx);
+        let homeserver_url = self.homeserver_field.read(cx).text();
         let Ok(homeserver_url) = homeserver_url
             .parse::<Url>()
             .or_else(|_| format!("https://{homeserver_url}/").parse::<Url>())
@@ -296,7 +303,7 @@ impl AuthSurface {
     }
 
     fn login_password_clicked(&mut self, cx: &mut Context<Self>) {
-        let password = self.password_field.read(cx).current_text(cx).to_string();
+        let password = self.password_field.read(cx).text().to_string();
         self.perform_login(LoginMethod::Password(password), cx);
     }
 
@@ -332,7 +339,7 @@ impl AuthSurface {
     }
 
     fn trigger_sso_token_login(&mut self, cx: &mut Context<Self>) {
-        let sso_token = self.token_field.read(cx).current_text(cx).to_string();
+        let sso_token = self.token_field.read(cx).text().to_string();
         self.perform_login(LoginMethod::SsoToken(sso_token), cx);
     }
 
@@ -345,7 +352,7 @@ impl AuthSurface {
             .user_id
             .clone()
             .map(|user_id| user_id.localpart().to_string())
-            .unwrap_or_else(|| self.username_field.read(cx).current_text(cx).to_string());
+            .unwrap_or_else(|| self.username_field.read(cx).text().to_string());
         let session_uuid = self.session_uuid;
 
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {

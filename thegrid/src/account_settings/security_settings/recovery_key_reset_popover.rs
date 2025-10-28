@@ -11,11 +11,11 @@ use contemporary::components::pager::slide_horizontal_animation::SlideHorizontal
 use contemporary::components::popover::popover;
 use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
-use contemporary::components::text_field::TextField;
+use contemporary::components::text_field::{MaskMode, TextField};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, ClipboardItem, Context, Entity, IntoElement, ParentElement, Render, Styled,
-    WeakEntity, Window, div, px,
+    App, AppContext, AsyncApp, ClipboardItem, Context, Entity, IntoElement, ParentElement, Render,
+    Styled, WeakEntity, Window, div, px,
 };
 use matrix_sdk::crypto::KeyExportError;
 use matrix_sdk::encryption::RoomKeyImportError;
@@ -42,22 +42,21 @@ enum RecoveryKeyResetState {
 
 impl RecoveryKeyResetPopover {
     pub fn new(cx: &mut App) -> Self {
-        let password_field = TextField::new(
-            cx,
-            "password-field",
-            "".into(),
-            tr!("RECOVERY_PASSPHRASE", "Recovery Passphrase (optional)").into(),
-        );
-        password_field.update(cx, |password_field, cx| {
-            password_field.password_field(cx, true);
-        });
-
         Self {
             recovery_not_set_up: false,
             visible: false,
             state: RecoveryKeyResetState::RecoveryPassphrase,
             error: None,
-            passphrase_field: password_field,
+            passphrase_field: cx.new(|cx| {
+                let mut text_field = TextField::new("password-field", cx);
+                text_field.set_mask_mode(MaskMode::password_mask());
+                text_field.set_placeholder(
+                    tr!("RECOVERY_PASSPHRASE", "Recovery Passphrase (optional)")
+                        .to_string()
+                        .as_str(),
+                );
+                text_field
+            }),
         }
     }
 
@@ -74,7 +73,7 @@ impl RecoveryKeyResetPopover {
     }
 
     fn perform_reset(&mut self, cx: &mut Context<Self>) {
-        let passphrase = self.passphrase_field.read(cx).current_text(cx);
+        let passphrase = self.passphrase_field.read(cx).text().to_string();
 
         let session_manager = cx.global::<SessionManager>();
         let client = session_manager.client().unwrap().read(cx).clone();

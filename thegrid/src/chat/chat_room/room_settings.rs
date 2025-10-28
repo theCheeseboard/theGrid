@@ -15,8 +15,8 @@ use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, ClickEvent, Context, Entity, IntoElement, ParentElement, Render, Styled,
-    WeakEntity, Window, div, px,
+    App, AppContext, AsyncApp, ClickEvent, Context, Entity, IntoElement, ParentElement, Render,
+    Styled, WeakEntity, Window, div, px,
 };
 use matrix_sdk::ruma::api::client::room::Visibility;
 use matrix_sdk::ruma::room::JoinRule;
@@ -66,12 +66,15 @@ impl RoomSettings {
             open_room,
             on_back_click: Rc::new(Box::new(on_back_click)),
 
-            new_name_text_field: TextField::new(
-                cx,
-                "new-name",
-                "".into(),
-                tr!("ROOM_NAME_PLACEHOLDER", "Room Name").into(),
-            ),
+            new_name_text_field: cx.new(|cx| {
+                let mut text_field = TextField::new("new-name", cx);
+                text_field.set_placeholder(
+                    tr!("ROOM_NAME_PLACEHOLDER", "Room Name")
+                        .to_string()
+                        .as_str(),
+                );
+                text_field
+            }),
 
             edit_room_name_open: false,
             enable_encryption_open: false,
@@ -405,7 +408,7 @@ impl Render for RoomSettings {
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 let room = room_2.clone();
                                 let new_display_name =
-                                    this.new_name_text_field.read(cx).current_text(cx);
+                                    this.new_name_text_field.read(cx).text().to_string();
 
                                 this.busy = true;
                                 cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {

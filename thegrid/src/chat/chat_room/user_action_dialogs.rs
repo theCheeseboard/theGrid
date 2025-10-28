@@ -210,153 +210,153 @@ impl Render for UserActionDialogs {
                             self.current_user.as_ref().unwrap().normalized_power_level();
 
                         david
-                        .title(tr!("POWER_LEVEL_UPDATE_TITLE", "Update Power Level").into())
-                        .content(
-                            div()
-                                .flex()
-                                .flex_col()
-                                .gap(px(4.))
-                                .child(
-                                    div()
-                                        .flex()
-                                        .flex_col()
-                                        .child(tr!(
+                            .title(tr!("POWER_LEVEL_UPDATE_TITLE", "Update Power Level").into())
+                            .content(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap(px(4.))
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .flex_col()
+                                            .child(tr!(
                                             "POWER_LEVEL_UPDATE_TEXT",
                                             "What power level do you want to assign to {{user}}?",
                                             user = dialog.acting_user.user_id().to_string()
                                         ))
-                                        .when(
-                                            my_power_level
-                                                >= RoomMemberRole::Administrator
+                                            .when(
+                                                my_power_level
+                                                    >= RoomMemberRole::Administrator
                                                     .suggested_power_level(),
-                                            |david| {
-                                                david.child(
-                                                    radio_button("power-level-administrator")
-                                                        .label(tr!(
+                                                |david| {
+                                                    david.child(
+                                                        radio_button("power-level-administrator")
+                                                            .label(tr!(
                                                             "POWER_LEVEL_ADMINISTRATOR",
                                                             "Administrator"
                                                         ))
-                                                        .when(
-                                                            new_power_level_value
-                                                                == RoomMemberRole::Administrator
+                                                            .when(
+                                                                new_power_level_value
+                                                                    == RoomMemberRole::Administrator
                                                                     .suggested_power_level(),
-                                                            |david| david.checked(),
-                                                        )
-                                                        .on_checked_changed(move |_, _, cx| {
-                                                            new_power_level_1.write(
-                                                                cx,
-                                                                RoomMemberRole::Administrator
-                                                                    .suggested_power_level(),
+                                                                |david| david.checked(),
                                                             )
-                                                        }),
-                                                )
-                                            },
-                                        )
-                                        .when(
-                                            my_power_level
-                                                >= RoomMemberRole::Moderator
+                                                            .on_checked_changed(move |_, _, cx| {
+                                                                new_power_level_1.write(
+                                                                    cx,
+                                                                    RoomMemberRole::Administrator
+                                                                        .suggested_power_level(),
+                                                                )
+                                                            }),
+                                                    )
+                                                },
+                                            )
+                                            .when(
+                                                my_power_level
+                                                    >= RoomMemberRole::Moderator
                                                     .suggested_power_level(),
-                                            |david| {
-                                                david.child(
-                                                    radio_button("power-level-moderator")
-                                                        .label(tr!(
+                                                |david| {
+                                                    david.child(
+                                                        radio_button("power-level-moderator")
+                                                            .label(tr!(
                                                             "POWER_LEVEL_MODERATOR",
                                                             "Moderator"
                                                         ))
-                                                        .when(
-                                                            new_power_level_value
-                                                                == RoomMemberRole::Moderator
+                                                            .when(
+                                                                new_power_level_value
+                                                                    == RoomMemberRole::Moderator
                                                                     .suggested_power_level(),
-                                                            |david| david.checked(),
-                                                        )
-                                                        .on_checked_changed(move |_, _, cx| {
-                                                            new_power_level_2.write(
-                                                                cx,
-                                                                RoomMemberRole::Moderator
-                                                                    .suggested_power_level(),
+                                                                |david| david.checked(),
                                                             )
-                                                        }),
-                                                )
-                                            },
-                                        )
-                                        .when(
-                                            my_power_level
-                                                >= RoomMemberRole::User.suggested_power_level(),
-                                            |david| {
-                                                david.child(
-                                                    radio_button("power-level-user")
-                                                        .label(tr!("POWER_LEVEL_USER", "User"))
-                                                        .when(
-                                                            new_power_level_value
-                                                                == RoomMemberRole::User
+                                                            .on_checked_changed(move |_, _, cx| {
+                                                                new_power_level_2.write(
+                                                                    cx,
+                                                                    RoomMemberRole::Moderator
+                                                                        .suggested_power_level(),
+                                                                )
+                                                            }),
+                                                    )
+                                                },
+                                            )
+                                            .when(
+                                                my_power_level
+                                                    >= RoomMemberRole::User.suggested_power_level(),
+                                                |david| {
+                                                    david.child(
+                                                        radio_button("power-level-user")
+                                                            .label(tr!("POWER_LEVEL_USER", "User"))
+                                                            .when(
+                                                                new_power_level_value
+                                                                    == RoomMemberRole::User
                                                                     .suggested_power_level(),
-                                                            |david| david.checked(),
-                                                        )
-                                                        .on_checked_changed(move |_, _, cx| {
-                                                            new_power_level_3.write(
-                                                                cx,
-                                                                RoomMemberRole::User
-                                                                    .suggested_power_level(),
+                                                                |david| david.checked(),
                                                             )
-                                                        }),
-                                                )
-                                            },
-                                        ),
-                                )
-                                .when(
-                                    !dialog.acting_user.is_account_user()
-                                        && new_power_level_value >= my_power_level,
-                                    |david| {
-                                        david.child(
-                                        admonition()
-                                            .severity(AdmonitionSeverity::Warning)
-                                            .title(tr!("HEADS_UP"))
-                                            .child(tr!(
+                                                            .on_checked_changed(move |_, _, cx| {
+                                                                new_power_level_3.write(
+                                                                    cx,
+                                                                    RoomMemberRole::User
+                                                                        .suggested_power_level(),
+                                                                )
+                                                            }),
+                                                    )
+                                                },
+                                            ),
+                                    )
+                                    .when(
+                                        !dialog.acting_user.is_account_user()
+                                            && new_power_level_value >= my_power_level,
+                                        |david| {
+                                            david.child(
+                                                admonition()
+                                                    .severity(AdmonitionSeverity::Warning)
+                                                    .title(tr!("HEADS_UP"))
+                                                    .child(tr!(
                                                 "POWER_LEVEL_UPDATE_PROMOTION_WARNING",
                                                 "Once this promotion takes effect, you will not \
                                                 be able to undo it, as you will lack sufficient \
                                                 permissions to change the power level of {{user}}.",
                                                 user = dialog.acting_user.user_id().to_string()
                                             )),
+                                            )
+                                        },
                                     )
-                                    },
-                                )
-                                .when(
-                                    dialog.acting_user.is_account_user()
-                                        && new_power_level_value < my_power_level,
-                                    |david| {
-                                        david.child(
-                                            admonition()
-                                                .severity(AdmonitionSeverity::Warning)
-                                                .title(tr!("HEADS_UP"))
-                                                .child(tr!(
+                                    .when(
+                                        dialog.acting_user.is_account_user()
+                                            && new_power_level_value < my_power_level,
+                                        |david| {
+                                            david.child(
+                                                admonition()
+                                                    .severity(AdmonitionSeverity::Warning)
+                                                    .title(tr!("HEADS_UP"))
+                                                    .child(tr!(
                                                     "POWER_LEVEL_UPDATE_DEMOTION_WARNING",
                                                     "Once this demotion takes effect, you will not \
                                                     be able to undo it, as you will lack \
                                                     sufficient permissions to promote yourself \
                                                     again."
                                                 )),
-                                        )
-                                    },
-                                ),
-                        )
-                        .standard_button(
-                            StandardButton::Cancel,
-                            cx.listener(|this, _, _, cx| {
-                                this.current_dialog = None;
-                                cx.notify()
-                            }),
-                        )
-                        .button(
-                            button("set-power-level")
-                                .child(icon_text(
-                                    "dialog-ok".into(),
-                                    tr!("POWER_LEVEL_UPDATE_ACTION", "Set Power Level").into(),
-                                ))
-                                .on_click(cx.listener(move |this, _, window, cx| {
-                                    this.update_power_level(new_power_level_value, window, cx);
-                                })),
-                        )
+                                            )
+                                        },
+                                    ),
+                            )
+                            .standard_button(
+                                StandardButton::Cancel,
+                                cx.listener(|this, _, _, cx| {
+                                    this.current_dialog = None;
+                                    cx.notify()
+                                }),
+                            )
+                            .button(
+                                button("set-power-level")
+                                    .child(icon_text(
+                                        "dialog-ok".into(),
+                                        tr!("POWER_LEVEL_UPDATE_ACTION", "Set Power Level").into(),
+                                    ))
+                                    .on_click(cx.listener(move |this, _, window, cx| {
+                                        this.update_power_level(new_power_level_value, window, cx);
+                                    })),
+                            )
                     }),
             )
             .child(
@@ -366,21 +366,15 @@ impl Render for UserActionDialogs {
                     }))
                     .processing(self.busy)
                     .when_some(self.current_dialog.clone(), |david, dialog| {
-                        let reason_field = window
-                            .use_state(cx, |_, cx| {
-                                TextField::new(
-                                    cx,
-                                    "reason-field",
-                                    "".into(),
-                                    tr!(
-                                        "MODERATION_ACTION_REASON_PLACEHOLDER",
-                                        "Reason (optional)"
-                                    )
-                                    .into(),
-                                )
-                            })
-                            .read(cx)
-                            .clone();
+                        let reason_field = window.use_state(cx, |_, cx| {
+                            let mut text_field = TextField::new("reason-field", cx);
+                            text_field.set_placeholder(
+                                tr!("MODERATION_ACTION_REASON_PLACEHOLDER", "Reason (optional)")
+                                    .to_string()
+                                    .as_str(),
+                            );
+                            text_field
+                        });
                         let theme = cx.global::<Theme>();
 
                         david
@@ -421,7 +415,7 @@ impl Render for UserActionDialogs {
                                         tr!("KICK_ACTION", "Kick").into(),
                                     ))
                                     .on_click(cx.listener(move |this, _, window, cx| {
-                                        let reason = reason_field.read(cx).current_text(cx);
+                                        let reason = reason_field.read(cx).text().to_string();
                                         this.evict_user(reason.into(), false, window, cx);
                                     })),
                             )
@@ -434,17 +428,15 @@ impl Render for UserActionDialogs {
                     }))
                     .processing(self.busy)
                     .when_some(self.current_dialog.clone(), |david, dialog| {
-                        let reason_field = window
-                            .use_state(cx, |_, cx| {
-                                TextField::new(
-                                    cx,
-                                    "reason-field",
-                                    "".into(),
-                                    tr!("MODERATION_ACTION_REASON_PLACEHOLDER",).into(),
-                                )
-                            })
-                            .read(cx)
-                            .clone();
+                        let reason_field = window.use_state(cx, |_, cx| {
+                            let mut text_field = TextField::new("reason-field", cx);
+                            text_field.set_placeholder(
+                                tr!("MODERATION_ACTION_REASON_PLACEHOLDER")
+                                    .to_string()
+                                    .as_str(),
+                            );
+                            text_field
+                        });
                         let theme = cx.global::<Theme>();
 
                         david
@@ -485,7 +477,7 @@ impl Render for UserActionDialogs {
                                         tr!("BAN_ACTION", "Ban").into(),
                                     ))
                                     .on_click(cx.listener(move |this, _, window, cx| {
-                                        let reason = reason_field.read(cx).current_text(cx);
+                                        let reason = reason_field.read(cx).text().to_string();
                                         this.evict_user(reason.into(), true, window, cx);
                                     })),
                             )

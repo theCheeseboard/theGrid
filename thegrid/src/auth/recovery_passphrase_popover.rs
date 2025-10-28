@@ -10,10 +10,10 @@ use contemporary::components::pager::pager;
 use contemporary::components::popover::popover;
 use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
-use contemporary::components::text_field::TextField;
+use contemporary::components::text_field::{MaskMode, TextField};
 use gpui::{
-    App, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
-    div, px,
+    App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled,
+    WeakEntity, Window, div, px,
 };
 use matrix_sdk::encryption::recovery::RecoveryState::Enabled;
 use thegrid::session::session_manager::SessionManager;
@@ -35,18 +35,18 @@ enum RecoveryState {
 
 impl RecoveryPassphrasePopover {
     pub fn new(cx: &mut App) -> Self {
-        let recovery_passphrase_field = TextField::new(
-            cx,
-            "recovery-passphrase-field",
-            Default::default(),
-            tr!("RECOVERY_PASSPHRASE_PLACEHOLDER", "Recovery Passphrase").into(),
-        );
-        recovery_passphrase_field.update(cx, |text_field, cx| {
-            text_field.password_field(cx, true);
-        });
         RecoveryPassphrasePopover {
             visible: false,
-            recovery_passphrase_field,
+            recovery_passphrase_field: cx.new(|cx| {
+                let mut text_field = TextField::new("recovery-passphrase-field", cx);
+                text_field.set_mask_mode(MaskMode::password_mask());
+                text_field.set_placeholder(
+                    tr!("RECOVERY_PASSPHRASE_PLACEHOLDER", "Recovery Passphrase")
+                        .to_string()
+                        .as_str(),
+                );
+                text_field
+            }),
             recovery_state: RecoveryState::Idle,
         }
     }
@@ -61,11 +61,7 @@ impl RecoveryPassphrasePopover {
         let session_manager = cx.global::<SessionManager>();
         let client = session_manager.client().unwrap().read(cx).clone();
         let recovery = client.encryption().recovery();
-        let recovery_key = self
-            .recovery_passphrase_field
-            .read(cx)
-            .current_text(cx)
-            .to_string();
+        let recovery_key = self.recovery_passphrase_field.read(cx).text().to_string();
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 if let Err(error) = cx
