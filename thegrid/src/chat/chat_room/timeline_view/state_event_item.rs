@@ -1,8 +1,9 @@
 use crate::chat::chat_room::timeline_view::state_change_element::state_change_element;
-use cntp_i18n::tr;
+use cntp_i18n::{Quote, tr};
 use gpui::{App, IntoElement, RenderOnce, Window, div};
 use matrix_sdk::ruma::OwnedUserId;
-use matrix_sdk::ruma::events::StateEventType;
+use matrix_sdk::ruma::events::room::name::RoomNameEventContent;
+use matrix_sdk::ruma::events::{FullStateEventContent, StateEventType};
 use matrix_sdk_ui::timeline::{
     AnyOtherFullStateEventContent, OtherState, Profile, TimelineDetails,
 };
@@ -35,6 +36,45 @@ impl RenderOnce for StateEventItem {
         .unwrap_or_else(|| self.sender.to_string());
 
         match self.state.content() {
+            AnyOtherFullStateEventContent::RoomName(event) => state_change_element(
+                None,
+                match event {
+                    FullStateEventContent::Original { content, .. } => {
+                        tr!(
+                            "ROOM_STATE_ROOM_NAME",
+                            "{{user}} changed the name of the room to {{new_name}}",
+                            user = sender,
+                            new_name:Quote = content.name
+                        )
+                    }
+                    FullStateEventContent::Redacted(_) => {
+                        tr!(
+                            "ROOM_STATE_ROOM_NAME_REDACTED",
+                            "{{user}} changed the name of the room",
+                            user = sender
+                        )
+                    }
+                },
+            )
+            .into_any_element(),
+            AnyOtherFullStateEventContent::RoomTopic(_) => state_change_element(
+                None,
+                tr!(
+                    "ROOM_STATE_ROOM_TOPIC",
+                    "{{user}} changed the topic for the room",
+                    user = sender
+                ),
+            )
+            .into_any_element(),
+            AnyOtherFullStateEventContent::RoomAvatar(_) => state_change_element(
+                None,
+                tr!(
+                    "ROOM_STATE_ROOM_AVATAR",
+                    "{{user}} changed the picture for the room",
+                    user = sender
+                ),
+            )
+            .into_any_element(),
             AnyOtherFullStateEventContent::RoomEncryption(_) => state_change_element(
                 None,
                 tr!(
@@ -49,6 +89,15 @@ impl RenderOnce for StateEventItem {
                 tr!(
                     "ROOM_STATE_POWER_LEVELS",
                     "{{user}} updated permissions in the room",
+                    user = sender
+                ),
+            )
+            .into_any_element(),
+            AnyOtherFullStateEventContent::RoomTombstone(_) => state_change_element(
+                None,
+                tr!(
+                    "ROOM_STATE_TOMBSTONE",
+                    "{{user}} upgraded the room",
                     user = sender
                 ),
             )

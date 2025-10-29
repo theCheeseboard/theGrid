@@ -1219,13 +1219,19 @@
   },
   "ROOM_STATE_POWER_LEVELS": {
     "context": "state_event_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/state_event_item.rs:50",
+    "definedIn": "src/chat/chat_room/timeline_view/state_event_item.rs:90",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_STATE_ROOM_AVATAR": {
+    "context": "state_event_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/state_event_item.rs:72",
     "plural": false,
     "description": null
   },
   "ROOM_STATE_ROOM_ENCRYPTION": {
     "context": "state_event_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/state_event_item.rs:41",
+    "definedIn": "src/chat/chat_room/timeline_view/state_event_item.rs:81",
     "plural": false,
     "description": null
   },
@@ -1268,6 +1274,30 @@
   "ROOM_STATE_ROOM_MEMBER_UNBANNED": {
     "context": "membership_change_item.rs",
     "definedIn": "src/chat/chat_room/timeline_view/membership_change_item.rs:65",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_STATE_ROOM_NAME": {
+    "context": "state_event_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/state_event_item.rs:44",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_STATE_ROOM_NAME_REDACTED": {
+    "context": "state_event_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/state_event_item.rs:52",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_STATE_ROOM_TOPIC": {
+    "context": "state_event_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/state_event_item.rs:63",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_STATE_TOMBSTONE": {
+    "context": "state_event_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/state_event_item.rs:99",
     "plural": false,
     "description": null
   },
