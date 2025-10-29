@@ -199,7 +199,7 @@ impl RenderOnce for StandardRoomElement {
             .on_click(move |event, window, cx| {
                 on_click(event, window, cx);
             })
-            .with_deferred_context_menu(context_menu)
+            .with_context_menu(context_menu)
             .child(
                 dialog_box("leave-room-dialog-box")
                     .render_as_deferred(true)
