@@ -1,26 +1,31 @@
 use crate::session::account_cache::AccountCache;
 use crate::session::caches::Caches;
 use crate::session::devices_cache::DevicesCache;
-use crate::session::error_handling::{ClientError, TerminalClientError, handle_error};
+use crate::session::error_handling::{
+    ClientError, RecoverableClientError, TerminalClientError, handle_error,
+};
 use crate::session::media_cache::MediaCache;
+use crate::session::room_cache::RoomCache;
 use crate::session::verification_requests_cache::VerificationRequestsCache;
 use crate::tokio_helper::TokioHelper;
 use contemporary::application::Details;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
-use gpui::{App, AppContext, AsyncApp, Entity, Global, Task, WeakEntity};
+use gpui::{App, AppContext, AsyncApp, Context, Entity, Global, Task, WeakEntity};
 use gpui_tokio::Tokio;
 use log::error;
 use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::config::SyncSettings;
+use matrix_sdk::ruma::OwnedUserId;
 use matrix_sdk::ruma::api::error::FromHttpResponseError;
 use matrix_sdk::ruma::events::key::verification::request::ToDeviceKeyVerificationRequestEvent;
 use matrix_sdk::store::RoomLoadSettings;
 use matrix_sdk::{Client, Error, HttpError, LoopCtrl, RumaApiError};
+use matrix_sdk_ui::sync_service::{State, SyncService};
 use std::fs::{create_dir_all, read_dir, remove_dir_all};
 use std::path::PathBuf;
+use std::sync::Arc;
 use uuid::Uuid;
-use crate::session::room_cache::RoomCache;
 
 pub struct SessionManager {
     current_session: Option<Session>,
@@ -74,120 +79,123 @@ impl SessionManager {
             let homeserver = std::fs::read_to_string(homeserver_file);
 
             cx.spawn(async move |cx: &mut AsyncApp| {
-                let client = Tokio::spawn_result(cx, async move {
-                    {
-                        if let Ok(homeserver) = homeserver {
-                            Client::builder().homeserver_url(homeserver)
-                        } else {
-                            Client::builder().server_name(user_id.server_name())
-                        }
-                    }
-                    .sqlite_store(store_dir, None)
-                    .build()
-                    .await
-                    .map_err(|e| anyhow!(e))
-                })
-                .unwrap()
-                .await;
-
-                match client {
-                    Ok(client) => {
-                        let client_clone = client.clone();
-                        Tokio::spawn_result(cx, async move {
-                            client_clone
-                                .matrix_auth()
-                                .restore_session(matrix_session, RoomLoadSettings::All)
-                                .await
-                                .map_err(|e| anyhow!(e))
-                        })
-                        .unwrap()
+                if let Err(error) =
+                    Self::setup_session(user_id, store_dir, matrix_session, homeserver.ok(), cx)
                         .await
-                        .unwrap();
-
-                        client.event_cache().subscribe().unwrap();
-
-                        let (tx_clear_error, rx_clear_error) = async_channel::bounded(1);
-                        cx.spawn(async move |cx: &mut AsyncApp| {
-                            loop {
-                                if rx_clear_error.recv().await.is_err() {
-                                    return;
-                                };
-
-                                if cx
-                                    .update_global::<Self, ()>(|session_manager, cx| {
-                                        session_manager.current_client_error = ClientError::None;
-                                    })
-                                    .is_err()
-                                {
-                                    return;
-                                }
-                            }
-                        })
-                        .detach();
-
-                        let client_clone = client.clone();
-                        cx.spawn(async move |cx: &mut AsyncApp| {
-                            loop {
-                                let client_clone = client_clone.clone();
-                                let tx_clear_error = tx_clear_error.clone();
-                                let sync_result = cx
-                                    .spawn_tokio(async move {
-                                        client_clone
-                                            .sync_with_callback(SyncSettings::default(), |_| {
-                                                let tx_clear_error = tx_clear_error.clone();
-                                                async move {
-                                                    if tx_clear_error.send(()).await.is_err() {
-                                                        return LoopCtrl::Break;
-                                                    };
-
-                                                    LoopCtrl::Continue
-                                                }
-                                            })
-                                            .await
-                                    })
-                                    .await
-                                    .unwrap_err();
-
-                                let error = handle_error(&sync_result);
-                                match error {
-                                    ClientError::None => {}
-                                    ClientError::Terminal(_) => {
-                                        error!("Sync error: {sync_result:?}");
-                                        let _ =
-                                            cx.update_global::<Self, ()>(|session_manager, cx| {
-                                                session_manager.current_client_error = error;
-                                            });
-
-                                        return;
-                                    }
-                                    ClientError::Recoverable(_) => {
-                                        let _ =
-                                            cx.update_global::<Self, ()>(|session_manager, cx| {
-                                                session_manager.current_client_error = error;
-                                            });
-                                    }
-                                }
-                            }
-                        })
-                        .detach();
-
-                        cx.update_global::<Self, ()>(|session_manager, cx| {
-                            session_manager.current_caches = Some(Caches::new(&client, cx));
-                            session_manager.current_session_client = Some(cx.new(|_| client));
-                        })
-                        .unwrap();
-                    }
-                    Err(error) => {
-                        error!("Unable to create client: {error:?}");
-                        let _ = cx.update_global::<Self, ()>(|session_manager, cx| {
-                            session_manager.current_client_error =
-                                ClientError::Terminal(TerminalClientError::UnknownError);
-                        });
-                    }
-                }
+                {
+                    error!("Unable to create client: {error:?}");
+                    let _ = cx.update_global::<Self, ()>(|session_manager, cx| {
+                        session_manager.current_client_error =
+                            ClientError::Terminal(TerminalClientError::UnknownError);
+                    });
+                };
             })
             .detach();
         }
+    }
+
+    async fn setup_session(
+        user_id: OwnedUserId,
+        store_dir: PathBuf,
+        matrix_session: MatrixSession,
+        homeserver: Option<String>,
+        cx: &mut AsyncApp,
+    ) -> anyhow::Result<()> {
+        let client = cx
+            .spawn_tokio(async move {
+                {
+                    if let Some(homeserver) = homeserver {
+                        Client::builder().homeserver_url(homeserver)
+                    } else {
+                        Client::builder().server_name(user_id.server_name())
+                    }
+                }
+                .sqlite_store(store_dir, None)
+                .build()
+                .await
+            })
+            .await?;
+
+        let client_clone = client.clone();
+        cx.spawn_tokio(async move {
+            client_clone
+                .matrix_auth()
+                .restore_session(matrix_session, RoomLoadSettings::All)
+                .await
+        })
+        .await?;
+
+        client.event_cache().subscribe()?;
+
+        let (tx_clear_error, rx_clear_error) = async_channel::bounded(1);
+        cx.spawn(async move |cx: &mut AsyncApp| {
+            loop {
+                if rx_clear_error.recv().await.is_err() {
+                    return;
+                };
+
+                if cx
+                    .update_global::<Self, ()>(|session_manager, cx| {
+                        session_manager.current_client_error = ClientError::None;
+                    })
+                    .is_err()
+                {
+                    return;
+                }
+            }
+        })
+        .detach();
+
+        let client_clone = client.clone();
+        cx.spawn(async move |cx: &mut AsyncApp| {
+            loop {
+                let client_clone = client_clone.clone();
+                let tx_clear_error = tx_clear_error.clone();
+                let sync_result = cx
+                    .spawn_tokio(async move {
+                        client_clone
+                            .sync_with_callback(SyncSettings::default(), |_| {
+                                let tx_clear_error = tx_clear_error.clone();
+                                async move {
+                                    if tx_clear_error.send(()).await.is_err() {
+                                        return LoopCtrl::Break;
+                                    };
+
+                                    LoopCtrl::Continue
+                                }
+                            })
+                            .await
+                    })
+                    .await
+                    .unwrap_err();
+
+                let error = handle_error(&sync_result);
+                match error {
+                    ClientError::None => {}
+                    ClientError::Terminal(_) => {
+                        error!("Sync error: {sync_result:?}");
+                        let _ = cx.update_global::<Self, ()>(|session_manager, cx| {
+                            session_manager.current_client_error = error;
+                        });
+
+                        return;
+                    }
+                    ClientError::Recoverable(_) => {
+                        let _ = cx.update_global::<Self, ()>(|session_manager, cx| {
+                            session_manager.current_client_error = error;
+                        });
+                    }
+                }
+            }
+        })
+        .detach();
+
+        cx.update_global::<Self, ()>(|session_manager, cx| {
+            session_manager.current_caches = Some(Caches::new(&client, cx));
+            session_manager.current_session_client = Some(cx.new(|_| client));
+        })?;
+
+        Ok(())
     }
 
     pub fn clear_session(&mut self) {
@@ -228,7 +236,7 @@ impl SessionManager {
     pub fn media(&self) -> &MediaCache {
         &self.current_caches.as_ref().unwrap().media_cache
     }
-    
+
     pub fn rooms(&self) -> Entity<RoomCache> {
         self.current_caches.as_ref().unwrap().room_cache.clone()
     }
