@@ -1,3 +1,5 @@
+use cntp_i18n::tr;
+use contemporary::notification::Notification;
 use gpui::{App, AppContext, AsyncApp, Context, Entity, WeakEntity};
 use log::{error, info};
 use matrix_sdk::Client;
@@ -219,6 +221,33 @@ impl VerificationRequestsCache {
                             .update(cx, |this, cx| {
                                 match mutation {
                                     CacheMutation::Push(verification_request) => {
+                                        if !verification_request.inner.we_started() {
+                                            // Trigger a notification
+                                            let _ = Notification::new()
+                                                .summary(
+                                                    tr!("INCOMING_VERIFICATION")
+                                                        .to_string()
+                                                        .as_str(),
+                                                )
+                                                .body(
+                                                    tr!(
+                                                        "INCOMING_SELF_VERIFICATION_DESCRIPTION",
+                                                        device_id = verification_request
+                                                            .device_id
+                                                            .clone()
+                                                            .map(|id| id.to_string())
+                                                            .unwrap_or_else(|| tr!(
+                                                                "UNKNOWN_DEVICE",
+                                                                "Unknown Device"
+                                                            )
+                                                            .to_string())
+                                                    )
+                                                    .to_string()
+                                                    .as_str(),
+                                                )
+                                                .post(cx);
+                                        }
+
                                         this.pending_verification_requests
                                             .push(verification_request);
                                     }

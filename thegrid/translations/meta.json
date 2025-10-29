@@ -1506,8 +1506,8 @@
     "description": null
   },
   "UNKNOWN_DEVICE": {
-    "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:261",
+    "context": "verification_requests_cache.rs",
+    "definedIn": "src/session/verification_requests_cache.rs:240",
     "plural": false,
     "description": null
   },
