@@ -851,6 +851,48 @@
     "plural": false,
     "description": null
   },
+  "NOTIFICATION_INVITE_BODY": {
+    "context": "notifications.rs",
+    "definedIn": "src/session/notifications.rs:123",
+    "plural": false,
+    "description": null
+  },
+  "NOTIFICATION_INVITE_SUMMARY": {
+    "context": "notifications.rs",
+    "definedIn": "src/session/notifications.rs:117",
+    "plural": false,
+    "description": null
+  },
+  "NOTIFICATION_MESSAGE_BODY_AUDIO": {
+    "context": "notifications.rs",
+    "definedIn": "src/session/notifications.rs:86",
+    "plural": false,
+    "description": null
+  },
+  "NOTIFICATION_MESSAGE_BODY_FILE": {
+    "context": "notifications.rs",
+    "definedIn": "src/session/notifications.rs:73",
+    "plural": false,
+    "description": null
+  },
+  "NOTIFICATION_MESSAGE_BODY_IMAGE": {
+    "context": "notifications.rs",
+    "definedIn": "src/session/notifications.rs:62",
+    "plural": false,
+    "description": null
+  },
+  "NOTIFICATION_MESSAGE_BODY_VIDEO": {
+    "context": "notifications.rs",
+    "definedIn": "src/session/notifications.rs:96",
+    "plural": false,
+    "description": null
+  },
+  "NOTIFICATION_MESSAGE_SUMMARY": {
+    "context": "notifications.rs",
+    "definedIn": "src/session/notifications.rs:44",
+    "plural": false,
+    "description": null
+  },
   "NO_DISPLAYED_ROOM_MESSAGE": {
     "context": "main_chat_surface.rs",
     "definedIn": "src/chat/main_chat_surface.rs:145",

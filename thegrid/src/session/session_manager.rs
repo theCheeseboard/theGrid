@@ -5,6 +5,7 @@ use crate::session::error_handling::{
     ClientError, RecoverableClientError, TerminalClientError, handle_error,
 };
 use crate::session::media_cache::MediaCache;
+use crate::session::notifications::trigger_notification;
 use crate::session::room_cache::RoomCache;
 use crate::session::verification_requests_cache::VerificationRequestsCache;
 use crate::tokio_helper::TokioHelper;
@@ -13,14 +14,15 @@ use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{App, AppContext, AsyncApp, Context, Entity, Global, Task, WeakEntity};
 use gpui_tokio::Tokio;
-use log::error;
+use log::{error, info};
 use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::config::SyncSettings;
 use matrix_sdk::ruma::OwnedUserId;
 use matrix_sdk::ruma::api::error::FromHttpResponseError;
 use matrix_sdk::ruma::events::key::verification::request::ToDeviceKeyVerificationRequestEvent;
 use matrix_sdk::store::RoomLoadSettings;
-use matrix_sdk::{Client, Error, HttpError, LoopCtrl, RumaApiError};
+use matrix_sdk::sync::Notification;
+use matrix_sdk::{Client, Error, HttpError, LoopCtrl, Room, RumaApiError};
 use matrix_sdk_ui::sync_service::{State, SyncService};
 use std::fs::{create_dir_all, read_dir, remove_dir_all};
 use std::path::PathBuf;
@@ -126,6 +128,39 @@ impl SessionManager {
         .await?;
 
         client.event_cache().subscribe()?;
+
+        let (tx_notification, rx_notification) = async_channel::bounded(1);
+
+        let client_clone = client.clone();
+        cx.spawn(async move |cx: &mut AsyncApp| {
+            let tx_notification = tx_notification.clone();
+            cx.spawn_tokio::<_, _, anyhow::Error>(async move {
+                client_clone
+                    .register_notification_handler(move |notification, room, client| {
+                        let tx_notification = tx_notification.clone();
+                        async move {
+                            let _ = tx_notification.send((notification, room)).await;
+                        }
+                    })
+                    .await;
+                Ok(())
+            })
+            .await
+        })
+        .detach();
+        cx.spawn(async move |cx: &mut AsyncApp| {
+            while let Ok((notification, room)) = rx_notification.recv().await {
+                if cx
+                    .update(|cx| {
+                        trigger_notification(notification, room, cx);
+                    })
+                    .is_err()
+                {
+                    return;
+                };
+            }
+        })
+        .detach();
 
         let (tx_clear_error, rx_clear_error) = async_channel::bounded(1);
         cx.spawn(async move |cx: &mut AsyncApp| {
