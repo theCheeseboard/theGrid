@@ -50,6 +50,8 @@ impl Render for ProfileSettings {
         let account = session_manager.current_account().read(cx);
         let session = session_manager.current_session().unwrap();
 
+        let display_name = account.display_name().unwrap_or_default();
+
         div()
             .bg(theme.background)
             .w_full()
@@ -115,8 +117,13 @@ impl Render for ProfileSettings {
                                                 )
                                                 .into(),
                                             ))
-                                            .on_click(cx.listener(|this, _, _, cx| {
-                                                // TODO: Set the text field text to the current display name
+                                            .on_click(cx.listener(move |this, _, _, cx| {
+                                                this.new_display_name_text_field.update(
+                                                    cx,
+                                                    |text_field, cx| {
+                                                        text_field.set_text(display_name.as_str());
+                                                    },
+                                                );
                                                 this.edit_display_name_open = true;
                                                 cx.notify()
                                             })),

@@ -152,6 +152,12 @@ impl Render for RoomSettings {
         let room_2 = room.clone();
         let room_3 = room.clone();
 
+        let room_name = room
+            .cached_display_name()
+            .map(|name| name.to_string())
+            .or_else(|| room.name())
+            .unwrap_or_default();
+
         div()
             .flex()
             .flex_col()
@@ -188,12 +194,7 @@ impl Render for RoomSettings {
                                     .flex_col()
                                     .justify_center()
                                     .gap(px(4.))
-                                    .child(
-                                        room.cached_display_name()
-                                            .map(|name| name.to_string())
-                                            .or_else(|| room.name())
-                                            .unwrap_or_default(),
-                                    )
+                                    .child(room_name.clone())
                                     .child(div().flex().when_else(
                                         room.encryption_state().is_encrypted(),
                                         |david| {
@@ -242,8 +243,14 @@ impl Render for RoomSettings {
                                                 "edit-rename".into(),
                                                 tr!("ROOM_CHANGE_NAME", "Change Room Name").into(),
                                             ))
-                                            .on_click(cx.listener(|this, _, _, cx| {
-                                                // TODO: Set the text field text to the current display name
+                                            .on_click(cx.listener(move |this, _, _, cx| {
+                                                this.new_name_text_field.update(
+                                                    cx,
+                                                    |text_field, cx| {
+                                                        text_field
+                                                            .set_text(room_name.as_str());
+                                                    },
+                                                );
                                                 this.edit_room_name_open = true;
                                                 cx.notify()
                                             })),
