@@ -32,11 +32,12 @@ struct CurrentDialog {
     acting_user: RoomMember,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 enum DialogType {
     PowerLevel,
     Ban,
     Kick,
+    Unban,
 }
 
 impl UserActionDialogs {
@@ -95,6 +96,13 @@ impl UserActionDialogs {
         })
     }
 
+    pub fn open_unban_dialog(&mut self, acting_user: RoomMember) {
+        self.current_dialog = Some(CurrentDialog {
+            dialog_type: DialogType::Unban,
+            acting_user,
+        })
+    }
+
     pub fn update_power_level(
         &mut self,
         new_power_level: UserPowerLevel,
@@ -138,16 +146,12 @@ impl UserActionDialogs {
         cx.notify();
     }
 
-    pub fn evict_user(
-        &mut self,
-        reason: String,
-        is_ban: bool,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
+    pub fn action_user(&mut self, reason: String, window: &mut Window, cx: &mut Context<Self>) {
         let dialog = self.current_dialog.as_ref().unwrap();
         let acting_user_id = dialog.acting_user.user_id().to_owned();
         let room = self.room.clone().unwrap();
+
+        let dialog_type = dialog.dialog_type;
 
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
@@ -159,10 +163,16 @@ impl UserActionDialogs {
                             Some(reason.as_str())
                         };
 
-                        if is_ban {
-                            room.ban_user(&acting_user_id, reason).await
-                        } else {
-                            room.kick_user(&acting_user_id, reason).await
+                        match dialog_type {
+                            DialogType::PowerLevel => {
+                                // ???
+                                panic!(
+                                    "Tried to effect a power level change with a ban or kick dialog"
+                                )
+                            }
+                            DialogType::Ban => room.ban_user(&acting_user_id, reason).await,
+                            DialogType::Kick => room.kick_user(&acting_user_id, reason).await,
+                            DialogType::Unban => room.unban_user(&acting_user_id, reason).await,
                         }
                     })
                     .await
@@ -416,7 +426,7 @@ impl Render for UserActionDialogs {
                                     ))
                                     .on_click(cx.listener(move |this, _, window, cx| {
                                         let reason = reason_field.read(cx).text().to_string();
-                                        this.evict_user(reason.into(), false, window, cx);
+                                        this.action_user(reason, window, cx);
                                     })),
                             )
                     }),
@@ -478,7 +488,69 @@ impl Render for UserActionDialogs {
                                     ))
                                     .on_click(cx.listener(move |this, _, window, cx| {
                                         let reason = reason_field.read(cx).text().to_string();
-                                        this.evict_user(reason.into(), true, window, cx);
+                                        this.action_user(reason, window, cx);
+                                    })),
+                            )
+                    }),
+            )
+            .child(
+                dialog_box("unban-dialog-box")
+                    .visible(self.current_dialog.as_ref().is_some_and(|current_dialog| {
+                        current_dialog.dialog_type == DialogType::Unban
+                    }))
+                    .processing(self.busy)
+                    .when_some(self.current_dialog.clone(), |david, dialog| {
+                        let reason_field = window.use_state(cx, |_, cx| {
+                            let mut text_field = TextField::new("reason-field", cx);
+                            text_field.set_placeholder(
+                                tr!("MODERATION_ACTION_REASON_PLACEHOLDER")
+                                    .to_string()
+                                    .as_str(),
+                            );
+                            text_field
+                        });
+                        let theme = cx.global::<Theme>();
+
+                        david
+                            .title(tr!("UNBAN_TITLE", "Lift Ban").into())
+                            .content(
+                                div().flex().flex_col().gap(px(4.)).child(
+                                    div()
+                                        .flex()
+                                        .flex_col()
+                                        .w(px(500.))
+                                        .child(tr!(
+                                            "UNBAN_TEXT",
+                                            "Do you want to lift {{user}}'s ban?",
+                                            user = dialog.acting_user.user_id().to_string()
+                                        ))
+                                        .child(div().text_color(theme.foreground.disabled()).child(
+                                            tr!(
+                                                "UNBAN_DESCRIPTION",
+                                                "They will be able to rejoin the room and can \
+                                                rejoin if the room is public, or if they are \
+                                                re-invited."
+                                            ),
+                                        ))
+                                        .child(reason_field.clone()),
+                                ),
+                            )
+                            .standard_button(
+                                StandardButton::Cancel,
+                                cx.listener(|this, _, _, cx| {
+                                    this.current_dialog = None;
+                                    cx.notify()
+                                }),
+                            )
+                            .button(
+                                button("unban")
+                                    .child(icon_text(
+                                        "user".into(),
+                                        tr!("UNBAN_ACTION", "Lift Ban").into(),
+                                    ))
+                                    .on_click(cx.listener(move |this, _, window, cx| {
+                                        let reason = reason_field.read(cx).text().to_string();
+                                        this.action_user(reason, window, cx);
                                     })),
                             )
                     }),

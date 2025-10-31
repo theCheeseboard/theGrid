@@ -40,6 +40,7 @@ pub enum UserAction {
     ChangePowerLevel,
     Kick,
     Ban,
+    Unban,
 }
 
 #[derive(IntoElement)]
@@ -77,10 +78,13 @@ impl RenderOnce for AuthorFlyout {
         let on_close_3 = on_close.clone();
         let on_close_4 = on_close.clone();
         let on_close_5 = on_close.clone();
+        let on_close_6 = on_close.clone();
+        let on_close_7 = on_close.clone();
 
         let on_user_action = Rc::new(self.on_user_action);
         let on_user_action_2 = on_user_action.clone();
         let on_user_action_3 = on_user_action.clone();
+        let on_user_action_4 = on_user_action.clone();
 
         let theme = cx.global::<Theme>();
         let room = self.room.read(cx).room.clone().unwrap();
@@ -95,6 +99,8 @@ impl RenderOnce for AuthorFlyout {
         let room_2 = room.clone();
         let room_3 = room.clone();
         let room_4 = room.clone();
+        let room_5 = room.clone();
+        let room_6 = room.clone();
 
         flyout(self.bounds)
             .render_as_deferred(true)
@@ -105,17 +111,21 @@ impl RenderOnce for AuthorFlyout {
                     let room_member = room_member.clone();
                     let room_member_2 = room_member.clone();
                     let room_member_3 = room_member.clone();
+                    let room_member_4 = room_member.clone();
                     let room_member_id = room_member.user_id().to_owned();
+                    let room_member_id_2 = room_member.user_id().to_owned();
                     let suggested_role = room_member.suggested_role_for_power_level();
 
                     let membership = room_member.membership().clone();
                     let joined = membership == MembershipState::Join;
                     let me = self.room.read(cx).current_user.clone().unwrap();
                     let can_invite = me.can_invite() && membership == MembershipState::Leave;
+                    let can_retract_invite = me.can_kick() && membership == MembershipState::Invite;
                     let can_ban =
                         me.can_ban() && me.power_level() > room_member.power_level() && joined;
                     let can_kick =
                         me.can_kick() && me.power_level() > room_member.power_level() && joined;
+                    let can_unban = me.can_ban() && membership == MembershipState::Ban;
 
                     div()
                         .occlude()
@@ -259,6 +269,42 @@ impl RenderOnce for AuthorFlyout {
                                                     }),
                                             )
                                         })
+                                        .when(can_retract_invite, |david| {
+                                            david.child(
+                                                button("retract-invite-button")
+                                                    .child(icon_text(
+                                                        "im-kick-user".into(),
+                                                        tr!(
+                                                            "RETRACT_INVITE_USER",
+                                                            "Retract Invite"
+                                                        )
+                                                        .into(),
+                                                    ))
+                                                    .destructive()
+                                                    .on_click(move |_, window, cx| {
+                                                        let room = room_5.clone();
+                                                        let room_member_id =
+                                                            room_member_id_2.clone();
+                                                        on_close_6(
+                                                            &AuthorFlyoutCloseEvent,
+                                                            window,
+                                                            cx,
+                                                        );
+                                                        cx.spawn(async |cx: &mut AsyncApp| {
+                                                            let _ = cx
+                                                                .spawn_tokio(async move {
+                                                                    room.kick_user(
+                                                                        &room_member_id,
+                                                                        None,
+                                                                    )
+                                                                    .await
+                                                                })
+                                                                .await;
+                                                        })
+                                                        .detach();
+                                                    }),
+                                            )
+                                        })
                                         .when(can_kick, |david| {
                                             david.child(
                                                 button("kick-button")
@@ -304,6 +350,31 @@ impl RenderOnce for AuthorFlyout {
                                                                 action: UserAction::Ban,
                                                                 room: room_3.clone(),
                                                                 user: room_member_3.clone(),
+                                                            },
+                                                            window,
+                                                            cx,
+                                                        );
+                                                    }),
+                                            )
+                                        })
+                                        .when(can_unban, |david| {
+                                            david.child(
+                                                button("unban-button")
+                                                    .child(icon_text(
+                                                        "user".into(),
+                                                        tr!("UNBAN", "Lift Ban").into(),
+                                                    ))
+                                                    .on_click(move |_, window, cx| {
+                                                        on_close_7(
+                                                            &AuthorFlyoutCloseEvent,
+                                                            window,
+                                                            cx,
+                                                        );
+                                                        on_user_action_4(
+                                                            &AuthorFlyoutUserActionEvent {
+                                                                action: UserAction::Unban,
+                                                                room: room_6.clone(),
+                                                                user: room_member_4.clone(),
                                                             },
                                                             window,
                                                             cx,

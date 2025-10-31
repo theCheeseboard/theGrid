@@ -115,6 +115,9 @@ impl ChatRoom {
                     UserAction::Ban => {
                         user_action_dialogs.open_ban_dialog(user_action.user.clone());
                     }
+                    UserAction::Unban => {
+                        user_action_dialogs.open_unban_dialog(user_action.user.clone());
+                    }
                 }
 
                 cx.notify()

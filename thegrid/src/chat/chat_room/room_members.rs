@@ -171,24 +171,32 @@ impl RoomMembers {
                                     .map(|name| name.to_string())
                                     .unwrap_or_else(|| member.user_id().to_string()),
                             )
-                            .when(suggested_role == RoomMemberRole::Administrator, |david| {
-                                david.child(
-                                    div()
-                                        .rounded(theme.border_radius)
-                                        .bg(theme.error_accent_color)
-                                        .p(px(2.))
-                                        .child(tr!("POWER_LEVEL_ADMINISTRATOR")),
-                                )
-                            })
-                            .when(suggested_role == RoomMemberRole::Moderator, |david| {
-                                david.child(
-                                    div()
-                                        .rounded(theme.border_radius)
-                                        .bg(theme.info_accent_color)
-                                        .p(px(2.))
-                                        .child(tr!("POWER_LEVEL_MODERATOR")),
-                                )
-                            }),
+                            .when(
+                                suggested_role == RoomMemberRole::Administrator
+                                    && *member.membership() == MembershipState::Join,
+                                |david| {
+                                    david.child(
+                                        div()
+                                            .rounded(theme.border_radius)
+                                            .bg(theme.error_accent_color)
+                                            .p(px(2.))
+                                            .child(tr!("POWER_LEVEL_ADMINISTRATOR")),
+                                    )
+                                },
+                            )
+                            .when(
+                                suggested_role == RoomMemberRole::Moderator
+                                    && *member.membership() == MembershipState::Join,
+                                |david| {
+                                    david.child(
+                                        div()
+                                            .rounded(theme.border_radius)
+                                            .bg(theme.info_accent_color)
+                                            .p(px(2.))
+                                            .child(tr!("POWER_LEVEL_MODERATOR")),
+                                    )
+                                },
+                            ),
                     )
                     .child(
                         div()
