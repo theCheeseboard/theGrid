@@ -117,10 +117,15 @@ impl TimelineView {
 
         if timeline.timeline_items().len() != self.list_state.item_count() {
             let mut last_offset = self.list_state.logical_scroll_top();
-            let new_items = timeline.timeline_items().len() - self.list_state.item_count();
-            last_offset.item_ix += new_items;
-            self.list_state.reset(timeline.timeline_items().len());
-            self.list_state.scroll_to(last_offset);
+            if let Some(new_items) = timeline
+                .timeline_items()
+                .len()
+                .checked_sub(self.list_state.item_count())
+            {
+                last_offset.item_ix += new_items;
+                self.list_state.reset(timeline.timeline_items().len());
+                self.list_state.scroll_to(last_offset);
+            }
         }
     }
 }

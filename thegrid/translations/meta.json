@@ -1123,55 +1123,55 @@
   },
   "ROOM_ACCESS": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:302",
+    "definedIn": "src/chat/chat_room/room_settings.rs:311",
     "plural": false,
     "description": null
   },
   "ROOM_ACCESS_INVITE_ONLY": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:315",
+    "definedIn": "src/chat/chat_room/room_settings.rs:324",
     "plural": false,
     "description": null
   },
   "ROOM_ACCESS_KNOCK_INVITE": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:310",
+    "definedIn": "src/chat/chat_room/room_settings.rs:319",
     "plural": false,
     "description": null
   },
   "ROOM_ACCESS_PUBLIC": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:306",
+    "definedIn": "src/chat/chat_room/room_settings.rs:315",
     "plural": false,
     "description": null
   },
   "ROOM_ACCESS_UNKNOWN": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:318",
+    "definedIn": "src/chat/chat_room/room_settings.rs:327",
     "plural": false,
     "description": null
   },
   "ROOM_ACCESS_VISIBILITY": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:288",
+    "definedIn": "src/chat/chat_room/room_settings.rs:297",
     "plural": false,
     "description": null
   },
   "ROOM_CHANGE_NAME": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:244",
+    "definedIn": "src/chat/chat_room/room_settings.rs:247",
     "plural": false,
     "description": null
   },
   "ROOM_CHANGE_NAME_DESCRIPTION": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:397",
+    "definedIn": "src/chat/chat_room/room_settings.rs:406",
     "plural": false,
     "description": null
   },
   "ROOM_CHANGE_PICTURE": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:260",
+    "definedIn": "src/chat/chat_room/room_settings.rs:262",
     "plural": false,
     "description": null
   },
@@ -1183,19 +1183,19 @@
   },
   "ROOM_ENCRYPTION_BADGE": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:207",
+    "definedIn": "src/chat/chat_room/room_settings.rs:210",
     "plural": false,
     "description": null
   },
   "ROOM_ENCRYPTION_ENABLE": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:270",
+    "definedIn": "src/chat/chat_room/room_settings.rs:279",
     "plural": false,
     "description": null
   },
   "ROOM_ENCRYPTION_ENABLE_DESCRIPTION": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:453",
+    "definedIn": "src/chat/chat_room/room_settings.rs:462",
     "plural": false,
     "description": null
   },
@@ -1223,6 +1223,12 @@
     "plural": false,
     "description": null
   },
+  "ROOM_MEMBERS": {
+    "context": "room_members.rs",
+    "definedIn": "src/chat/chat_room/room_members.rs:204",
+    "plural": false,
+    "description": null
+  },
   "ROOM_NAME": {
     "context": "create_room_popover.rs",
     "definedIn": "src/chat/join_room/create_room_popover.rs:43",
@@ -1231,7 +1237,7 @@
   },
   "ROOM_NAME_PLACEHOLDER": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:72",
+    "definedIn": "src/chat/chat_room/room_settings.rs:75",
     "plural": false,
     "description": null
   },
@@ -1243,19 +1249,19 @@
   },
   "ROOM_NO_ENCRYPTION_BADGE": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:219",
+    "definedIn": "src/chat/chat_room/room_settings.rs:222",
     "plural": false,
     "description": null
   },
   "ROOM_PUBLISH_TO_DIRECTORY": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:368",
+    "definedIn": "src/chat/chat_room/room_settings.rs:377",
     "plural": false,
     "description": null
   },
   "ROOM_SETTINGS": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:168",
+    "definedIn": "src/chat/chat_room/room_settings.rs:171",
     "plural": false,
     "description": null
   },
@@ -1375,7 +1381,7 @@
   },
   "ROOM_VIEW_MEMBERS": {
     "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:264",
+    "definedIn": "src/chat/chat_room/room_settings.rs:268",
     "plural": false,
     "description": null
   },
@@ -1555,7 +1561,7 @@
   },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:107",
+    "definedIn": "src/chat/chat_room.rs:138",
     "plural": false,
     "description": null
   },

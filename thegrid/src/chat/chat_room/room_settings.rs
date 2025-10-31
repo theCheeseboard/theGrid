@@ -28,6 +28,7 @@ use thegrid::tokio_helper::TokioHelper;
 pub struct RoomSettings {
     open_room: Entity<OpenRoom>,
     on_back_click: Rc<Box<dyn Fn(&ClickEvent, &mut Window, &mut App)>>,
+    on_members_click: Rc<Box<dyn Fn(&ClickEvent, &mut Window, &mut App)>>,
     edit_room_name_open: bool,
     new_name_text_field: Entity<TextField>,
     enable_encryption_open: bool,
@@ -39,6 +40,7 @@ impl RoomSettings {
     pub fn new(
         open_room: Entity<OpenRoom>,
         on_back_click: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
+        on_members_click: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
         cx: &mut Context<RoomSettings>,
     ) -> Self {
         cx.observe(&open_room, |this, open_room, cx| {
@@ -65,6 +67,7 @@ impl RoomSettings {
         Self {
             open_room,
             on_back_click: Rc::new(Box::new(on_back_click)),
+            on_members_click: Rc::new(Box::new(on_members_click)),
 
             new_name_text_field: cx.new(|cx| {
                 let mut text_field = TextField::new("new-name", cx);
@@ -247,8 +250,7 @@ impl Render for RoomSettings {
                                                 this.new_name_text_field.update(
                                                     cx,
                                                     |text_field, cx| {
-                                                        text_field
-                                                            .set_text(room_name.as_str());
+                                                        text_field.set_text(room_name.as_str());
                                                     },
                                                 );
                                                 this.edit_room_name_open = true;
@@ -259,10 +261,17 @@ impl Render for RoomSettings {
                                         "edit-rename".into(),
                                         tr!("ROOM_CHANGE_PICTURE", "Change Room Picture").into(),
                                     )))
-                                    .child(button("room-view-members").child(icon_text(
-                                        "user".into(),
-                                        tr!("ROOM_VIEW_MEMBERS", "Manage Room Members").into(),
-                                    )))
+                                    .child(
+                                        button("room-view-members")
+                                            .child(icon_text(
+                                                "user".into(),
+                                                tr!("ROOM_VIEW_MEMBERS", "Manage Room Members")
+                                                    .into(),
+                                            ))
+                                            .on_click(cx.listener(|this, event, window, cx| {
+                                                (this.on_members_click)(event, window, cx);
+                                            })),
+                                    )
                                     .when(!room.encryption_state().is_encrypted(), |david| {
                                         david.child(
                                             button("room-encryption-enable")

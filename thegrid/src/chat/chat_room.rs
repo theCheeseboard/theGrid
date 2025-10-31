@@ -2,6 +2,7 @@ mod attachments_view;
 mod chat_bar;
 pub mod invite_popover;
 pub mod open_room;
+mod room_members;
 mod room_settings;
 mod timeline;
 mod timeline_view;
@@ -9,6 +10,7 @@ mod user_action_dialogs;
 
 use crate::chat::chat_room::attachments_view::AttachmentsView;
 use crate::chat::chat_room::open_room::OpenRoom;
+use crate::chat::chat_room::room_members::RoomMembers;
 use crate::chat::chat_room::room_settings::RoomSettings;
 use crate::chat::chat_room::timeline_view::TimelineView;
 use crate::chat::chat_room::user_action_dialogs::UserActionDialogs;
@@ -32,9 +34,16 @@ use timeline_view::author_flyout::{AuthorFlyoutUserActionEvent, UserAction};
 pub struct ChatRoom {
     open_room: Entity<OpenRoom>,
     room_settings: Entity<RoomSettings>,
+    room_members: Entity<RoomMembers>,
     user_action_dialogs: Entity<UserActionDialogs>,
     timeline_view: Entity<TimelineView>,
-    show_settings: bool,
+    current_page: ChatRoomPage,
+}
+
+enum ChatRoomPage {
+    Chat,
+    Settings,
+    Members,
 }
 
 impl ChatRoom {
@@ -47,12 +56,33 @@ impl ChatRoom {
             let open_room = cx.new(|cx| OpenRoom::new(room_id.clone(), displayed_room, cx));
             let user_action_dialogs = cx.new(|cx| UserActionDialogs::new(room_id.clone(), cx));
 
-            let back_click = cx.listener(|this: &mut ChatRoom, _, _, cx| {
-                this.show_settings = false;
+            let settings_back_click = cx.listener(|this: &mut ChatRoom, _, _, cx| {
+                this.current_page = ChatRoomPage::Chat;
+                cx.notify();
+            });
+            let members_click = cx.listener(|this: &mut ChatRoom, _, _, cx| {
+                this.current_page = ChatRoomPage::Members;
+                cx.notify();
+            });
+            let room_settings = cx.new(|cx| {
+                RoomSettings::new(open_room.clone(), settings_back_click, members_click, cx)
+            });
+
+            let members_back_click = cx.listener(|this: &mut ChatRoom, _, _, cx| {
+                this.current_page = ChatRoomPage::Settings;
                 cx.notify();
             });
             let trigger_user_action_listener = cx.listener(Self::trigger_user_action);
-            let room_settings = cx.new(|cx| RoomSettings::new(open_room.clone(), back_click, cx));
+            let room_members = cx.new(|cx| {
+                RoomMembers::new(
+                    open_room.clone(),
+                    members_back_click,
+                    trigger_user_action_listener,
+                    cx,
+                )
+            });
+
+            let trigger_user_action_listener = cx.listener(Self::trigger_user_action);
             let timeline_view =
                 cx.new(|cx| TimelineView::new(open_room.clone(), trigger_user_action_listener, cx));
 
@@ -60,7 +90,8 @@ impl ChatRoom {
                 open_room,
                 user_action_dialogs,
                 room_settings,
-                show_settings: false,
+                room_members,
+                current_page: ChatRoomPage::Chat,
                 timeline_view,
             }
         })
@@ -118,58 +149,71 @@ impl Render for ChatRoom {
         div()
             .size_full()
             .child(
-                pager("chat-room-pager", if self.show_settings { 1 } else { 0 })
-                    .animation(LiftAnimation::new())
-                    .size_full()
-                    .page(
-                        div()
-                            .flex()
-                            .flex_col()
-                            .size_full()
-                            .child(
-                                grandstand("main-area-grandstand")
-                                    .text(
-                                        room.cached_display_name()
-                                            .map(|name| name.to_string())
-                                            .or_else(|| room.name())
-                                            .unwrap_or_default(),
-                                    )
-                                    .pt(px(36.))
-                                    .child(
-                                        button("room-settings-button")
-                                            .flat()
-                                            .child(icon("configure".into()))
-                                            .on_click(cx.listener(|this, _, _, cx| {
-                                                this.show_settings = true;
-                                                cx.notify()
-                                            })),
-                                    ),
-                            )
-                            .child(
-                                div()
-                                    .flex()
-                                    .flex_col()
-                                    .flex_grow()
-                                    .child(self.timeline_view.clone())
-                                    .when(!pending_attachments.is_empty(), |david| {
-                                        david.child(AttachmentsView {
-                                            open_room: self.open_room.clone(),
-                                        })
-                                    }),
-                            )
-                            .child(chat_bar)
-                            .child(div().absolute().left_0().top_0().size_full().on_drop(
-                                cx.listener(|this, event: &ExternalPaths, _, cx| {
+                pager(
+                    "chat-room-pager",
+                    match self.current_page {
+                        ChatRoomPage::Chat => 0,
+                        ChatRoomPage::Settings => 1,
+                        ChatRoomPage::Members => 2,
+                    },
+                )
+                .animation(LiftAnimation::new())
+                .size_full()
+                .page(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .size_full()
+                        .child(
+                            grandstand("main-area-grandstand")
+                                .text(
+                                    room.cached_display_name()
+                                        .map(|name| name.to_string())
+                                        .or_else(|| room.name())
+                                        .unwrap_or_default(),
+                                )
+                                .pt(px(36.))
+                                .child(
+                                    button("room-settings-button")
+                                        .flat()
+                                        .child(icon("configure".into()))
+                                        .on_click(cx.listener(|this, _, _, cx| {
+                                            this.current_page = ChatRoomPage::Settings;
+                                            cx.notify()
+                                        })),
+                                ),
+                        )
+                        .child(
+                            div()
+                                .flex()
+                                .flex_col()
+                                .flex_grow()
+                                .child(self.timeline_view.clone())
+                                .when(!pending_attachments.is_empty(), |david| {
+                                    david.child(AttachmentsView {
+                                        open_room: self.open_room.clone(),
+                                    })
+                                }),
+                        )
+                        .child(chat_bar)
+                        .child(
+                            div()
+                                .absolute()
+                                .left_0()
+                                .top_0()
+                                .size_full()
+                                .on_drop(cx.listener(|this, event: &ExternalPaths, _, cx| {
                                     this.open_room.update(cx, |open_room, cx| {
                                         for path in event.paths() {
                                             open_room.attach_from_disk(path.clone(), cx);
                                         }
                                     });
-                                }),
-                            ))
-                            .into_any_element(),
-                    )
-                    .page(self.room_settings.clone().into_any_element()),
+                                })),
+                        )
+                        .into_any_element(),
+                )
+                .page(self.room_settings.clone().into_any_element())
+                .page(self.room_members.clone().into_any_element()),
             )
             .child(self.user_action_dialogs.clone())
     }
