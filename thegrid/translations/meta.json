@@ -787,19 +787,19 @@
   },
   "LEAVE_ROOM_INFORMATIONAL_NOT_PUBLIC": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:223",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:230",
     "plural": false,
     "description": null
   },
   "LEAVE_ROOM_INFORMATIONAL_PUBLIC": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:217",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:224",
     "plural": false,
     "description": null
   },
   "LEAVE_ROOM_TEXT": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:210",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:217",
     "plural": false,
     "description": null
   },

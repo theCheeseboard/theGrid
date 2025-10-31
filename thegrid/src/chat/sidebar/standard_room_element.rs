@@ -33,7 +33,7 @@ pub struct StandardRoomElement {
 #[derive(PartialEq, Clone, Copy)]
 enum CurrentDialogBox {
     None,
-    LeaveRoom,
+    LeaveRoom(bool),
 }
 
 impl RenderOnce for StandardRoomElement {
@@ -154,7 +154,7 @@ impl RenderOnce for StandardRoomElement {
                 .label(tr!("ROOM_LEAVE", "Leave Room"))
                 .icon("system-log-out")
                 .on_triggered(move |_, _, cx| {
-                    current_dialog_box.write(cx, CurrentDialogBox::LeaveRoom);
+                    current_dialog_box.write(cx, CurrentDialogBox::LeaveRoom(false));
                 })
                 .build(),
         ];
@@ -203,7 +203,14 @@ impl RenderOnce for StandardRoomElement {
             .child(
                 dialog_box("leave-room-dialog-box")
                     .render_as_deferred(true)
-                    .visible(current_dialog_box_value == CurrentDialogBox::LeaveRoom)
+                    .visible(matches!(
+                        current_dialog_box_value,
+                        CurrentDialogBox::LeaveRoom(_)
+                    ))
+                    .processing(match current_dialog_box_value {
+                        CurrentDialogBox::None => false,
+                        CurrentDialogBox::LeaveRoom(busy) => busy,
+                    })
                     .title(tr!("ROOM_LEAVE").into())
                     .content_text_informational(
                         tr!(
@@ -234,13 +241,23 @@ impl RenderOnce for StandardRoomElement {
                             .destructive()
                             .child(icon_text("system-log-out".into(), tr!("ROOM_LEAVE").into()))
                             .on_click(move |_, _, cx| {
+                                let current_dialog_box = current_dialog_box_3.clone();
                                 let matrix_room = matrix_room.clone();
-                                current_dialog_box_3.write(cx, CurrentDialogBox::LeaveRoom);
+                                current_dialog_box.write(cx, CurrentDialogBox::LeaveRoom(true));
 
                                 cx.spawn(async move |cx: &mut AsyncApp| {
-                                    let _ = cx
+                                    if cx
                                         .spawn_tokio(async move { matrix_room.leave().await })
-                                        .await;
+                                        .await
+                                        .is_err()
+                                    {
+                                        // TODO: Show error
+                                        let _ = current_dialog_box
+                                            .write(cx, CurrentDialogBox::LeaveRoom(false));
+                                        return;
+                                    };
+
+                                    let _ = current_dialog_box.write(cx, CurrentDialogBox::None);
                                 })
                                 .detach();
                             }),
