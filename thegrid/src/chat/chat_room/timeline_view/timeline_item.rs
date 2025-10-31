@@ -7,6 +7,7 @@ use crate::chat::chat_room::timeline_view::profile_change_item::profile_change_i
 use crate::chat::chat_room::timeline_view::room_head::room_head;
 use crate::chat::chat_room::timeline_view::state_event_item::state_event_item;
 use crate::chat::chat_room::timeline_view::timeline_message_item::timeline_message_item;
+use crate::chat::displayed_room::DisplayedRoom;
 use crate::mxc_image::{SizePolicy, mxc_image};
 use chrono::{DateTime, Local};
 use cntp_i18n::tr;
@@ -32,6 +33,7 @@ pub struct TimelineItem {
     timeline_item: Arc<MatrixUiTimelineItem>,
     previous_timeline_item: Option<Arc<MatrixUiTimelineItem>>,
     open_room: Entity<OpenRoom>,
+    displayed_room: Entity<DisplayedRoom>,
     on_user_action: Rc<Box<AuthorFlyoutUserActionListener>>,
 }
 
@@ -39,12 +41,14 @@ pub fn timeline_item(
     item: Arc<MatrixUiTimelineItem>,
     previous_timeline_item: Option<Arc<MatrixUiTimelineItem>>,
     open_room: Entity<OpenRoom>,
+    displayed_room: Entity<DisplayedRoom>,
     on_user_action: impl Fn(&AuthorFlyoutUserActionEvent, &mut Window, &mut App) + 'static,
 ) -> TimelineItem {
     TimelineItem {
         timeline_item: item,
         previous_timeline_item,
         open_room,
+        displayed_room,
         on_user_action: Rc::new(Box::new(on_user_action)),
     }
 }
@@ -158,6 +162,7 @@ impl TimelineItem {
                 });
                 let author_flyout_open = *author_flyout_open_entity.read(cx);
                 let on_user_action = self.on_user_action.clone();
+                let displayed_room = self.displayed_room.clone();
 
                 div()
                     .id("container")
@@ -187,6 +192,7 @@ impl TimelineItem {
                                         author_flyout_open,
                                         cached_member,
                                         room,
+                                        displayed_room,
                                         move |_, _, cx| {
                                             author_flyout_open_entity_2.write(cx, false);
                                         },

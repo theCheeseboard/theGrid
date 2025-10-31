@@ -3,6 +3,7 @@ use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::timeline_view::author_flyout::{
     AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener, author_flyout,
 };
+use crate::chat::displayed_room::DisplayedRoom;
 use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::tr;
 use contemporary::components::anchorer::WithAnchorer;
@@ -27,6 +28,7 @@ use thegrid::tokio_helper::TokioHelper;
 
 pub struct RoomMembers {
     open_room: Entity<OpenRoom>,
+    displayed_room: Entity<DisplayedRoom>,
     on_back_click: Rc<Box<dyn Fn(&ClickEvent, &mut Window, &mut App)>>,
     on_user_action: Box<AuthorFlyoutUserActionListener>,
 
@@ -47,6 +49,7 @@ enum RoomMemberFilter {
 impl RoomMembers {
     pub fn new(
         open_room: Entity<OpenRoom>,
+        displayed_room: Entity<DisplayedRoom>,
         on_back_click: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
         on_user_action: impl Fn(&AuthorFlyoutUserActionEvent, &mut Window, &mut App) + 'static,
         cx: &mut Context<Self>,
@@ -61,6 +64,7 @@ impl RoomMembers {
 
         Self {
             open_room,
+            displayed_room,
             on_back_click: Rc::new(Box::new(on_back_click)),
             members: Vec::new(),
             displayed_members: Vec::new(),
@@ -144,6 +148,8 @@ impl RoomMembers {
         let on_user_action =
             cx.listener(move |this, event, window, cx| (this.on_user_action)(event, window, cx));
 
+        let displayed_room = self.displayed_room.clone();
+
         div()
             .id(i)
             .flex()
@@ -214,6 +220,7 @@ impl RoomMembers {
                     author_flyout_open,
                     member_entity,
                     open_room,
+                    displayed_room,
                     move |_, _, cx| {
                         author_flyout_open_entity.write(cx, false);
                     },

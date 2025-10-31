@@ -53,7 +53,7 @@ impl ChatRoom {
         cx: &mut App,
     ) -> Entity<Self> {
         cx.new(|cx| {
-            let open_room = cx.new(|cx| OpenRoom::new(room_id.clone(), displayed_room, cx));
+            let open_room = cx.new(|cx| OpenRoom::new(room_id.clone(), displayed_room.clone(), cx));
             let user_action_dialogs = cx.new(|cx| UserActionDialogs::new(room_id.clone(), cx));
 
             let settings_back_click = cx.listener(|this: &mut ChatRoom, _, _, cx| {
@@ -76,6 +76,7 @@ impl ChatRoom {
             let room_members = cx.new(|cx| {
                 RoomMembers::new(
                     open_room.clone(),
+                    displayed_room.clone(),
                     members_back_click,
                     trigger_user_action_listener,
                     cx,
@@ -83,8 +84,14 @@ impl ChatRoom {
             });
 
             let trigger_user_action_listener = cx.listener(Self::trigger_user_action);
-            let timeline_view =
-                cx.new(|cx| TimelineView::new(open_room.clone(), trigger_user_action_listener, cx));
+            let timeline_view = cx.new(|cx| {
+                TimelineView::new(
+                    open_room.clone(),
+                    displayed_room.clone(),
+                    trigger_user_action_listener,
+                    cx,
+                )
+            });
 
             Self {
                 open_room,

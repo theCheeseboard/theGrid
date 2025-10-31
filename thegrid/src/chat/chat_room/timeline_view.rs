@@ -13,6 +13,7 @@ use crate::chat::chat_room::timeline_view::author_flyout::{
     AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener,
 };
 use crate::chat::chat_room::timeline_view::timeline_item::timeline_item;
+use crate::chat::displayed_room::DisplayedRoom;
 use gpui::{
     App, AsyncApp, Context, Element, ElementId, Entity, InteractiveElement, IntoElement,
     ListAlignment, ListOffset, ListScrollEvent, ListSizingBehavior, ListState, ParentElement,
@@ -26,6 +27,7 @@ use thegrid::tokio_helper::TokioHelper;
 
 pub struct TimelineView {
     open_room: Entity<OpenRoom>,
+    displayed_room: Entity<DisplayedRoom>,
     list_state: ListState,
     pagination_pending: bool,
     on_user_action: Box<AuthorFlyoutUserActionListener>,
@@ -34,6 +36,7 @@ pub struct TimelineView {
 impl TimelineView {
     pub fn new(
         open_room: Entity<OpenRoom>,
+        displayed_room: Entity<DisplayedRoom>,
         on_user_action: impl Fn(&AuthorFlyoutUserActionEvent, &mut Window, &mut App) + 'static,
         cx: &mut Context<TimelineView>,
     ) -> TimelineView {
@@ -85,6 +88,7 @@ impl TimelineView {
 
         let mut this = Self {
             open_room,
+            displayed_room,
             list_state,
             pagination_pending: false,
             on_user_action: Box::new(on_user_action),
@@ -163,6 +167,7 @@ impl Render for TimelineView {
                                 item,
                                 previous_item,
                                 open_room.clone(),
+                                this.displayed_room.clone(),
                                 cx.listener(|this, event, window, cx| {
                                     (this.on_user_action)(event, window, cx)
                                 }),

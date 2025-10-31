@@ -1,4 +1,5 @@
 use crate::chat::chat_room::open_room::OpenRoom;
+use crate::chat::displayed_room::DisplayedRoom;
 use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::{Quote, tr};
 use contemporary::components::button::button;
@@ -7,6 +8,7 @@ use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
+use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
@@ -15,10 +17,15 @@ use gpui::{
 };
 use matrix_sdk::Room;
 use matrix_sdk::room::{RoomMember, RoomMemberRole};
+use matrix_sdk::ruma::OwnedUserId;
 use matrix_sdk::ruma::events::room::member::MembershipState;
+use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::events::room::power_levels::UserPowerLevel;
+use matrix_sdk_ui::timeline::RoomExt;
 use std::rc::Rc;
+use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
+use thegrid_text_rendering::Text;
 
 pub type AuthorFlyoutCloseListener =
     dyn Fn(&AuthorFlyoutCloseEvent, &mut Window, &mut App) + 'static;
@@ -49,6 +56,7 @@ pub struct AuthorFlyout {
     visible: bool,
     author: Entity<Option<RoomMember>>,
     room: Entity<OpenRoom>,
+    displayed_room: Entity<DisplayedRoom>,
     on_close: Box<AuthorFlyoutCloseListener>,
     on_user_action: Box<AuthorFlyoutUserActionListener>,
 }
@@ -58,6 +66,7 @@ pub fn author_flyout(
     visible: bool,
     author: Entity<Option<RoomMember>>,
     room: Entity<OpenRoom>,
+    displayed_room: Entity<DisplayedRoom>,
     on_close: impl Fn(&AuthorFlyoutCloseEvent, &mut Window, &mut App) + 'static,
     on_user_action: impl Fn(&AuthorFlyoutUserActionEvent, &mut Window, &mut App) + 'static,
 ) -> AuthorFlyout {
@@ -66,8 +75,56 @@ pub fn author_flyout(
         visible,
         author,
         room,
+        displayed_room,
         on_close: Box::new(on_close),
         on_user_action: Box::new(on_user_action),
+    }
+}
+
+impl AuthorFlyout {
+    fn send_direct_message(
+        message: String,
+        existing_room: Option<Room>,
+        dm_target: OwnedUserId,
+        displayed_room: Entity<DisplayedRoom>,
+        cx: &mut App,
+    ) {
+        let session_manager = cx.global::<SessionManager>();
+        let client = session_manager.client().unwrap().read(cx).clone();
+
+        // Send a message to the DM room, creating one if
+        // it doesn't exist
+        cx.spawn(async move |cx: &mut AsyncApp| {
+            let room = match existing_room {
+                None => {
+                    let Ok(room) = cx
+                        .spawn_tokio(async move { client.create_dm(&dm_target).await })
+                        .await
+                    else {
+                        // TODO: Show error
+                        return;
+                    };
+
+                    room
+                }
+                Some(room) => room,
+            };
+
+            let _ = displayed_room.write(cx, DisplayedRoom::Room(room.room_id().to_owned()));
+
+            cx.spawn(async move |cx: &mut AsyncApp| {
+                let _ = cx
+                    .spawn_tokio(async move {
+                        room.timeline()
+                            .await?
+                            .send(RoomMessageEventContent::text_plain(message).into())
+                            .await
+                    })
+                    .await;
+            })
+            .detach();
+        })
+        .detach();
     }
 }
 
@@ -80,13 +137,17 @@ impl RenderOnce for AuthorFlyout {
         let on_close_5 = on_close.clone();
         let on_close_6 = on_close.clone();
         let on_close_7 = on_close.clone();
+        let on_close_8 = on_close.clone();
+        let on_close_9 = on_close.clone();
 
         let on_user_action = Rc::new(self.on_user_action);
         let on_user_action_2 = on_user_action.clone();
         let on_user_action_3 = on_user_action.clone();
         let on_user_action_4 = on_user_action.clone();
 
-        let theme = cx.global::<Theme>();
+        let displayed_room = self.displayed_room;
+        let displayed_room_2 = displayed_room.clone();
+
         let room = self.room.read(cx).room.clone().unwrap();
 
         let display_name = room
@@ -112,9 +173,46 @@ impl RenderOnce for AuthorFlyout {
                     let room_member_2 = room_member.clone();
                     let room_member_3 = room_member.clone();
                     let room_member_4 = room_member.clone();
+                    let room_member_5 = room_member.clone();
                     let room_member_id = room_member.user_id().to_owned();
-                    let room_member_id_2 = room_member.user_id().to_owned();
+                    let room_member_id_2 = room_member_id.clone();
+                    let room_member_id_3 = room_member_id.clone();
+                    let room_member_id_4 = room_member_id.clone();
                     let suggested_role = room_member.suggested_role_for_power_level();
+
+                    let session_manager = cx.global::<SessionManager>();
+                    let client = session_manager.client().unwrap().read(cx).clone();
+                    let current_dm_room = client.get_dm_room(room_member.user_id());
+                    let current_dm_room_2 = current_dm_room.clone();
+
+                    let direct_message_box = window.use_state(cx, |_, cx| {
+                        let mut text_field = TextField::new("direct-message", cx);
+                        text_field.set_placeholder(
+                            tr!("DIRECT_MESSAGE_PLACEHOLDER", "Message")
+                                .to_string()
+                                .as_str(),
+                        );
+                        text_field.on_enter_press(cx.listener(
+                            move |direct_message_box: &mut TextField, _, window, cx| {
+                                let message = direct_message_box.text().to_string();
+                                if message.is_empty() {
+                                    return;
+                                }
+
+                                on_close_9(&AuthorFlyoutCloseEvent, window, cx);
+
+                                Self::send_direct_message(
+                                    message,
+                                    current_dm_room_2.clone(),
+                                    room_member_id_4.clone(),
+                                    displayed_room_2.clone(),
+                                    cx,
+                                );
+                            },
+                        ));
+                        text_field
+                    });
+                    let direct_message_box_2 = direct_message_box.clone();
 
                     let membership = room_member.membership().clone();
                     let joined = membership == MembershipState::Join;
@@ -126,6 +224,9 @@ impl RenderOnce for AuthorFlyout {
                     let can_kick =
                         me.can_kick() && me.power_level() > room_member.power_level() && joined;
                     let can_unban = me.can_ban() && membership == MembershipState::Ban;
+                    let is_ignored = room_member.is_ignored();
+
+                    let theme = cx.global::<Theme>();
 
                     div()
                         .occlude()
@@ -384,6 +485,53 @@ impl RenderOnce for AuthorFlyout {
                                         }),
                                 ),
                         )
+                        .when(!is_ignored && !room_member_5.is_account_user(), |david| {
+                            david.child(
+                                layer()
+                                    .p(px(4.))
+                                    .flex()
+                                    .flex_col()
+                                    .child(subtitle(tr!("DIRECT_MESSAGE", "Direct Message")))
+                                    .child(direct_message_box)
+                                    .child(
+                                        button("send-button")
+                                            .child(icon_text(
+                                                "mail-send".into(),
+                                                match current_dm_room {
+                                                    None => {
+                                                        tr!(
+                                                            "DIRECT_MESSAGE_OPEN_SEND",
+                                                            "Invite to DM and Send"
+                                                        )
+                                                    }
+                                                    Some(_) => {
+                                                        tr!("DIRECT_MESSAGE_SEND", "Send")
+                                                    }
+                                                }
+                                                .into(),
+                                            ))
+                                            .on_click(move |_, window, cx| {
+                                                let message = direct_message_box_2
+                                                    .read(cx)
+                                                    .text()
+                                                    .to_string();
+                                                if message.is_empty() {
+                                                    return;
+                                                }
+
+                                                on_close_8(&AuthorFlyoutCloseEvent, window, cx);
+
+                                                Self::send_direct_message(
+                                                    message,
+                                                    current_dm_room.clone(),
+                                                    room_member_id_3.clone(),
+                                                    displayed_room.clone(),
+                                                    cx,
+                                                );
+                                            }),
+                                    ),
+                            )
+                        })
                         .into_any_element()
                 }
                 None => div()
