@@ -815,6 +815,30 @@
     "plural": false,
     "description": null
   },
+  "MEMBER_LIST_FILTERS": {
+    "context": "room_members.rs",
+    "definedIn": "src/chat/chat_room/room_members.rs:262",
+    "plural": false,
+    "description": null
+  },
+  "MEMBER_LIST_FILTER_BANNED": {
+    "context": "room_members.rs",
+    "definedIn": "src/chat/chat_room/room_members.rs:293",
+    "plural": false,
+    "description": null
+  },
+  "MEMBER_LIST_FILTER_INVITED": {
+    "context": "room_members.rs",
+    "definedIn": "src/chat/chat_room/room_members.rs:282",
+    "plural": false,
+    "description": null
+  },
+  "MEMBER_LIST_FILTER_JOINED": {
+    "context": "room_members.rs",
+    "definedIn": "src/chat/chat_room/room_members.rs:271",
+    "plural": false,
+    "description": null
+  },
   "MENU_ACCOUNT": {
     "context": "main.rs",
     "definedIn": "src/main.rs:79",
@@ -1225,7 +1249,7 @@
   },
   "ROOM_MEMBERS": {
     "context": "room_members.rs",
-    "definedIn": "src/chat/chat_room/room_members.rs:204",
+    "definedIn": "src/chat/chat_room/room_members.rs:244",
     "plural": false,
     "description": null
   },
