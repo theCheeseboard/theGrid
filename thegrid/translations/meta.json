@@ -91,67 +91,67 @@
   },
   "AUTH_ADVANCED_LOG_IN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:720",
+    "definedIn": "src/auth/auth_surface.rs:758",
     "plural": false,
     "description": null
   },
   "AUTH_HOMESERVER_PLACEHOLDER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:112",
+    "definedIn": "src/auth/auth_surface.rs:114",
     "plural": false,
     "description": null
   },
   "AUTH_LOG_IN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:730",
+    "definedIn": "src/auth/auth_surface.rs:768",
     "plural": false,
     "description": null
   },
   "AUTH_LOG_IN_TO_MATRIX": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:711",
+    "definedIn": "src/auth/auth_surface.rs:749",
     "plural": false,
     "description": null
   },
   "AUTH_MATRIX_ID_EXAMPLE": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:76",
+    "definedIn": "src/auth/auth_surface.rs:78",
     "plural": false,
     "description": null
   },
   "AUTH_PASSWORD": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:526",
+    "definedIn": "src/auth/auth_surface.rs:560",
     "plural": false,
     "description": null
   },
   "AUTH_PASSWORD_PLACEHOLDER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:86",
+    "definedIn": "src/auth/auth_surface.rs:88",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_ADVANCED_LOGIN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:450",
+    "definedIn": "src/auth/auth_surface.rs:467",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_ADVANCED_LOGIN_TEXT": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:459",
+    "definedIn": "src/auth/auth_surface.rs:476",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_CONNECTION_ERROR": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:487",
+    "definedIn": "src/auth/auth_surface.rs:514",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_CONNECTION_ERROR_TEXT": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:496",
+    "definedIn": "src/auth/auth_surface.rs:523",
     "plural": false,
     "description": null
   },
@@ -181,43 +181,43 @@
   },
   "AUTH_SESSION_RESTORE": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:680",
+    "definedIn": "src/auth/auth_surface.rs:718",
     "plural": false,
     "description": null
   },
   "AUTH_SSO": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:564",
+    "definedIn": "src/auth/auth_surface.rs:597",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_BUTTON": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:573",
+    "definedIn": "src/auth/auth_surface.rs:607",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_MESSAGE": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:612",
+    "definedIn": "src/auth/auth_surface.rs:650",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_NAME": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:607",
+    "definedIn": "src/auth/auth_surface.rs:645",
     "plural": false,
     "description": null
   },
   "AUTH_TOKEN_PLACEHOLDER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:96",
+    "definedIn": "src/auth/auth_surface.rs:98",
     "plural": false,
     "description": null
   },
   "AUTH_USERNAME_PLACEHOLDER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:103",
+    "definedIn": "src/auth/auth_surface.rs:105",
     "plural": false,
     "description": null
   },
@@ -403,13 +403,13 @@
   },
   "EMOJI_MATCH": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:341",
+    "definedIn": "src/auth/verification_popover.rs:343",
     "plural": false,
     "description": null
   },
   "EMOJI_NO_MATCH": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:375",
+    "definedIn": "src/auth/verification_popover.rs:377",
     "plural": false,
     "description": null
   },
@@ -961,13 +961,13 @@
   },
   "POPOVER_LOGIN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:758",
+    "definedIn": "src/auth/auth_surface.rs:797",
     "plural": false,
     "description": null
   },
   "POPOVER_LOGIN_HOMESERVER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:752",
+    "definedIn": "src/auth/auth_surface.rs:791",
     "plural": false,
     "description": null
   },
@@ -991,7 +991,7 @@
   },
   "POPOVER_VERIFY": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:470",
+    "definedIn": "src/auth/verification_popover.rs:472",
     "plural": false,
     "description": null
   },
@@ -1687,55 +1687,55 @@
   },
   "VERIFICATION_POPOVER_AWAITING_OK": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:483",
+    "definedIn": "src/auth/verification_popover.rs:485",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_AWAITING_OK_SPINNER": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:518",
+    "definedIn": "src/auth/verification_popover.rs:520",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_AWAITING_OK_TEXT": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:495",
+    "definedIn": "src/auth/verification_popover.rs:497",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_AWAITING_OK_US_TEXT": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:503",
+    "definedIn": "src/auth/verification_popover.rs:505",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_CANCELLED": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:442",
+    "definedIn": "src/auth/verification_popover.rs:444",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_OK": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:257",
+    "definedIn": "src/auth/verification_popover.rs:259",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_OK_MESSAGE": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:266",
+    "definedIn": "src/auth/verification_popover.rs:268",
     "plural": false,
     "description": null
   },
   "VERIFICATION_SAS_EMOJI": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:314",
+    "definedIn": "src/auth/verification_popover.rs:316",
     "plural": false,
     "description": null
   },
   "VERIFICATION_SAS_EMOJI_DESCRIPTION": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:318",
+    "definedIn": "src/auth/verification_popover.rs:320",
     "plural": false,
     "description": null
   },

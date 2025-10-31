@@ -212,10 +212,12 @@ impl Render for VerificationPopover {
                     },
                 )
                 .animation(FadeAnimation::new())
+                .size_full()
                 .page(
                     div()
                         .flex()
                         .flex_col()
+                        .size_full()
                         .gap(px(9.))
                         .child(
                             grandstand("verify-popover-grandstand")
