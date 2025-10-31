@@ -59,6 +59,12 @@
     "plural": false,
     "description": null
   },
+  "ACTIONS": {
+    "context": "room_members.rs",
+    "definedIn": "src/chat/chat_room/room_members.rs:333",
+    "plural": false,
+    "description": null
+  },
   "ATTACHMENTS_TITLE": {
     "context": "attachments_view.rs",
     "definedIn": "src/chat/chat_room/attachments_view.rs:48",
@@ -817,25 +823,25 @@
   },
   "MEMBER_LIST_FILTERS": {
     "context": "room_members.rs",
-    "definedIn": "src/chat/chat_room/room_members.rs:270",
+    "definedIn": "src/chat/chat_room/room_members.rs:278",
     "plural": false,
     "description": null
   },
   "MEMBER_LIST_FILTER_BANNED": {
     "context": "room_members.rs",
-    "definedIn": "src/chat/chat_room/room_members.rs:301",
+    "definedIn": "src/chat/chat_room/room_members.rs:316",
     "plural": false,
     "description": null
   },
   "MEMBER_LIST_FILTER_INVITED": {
     "context": "room_members.rs",
-    "definedIn": "src/chat/chat_room/room_members.rs:290",
+    "definedIn": "src/chat/chat_room/room_members.rs:302",
     "plural": false,
     "description": null
   },
   "MEMBER_LIST_FILTER_JOINED": {
     "context": "room_members.rs",
-    "definedIn": "src/chat/chat_room/room_members.rs:279",
+    "definedIn": "src/chat/chat_room/room_members.rs:288",
     "plural": false,
     "description": null
   },
@@ -1255,7 +1261,7 @@
   },
   "ROOM_MEMBERS": {
     "context": "room_members.rs",
-    "definedIn": "src/chat/chat_room/room_members.rs:252",
+    "definedIn": "src/chat/chat_room/room_members.rs:256",
     "plural": false,
     "description": null
   },

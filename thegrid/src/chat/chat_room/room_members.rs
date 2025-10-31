@@ -1,3 +1,4 @@
+use crate::chat::chat_room::invite_popover::InvitePopover;
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::timeline_view::author_flyout::{
     AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener, author_flyout,
@@ -6,16 +7,16 @@ use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::tr;
 use contemporary::components::anchorer::WithAnchorer;
 use contemporary::components::button::button;
-use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
+use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AnyElement, App, AppContext, AsyncApp, ClickEvent, Context, Element, Entity,
-    InteractiveElement, IntoElement, ListAlignment, ListState, ParentElement, Render,
-    StatefulInteractiveElement, Styled, WeakEntity, Window, div, list, px, rgb,
+    AnyElement, App, AppContext, AsyncApp, ClickEvent, Context, Entity, InteractiveElement,
+    IntoElement, ListAlignment, ListState, ParentElement, Render, StatefulInteractiveElement,
+    Styled, WeakEntity, Window, div, list, px,
 };
 use matrix_sdk::RoomMemberships;
 use matrix_sdk::room::{RoomMember, RoomMemberRole};
@@ -33,6 +34,7 @@ pub struct RoomMembers {
     displayed_members: Vec<RoomMember>,
     filter: RoomMemberFilter,
     list_state: ListState,
+    invite_popover: Entity<InvitePopover>,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -55,6 +57,7 @@ impl RoomMembers {
         .detach();
 
         let list_state = ListState::new(0, ListAlignment::Top, px(200.));
+        let invite_popover = cx.new(|cx| InvitePopover::new(cx));
 
         Self {
             open_room,
@@ -64,6 +67,7 @@ impl RoomMembers {
             on_user_action: Box::new(on_user_action),
             filter: RoomMemberFilter::Joined,
             list_state,
+            invite_popover,
         }
     }
 
@@ -262,53 +266,90 @@ impl Render for RoomMembers {
                     .size_full()
                     .gap(px(8.))
                     .child(
-                        div().p(px(4.)).child(
-                            layer()
-                                .p(px(8.))
-                                .gap(px(8.))
-                                .w(px(100.))
-                                .child(subtitle(tr!("MEMBER_LIST_FILTERS", "Filters")))
-                                .child(
-                                    div()
-                                        .flex()
-                                        .flex_col()
-                                        .bg(theme.button_background)
-                                        .rounded(theme.border_radius)
-                                        .child(
-                                            button("filter-joined")
-                                                .child(tr!("MEMBER_LIST_FILTER_JOINED", "Joined"))
-                                                .checked_when(
-                                                    self.filter == RoomMemberFilter::Joined,
+                        div()
+                            .flex()
+                            .flex_col()
+                            .p(px(4.))
+                            .gap(px(4.))
+                            .child(
+                                layer()
+                                    .p(px(8.))
+                                    .gap(px(8.))
+                                    .child(subtitle(tr!("MEMBER_LIST_FILTERS", "Filters")))
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .flex_col()
+                                            .bg(theme.button_background)
+                                            .rounded(theme.border_radius)
+                                            .child(
+                                                button("filter-joined")
+                                                    .child(tr!(
+                                                        "MEMBER_LIST_FILTER_JOINED",
+                                                        "Joined"
+                                                    ))
+                                                    .checked_when(
+                                                        self.filter == RoomMemberFilter::Joined,
+                                                    )
+                                                    .on_click(cx.listener(|this, _, _, cx| {
+                                                        this.filter = RoomMemberFilter::Joined;
+                                                        this.update_displayed_members(cx);
+                                                    })),
+                                            )
+                                            .child(
+                                                button("filter-invited")
+                                                    .child(tr!(
+                                                        "MEMBER_LIST_FILTER_INVITED",
+                                                        "Invited"
+                                                    ))
+                                                    .checked_when(
+                                                        self.filter == RoomMemberFilter::Invited,
+                                                    )
+                                                    .on_click(cx.listener(|this, _, _, cx| {
+                                                        this.filter = RoomMemberFilter::Invited;
+                                                        this.update_displayed_members(cx);
+                                                    })),
+                                            )
+                                            .child(
+                                                button("filter-banned")
+                                                    .child(tr!(
+                                                        "MEMBER_LIST_FILTER_BANNED",
+                                                        "Banned"
+                                                    ))
+                                                    .checked_when(
+                                                        self.filter == RoomMemberFilter::Banned,
+                                                    )
+                                                    .on_click(cx.listener(|this, _, _, cx| {
+                                                        this.filter = RoomMemberFilter::Banned;
+                                                        this.update_displayed_members(cx);
+                                                    })),
+                                            ),
+                                    ),
+                            )
+                            .child(
+                                layer()
+                                    .p(px(8.))
+                                    .gap(px(8.))
+                                    .child(subtitle(tr!("ACTIONS", "Actions")))
+                                    .child(
+                                        button("invite-button")
+                                            .child(icon_text(
+                                                "user".into(),
+                                                tr!("INVITE_ACTION").into(),
+                                            ))
+                                            .on_click(cx.listener(|this, _, _, cx| {
+                                                this.invite_popover.update(
+                                                    cx,
+                                                    |invite_popover, cx| {
+                                                        let room_id =
+                                                            this.open_room.read(cx).room_id.clone();
+                                                        invite_popover
+                                                            .open_invite_popover(room_id, cx);
+                                                    },
                                                 )
-                                                .on_click(cx.listener(|this, _, _, cx| {
-                                                    this.filter = RoomMemberFilter::Joined;
-                                                    this.update_displayed_members(cx);
-                                                })),
-                                        )
-                                        .child(
-                                            button("filter-invited")
-                                                .child(tr!("MEMBER_LIST_FILTER_INVITED", "Invited"))
-                                                .checked_when(
-                                                    self.filter == RoomMemberFilter::Invited,
-                                                )
-                                                .on_click(cx.listener(|this, _, _, cx| {
-                                                    this.filter = RoomMemberFilter::Invited;
-                                                    this.update_displayed_members(cx);
-                                                })),
-                                        )
-                                        .child(
-                                            button("filter-banned")
-                                                .child(tr!("MEMBER_LIST_FILTER_BANNED", "Banned"))
-                                                .checked_when(
-                                                    self.filter == RoomMemberFilter::Banned,
-                                                )
-                                                .on_click(cx.listener(|this, _, _, cx| {
-                                                    this.filter = RoomMemberFilter::Banned;
-                                                    this.update_displayed_members(cx);
-                                                })),
-                                        ),
-                                ),
-                        ),
+                                            })),
+                                    ),
+                            ),
                     )
                     .child(
                         div()
@@ -327,5 +368,6 @@ impl Render for RoomMembers {
                             ),
                     ),
             )
+            .child(self.invite_popover.clone())
     }
 }
