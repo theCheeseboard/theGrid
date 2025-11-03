@@ -1,7 +1,7 @@
+use crate::account_settings::security_settings::identity_reset::IdentityResetSurface;
 use crate::account_settings::{AccountSettingsPage, AccountSettingsSurface};
 use crate::auth::auth_surface::AuthSurface;
 use crate::chat::chat_surface::ChatSurface;
-use crate::identity_reset::IdentityResetSurface;
 use contemporary::about_surface::about_surface;
 use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;

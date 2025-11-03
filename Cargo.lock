@@ -1122,7 +1122,7 @@ dependencies = [
 [[package]]
 name = "cntp_config"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#c7d55ceca2d863c635e13f3989b16730ca2aa304"
+source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
 dependencies = [
  "serde",
  "serde_json",
@@ -1133,7 +1133,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#c7d55ceca2d863c635e13f3989b16730ca2aa304"
+source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
 dependencies = [
  "cntp_i18n_core",
  "cntp_i18n_macros",
@@ -1147,7 +1147,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_core"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#c7d55ceca2d863c635e13f3989b16730ca2aa304"
+source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
 dependencies = [
  "anyhow",
  "cntp_localesupport",
@@ -1161,7 +1161,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_gen"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#c7d55ceca2d863c635e13f3989b16730ca2aa304"
+source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
 dependencies = [
  "cntp_i18n_core",
  "cntp_i18n_parse",
@@ -1177,7 +1177,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#c7d55ceca2d863c635e13f3989b16730ca2aa304"
+source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
 dependencies = [
  "cntp_i18n_core",
  "cntp_i18n_parse",
@@ -1191,7 +1191,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_parse"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#c7d55ceca2d863c635e13f3989b16730ca2aa304"
+source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
 dependencies = [
  "syn 2.0.108",
 ]
@@ -1199,7 +1199,7 @@ dependencies = [
 [[package]]
 name = "cntp_icon_tool_core"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#c7d55ceca2d863c635e13f3989b16730ca2aa304"
+source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
 dependencies = [
  "regex",
 ]
@@ -1207,7 +1207,7 @@ dependencies = [
 [[package]]
 name = "cntp_icon_tool_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#c7d55ceca2d863c635e13f3989b16730ca2aa304"
+source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
 dependencies = [
  "cntp_config",
  "cntp_icon_tool_core",
@@ -1218,7 +1218,7 @@ dependencies = [
 [[package]]
 name = "cntp_localesupport"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#c7d55ceca2d863c635e13f3989b16730ca2aa304"
+source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
 dependencies = [
  "chrono",
  "icu",
@@ -1231,7 +1231,7 @@ dependencies = [
 [[package]]
 name = "cntp_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#c7d55ceca2d863c635e13f3989b16730ca2aa304"
+source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
 dependencies = [
  "cntp_config",
  "quote",
@@ -1404,7 +1404,7 @@ checksum = "7c74b8349d32d297c9134b8c88677813a227df8f779daa29bfc29c183fe3dca6"
 [[package]]
 name = "contemporary"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#c7d55ceca2d863c635e13f3989b16730ca2aa304"
+source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
 dependencies = [
  "ashpd 0.11.0",
  "async-channel 2.5.0",
@@ -5342,11 +5342,10 @@ dependencies = [
 
 [[package]]
 name = "num-bigint-dig"
-version = "0.8.4"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc84195820f291c7697304f3cbdadd1cb7199c0efc917ff5eafd71225c136151"
+checksum = "82c79c15c05d4bf82b6f5ef163104cc81a760d8e874d38ac50ab67c8877b647b"
 dependencies = [
- "byteorder",
  "lazy_static",
  "libm",
  "num-integer",
@@ -6999,9 +6998,9 @@ dependencies = [
 
 [[package]]
 name = "rust-embed"
-version = "8.8.0"
+version = "8.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb44e1917075637ee8c7bcb865cf8830e3a92b5b1189e44e3a0ab5a0d5be314b"
+checksum = "947d7f3fad52b283d261c4c99a084937e2fe492248cb9a68a8435a861b8798ca"
 dependencies = [
  "rust-embed-impl",
  "rust-embed-utils",
@@ -7010,9 +7009,9 @@ dependencies = [
 
 [[package]]
 name = "rust-embed-impl"
-version = "8.8.0"
+version = "8.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "382499b49db77a7c19abd2a574f85ada7e9dbe125d5d1160fa5cad7c4cf71fc9"
+checksum = "5fa2c8c9e8711e10f9c4fd2d64317ef13feaab820a4c51541f1a8c8e2e851ab2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -7023,9 +7022,9 @@ dependencies = [
 
 [[package]]
 name = "rust-embed-utils"
-version = "8.8.0"
+version = "8.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21fcbee55c2458836bcdbfffb6ec9ba74bbc23ca7aa6816015a3dd2c4d8fc185"
+checksum = "60b161f275cb337fe0a44d924a5f4df0ed69c2c39519858f931ce61c779d3475"
 dependencies = [
  "globset",
  "sha2",
@@ -7212,9 +7211,9 @@ dependencies = [
 
 [[package]]
 name = "schemars"
-version = "1.0.4"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82d20c4491bc164fa2f6c5d44565947a52ad80b9505d8e36f8d54c27c739fcd0"
+checksum = "1317c3bf3e7df961da95b0a56a172a02abead31276215a0497241a7624b487ce"
 dependencies = [
  "dyn-clone",
  "indexmap",
@@ -7226,9 +7225,9 @@ dependencies = [
 
 [[package]]
 name = "schemars_derive"
-version = "1.0.4"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33d020396d1d138dc19f1165df7545479dcd58d93810dc5d646a16e55abefa80"
+checksum = "5f760a6150d45dd66ec044983c124595ae76912e77ed0b44124cb3e415cce5d9"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -8620,9 +8619,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.7.16"
+version = "0.7.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14307c986784f72ef81c89db7d9e28d6ac26d16213b109ea501696195e6e3ce5"
+checksum = "2efa149fe76073d6e8fd97ef4f4eca7b67f599660115591483572e406e165594"
 dependencies = [
  "bytes",
  "futures-core",
@@ -9468,9 +9467,9 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
 name = "version-compare"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "852e951cb7832cb45cb1169900d19760cfa39b82bc0ea9c0e5a14ae88411c98b"
+checksum = "03c2856837ef78f57382f06b2b8563a2f512f7185d732608fd9176cb3b8edf0e"
 
 [[package]]
 name = "version_check"

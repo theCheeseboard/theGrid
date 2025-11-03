@@ -222,7 +222,7 @@ impl Render for DevicesSettings {
                                 let device_id = this_device.inner.device_id.clone();
                                 DeviceItem {
                                     device: this_device,
-                                    verify_device: Rc::new(Box::new(|_, _, _| {})),
+                                    verify_device: None,
                                     erase_device: Rc::new(Box::new(cx.listener(
                                         move |this, _, _, cx| {
                                             this.log_out_device(device_id.clone(), cx)
@@ -242,7 +242,7 @@ impl Render for DevicesSettings {
                                     .w_full()
                                     .child(subtitle(tr!("DEVICES_OTHER_DEVICES", "Other Devices"))),
                                 |david, item| {
-                                    let device = item.encryption_status.clone().unwrap();
+                                    let device = item.encryption_status.clone();
                                     let device_id = item.inner.device_id.clone();
                                     david.child(
                                         div()
@@ -251,14 +251,17 @@ impl Render for DevicesSettings {
                                             ))
                                             .child(DeviceItem {
                                                 device: item,
-                                                verify_device: Rc::new(Box::new(cx.listener(
-                                                    move |this, _, _, cx| {
-                                                        this.request_device_verification(
-                                                            device.clone(),
-                                                            cx,
-                                                        )
-                                                    },
-                                                ))),
+                                                verify_device: match device {
+                                                    None => None,
+                                                    Some(device) => Some(Rc::new(Box::new(
+                                                        cx.listener(move |this, _, _, cx| {
+                                                            this.request_device_verification(
+                                                                device.clone(),
+                                                                cx,
+                                                            )
+                                                        }),
+                                                    ))),
+                                                },
                                                 erase_device: Rc::new(Box::new(cx.listener(
                                                     move |this, _, _, cx| {
                                                         this.log_out_device(device_id.clone(), cx)
@@ -322,7 +325,7 @@ impl Render for DevicesSettings {
 #[derive(IntoElement)]
 struct DeviceItem {
     device: CachedDevice,
-    verify_device: Rc<Box<dyn Fn(&(), &mut Window, &mut App)>>,
+    verify_device: Option<Rc<Box<dyn Fn(&(), &mut Window, &mut App)>>>,
     erase_device: Rc<Box<dyn Fn(&(), &mut Window, &mut App)>>,
 }
 
@@ -409,14 +412,16 @@ impl RenderOnce for DeviceItem {
                     .rounded(theme.border_radius)
                     .bg(theme.button_background)
                     .when(!device_verified, |david| {
-                        david.child(
-                            button("verify-device-button")
-                                .child(icon_text(
-                                    "dialog-ok".into(),
-                                    tr!("DEVICE_VERIFY", "Verify").into(),
-                                ))
-                                .on_click(move |_, window, cx| verify_device(&(), window, cx)),
-                        )
+                        david.when_some(verify_device, |david, verify_device| {
+                            david.child(
+                                button("verify-device-button")
+                                    .child(icon_text(
+                                        "dialog-ok".into(),
+                                        tr!("DEVICE_VERIFY", "Verify").into(),
+                                    ))
+                                    .on_click(move |_, window, cx| verify_device(&(), window, cx)),
+                            )
+                        })
                     })
                     .child(
                         button("log-out-device-button")

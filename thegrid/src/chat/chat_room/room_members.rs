@@ -214,7 +214,7 @@ impl RoomMembers {
                             .child(member.user_id().to_string()),
                     ),
             )
-            .with_anchorer(move |david, bounds| {
+            .with_anchorer(move |david, bounds, _, _| {
                 david.child(author_flyout(
                     bounds,
                     author_flyout_open,

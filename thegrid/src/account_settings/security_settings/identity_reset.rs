@@ -24,6 +24,7 @@ use matrix_sdk::encryption::recovery::{IdentityResetHandle, RecoveryError};
 use matrix_sdk::ruma::api::client::uiaa::AuthData;
 use std::rc::Rc;
 use thegrid::session::session_manager::SessionManager;
+use thegrid::tokio_helper::TokioHelper;
 use tracing::{Id, error};
 
 pub struct IdentityResetSurface {
@@ -107,8 +108,7 @@ impl IdentityResetSurface {
                         // Crypto identity was reset successfully
                         weak_this
                             .update(cx, |this, cx| {
-                                this.state = IdentityResetState::Complete;
-                                cx.notify();
+                                this.complete_reset(cx);
                             })
                             .unwrap();
                     }
@@ -165,7 +165,42 @@ impl IdentityResetSurface {
                 } else {
                     weak_this
                         .update(cx, |this, cx| {
+                            this.complete_reset(cx);
+                        })
+                        .unwrap();
+                }
+            },
+        )
+        .detach();
+    }
+
+    fn complete_reset(&mut self, cx: &mut Context<Self>) {
+        // Manually verify our own identity
+        let session_manager = cx.global::<SessionManager>();
+        let client = session_manager.client().unwrap().read(cx).clone();
+        let user_id = client.user_id().unwrap().to_owned();
+
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                if let Ok(Some(identity)) = cx
+                    .spawn_tokio(async move {
+                        client.encryption().request_user_identity(&user_id).await
+                    })
+                    .await
+                {
+                    let _ = cx.spawn_tokio(async move { identity.verify().await }).await;
+
+                    weak_this
+                        .update(cx, |this, cx| {
                             this.state = IdentityResetState::Complete;
+                            cx.notify();
+                        })
+                        .unwrap();
+                } else {
+                    weak_this
+                        .update(cx, |this, cx| {
+                            // TODO: Show error
+                            this.state = IdentityResetState::Confirm;
                             cx.notify();
                         })
                         .unwrap();

@@ -142,21 +142,25 @@ impl Render for InvitePopover {
                                                 .child(
                                                     div()
                                                         .child(self.invite_search.clone())
-                                                        .with_anchorer(move |david, bounds| {
-                                                            david.child(
-                                                                flyout(bounds)
-                                                                    .visible(false)
-                                                                    .anchor_bottom_left()
-                                                                    .w(bounds.size.width)
-                                                                    .max_h(px(100.))
-                                                                    .bg(theme.background)
-                                                                    .border(px(1.))
-                                                                    .border_color(
-                                                                        theme.border_color,
-                                                                    )
-                                                                    .rounded(theme.border_radius),
-                                                            )
-                                                        }),
+                                                        .with_anchorer(
+                                                            move |david, bounds, _, _| {
+                                                                david.child(
+                                                                    flyout(bounds)
+                                                                        .visible(false)
+                                                                        .anchor_bottom_left()
+                                                                        .w(bounds.size.width)
+                                                                        .max_h(px(100.))
+                                                                        .bg(theme.background)
+                                                                        .border(px(1.))
+                                                                        .border_color(
+                                                                            theme.border_color,
+                                                                        )
+                                                                        .rounded(
+                                                                            theme.border_radius,
+                                                                        ),
+                                                                )
+                                                            },
+                                                        ),
                                                 )
                                                 .child(
                                                     button("do-invite-out")

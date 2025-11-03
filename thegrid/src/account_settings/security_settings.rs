@@ -1,3 +1,4 @@
+pub mod identity_reset;
 mod key_export_popover;
 mod key_import_popover;
 pub mod recovery_key_reset_popover;
@@ -16,11 +17,10 @@ use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
-use directories::UserDirs;
 use gpui::prelude::FluentBuilder;
 use gpui::{
     App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, PathPromptOptions,
-    Render, Styled, WeakEntity, Window, div, px,
+    Render, Styled, Window, div, px,
 };
 use matrix_sdk::encryption::recovery::RecoveryState;
 use std::rc::Rc;

@@ -1,19 +1,19 @@
 {
   "ACCOUNT_ACCOUNT_SETTINGS": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:82",
+    "definedIn": "src/main.rs:81",
     "plural": false,
     "description": null
   },
   "ACCOUNT_ACCOUNT_SWITCHER": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:87",
+    "definedIn": "src/main.rs:86",
     "plural": false,
     "description": null
   },
   "ACCOUNT_LOG_OUT": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:90",
+    "definedIn": "src/main.rs:89",
     "plural": false,
     "description": null
   },
@@ -169,13 +169,13 @@
   },
   "AUTH_REQUIRED_OAUTH_DESCRIPTION": {
     "context": "identity_reset.rs",
-    "definedIn": "src/identity_reset.rs:363",
+    "definedIn": "src/account_settings/security_settings/identity_reset.rs:398",
     "plural": false,
     "description": null
   },
   "AUTH_REQUIRED_OAUTH_GO": {
     "context": "identity_reset.rs",
-    "definedIn": "src/identity_reset.rs:375",
+    "definedIn": "src/account_settings/security_settings/identity_reset.rs:410",
     "plural": false,
     "description": null
   },
@@ -319,25 +319,25 @@
   },
   "DEVICES_LOG_OUT_ACTION": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:309",
+    "definedIn": "src/account_settings/devices_settings.rs:312",
     "plural": false,
     "description": null
   },
   "DEVICES_LOG_OUT_INFORMATION": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:291",
+    "definedIn": "src/account_settings/devices_settings.rs:294",
     "plural": false,
     "description": null
   },
   "DEVICES_LOG_OUT_TEXT": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:281",
+    "definedIn": "src/account_settings/devices_settings.rs:284",
     "plural": false,
     "description": null
   },
   "DEVICES_LOG_OUT_TITLE": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:278",
+    "definedIn": "src/account_settings/devices_settings.rs:281",
     "plural": false,
     "description": null
   },
@@ -355,13 +355,13 @@
   },
   "DEVICE_LAST_ACTIVITY": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:357",
+    "definedIn": "src/account_settings/devices_settings.rs:360",
     "plural": false,
     "description": null
   },
   "DEVICE_VERIFY": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:416",
+    "definedIn": "src/account_settings/devices_settings.rs:420",
     "plural": false,
     "description": null
   },
@@ -391,7 +391,7 @@
   },
   "DONE": {
     "context": "identity_reset.rs",
-    "definedIn": "src/identity_reset.rs:331",
+    "definedIn": "src/account_settings/security_settings/identity_reset.rs:366",
     "plural": false,
     "description": null
   },
@@ -451,49 +451,49 @@
   },
   "IDENTITY_RESET": {
     "context": "identity_reset.rs",
-    "definedIn": "src/identity_reset.rs:215",
+    "definedIn": "src/account_settings/security_settings/identity_reset.rs:250",
     "plural": false,
     "description": null
   },
   "IDENTITY_RESET_COMPLETE": {
     "context": "identity_reset.rs",
-    "definedIn": "src/identity_reset.rs:320",
+    "definedIn": "src/account_settings/security_settings/identity_reset.rs:355",
     "plural": false,
     "description": null
   },
   "IDENTITY_RESET_COMPLETE_DESCRIPTION": {
     "context": "identity_reset.rs",
-    "definedIn": "src/identity_reset.rs:324",
+    "definedIn": "src/account_settings/security_settings/identity_reset.rs:359",
     "plural": false,
     "description": null
   },
   "IDENTITY_RESET_DESCRIPTION": {
     "context": "identity_reset.rs",
-    "definedIn": "src/identity_reset.rs:242",
+    "definedIn": "src/account_settings/security_settings/identity_reset.rs:277",
     "plural": false,
     "description": null
   },
   "IDENTITY_RESET_DESCRIPTION_2": {
     "context": "identity_reset.rs",
-    "definedIn": "src/identity_reset.rs:264",
+    "definedIn": "src/account_settings/security_settings/identity_reset.rs:299",
     "plural": false,
     "description": null
   },
   "IDENTITY_RESET_UPSHOT_1": {
     "context": "identity_reset.rs",
-    "definedIn": "src/identity_reset.rs:249",
+    "definedIn": "src/account_settings/security_settings/identity_reset.rs:284",
     "plural": false,
     "description": null
   },
   "IDENTITY_RESET_UPSHOT_2": {
     "context": "identity_reset.rs",
-    "definedIn": "src/identity_reset.rs:254",
+    "definedIn": "src/account_settings/security_settings/identity_reset.rs:289",
     "plural": false,
     "description": null
   },
   "IDENTITY_RESET_UPSHOT_3": {
     "context": "identity_reset.rs",
-    "definedIn": "src/identity_reset.rs:260",
+    "definedIn": "src/account_settings/security_settings/identity_reset.rs:295",
     "plural": false,
     "description": null
   },
@@ -541,7 +541,7 @@
   },
   "INVITE_ACTION": {
     "context": "invite_popover.rs",
-    "definedIn": "src/chat/chat_room/invite_popover.rs:165",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:169",
     "plural": false,
     "description": null
   },
@@ -871,13 +871,13 @@
   },
   "MENU_ACCOUNT": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:79",
+    "definedIn": "src/main.rs:78",
     "plural": false,
     "description": null
   },
   "MENU_ROOMS": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:94",
+    "definedIn": "src/main.rs:93",
     "plural": false,
     "description": null
   },
@@ -1171,7 +1171,7 @@
   },
   "ROOMS_CREATE": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:96",
+    "definedIn": "src/main.rs:95",
     "plural": false,
     "description": null
   },
@@ -1675,7 +1675,7 @@
   },
   "UNVERIFIED_DEVICE_BADGE": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:395",
+    "definedIn": "src/account_settings/devices_settings.rs:398",
     "plural": false,
     "description": null
   },

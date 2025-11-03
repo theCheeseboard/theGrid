@@ -8,7 +8,6 @@ mod main_window;
 mod utilities;
 
 mod account_settings;
-mod identity_reset;
 mod mxc_image;
 mod uiaa_client;
 

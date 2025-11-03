@@ -186,7 +186,7 @@ impl TimelineItem {
                                     .size_policy(SizePolicy::Fit)
                                     .rounded(theme.border_radius),
                                 )
-                                .with_anchorer(move |david, bounds| {
+                                .with_anchorer(move |david, bounds, _, _| {
                                     david.child(author_flyout(
                                         bounds,
                                         author_flyout_open,
