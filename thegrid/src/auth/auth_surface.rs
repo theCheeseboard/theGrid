@@ -675,7 +675,7 @@ impl AuthSurface {
                                 .gap(px(6.))
                                 .child(subtitle(match idp {
                                     None => {
-                                        tr!("AUTH_SSO_NAME", "Login with Single Sign-on",)
+                                        tr!("AUTH_SSO_NAME_GENERIC", "Login with Single Sign-on",)
                                     }
                                     Some(idp) => {
                                         tr!(

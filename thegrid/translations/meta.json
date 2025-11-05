@@ -215,6 +215,12 @@
     "plural": false,
     "description": null
   },
+  "AUTH_SSO_NAME_GENERIC": {
+    "context": "auth_surface.rs",
+    "definedIn": "src/auth/auth_surface.rs:678",
+    "plural": false,
+    "description": null
+  },
   "AUTH_TOKEN_PLACEHOLDER": {
     "context": "auth_surface.rs",
     "definedIn": "src/auth/auth_surface.rs:98",

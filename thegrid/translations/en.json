@@ -35,6 +35,7 @@
   "AUTH_SSO_BUTTON_GENERIC": "Log in with {{sso_provider}}",
   "AUTH_SSO_MESSAGE": "We've opened a browser. Go ahead and log in there, and come back when you're done.",
   "AUTH_SSO_NAME": "Login with {{idp_name}}",
+  "AUTH_SSO_NAME_GENERIC": "Login with Single Sign-on",
   "AUTH_TOKEN_PLACEHOLDER": "Token",
   "AUTH_USERNAME_PLACEHOLDER": "Username",
   "BAN": "Ban",
