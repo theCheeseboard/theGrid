@@ -44,7 +44,7 @@ enum AuthState {
     Connecting,
     ConnectionError,
     AuthRequired,
-    SsoTokenRequired(IdentityProvider),
+    SsoTokenRequired(Option<IdentityProvider>),
 }
 
 enum LoginMethod {
@@ -309,27 +309,36 @@ impl AuthSurface {
         self.perform_login(LoginMethod::Password(password), cx);
     }
 
-    fn trigger_sso_login(&mut self, idp: IdentityProvider, cx: &mut Context<Self>) {
+    fn trigger_sso_login(&mut self, idp: Option<IdentityProvider>, cx: &mut Context<Self>) {
         let client = self.client.clone().unwrap();
         let client_clone = client.clone();
 
         let idp_clone = idp.clone();
 
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
-            let requested_url = Tokio::spawn_result(cx, async move {
-                client_clone
-                    .matrix_auth()
-                    .get_sso_login_url(
-                        "https://thegrid.vicr123.com/idp-signin",
-                        Some(idp.id.as_str()),
-                    )
-                    // .initial_device_display_name(default_device_name.as_str())
-                    // .send()
+            let requested_url = match idp {
+                None => {
+                    cx.spawn_tokio(async move {
+                        client_clone
+                            .matrix_auth()
+                            .get_sso_login_url("https://thegrid.vicr123.com/idp-signin", None)
+                            .await
+                    })
                     .await
-                    .map_err(|e| anyhow!(e))
-            })
-            .unwrap()
-            .await;
+                }
+                Some(idp) => {
+                    cx.spawn_tokio(async move {
+                        client_clone
+                            .matrix_auth()
+                            .get_sso_login_url(
+                                "https://thegrid.vicr123.com/idp-signin",
+                                Some(idp.id.as_str()),
+                            )
+                            .await
+                    })
+                    .await
+                }
+            };
 
             cx.update(|cx| cx.open_url(&requested_url.unwrap()))
                 .unwrap();
@@ -582,7 +591,17 @@ impl AuthSurface {
                             |david| {
                                 let sso_providers = self.login_types.iter().flat_map(
                                     |login_type| match login_type {
-                                        LoginType::Sso(sso) => sso.identity_providers.clone(),
+                                        LoginType::Sso(sso) => {
+                                            if sso.identity_providers.is_empty() {
+                                                vec![None]
+                                            } else {
+                                                sso.identity_providers
+                                                    .iter()
+                                                    .cloned()
+                                                    .map(|idp| Some(idp))
+                                                    .collect()
+                                            }
+                                        }
                                         _ => Vec::new(),
                                     },
                                 );
@@ -598,17 +617,30 @@ impl AuthSurface {
                                         |david, sso_provider| {
                                             david.child(
                                                 button(ElementId::Name(
-                                                    format!("sso-provider-{}", sso_provider.id)
-                                                        .into(),
+                                                    format!(
+                                                        "sso-provider-{}",
+                                                        sso_provider
+                                                            .clone()
+                                                            .map(|sso_provider| sso_provider.id)
+                                                            .unwrap_or_default()
+                                                    )
+                                                    .into(),
                                                 ))
                                                 .child(icon_text(
                                                     "arrow-right".into(),
-                                                    tr!(
-                                                        "AUTH_SSO_BUTTON",
-                                                        "Log in with {{sso_provider}}",
-                                                        sso_provider = sso_provider.name
-                                                    )
-                                                    .into(),
+                                                    match &sso_provider {
+                                                        None => tr!(
+                                                            "AUTH_SSO_BUTTON",
+                                                            "Log in with SSO"
+                                                        )
+                                                        .into(),
+                                                        Some(sso_provider) => tr!(
+                                                            "AUTH_SSO_BUTTON_GENERIC",
+                                                            "Log in with {{sso_provider}}",
+                                                            sso_provider = sso_provider.name
+                                                        )
+                                                        .into(),
+                                                    },
                                                 ))
                                                 .on_click(cx.listener(move |this, _, _, cx| {
                                                     this.trigger_sso_login(
@@ -641,11 +673,18 @@ impl AuthSurface {
                                 .p(px(8.))
                                 .w_full()
                                 .gap(px(6.))
-                                .child(subtitle(tr!(
-                                    "AUTH_SSO_NAME",
-                                    "Login with {{idp_name}}",
-                                    idp_name = idp.name
-                                )))
+                                .child(subtitle(match idp {
+                                    None => {
+                                        tr!("AUTH_SSO_NAME", "Login with Single Sign-on",)
+                                    }
+                                    Some(idp) => {
+                                        tr!(
+                                            "AUTH_SSO_NAME",
+                                            "Login with {{idp_name}}",
+                                            idp_name = idp.name
+                                        )
+                                    }
+                                }))
                                 .child(tr!(
                                     "AUTH_SSO_MESSAGE",
                                     "We've opened a browser. Go ahead and log in there, \
