@@ -270,8 +270,8 @@
     "description": null
   },
   "CLOSE": {
-    "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:245",
+    "context": "verification_popover.rs",
+    "definedIn": "src/auth/verification_popover.rs:452",
     "plural": false,
     "description": null
   },
@@ -300,8 +300,8 @@
     "description": null
   },
   "CREATE_ROOM_OPTIONS": {
-    "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:144",
+    "context": "create_room_popover.rs",
+    "definedIn": "src/chat/join_room/create_room_popover.rs:134",
     "plural": false,
     "description": null
   },
@@ -553,7 +553,7 @@
   },
   "INVITE_ACTION": {
     "context": "invite_popover.rs",
-    "definedIn": "src/chat/chat_room/invite_popover.rs:169",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:196",
     "plural": false,
     "description": null
   },
@@ -565,7 +565,19 @@
   },
   "INVITE_DESCRIPTION": {
     "context": "invite_popover.rs",
-    "definedIn": "src/chat/chat_room/invite_popover.rs:139",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:166",
+    "plural": false,
+    "description": null
+  },
+  "INVITE_ERROR_TEXT": {
+    "context": "invite_popover.rs",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:95",
+    "plural": false,
+    "description": null
+  },
+  "INVITE_ERROR_TITLE": {
+    "context": "invite_popover.rs",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:91",
     "plural": false,
     "description": null
   },
@@ -577,19 +589,19 @@
   },
   "INVITE_SEARCH_PLACEHOLDER": {
     "context": "invite_popover.rs",
-    "definedIn": "src/chat/chat_room/invite_popover.rs:40",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:41",
     "plural": false,
     "description": null
   },
   "INVITE_SUBTITLE": {
     "context": "invite_popover.rs",
-    "definedIn": "src/chat/chat_room/invite_popover.rs:132",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:159",
     "plural": false,
     "description": null
   },
   "INVITE_TITLE": {
     "context": "invite_popover.rs",
-    "definedIn": "src/chat/chat_room/invite_popover.rs:119",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:146",
     "plural": false,
     "description": null
   },
@@ -1332,8 +1344,8 @@
     "description": null
   },
   "ROOM_SETTINGS": {
-    "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:171",
+    "context": "standard_room_element.rs",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:149",
     "plural": false,
     "description": null
   },

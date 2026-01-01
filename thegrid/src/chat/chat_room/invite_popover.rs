@@ -12,10 +12,11 @@ use contemporary::components::popover::popover;
 use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::TextField;
+use contemporary::components::toast::Toast;
 use contemporary::styling::theme::Theme;
 use gpui::{
-    AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled, WeakEntity,
-    Window, div, px,
+    AppContext, AsyncApp, AsyncWindowContext, Context, Entity, IntoElement, ParentElement, Render,
+    Styled, WeakEntity, Window, div, px,
 };
 use matrix_sdk::ruma::{OwnedRoomId, OwnedUserId, UserId};
 use thegrid::session::session_manager::SessionManager;
@@ -54,7 +55,7 @@ impl InvitePopover {
         cx.notify();
     }
 
-    pub fn perform_invite(&mut self, cx: &mut Context<Self>) {
+    pub fn perform_invite(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         // TODO: Remove when we have search
         let Ok(user_id) = UserId::parse(self.invite_search.read(cx).text()) else {
             return;
@@ -71,16 +72,42 @@ impl InvitePopover {
             .unwrap()
             .read(cx);
         let room = cached_room.inner.clone();
-        cx.spawn(
-            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+
+        cx.spawn_in(
+            window,
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncWindowContext| {
                 for user_id in pending_invites.iter() {
                     let user_id = user_id.clone();
+                    let user_id_2 = user_id.clone();
                     let room = room.clone();
 
-                    // TODO: Handle errors
-                    let _ = cx
+                    if let Err(e) = cx
                         .spawn_tokio(async move { room.invite_user_by_id(&user_id).await })
-                        .await;
+                        .await
+                    {
+                        let _ = cx.update(|window, cx| {
+                            Toast::new()
+                                .title(
+                                    &tr!("INVITE_ERROR_TITLE", "Unable to send invite").to_string(),
+                                )
+                                .body(
+                                    &tr!(
+                                        "INVITE_ERROR_TEXT",
+                                        "Unable to invite {{user}} to the room",
+                                        user = user_id_2.to_string()
+                                    )
+                                    .to_string(),
+                                )
+                                .post(window, cx);
+                        });
+
+                        let _ = weak_this.update(cx, |this, cx| {
+                            this.busy = false;
+                            cx.notify();
+                        });
+
+                        return;
+                    }
                 }
 
                 let _ = weak_this.update(cx, |this, cx| {
@@ -170,8 +197,8 @@ impl Render for InvitePopover {
                                                                 .into(),
                                                         ))
                                                         .on_click(cx.listener(
-                                                            move |this, _, _, cx| {
-                                                                this.perform_invite(cx)
+                                                            move |this, _, window, cx| {
+                                                                this.perform_invite(window, cx)
                                                             },
                                                         )),
                                                 ),
