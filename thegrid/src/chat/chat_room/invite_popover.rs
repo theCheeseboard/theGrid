@@ -1,4 +1,5 @@
 use cntp_i18n::tr;
+use contemporary::components::admonition::AdmonitionSeverity;
 use contemporary::components::anchorer::WithAnchorer;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
@@ -98,6 +99,7 @@ impl InvitePopover {
                                     )
                                     .to_string(),
                                 )
+                                .severity(AdmonitionSeverity::Error)
                                 .post(window, cx);
                         });
 
