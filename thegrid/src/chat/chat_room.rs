@@ -16,6 +16,7 @@ use crate::chat::chat_room::timeline_view::TimelineView;
 use crate::chat::chat_room::user_action_dialogs::UserActionDialogs;
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::tr;
+use contemporary::components::admonition::admonition;
 use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
@@ -27,6 +28,7 @@ use gpui::{
     ParentElement, Render, StatefulInteractiveElement, Styled, Window, div, px,
 };
 use matrix_sdk::ruma::OwnedRoomId;
+use matrix_sdk::ruma::events::tag::TagName;
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
 use timeline_view::author_flyout::{AuthorFlyoutUserActionEvent, UserAction};
@@ -204,6 +206,22 @@ impl Render for ChatRoom {
                                         open_room: self.open_room.clone(),
                                     })
                                 }),
+                        )
+                        .when(
+                            open_room.tags.contains_key(&TagName::ServerNotice),
+                            |david| {
+                                david.child(
+                                    div().px(px(2.)).pb(px(2.)).child(
+                                        admonition()
+                                            .title(tr!("SERVER_NOTICE_ROOM_TITLE", "Official Room"))
+                                            .child(tr!(
+                                                "SERVER_NOTICE_ROOM_CONTENT",
+                                                "Notices from your homeserver will appear \
+                                                    in this room."
+                                            )),
+                                    ),
+                                )
+                            },
                         )
                         .child(chat_bar)
                         .child(

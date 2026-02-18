@@ -256,6 +256,8 @@
   "SECURITY_KEY_EXPORT_WARNING": "Keep this file and the password guarded. Anyone who gets access to this file and the password will be able to decrypt your messages.",
   "SECURITY_RECOVERY_KEY_RESET": "Reset Recovery Key",
   "SECURITY_RECOVERY_KEY_SETUP": "Set up Recovery Key",
+  "SERVER_NOTICE_ROOM_CONTENT": "Notices from your homeserver will appear in this room.",
+  "SERVER_NOTICE_ROOM_TITLE": "Official Room",
   "SETUP_RECOVERY": "Set up recovery",
   "SETUP_RECOVERY_DESCRIPTION": "Set up a recovery key for your account so you don't lose access to your encrypted messages",
   "SETUP_RECOVERY_NOW": "Set up now",

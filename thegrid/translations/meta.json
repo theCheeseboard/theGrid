@@ -79,7 +79,7 @@
   },
   "ATTACH_PROMPT": {
     "context": "open_room.rs",
-    "definedIn": "src/chat/chat_room/open_room.rs:193",
+    "definedIn": "src/chat/chat_room/open_room.rs:209",
     "plural": false,
     "description": null
   },
@@ -553,7 +553,7 @@
   },
   "INVITE_ACTION": {
     "context": "invite_popover.rs",
-    "definedIn": "src/chat/chat_room/invite_popover.rs:196",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:198",
     "plural": false,
     "description": null
   },
@@ -565,19 +565,19 @@
   },
   "INVITE_DESCRIPTION": {
     "context": "invite_popover.rs",
-    "definedIn": "src/chat/chat_room/invite_popover.rs:166",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:168",
     "plural": false,
     "description": null
   },
   "INVITE_ERROR_TEXT": {
     "context": "invite_popover.rs",
-    "definedIn": "src/chat/chat_room/invite_popover.rs:95",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:96",
     "plural": false,
     "description": null
   },
   "INVITE_ERROR_TITLE": {
     "context": "invite_popover.rs",
-    "definedIn": "src/chat/chat_room/invite_popover.rs:91",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:92",
     "plural": false,
     "description": null
   },
@@ -589,19 +589,19 @@
   },
   "INVITE_SEARCH_PLACEHOLDER": {
     "context": "invite_popover.rs",
-    "definedIn": "src/chat/chat_room/invite_popover.rs:41",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:42",
     "plural": false,
     "description": null
   },
   "INVITE_SUBTITLE": {
     "context": "invite_popover.rs",
-    "definedIn": "src/chat/chat_room/invite_popover.rs:159",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:161",
     "plural": false,
     "description": null
   },
   "INVITE_TITLE": {
     "context": "invite_popover.rs",
-    "definedIn": "src/chat/chat_room/invite_popover.rs:146",
+    "definedIn": "src/chat/chat_room/invite_popover.rs:148",
     "plural": false,
     "description": null
   },
@@ -1541,6 +1541,18 @@
     "plural": false,
     "description": null
   },
+  "SERVER_NOTICE_ROOM_CONTENT": {
+    "context": "chat_room.rs",
+    "definedIn": "src/chat/chat_room.rs:218",
+    "plural": false,
+    "description": null
+  },
+  "SERVER_NOTICE_ROOM_TITLE": {
+    "context": "chat_room.rs",
+    "definedIn": "src/chat/chat_room.rs:216",
+    "plural": false,
+    "description": null
+  },
   "SETUP_RECOVERY": {
     "context": "sidebar.rs",
     "definedIn": "src/chat/sidebar.rs:356",
@@ -1675,7 +1687,7 @@
   },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:148",
+    "definedIn": "src/chat/chat_room.rs:150",
     "plural": false,
     "description": null
   },

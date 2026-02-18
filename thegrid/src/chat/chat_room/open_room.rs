@@ -25,8 +25,11 @@ use matrix_sdk_ui::Timeline as MatrixUiTimeline;
 use matrix_sdk_ui::timeline::{AttachmentConfig, AttachmentSource, Error, RoomExt};
 use mime2ext::mime2ext;
 use std::fs::read;
+use std::iter::Map;
 use std::mem;
 use std::path::PathBuf;
+use imbl::HashMap;
+use matrix_sdk::ruma::events::tag::{TagInfo, TagName, Tags};
 use thegrid::session::session_manager::SessionManager;
 use thegrid::thegrid_error::TheGridError;
 use thegrid::tokio_helper::TokioHelper;
@@ -41,6 +44,7 @@ pub struct OpenRoom {
     pub room_id: OwnedRoomId,
     pub chat_bar: Entity<ChatBar>,
     pub timeline: Option<Entity<Timeline>>,
+    pub tags: Tags,
 }
 
 pub struct PendingAttachment {
@@ -87,6 +91,7 @@ impl OpenRoom {
             typing_users: Vec::new(),
             chat_input,
             timeline: None,
+            tags: Default::default()
         };
 
         let Some(room) = client.get_room(&room_id) else {
@@ -96,9 +101,10 @@ impl OpenRoom {
 
         self_return.setup_acquire_own_user(cx);
 
+        let room_clone = room.clone();
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let timeline = cx.spawn_tokio(async move { room.timeline().await }).await;
+                let timeline = cx.spawn_tokio(async move { room_clone.timeline().await }).await;
 
                 if let Ok(timeline) = timeline {
                     let _ = weak_this.update(cx, |this, cx| {
@@ -110,6 +116,16 @@ impl OpenRoom {
             },
         )
         .detach();
+
+        cx.spawn(async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+            let tags = cx.spawn_tokio(async move {room.tags().await}).await;
+            if let Ok(Some(tags)) = tags {
+                let _ = weak_this.update(cx, |this, cx| {
+                    this.tags = tags;
+                    cx.notify()
+                });
+            }
+        }).detach();
 
         self_return
     }
