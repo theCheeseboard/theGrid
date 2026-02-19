@@ -35,14 +35,14 @@ impl KeyExportPopover {
                 let mut text_field = TextField::new("password", cx);
                 text_field.set_mask_mode(MaskMode::password_mask());
                 text_field
-                    .set_placeholder(tr!("KEY_EXPORT_PASSWORD", "Password").to_string().as_str());
+                    .set_placeholder(tr!("PASSWORD", "Password").to_string().as_str());
                 text_field
             }),
             password_confirm_field: cx.new(|cx| {
                 let mut text_field = TextField::new("password-confirm-field", cx);
                 text_field.set_mask_mode(MaskMode::password_mask());
                 text_field.set_placeholder(
-                    tr!("KEY_EXPORT_PASSWORD_CONFIRM", "Confirm Password")
+                    tr!("PASSWORD_CONFIRM", "Confirm Password")
                         .to_string()
                         .as_str(),
                 );

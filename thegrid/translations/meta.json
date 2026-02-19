@@ -1,19 +1,19 @@
 {
   "ACCOUNT_ACCOUNT_SETTINGS": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:81",
+    "definedIn": "src/main.rs:82",
     "plural": false,
     "description": null
   },
   "ACCOUNT_ACCOUNT_SWITCHER": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:86",
+    "definedIn": "src/main.rs:87",
     "plural": false,
     "description": null
   },
   "ACCOUNT_LOG_OUT": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:89",
+    "definedIn": "src/main.rs:90",
     "plural": false,
     "description": null
   },
@@ -91,67 +91,67 @@
   },
   "AUTH_ADVANCED_LOG_IN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:797",
+    "definedIn": "src/auth/auth_surface.rs:824",
     "plural": false,
     "description": null
   },
   "AUTH_HOMESERVER_PLACEHOLDER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:114",
+    "definedIn": "src/auth/auth_surface.rs:123",
     "plural": false,
     "description": null
   },
   "AUTH_LOG_IN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:807",
+    "definedIn": "src/auth/auth_surface.rs:834",
     "plural": false,
     "description": null
   },
   "AUTH_LOG_IN_TO_MATRIX": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:788",
+    "definedIn": "src/auth/auth_surface.rs:808",
     "plural": false,
     "description": null
   },
   "AUTH_MATRIX_ID_EXAMPLE": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:78",
+    "definedIn": "src/auth/auth_surface.rs:87",
     "plural": false,
     "description": null
   },
   "AUTH_PASSWORD": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:569",
+    "definedIn": "src/auth/auth_surface.rs:589",
     "plural": false,
     "description": null
   },
   "AUTH_PASSWORD_PLACEHOLDER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:88",
+    "definedIn": "src/auth/auth_surface.rs:97",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_ADVANCED_LOGIN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:476",
+    "definedIn": "src/auth/auth_surface.rs:496",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_ADVANCED_LOGIN_TEXT": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:485",
+    "definedIn": "src/auth/auth_surface.rs:505",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_CONNECTION_ERROR": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:523",
+    "definedIn": "src/auth/auth_surface.rs:543",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_CONNECTION_ERROR_TEXT": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:532",
+    "definedIn": "src/auth/auth_surface.rs:552",
     "plural": false,
     "description": null
   },
@@ -181,55 +181,55 @@
   },
   "AUTH_SESSION_RESTORE": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:757",
+    "definedIn": "src/auth/auth_surface.rs:777",
     "plural": false,
     "description": null
   },
   "AUTH_SSO": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:616",
+    "definedIn": "src/auth/auth_surface.rs:636",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_BUTTON": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:633",
+    "definedIn": "src/auth/auth_surface.rs:653",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_BUTTON_GENERIC": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:638",
+    "definedIn": "src/auth/auth_surface.rs:658",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_MESSAGE": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:689",
+    "definedIn": "src/auth/auth_surface.rs:709",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_NAME": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:682",
+    "definedIn": "src/auth/auth_surface.rs:702",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_NAME_GENERIC": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:678",
+    "definedIn": "src/auth/auth_surface.rs:698",
     "plural": false,
     "description": null
   },
   "AUTH_TOKEN_PLACEHOLDER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:98",
+    "definedIn": "src/auth/auth_surface.rs:107",
     "plural": false,
     "description": null
   },
   "AUTH_USERNAME_PLACEHOLDER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:105",
+    "definedIn": "src/auth/auth_surface.rs:114",
     "plural": false,
     "description": null
   },
@@ -641,18 +641,6 @@
     "plural": false,
     "description": null
   },
-  "KEY_EXPORT_PASSWORD": {
-    "context": "key_export_popover.rs",
-    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:38",
-    "plural": false,
-    "description": null
-  },
-  "KEY_EXPORT_PASSWORD_CONFIRM": {
-    "context": "key_export_popover.rs",
-    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:45",
-    "plural": false,
-    "description": null
-  },
   "KEY_EXPORT_TITLE": {
     "context": "key_export_popover.rs",
     "definedIn": "src/account_settings/security_settings/key_export_popover.rs:133",
@@ -895,13 +883,13 @@
   },
   "MENU_ACCOUNT": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:78",
+    "definedIn": "src/main.rs:79",
     "plural": false,
     "description": null
   },
   "MENU_ROOMS": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:93",
+    "definedIn": "src/main.rs:94",
     "plural": false,
     "description": null
   },
@@ -920,6 +908,18 @@
   "NEW_DISPLAY_NAME_PLACEHOLDER": {
     "context": "profile_settings.rs",
     "definedIn": "src/account_settings/profile_settings.rs:35",
+    "plural": false,
+    "description": null
+  },
+  "NEW_USERNAME_DESCRIPTION": {
+    "context": "register_matrix_auth_password_page.rs",
+    "definedIn": "src/register/register_matrix_auth_password_page.rs:101",
+    "plural": false,
+    "description": null
+  },
+  "NEXT": {
+    "context": "register_matrix_auth_password_page.rs",
+    "definedIn": "src/register/register_matrix_auth_password_page.rs:114",
     "plural": false,
     "description": null
   },
@@ -983,15 +983,51 @@
     "plural": false,
     "description": null
   },
+  "OPEN_ACCOUNT_HOMESERVER_TITLE": {
+    "context": "register_homeserver_page.rs",
+    "definedIn": "src/register/register_homeserver_page.rs:70",
+    "plural": false,
+    "description": null
+  },
+  "OPEN_ACCOUNT_MATRIX_AUTH_TITLE": {
+    "context": "register_matrix_auth_password_page.rs",
+    "definedIn": "src/register/register_matrix_auth_password_page.rs:97",
+    "plural": false,
+    "description": null
+  },
+  "OPEN_ACCOUNT_TITLE_HOMESERVER_DESCRIPTION": {
+    "context": "register_homeserver_page.rs",
+    "definedIn": "src/register/register_homeserver_page.rs:74",
+    "plural": false,
+    "description": null
+  },
+  "PASSWORD": {
+    "context": "key_export_popover.rs",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:38",
+    "plural": false,
+    "description": null
+  },
+  "PASSWORD_CONFIRM": {
+    "context": "key_export_popover.rs",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:45",
+    "plural": false,
+    "description": null
+  },
+  "PASSWORD_DESCRIPTION": {
+    "context": "register_matrix_auth_password_page.rs",
+    "definedIn": "src/register/register_matrix_auth_password_page.rs:106",
+    "plural": false,
+    "description": null
+  },
   "POPOVER_LOGIN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:836",
+    "definedIn": "src/auth/auth_surface.rs:863",
     "plural": false,
     "description": null
   },
   "POPOVER_LOGIN_HOMESERVER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:830",
+    "definedIn": "src/auth/auth_surface.rs:857",
     "plural": false,
     "description": null
   },
@@ -1181,6 +1217,12 @@
     "plural": false,
     "description": null
   },
+  "REGISTER_TITLE": {
+    "context": "register_homeserver_page.rs",
+    "definedIn": "src/register/register_homeserver_page.rs:48",
+    "plural": false,
+    "description": null
+  },
   "REPLY_UNAVAILABLE": {
     "context": "timeline_message_item.rs",
     "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:67",
@@ -1195,7 +1237,7 @@
   },
   "ROOMS_CREATE": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:95",
+    "definedIn": "src/main.rs:96",
     "plural": false,
     "description": null
   },
@@ -1712,6 +1754,12 @@
   "UNVERIFIED_DEVICE_BADGE": {
     "context": "devices_settings.rs",
     "definedIn": "src/account_settings/devices_settings.rs:398",
+    "plural": false,
+    "description": null
+  },
+  "USERNAME": {
+    "context": "register_matrix_auth_password_page.rs",
+    "definedIn": "src/register/register_matrix_auth_password_page.rs:42",
     "plural": false,
     "description": null
   },

@@ -2,6 +2,7 @@ use crate::account_settings::security_settings::identity_reset::IdentityResetSur
 use crate::account_settings::{AccountSettingsPage, AccountSettingsSurface};
 use crate::auth::auth_surface::AuthSurface;
 use crate::chat::chat_surface::ChatSurface;
+use crate::register::register_surface::RegisterSurface;
 use contemporary::about_surface::about_surface;
 use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
@@ -12,6 +13,7 @@ use thegrid::session::session_manager::SessionManager;
 pub struct MainWindow {
     main_surface: Entity<ChatSurface>,
     auth_surface: Entity<AuthSurface>,
+    register_surface: Entity<RegisterSurface>,
     account_settings_surface: Entity<AccountSettingsSurface>,
     identity_reset_surface: Entity<IdentityResetSurface>,
     current_surface: Vec<MainWindowSurface>,
@@ -21,6 +23,7 @@ pub struct MainWindow {
 pub enum MainWindowSurface {
     Main,
     AccountSettings(AccountSettingsPage),
+    Register,
     IdentityReset,
     About,
 }
@@ -50,10 +53,13 @@ impl MainWindow {
             let handle_surface_change = cx.listener(Self::handle_surface_change);
             let handle_surface_change_2 = cx.listener(Self::handle_surface_change);
             let handle_surface_change_3 = cx.listener(Self::handle_surface_change);
+            let handle_surface_change_4 = cx.listener(Self::handle_surface_change);
+            let handle_surface_change_5 = cx.listener(Self::handle_surface_change);
 
             MainWindow {
                 main_surface: ChatSurface::new(cx, handle_surface_change),
-                auth_surface: AuthSurface::new(cx),
+                auth_surface: AuthSurface::new(cx, handle_surface_change_5),
+                register_surface: cx.new(|cx| RegisterSurface::new(cx, handle_surface_change_4)),
                 account_settings_surface: AccountSettingsSurface::new(cx, handle_surface_change_2),
                 identity_reset_surface: IdentityResetSurface::new(cx, handle_surface_change_3),
                 current_surface: vec![MainWindowSurface::Main],
@@ -111,9 +117,10 @@ impl Render for MainWindow {
                         Some(_) => 0,
                         None => 1,
                     },
-                    MainWindowSurface::AccountSettings(_) => 2,
-                    MainWindowSurface::IdentityReset => 3,
-                    MainWindowSurface::About => 4,
+                    MainWindowSurface::Register => 2,
+                    MainWindowSurface::AccountSettings(_) => 3,
+                    MainWindowSurface::IdentityReset => 4,
+                    MainWindowSurface::About => 5,
                 },
             )
             .w_full()
@@ -121,6 +128,7 @@ impl Render for MainWindow {
             .animation(LiftAnimation::new())
             .page(self.main_surface.clone().into_any_element())
             .page(self.auth_surface.clone().into_any_element())
+            .page(self.register_surface.clone().into_any_element())
             .page(self.account_settings_surface.clone().into_any_element())
             .page(self.identity_reset_surface.clone().into_any_element())
             .page(

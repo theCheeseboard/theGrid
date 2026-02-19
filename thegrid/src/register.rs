@@ -1,0 +1,3 @@
+pub mod register_surface;
+mod register_homeserver_page;
+mod register_matrix_auth_password_page;

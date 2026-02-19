@@ -3,6 +3,7 @@
 
 mod actions;
 pub mod auth;
+pub mod register;
 mod chat;
 mod main_window;
 mod utilities;

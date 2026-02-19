@@ -1,3 +1,6 @@
+use crate::main_window::{
+    MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
+};
 use crate::utilities::default_device_name;
 use cntp_i18n::{i18n_manager, tr};
 use contemporary::application::Details;
@@ -30,6 +33,7 @@ use matrix_sdk::ruma::{DeviceId, OwnedUserId, user_id};
 use matrix_sdk::{Client, ClientBuildError};
 use smol::future::FutureExt;
 use std::path::PathBuf;
+use std::rc::Rc;
 use std::sync::Arc;
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
@@ -63,10 +67,15 @@ pub struct AuthSurface {
     login_types: Vec<LoginType>,
     user_id: Option<OwnedUserId>,
     session_uuid: Uuid,
+
+    on_surface_change: Rc<Box<SurfaceChangeHandler>>,
 }
 
 impl AuthSurface {
-    pub fn new(cx: &mut App) -> Entity<Self> {
+    pub fn new(
+        cx: &mut App,
+        on_surface_change: impl Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static,
+    ) -> Entity<Self> {
         cx.new(|cx| {
             cx.observe_global::<SessionManager>(|session_manager, cx| cx.notify())
                 .detach();
@@ -122,6 +131,7 @@ impl AuthSurface {
                 user_id: None,
                 login_types: Vec::new(),
                 session_uuid: Uuid::new_v4(),
+                on_surface_change: Rc::new(Box::new(on_surface_change)),
             };
             surface
         })
@@ -220,6 +230,16 @@ impl AuthSurface {
     fn advanced_login_clicked(&mut self, cx: &mut Context<Self>) {
         self.state = AuthState::Advanced;
         cx.notify();
+    }
+
+    fn open_account_clicked(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        (self.on_surface_change)(
+            &SurfaceChangeEvent {
+                change: SurfaceChange::Push(MainWindowSurface::Register),
+            },
+            window,
+            cx,
+        );
     }
 
     fn trigger_advanced_login(&mut self, cx: &mut Context<Self>) {
@@ -791,6 +811,13 @@ impl Render for AuthSurface {
                                 div()
                                     .flex()
                                     .gap(px(4.))
+                                    // .child(
+                                    //     button("open_account")
+                                    //         .child(tr!("AUTH_OPEN_ACCOUNT", "Open New Account..."))
+                                    //         .on_click(cx.listener(|this, _, window, cx| {
+                                    //             this.open_account_clicked(window, cx)
+                                    //         })),
+                                    // )
                                     .child(div().flex_grow())
                                     .child(
                                         button("advanced_log_in")
