@@ -3,6 +3,7 @@ mod ignored_users_settings;
 mod notifications_settings;
 mod profile_settings;
 pub mod security_settings;
+pub mod deactivate_account;
 
 use crate::account_settings::devices_settings::DevicesSettings;
 use crate::account_settings::ignored_users_settings::IgnoredUsersSettings;
@@ -51,15 +52,18 @@ impl AccountSettingsSurface {
     ) -> Entity<Self> {
         let on_surface_change = Rc::new(Box::new(on_surface_change));
         let on_surface_change_2 = on_surface_change.clone();
+        let on_surface_change_3 = on_surface_change.clone();
         cx.new(|cx| Self {
             current_page: 0,
             on_surface_change: Rc::new(Box::new(move |event, window, cx| {
                 on_surface_change(event, window, cx)
             })),
 
-            profile_settings: ProfileSettings::new(cx),
-            security_settings: SecuritySettings::new(cx, move |event, window, cx| {
+            profile_settings: ProfileSettings::new(cx, move |event, window, cx| {
                 on_surface_change_2(event, window, cx)
+            }),
+            security_settings: SecuritySettings::new(cx, move |event, window, cx| {
+                on_surface_change_3(event, window, cx)
             }),
             notifications_settings: NotificationsSettings::new(cx),
             devices_settings: DevicesSettings::new(cx),

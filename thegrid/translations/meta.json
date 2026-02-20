@@ -11,6 +11,90 @@
     "plural": false,
     "description": null
   },
+  "ACCOUNT_DEACTIVATE": {
+    "context": "deactivate_account.rs",
+    "definedIn": "src/account_settings/deactivate_account.rs:299",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_DEACTIVATE_AND_DELETE": {
+    "context": "deactivate_account.rs",
+    "definedIn": "src/account_settings/deactivate_account.rs:269",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_DEACTIVATE_AND_DELETE_DESCRIPTION": {
+    "context": "deactivate_account.rs",
+    "definedIn": "src/account_settings/deactivate_account.rs:259",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_DEACTIVATE_CHOOSE_TITLE": {
+    "context": "deactivate_account.rs",
+    "definedIn": "src/account_settings/deactivate_account.rs:225",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_DEACTIVATE_COMPLETE": {
+    "context": "deactivate_account.rs",
+    "definedIn": "src/account_settings/deactivate_account.rs:416",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_DEACTIVATE_COMPLETE_DESCRIPTION": {
+    "context": "deactivate_account.rs",
+    "definedIn": "src/account_settings/deactivate_account.rs:420",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_DEACTIVATE_DESCRIPTION_2": {
+    "context": "deactivate_account.rs",
+    "definedIn": "src/account_settings/deactivate_account.rs:344",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_DEACTIVATE_ONLY": {
+    "context": "deactivate_account.rs",
+    "definedIn": "src/account_settings/deactivate_account.rs:243",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_DEACTIVATE_ONLY_DESCRIPTION": {
+    "context": "deactivate_account.rs",
+    "definedIn": "src/account_settings/deactivate_account.rs:234",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_DEACTIVATE_TITLE": {
+    "context": "deactivate_account.rs",
+    "definedIn": "src/account_settings/deactivate_account.rs:321",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_DEACTIVATE_UPSHOT_1": {
+    "context": "deactivate_account.rs",
+    "definedIn": "src/account_settings/deactivate_account.rs:326",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_DEACTIVATE_UPSHOT_2": {
+    "context": "deactivate_account.rs",
+    "definedIn": "src/account_settings/deactivate_account.rs:330",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_DEACTIVATE_UPSHOT_3": {
+    "context": "deactivate_account.rs",
+    "definedIn": "src/account_settings/deactivate_account.rs:335",
+    "plural": false,
+    "description": null
+  },
+  "ACCOUNT_DEACTIVATE_UPSHOT_4": {
+    "context": "deactivate_account.rs",
+    "definedIn": "src/account_settings/deactivate_account.rs:340",
+    "plural": false,
+    "description": null
+  },
   "ACCOUNT_LOG_OUT": {
     "context": "main.rs",
     "definedIn": "src/main.rs:90",
@@ -19,37 +103,37 @@
   },
   "ACCOUNT_SETTINGS_DEVICES": {
     "context": "account_settings.rs",
-    "definedIn": "src/account_settings.rs:150",
+    "definedIn": "src/account_settings.rs:154",
     "plural": false,
     "description": null
   },
   "ACCOUNT_SETTINGS_IGNORED_USERS": {
     "context": "account_settings.rs",
-    "definedIn": "src/account_settings.rs:154",
+    "definedIn": "src/account_settings.rs:158",
     "plural": false,
     "description": null
   },
   "ACCOUNT_SETTINGS_NOTIFICATIONS": {
     "context": "account_settings.rs",
-    "definedIn": "src/account_settings.rs:146",
+    "definedIn": "src/account_settings.rs:150",
     "plural": false,
     "description": null
   },
   "ACCOUNT_SETTINGS_PROFILE": {
     "context": "account_settings.rs",
-    "definedIn": "src/account_settings.rs:138",
+    "definedIn": "src/account_settings.rs:142",
     "plural": false,
     "description": null
   },
   "ACCOUNT_SETTINGS_SECURITY": {
     "context": "account_settings.rs",
-    "definedIn": "src/account_settings.rs:142",
+    "definedIn": "src/account_settings.rs:146",
     "plural": false,
     "description": null
   },
   "ACCOUNT_SETTINGS_TITLE": {
     "context": "account_settings.rs",
-    "definedIn": "src/account_settings.rs:102",
+    "definedIn": "src/account_settings.rs:106",
     "plural": false,
     "description": null
   },
@@ -402,8 +486,8 @@
     "description": null
   },
   "DONE": {
-    "context": "identity_reset.rs",
-    "definedIn": "src/account_settings/security_settings/identity_reset.rs:366",
+    "context": "deactivate_account.rs",
+    "definedIn": "src/account_settings/deactivate_account.rs:427",
     "plural": false,
     "description": null
   },
@@ -907,7 +991,7 @@
   },
   "NEW_DISPLAY_NAME_PLACEHOLDER": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:35",
+    "definedIn": "src/account_settings/profile_settings.rs:41",
     "plural": false,
     "description": null
   },
@@ -1109,27 +1193,39 @@
     "plural": false,
     "description": null
   },
+  "PROFILE_ACCOUNT": {
+    "context": "profile_settings.rs",
+    "definedIn": "src/account_settings/profile_settings.rs:156",
+    "plural": false,
+    "description": null
+  },
   "PROFILE_CHANGE_DISPLAY_NAME": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:115",
+    "definedIn": "src/account_settings/profile_settings.rs:122",
     "plural": false,
     "description": null
   },
   "PROFILE_CHANGE_DISPLAY_NAME_DESCRIPTION": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:155",
+    "definedIn": "src/account_settings/profile_settings.rs:198",
     "plural": false,
     "description": null
   },
   "PROFILE_CHANGE_PROFILE_PICTURE": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:135",
+    "definedIn": "src/account_settings/profile_settings.rs:142",
+    "plural": false,
+    "description": null
+  },
+  "PROFILE_DEACTIVATE": {
+    "context": "profile_settings.rs",
+    "definedIn": "src/account_settings/profile_settings.rs:167",
     "plural": false,
     "description": null
   },
   "PROFILE_PROFILE": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:103",
+    "definedIn": "src/account_settings/profile_settings.rs:110",
     "plural": false,
     "description": null
   },

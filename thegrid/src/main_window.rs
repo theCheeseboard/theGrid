@@ -1,3 +1,4 @@
+use crate::account_settings::deactivate_account::DeactivateSurface;
 use crate::account_settings::security_settings::identity_reset::IdentityResetSurface;
 use crate::account_settings::{AccountSettingsPage, AccountSettingsSurface};
 use crate::auth::auth_surface::AuthSurface;
@@ -16,6 +17,7 @@ pub struct MainWindow {
     register_surface: Entity<RegisterSurface>,
     account_settings_surface: Entity<AccountSettingsSurface>,
     identity_reset_surface: Entity<IdentityResetSurface>,
+    deactivate_account_surface: Entity<DeactivateSurface>,
     current_surface: Vec<MainWindowSurface>,
 }
 
@@ -25,6 +27,7 @@ pub enum MainWindowSurface {
     AccountSettings(AccountSettingsPage),
     Register,
     IdentityReset,
+    DeactivateAccount,
     About,
 }
 
@@ -55,6 +58,7 @@ impl MainWindow {
             let handle_surface_change_3 = cx.listener(Self::handle_surface_change);
             let handle_surface_change_4 = cx.listener(Self::handle_surface_change);
             let handle_surface_change_5 = cx.listener(Self::handle_surface_change);
+            let handle_surface_change_6 = cx.listener(Self::handle_surface_change);
 
             MainWindow {
                 main_surface: ChatSurface::new(cx, handle_surface_change),
@@ -62,6 +66,7 @@ impl MainWindow {
                 register_surface: cx.new(|cx| RegisterSurface::new(cx, handle_surface_change_4)),
                 account_settings_surface: AccountSettingsSurface::new(cx, handle_surface_change_2),
                 identity_reset_surface: IdentityResetSurface::new(cx, handle_surface_change_3),
+                deactivate_account_surface: DeactivateSurface::new(cx, handle_surface_change_6),
                 current_surface: vec![MainWindowSurface::Main],
             }
         })
@@ -120,7 +125,8 @@ impl Render for MainWindow {
                     MainWindowSurface::Register => 2,
                     MainWindowSurface::AccountSettings(_) => 3,
                     MainWindowSurface::IdentityReset => 4,
-                    MainWindowSurface::About => 5,
+                    MainWindowSurface::DeactivateAccount => 5,
+                    MainWindowSurface::About => 6,
                 },
             )
             .w_full()
@@ -131,6 +137,7 @@ impl Render for MainWindow {
             .page(self.register_surface.clone().into_any_element())
             .page(self.account_settings_surface.clone().into_any_element())
             .page(self.identity_reset_surface.clone().into_any_element())
+            .page(self.deactivate_account_surface.clone().into_any_element())
             .page(
                 about_surface()
                     .on_back_click(cx.listener(|this, _, _, cx| {

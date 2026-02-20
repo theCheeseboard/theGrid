@@ -1,3 +1,4 @@
+use crate::main_window::{MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::tr;
 use contemporary::components::button::button;
@@ -14,6 +15,7 @@ use gpui::{
     App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled,
     WeakEntity, Window, div, px, rgb,
 };
+use std::rc::Rc;
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
 
@@ -21,10 +23,14 @@ pub struct ProfileSettings {
     edit_display_name_open: bool,
     edit_profile_picture_open: bool,
     new_display_name_text_field: Entity<TextField>,
+    on_surface_change: Rc<Box<SurfaceChangeHandler>>,
 }
 
 impl ProfileSettings {
-    pub fn new(cx: &mut App) -> Entity<Self> {
+    pub fn new(
+        cx: &mut App,
+        on_surface_change: impl Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static,
+    ) -> Entity<Self> {
         cx.new(|cx| Self {
             edit_display_name_open: false,
             edit_profile_picture_open: false,
@@ -38,6 +44,7 @@ impl ProfileSettings {
                 );
                 text_field
             }),
+            on_surface_change: Rc::new(Box::new(on_surface_change)),
         })
     }
 }
@@ -137,6 +144,42 @@ impl Render for ProfileSettings {
                                             )
                                             .into(),
                                         )),
+                                    ),
+                            ),
+                    )
+                    .child(
+                        layer()
+                            .flex()
+                            .flex_col()
+                            .p(px(8.))
+                            .w_full()
+                            .child(subtitle(tr!("PROFILE_ACCOUNT", "Account")))
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .bg(theme.button_background)
+                                    .rounded(theme.border_radius)
+                                    .child(
+                                        button("profile-deactivate")
+                                            .child(icon_text(
+                                                "list-remove".into(),
+                                                tr!("PROFILE_DEACTIVATE", "Deactivate Account")
+                                                    .into(),
+                                            ))
+                                            .destructive()
+                                            .on_click(cx.listener(move |this, _, window, cx| {
+                                                (this.on_surface_change)(
+                                                    &SurfaceChangeEvent {
+                                                        change: SurfaceChange::Push(
+                                                            MainWindowSurface::DeactivateAccount,
+                                                        ),
+                                                    },
+                                                    window,
+                                                    cx,
+                                                );
+                                                cx.notify();
+                                            })),
                                     ),
                             ),
                     ),
