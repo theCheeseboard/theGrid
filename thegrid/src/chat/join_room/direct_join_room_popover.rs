@@ -18,9 +18,10 @@ use gpui::{
 };
 use matrix_sdk::ruma::api::client::room::Visibility;
 use matrix_sdk::ruma::api::client::room::create_room::v3::{CreationContent, Request};
+use matrix_sdk::ruma::matrix_uri::MatrixId;
 use matrix_sdk::ruma::serde::Raw;
+use matrix_sdk::ruma::{MatrixToUri, OwnedRoomOrAliasId};
 use matrix_sdk::{Error, Room};
-use matrix_sdk::ruma::OwnedRoomOrAliasId;
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
 
@@ -43,9 +44,7 @@ impl DirectJoinRoomPopover {
             text_field
         });
 
-        cx.observe(&id_field, |this, id_field, cx| {
-
-        }).detach();
+        cx.observe(&id_field, |this, id_field, cx| {}).detach();
 
         Self {
             visible: false,
@@ -69,8 +68,24 @@ impl DirectJoinRoomPopover {
             // TODO: Indicate error
             return;
         }
-        
-        let Ok(room_or_alias) = OwnedRoomOrAliasId::try_from(room_id_text) else {
+
+        let lookup_result = match OwnedRoomOrAliasId::try_from(room_id_text) {
+            Ok(room_or_alias) => Some((room_or_alias, Default::default())),
+            Err(_) => match MatrixToUri::parse(room_id_text) {
+                Ok(uri) => match uri.id() {
+                    MatrixId::Room(room) => {
+                        Some((OwnedRoomOrAliasId::from(room.clone()), uri.via().to_vec()))
+                    }
+                    MatrixId::RoomAlias(room_alias) => {
+                        Some((OwnedRoomOrAliasId::from(room_alias.clone()), uri.via().to_vec()))
+                    }
+                    _ => None,
+                },
+                Err(_) => None,
+            },
+        };
+
+        let Some((room_or_alias, vias)) = lookup_result else {
             // TODO: Indicate error
             return;
         };
@@ -80,12 +95,13 @@ impl DirectJoinRoomPopover {
 
         self.processing = true;
         cx.notify();
-        
+
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 match cx
                     .spawn_tokio(async move {
-                        client.join_room_by_id_or_alias(&room_or_alias, &[]).await })
+                        client.join_room_by_id_or_alias(&room_or_alias, &vias).await
+                    })
                     .await
                 {
                     Ok(room) => {
@@ -109,7 +125,7 @@ impl DirectJoinRoomPopover {
                 }
             },
         )
-            .detach();
+        .detach();
     }
 
     fn direct_join_room_page_contents(&mut self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -127,7 +143,8 @@ impl DirectJoinRoomPopover {
                         .gap(px(8.))
                         .child(tr!(
                             "DIRECT_JOIN_ROOM_DESCRIPTION",
-                            "If you know the room address, you can join it directly."
+                            "If you know the room address or have a room link, you can join it \
+                            directly."
                         ))
                         .child(self.id_field.clone())
                         .child(

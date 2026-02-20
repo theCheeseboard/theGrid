@@ -469,7 +469,7 @@
   },
   "DIRECT_JOIN_ROOM_DESCRIPTION": {
     "context": "direct_join_room_popover.rs",
-    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:129",
+    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:145",
     "plural": false,
     "description": null
   },
@@ -715,7 +715,7 @@
   },
   "JOIN_ROOM": {
     "context": "direct_join_room_popover.rs",
-    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:137",
+    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:154",
     "plural": false,
     "description": null
   },
@@ -1405,7 +1405,7 @@
   },
   "ROOM_ADDRESS": {
     "context": "direct_join_room_popover.rs",
-    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:39",
+    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:40",
     "plural": false,
     "description": null
   },

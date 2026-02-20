@@ -77,7 +77,7 @@
   "DEVICE_LAST_ACTIVITY": "Last activity {{last_activity_timestamp}}",
   "DEVICE_VERIFY": "Verify",
   "DIRECT_JOIN_ROOM": "Join a room",
-  "DIRECT_JOIN_ROOM_DESCRIPTION": "If you know the room address, you can join it directly.",
+  "DIRECT_JOIN_ROOM_DESCRIPTION": "If you know the room address or have a room link, you can join it directly.",
   "DIRECT_MESSAGE": "Direct Message",
   "DIRECT_MESSAGE_OPEN_SEND": "Invite to DM and Send",
   "DIRECT_MESSAGE_PLACEHOLDER": "Message",
