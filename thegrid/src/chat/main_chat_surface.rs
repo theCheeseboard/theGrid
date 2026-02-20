@@ -1,5 +1,5 @@
 use crate::account_settings::AccountSettingsPage;
-use crate::actions::{AccountSettings, AccountSwitcher, CreateRoom, LogOut};
+use crate::actions::{AccountSettings, AccountSwitcher, CreateRoom, DirectJoinRoom, LogOut};
 use crate::auth::logout_popover::logout_popover;
 use crate::chat::chat_room::ChatRoom;
 use crate::chat::displayed_room::DisplayedRoom;
@@ -16,6 +16,7 @@ use gpui::{
 };
 use std::rc::Rc;
 use thegrid::session::session_manager::SessionManager;
+use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
 
 pub struct MainChatSurface {
     sidebar: Entity<Sidebar>,
@@ -27,6 +28,7 @@ pub struct MainChatSurface {
 
     logout_popover_visible: Entity<bool>,
     create_room_popover: Entity<CreateRoomPopover>,
+    direct_join_room_popover: Entity<DirectJoinRoomPopover>,
 
     on_surface_change: Rc<Box<SurfaceChangeHandler>>,
 }
@@ -51,6 +53,7 @@ impl MainChatSurface {
             .detach();
 
             let create_room_popover = cx.new(|cx| CreateRoomPopover::new(cx));
+            let direct_join_room_popover = cx.new(|cx| DirectJoinRoomPopover::new(cx));
 
             MainChatSurface {
                 sidebar: cx.new(|cx| {
@@ -59,7 +62,7 @@ impl MainChatSurface {
                     sidebar
                 }),
                 join_room: cx.new(|cx| {
-                    JoinRoom::new(cx, displayed_room.clone(), create_room_popover.clone())
+                    JoinRoom::new(cx, displayed_room.clone(), create_room_popover.clone(), direct_join_room_popover.clone())
                 }),
                 displayed_room,
                 chat_room: None,
@@ -67,6 +70,7 @@ impl MainChatSurface {
                 logout_popover_visible: cx.new(|_| false),
                 on_surface_change: Rc::new(Box::new(on_surface_change)),
                 create_room_popover,
+                direct_join_room_popover,
             }
         })
     }
@@ -107,6 +111,11 @@ impl MainChatSurface {
         self.create_room_popover
             .update(cx, |create_room_popover, cx| create_room_popover.open(cx))
     }
+
+    pub fn direct_join_room(&mut self, _: &DirectJoinRoom, _: &mut Window, cx: &mut Context<Self>) {
+        self.direct_join_room_popover
+            .update(cx, |direct_join_room_popover, cx| direct_join_room_popover.open(cx))
+    }
 }
 
 impl Render for MainChatSurface {
@@ -121,6 +130,7 @@ impl Render for MainChatSurface {
             .on_action(cx.listener(Self::account_settings))
             .on_action(cx.listener(Self::account_switcher))
             .on_action(cx.listener(Self::create_room))
+            .on_action(cx.listener(Self::direct_join_room))
             .size_full()
             .flex()
             .gap(px(2.))
@@ -158,5 +168,6 @@ impl Render for MainChatSurface {
             )
             .child(logout_popover(self.logout_popover_visible.clone()))
             .child(self.create_room_popover.clone())
+            .child(self.direct_join_room_popover.clone())
     }
 }

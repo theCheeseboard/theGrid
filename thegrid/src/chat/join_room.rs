@@ -20,13 +20,16 @@ use thegrid::session::room_cache::CachedRoom;
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
 use tracing::error;
+use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
 
 pub mod create_room_popover;
+pub mod direct_join_room_popover;
 
 pub struct JoinRoom {
     invitations: Vec<Entity<CachedRoom>>,
     invitations_list: ListState,
     create_room_popover: Entity<CreateRoomPopover>,
+    direct_join_room_popover: Entity<DirectJoinRoomPopover>,
     displayed_room: Entity<DisplayedRoom>,
 
     room_cache_subscription: Option<Subscription>,
@@ -37,6 +40,7 @@ impl JoinRoom {
         cx: &mut Context<Self>,
         displayed_room: Entity<DisplayedRoom>,
         create_room_popover: Entity<CreateRoomPopover>,
+        direct_join_room_popover: Entity<DirectJoinRoomPopover>,
     ) -> Self {
         cx.observe_global::<SessionManager>(|this, cx| {
             this.update_invitations(cx);
@@ -57,6 +61,7 @@ impl JoinRoom {
             invitations: Vec::new(),
             invitations_list: ListState::new(0, ListAlignment::Top, px(200.)),
             create_room_popover,
+            direct_join_room_popover,
             room_cache_subscription: None,
             displayed_room,
         }
@@ -141,19 +146,44 @@ impl Render for JoinRoom {
                             .flex_col()
                             .p(px(8.))
                             .w_full()
-                            .child(subtitle(tr!("CREATE_ROOM_OPTIONS", "Create Room")))
+                            .child(subtitle(tr!("NEW_ROOM_OPTIONS", "Create Room")))
                             .child(
-                                button("create-room")
-                                    .child(icon_text("list-add".into(), tr!("CREATE_ROOM").into()))
-                                    .on_click(cx.listener(|this, _, _, cx| {
-                                        this.create_room_popover.update(
-                                            cx,
-                                            |create_room_popover, cx| {
-                                                create_room_popover.open(cx);
-                                                cx.notify();
-                                            },
-                                        )
-                                    })),
+                                div()
+                                    .flex_col()
+                                    .bg(theme.button_background)
+                                    .rounded(theme.border_radius)
+                                    .child(
+                                        button("create-room")
+                                            .child(icon_text(
+                                                "list-add".into(),
+                                                tr!("CREATE_ROOM").into(),
+                                            ))
+                                            .on_click(cx.listener(|this, _, _, cx| {
+                                                this.create_room_popover.update(
+                                                    cx,
+                                                    |create_room_popover, cx| {
+                                                        create_room_popover.open(cx);
+                                                        cx.notify();
+                                                    },
+                                                )
+                                            })),
+                                    )
+                                    .child(
+                                        button("direct-join-room")
+                                            .child(icon_text(
+                                                "list-add".into(),
+                                                tr!("DIRECT_JOIN_ROOM", "Join a room").into(),
+                                            ))
+                                            .on_click(cx.listener(|this, _, _, cx| {
+                                                this.direct_join_room_popover.update(
+                                                    cx,
+                                                    |direct_join_room_popover, cx| {
+                                                        direct_join_room_popover.open(cx);
+                                                        cx.notify();
+                                                    },
+                                                )
+                                            })),
+                                    ),
                             ),
                     ),
             )

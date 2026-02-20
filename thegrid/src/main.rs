@@ -95,6 +95,9 @@ fn mane() {
                                     items: vec![MenuItem::action(
                                         tr!("ROOMS_CREATE", "Create Room..."),
                                         CreateRoom,
+                                    ), MenuItem::action(
+                                        tr!("ROOMS_DIRECT_JOIN", "Join a room..."),
+                                        CreateRoom,
                                     )],
                                 },
                             ],
