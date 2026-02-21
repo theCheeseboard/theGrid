@@ -1070,6 +1070,18 @@ dependencies = [
 [[package]]
 name = "cntp_config"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "838fe625d670185dc8e97239409da036a65ad434889470091a0d3b128e440263"
+dependencies = [
+ "serde",
+ "serde_json",
+ "toml 0.8.23",
+ "tracing",
+]
+
+[[package]]
+name = "cntp_config"
+version = "0.1.0"
 source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
 dependencies = [
  "serde",
@@ -1081,15 +1093,53 @@ dependencies = [
 [[package]]
 name = "cntp_i18n"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc83edad9104daae33067b872b2ef0a4646e8b1d1caa06e507377affcc4fe7f7"
 dependencies = [
- "cntp_i18n_core",
- "cntp_i18n_macros",
- "cntp_localesupport",
+ "cntp_i18n_core 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cntp_i18n_macros 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cntp_localesupport 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "once_cell",
  "phf 0.12.1",
  "quick_cache",
  "rustc-hash 2.1.1",
+]
+
+[[package]]
+name = "cntp_i18n"
+version = "0.1.0"
+source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
+dependencies = [
+ "cntp_i18n_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
+ "cntp_i18n_macros 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
+ "cntp_localesupport 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
+ "once_cell",
+ "phf 0.12.1",
+ "quick_cache",
+ "rustc-hash 2.1.1",
+]
+
+[[package]]
+name = "cntp_i18n_build_core"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d7a5fb8dcafa970a31f2e9a59d6c67bc9d2c9f185347efd537000a8b5e90dee3"
+dependencies = [
+ "serde",
+ "serde_json",
+ "toml 0.8.23",
+]
+
+[[package]]
+name = "cntp_i18n_core"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb8ae8043dd263e2d3a0edacc7d288bb78d960e3303a35e03a1386eacbe4c374"
+dependencies = [
+ "anyhow",
+ "cntp_localesupport 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gpui",
+ "icu",
 ]
 
 [[package]]
@@ -1098,7 +1148,7 @@ version = "0.1.0"
 source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
 dependencies = [
  "anyhow",
- "cntp_localesupport",
+ "cntp_localesupport 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
  "gpui",
  "icu",
  "serde",
@@ -1109,10 +1159,28 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_gen"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70fbf6b66bc0e1a68e65fbc7e6c4a33458d0c4ee6091844a7b7a31e59b8c9f80"
+dependencies = [
+ "cntp_i18n_build_core",
+ "cntp_i18n_core 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cntp_i18n_parse 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "icu",
+ "itertools 0.14.0",
+ "proc-macro2",
+ "serde_json",
+ "syn 2.0.108",
+ "tracing",
+ "walkdir",
+]
+
+[[package]]
+name = "cntp_i18n_gen"
+version = "0.1.0"
 source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
 dependencies = [
- "cntp_i18n_core",
- "cntp_i18n_parse",
+ "cntp_i18n_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
+ "cntp_i18n_parse 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
  "icu",
  "itertools 0.14.0",
  "proc-macro2",
@@ -1125,14 +1193,39 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e625ddc28281e122a14e4cb6d275c4f8a0313cb33819a1b5563d57aa77736db"
 dependencies = [
- "cntp_i18n_core",
- "cntp_i18n_parse",
+ "cntp_i18n_build_core",
+ "cntp_i18n_core 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cntp_i18n_parse 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "once_cell",
  "proc-macro2",
  "quote",
  "rustc-hash 2.1.1",
+ "syn 2.0.108",
+]
+
+[[package]]
+name = "cntp_i18n_macros"
+version = "0.1.0"
+source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
+dependencies = [
+ "cntp_i18n_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
+ "cntp_i18n_parse 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
+ "once_cell",
+ "proc-macro2",
+ "quote",
+ "rustc-hash 2.1.1",
+ "syn 2.0.108",
+]
+
+[[package]]
+name = "cntp_i18n_parse"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8760a4e546b7093529ad7658dfb459bc6fd627b356bf8dce0349bd4011fff2ed"
+dependencies = [
  "syn 2.0.108",
 ]
 
@@ -1147,7 +1240,8 @@ dependencies = [
 [[package]]
 name = "cntp_icon_tool_core"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aa5d686e2954cfccdca01d5ab3373d901eb2cc9def09c441595ace876c7d1deb"
 dependencies = [
  "regex",
 ]
@@ -1155,12 +1249,28 @@ dependencies = [
 [[package]]
 name = "cntp_icon_tool_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f79d9ddbedb3f9476170718b047f72f22eebc60fd147cd336358698b138e4d71"
 dependencies = [
- "cntp_config",
+ "cntp_config 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cntp_icon_tool_core",
  "quote",
  "syn 2.0.108",
+]
+
+[[package]]
+name = "cntp_localesupport"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3bfd38e68bd83cd394a525a539c82ef5ecce3b4afcd2228e93c1e5af17d5b177"
+dependencies = [
+ "chrono",
+ "icu",
+ "locale_config",
+ "rust-embed",
+ "serde",
+ "serde_json",
+ "smallvec",
 ]
 
 [[package]]
@@ -1181,7 +1291,7 @@ name = "cntp_macros"
 version = "0.1.0"
 source = "git+https://github.com/vicr123/contemporary-rs#dc13b814f5ee55776fc06d923332c1dd4c738ab3"
 dependencies = [
- "cntp_config",
+ "cntp_config 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
  "quote",
  "serde",
  "serde_json",
@@ -1357,9 +1467,9 @@ dependencies = [
  "ashpd 0.11.0",
  "async-channel 2.5.0",
  "cancellation-token",
- "cntp_config",
- "cntp_i18n",
- "cntp_i18n_gen",
+ "cntp_config 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
+ "cntp_i18n 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
+ "cntp_i18n_gen 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
  "cntp_macros",
  "directories",
  "freedesktop-icons",
@@ -8042,10 +8152,11 @@ version = "0.1.0"
 dependencies = [
  "async-channel 2.5.0",
  "chrono",
- "cntp_i18n",
- "cntp_i18n_gen",
+ "cntp_i18n 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cntp_i18n_gen 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cntp_icon_tool_macros",
  "contemporary",
+ "core-text",
  "directories",
  "emojis 0.7.2",
  "gpui",

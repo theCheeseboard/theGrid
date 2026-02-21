@@ -36,3 +36,7 @@ thegrid_text_rendering = { path = "../thegrid_text_rendering" }
 
 [build-dependencies]
 cntp_i18n_gen = { workspace = true }
+
+# Fixes "two different versions of crate `core_graphics` are being used" error.
+[target.'cfg(target_os = "macos")'.dependencies]
+core-text = "=21.0.0"
