@@ -77,12 +77,22 @@ impl AuthSurface {
         on_surface_change: impl Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static,
     ) -> Entity<Self> {
         cx.new(|cx| {
-            cx.observe_global::<SessionManager>(|session_manager, cx| cx.notify())
+            cx.observe_global::<SessionManager>(|_: &mut AuthSurface, cx| cx.notify())
                 .detach();
+
+            let matrix_id_enter_listener = cx.listener(|_, _, window, cx| {
+                let this = cx.entity();
+                window.on_next_frame(move |window, cx| {
+                    this.update(cx, |this, cx| {
+                        this.login_clicked(window, cx);
+                    });
+                });
+            });
 
             let surface = Self {
                 matrix_id_field: cx.new(|cx| {
                     let mut text_field = TextField::new("matrix-id", cx);
+                    text_field.on_enter_press(matrix_id_enter_listener);
                     text_field.set_placeholder(
                         tr!("AUTH_MATRIX_ID_EXAMPLE", "@user:example.org")
                             .to_string()
@@ -145,11 +155,13 @@ impl AuthSurface {
         session_dir.join(self.session_uuid.to_string())
     }
 
-    fn login_clicked(&mut self, cx: &mut Context<Self>) {
+    fn login_clicked(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let username = self.matrix_id_field.read(cx).text();
         let user_id = user_id::UserId::parse(username);
         let Ok(user_id) = user_id else {
-            error!("user_id not okay");
+            self.matrix_id_field.update(cx, |matrix_id_field, cx| {
+                matrix_id_field.flash_error(window, cx);
+            });
             return;
         };
         self.user_id = Some(user_id.clone());
@@ -242,7 +254,7 @@ impl AuthSurface {
         );
     }
 
-    fn trigger_advanced_login(&mut self, cx: &mut Context<Self>) {
+    fn trigger_advanced_login(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let session_dir = self.session_dir(cx);
         let store_dir = session_dir.join("store");
         let homeserver_url = self.homeserver_field.read(cx).text();
@@ -250,7 +262,9 @@ impl AuthSurface {
             .parse::<Url>()
             .or_else(|_| format!("https://{homeserver_url}/").parse::<Url>())
         else {
-            error!("Unable to parse homeserver URL");
+            self.homeserver_field.update(cx, |homeserver_field, cx| {
+                homeserver_field.flash_error(window, cx);
+            });
             return;
         };
 
@@ -514,8 +528,8 @@ impl AuthSurface {
                                             "dialog-ok".into(),
                                             tr!("AUTH_LOG_IN").into(),
                                         ))
-                                        .on_click(cx.listener(|this, _, _, cx| {
-                                            this.trigger_advanced_login(cx);
+                                        .on_click(cx.listener(|this, _, window, cx| {
+                                            this.trigger_advanced_login(window, cx);
                                         })),
                                 ),
                         ),
@@ -833,8 +847,8 @@ impl Render for AuthSurface {
                                                 "arrow-right".into(),
                                                 tr!("AUTH_LOG_IN", "Log In").into(),
                                             ))
-                                            .on_click(cx.listener(|this, _, _, cx| {
-                                                this.login_clicked(cx);
+                                            .on_click(cx.listener(|this, _, window, cx| {
+                                                this.login_clicked(window, cx);
                                             })),
                                     ),
                             ),
