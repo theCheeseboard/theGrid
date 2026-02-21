@@ -354,8 +354,8 @@
     "description": null
   },
   "CLOSE": {
-    "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:245",
+    "context": "verification_popover.rs",
+    "definedIn": "src/auth/verification_popover.rs:452",
     "plural": false,
     "description": null
   },
@@ -714,8 +714,8 @@
     "description": null
   },
   "JOIN_ROOM": {
-    "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:102",
+    "context": "direct_join_room_popover.rs",
+    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:154",
     "plural": false,
     "description": null
   },
@@ -1512,8 +1512,8 @@
     "description": null
   },
   "ROOM_SETTINGS": {
-    "context": "room_settings.rs",
-    "definedIn": "src/chat/chat_room/room_settings.rs:171",
+    "context": "standard_room_element.rs",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:149",
     "plural": false,
     "description": null
   },
@@ -1752,8 +1752,8 @@
     "description": null
   },
   "SORRY": {
-    "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:305",
+    "context": "auth_surface.rs",
+    "definedIn": "src/auth/auth_surface.rs:573",
     "plural": false,
     "description": null
   },
