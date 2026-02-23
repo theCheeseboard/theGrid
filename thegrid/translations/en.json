@@ -239,6 +239,9 @@
   "ROOM_CHANGE_PICTURE": "Change Room Picture",
   "ROOM_COPY_LINK": "Copy link to room",
   "ROOM_DIRECTORY": "Room Directory",
+  "ROOM_DIRECTORY_ADD_SERVER": "Browse another server",
+  "ROOM_DIRECTORY_ADD_SERVER_DESCRIPTION": "If you want to find communities on another server, you can enter the address of the homeserver below.",
+  "ROOM_DIRECTORY_BROWSE_BUTTON": "Browse Server Directory",
   "ROOM_DIRECTORY_MEMBER_COUNT": {
     "one": "{{count}} member",
     "other": "{{count}} members"

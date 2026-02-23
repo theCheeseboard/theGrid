@@ -1435,7 +1435,25 @@
   },
   "ROOM_DIRECTORY": {
     "context": "directory_sidebar_page.rs",
-    "definedIn": "src/chat/sidebar/directory_sidebar_page.rs:72",
+    "definedIn": "src/chat/sidebar/directory_sidebar_page.rs:86",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_DIRECTORY_ADD_SERVER": {
+    "context": "directory_sidebar_page.rs",
+    "definedIn": "src/chat/sidebar/directory_sidebar_page.rs:176",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_DIRECTORY_ADD_SERVER_DESCRIPTION": {
+    "context": "directory_sidebar_page.rs",
+    "definedIn": "src/chat/sidebar/directory_sidebar_page.rs:184",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_DIRECTORY_BROWSE_BUTTON": {
+    "context": "directory_sidebar_page.rs",
+    "definedIn": "src/chat/sidebar/directory_sidebar_page.rs:201",
     "plural": false,
     "description": null
   },
@@ -1447,7 +1465,7 @@
   },
   "ROOM_DIRECTORY_OTHER_SERVER": {
     "context": "directory_sidebar_page.rs",
-    "definedIn": "src/chat/sidebar/directory_sidebar_page.rs:103",
+    "definedIn": "src/chat/sidebar/directory_sidebar_page.rs:117",
     "plural": false,
     "description": null
   },

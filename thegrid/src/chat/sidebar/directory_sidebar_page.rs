@@ -1,13 +1,18 @@
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::Sidebar;
 use cntp_i18n::tr;
+use contemporary::components::button::button;
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
+use contemporary::components::icon_text::icon_text;
+use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, Context, ElementId, Entity, InteractiveElement, IntoElement, ListAlignment,
-    ListState, ParentElement, Render, StatefulInteractiveElement, Styled, Window, div, list, px,
+    App, AppContext, AsyncApp, Context, ElementId, Entity, InteractiveElement, IntoElement,
+    ListAlignment, ListState, ParentElement, Render, StatefulInteractiveElement, Styled,
+    WeakEntity, Window, div, list, px,
 };
 use matrix_sdk::{OwnedServerName, ServerName};
 use thegrid::session::session_manager::SessionManager;
@@ -16,6 +21,8 @@ pub struct DirectorySidebarPage {
     list_state: ListState,
     sidebar: Entity<Sidebar>,
     displayed_room: Entity<DisplayedRoom>,
+    add_dialog_visible: bool,
+    new_homeserver_text_field: Entity<TextField>,
 
     servers: Vec<OwnedServerName>,
 }
@@ -41,6 +48,13 @@ impl DirectorySidebarPage {
             sidebar,
             servers,
             displayed_room,
+            add_dialog_visible: false,
+
+            new_homeserver_text_field: cx.new(|cx| {
+                let mut text_field = TextField::new("homeserver", cx);
+                text_field.set_placeholder("matrix.org");
+                text_field
+            }),
         }
     }
 
@@ -102,9 +116,11 @@ impl Render for DirectorySidebarPage {
                                             .child(tr!(
                                                 "ROOM_DIRECTORY_OTHER_SERVER",
                                                 "Another server..."
-                                            )), // .on_click(move |event, window, cx| {
-                                                //     on_click(event, window, cx);
-                                                // })
+                                            ))
+                                            .on_click(cx.listener(move |this, _, _, cx| {
+                                                this.add_dialog_visible = true;
+                                                cx.notify();
+                                            })),
                                     )
                                     .into_any_element()
                             } else {
@@ -153,6 +169,60 @@ impl Render for DirectorySidebarPage {
                     .flex_col()
                     .h_full(),
                 ),
+            )
+            .child(
+                dialog_box("directory-homeserver-dialog")
+                    .visible(self.add_dialog_visible)
+                    .title(tr!("ROOM_DIRECTORY_ADD_SERVER", "Browse another server").into())
+                    .content(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .w(px(500.))
+                            .gap(px(12.))
+                            .child(tr!(
+                                "ROOM_DIRECTORY_ADD_SERVER_DESCRIPTION",
+                                "If you want to find communities on another server, you can enter \
+                                the address of the homeserver below."
+                            ))
+                            .child(self.new_homeserver_text_field.clone().into_any_element()),
+                    )
+                    .standard_button(
+                        StandardButton::Cancel,
+                        cx.listener(|this, _, _, cx| {
+                            this.add_dialog_visible = false;
+                            cx.notify()
+                        }),
+                    )
+                    .button(
+                        button("add-server-button")
+                            .child(icon_text(
+                                "dialog-ok".into(),
+                                tr!("ROOM_DIRECTORY_BROWSE_BUTTON", "Browse Server Directory")
+                                    .into(),
+                            ))
+                            .on_click(cx.listener(|this, _, window, cx| {
+                                let homeserver = this.new_homeserver_text_field.read(cx).text();
+                                match ServerName::parse(homeserver) {
+                                    Ok(homeserver) => {
+                                        if !this.servers.contains(&homeserver) {
+                                            this.servers.push(homeserver.clone());
+                                            this.update_server_list();
+                                        }
+
+                                        this.change_server(homeserver, window, cx);
+                                        this.add_dialog_visible = false;
+                                        cx.notify();
+                                    }
+                                    Err(e) => this.new_homeserver_text_field.update(
+                                        cx,
+                                        |text_field, cx| {
+                                            text_field.flash_error(window, cx);
+                                        },
+                                    ),
+                                }
+                            })),
+                    ),
             )
     }
 }
