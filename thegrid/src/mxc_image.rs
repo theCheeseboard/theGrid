@@ -3,8 +3,8 @@ use contemporary::styling::theme::Theme;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, BorrowAppContext, IntoElement, ParentElement, Refineable, RenderOnce, StyleRefinement,
-    Styled, Window, div, img, px, rgb, rgba,
+    App, BorrowAppContext, ElementId, IntoElement, ParentElement, Refineable, RenderOnce,
+    StyleRefinement, Styled, Window, div, img, px, rgb, rgba,
 };
 use thegrid::session::media_cache::{MediaCacheEntry, MediaState};
 use thegrid::session::session_manager::SessionManager;
@@ -50,7 +50,11 @@ impl RenderOnce for MxcImage {
         // we store it in state. Once a frame passes without this element being rendered,
         // its refcount will decrement and the image will be dropped if there are no other
         // references to it.
-        let read_image_store = window.use_state(cx, |_, _| Err(anyhow!("No image")));
+        let mxc_url_string = self.mxc.to_string();
+        let read_image_store =
+            window.use_keyed_state(ElementId::Name(mxc_url_string.into()), cx, |_, _| {
+                Err(anyhow!("No image"))
+            });
 
         let image = cx.update_global::<SessionManager, _>(|session_manager, cx| {
             session_manager.media().media_file(self.mxc, cx)

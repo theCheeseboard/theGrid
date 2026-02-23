@@ -5,6 +5,7 @@ use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{App, AppContext, AsyncApp, Context, Entity, RenderImage, WeakEntity};
 use image::{Frame, ImageReader, Pixel, RgbaImage};
+use log::warn;
 use matrix_sdk::media::{MediaFileHandle, MediaFormat, MediaRequestParameters, UniqueKey};
 use matrix_sdk::ruma::OwnedMxcUri;
 use matrix_sdk::ruma::events::room::MediaSource;
@@ -12,6 +13,7 @@ use matrix_sdk::{Client, Error};
 use smallvec::smallvec;
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::hash::Hash;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex, Weak};
@@ -34,6 +36,19 @@ impl MediaCacheEntry {
 
     pub fn from_mxc(mxc: OwnedMxcUri) -> Self {
         MediaCacheEntry::MediaSource(MediaSource::Plain(mxc))
+    }
+}
+
+impl Display for MediaCacheEntry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            MediaCacheEntry::MediaSource(source) => match source {
+                MediaSource::Plain(plain) => plain.to_string(),
+                MediaSource::Encrypted(encrypted) => encrypted.url.to_string(),
+            },
+            MediaCacheEntry::None => "none".into(),
+        };
+        write!(f, "{}", str)
     }
 }
 
@@ -171,7 +186,13 @@ impl MediaFile {
         })
     }
 
-    pub fn request_media(&mut self, filename: Option<String>, mime_type: Option<String>, spawn_job: bool, cx: &mut Context<Self>) {
+    pub fn request_media(
+        &mut self,
+        filename: Option<String>,
+        mime_type: Option<String>,
+        spawn_job: bool,
+        cx: &mut Context<Self>,
+    ) {
         self.media_state = MediaState::Loading;
 
         // TODO: Spawn job
@@ -189,7 +210,10 @@ impl MediaFile {
                                     format: MediaFormat::File,
                                 },
                                 filename,
-                                &mime_type.unwrap_or("application/octet-stream".into()).parse().unwrap(),
+                                &mime_type
+                                    .unwrap_or("application/octet-stream".into())
+                                    .parse()
+                                    .unwrap(),
                                 true,
                                 None,
                             )
