@@ -8,16 +8,13 @@ use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::pager::pager;
+use contemporary::components::skeleton::skeleton;
 use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
-use gpui::{
-    AnyElement, AppContext, AsyncApp, Context, Element, Entity, InteractiveElement, IntoElement,
-    ListAlignment, ListState, ParentElement, Render, Styled, WeakEntity, Window, div, list, px,
-    rgb,
-};
+use gpui::{AnyElement, AppContext, AsyncApp, Context, Element, Entity, InteractiveElement, IntoElement, ListAlignment, ListScrollEvent, ListState, ParentElement, Render, Styled, WeakEntity, Window, div, list, px, rgb, ListOffset};
 use imbl::Vector;
 use matrix_sdk::room_directory_search::{RoomDescription, RoomDirectorySearch};
 use matrix_sdk::stream::StreamExt;
@@ -34,6 +31,7 @@ pub struct RoomDirectory {
     current_results: Vector<RoomDescription>,
     list_state: ListState,
     next_page_channel: Sender<()>,
+    finished: bool,
 
     search_query: Entity<TextField>,
 }
@@ -47,6 +45,7 @@ enum DirectorySearchState {
 enum Feedback {
     ClearBusy,
     SetReady,
+    SetFinished,
 }
 
 impl RoomDirectory {
@@ -73,6 +72,16 @@ impl RoomDirectory {
         })
         .detach();
 
+        list_state.set_scroll_handler(cx.listener(
+            |this: &mut Self, event: &ListScrollEvent, _, cx| {
+                if event.visible_range.end > this.current_results.len() - 3 && !this.busy {
+                    // Paginate
+                    this.busy = true;
+                    let _ = smol::block_on(this.next_page_channel.send(()));
+                }
+            },
+        ));
+
         let mut this = Self {
             server_name,
             state: DirectorySearchState::Searching,
@@ -82,6 +91,7 @@ impl RoomDirectory {
             current_results: Vector::new(),
             list_state,
             next_page_channel: tx,
+            finished: false,
 
             search_query,
         };
@@ -91,8 +101,18 @@ impl RoomDirectory {
         this
     }
 
+    fn reset_list_state(&mut self, cx: &mut Context<Self>) {
+        let last_offset = self.list_state.logical_scroll_top();
+        self.list_state
+            .reset(self.current_results.len() + if self.finished { 0 } else { 3 });
+        self.list_state.scroll_to(last_offset);
+    }
+
     pub fn run_search(&mut self, cx: &mut Context<Self>) {
         self.state = DirectorySearchState::Searching;
+        self.finished = false;
+        self.current_results = Default::default();
+        self.reset_list_state(cx);
         cx.notify();
 
         let session_manager = cx.global::<SessionManager>();
@@ -124,6 +144,10 @@ impl RoomDirectory {
                                 }
                                 Feedback::SetReady => {
                                     this.state = DirectorySearchState::ResultsReady;
+                                }
+                                Feedback::SetFinished => {
+                                    this.finished = true;
+                                    this.reset_list_state(cx);
                                 }
                             }
                             cx.notify();
@@ -159,7 +183,7 @@ impl RoomDirectory {
                                 for diff in diffs {
                                     diff.apply(&mut this.current_results);
                                 }
-                                this.list_state.reset(this.current_results.len());
+                                this.reset_list_state(cx);
                                 cx.notify();
                             })
                             .is_err()
@@ -190,6 +214,12 @@ impl RoomDirectory {
                             if tx_feedback.send(Feedback::ClearBusy).await.is_err() {
                                 return Ok(());
                             };
+
+                            if room_directory_search.is_at_last_page()
+                                && tx_feedback.send(Feedback::SetFinished).await.is_err()
+                            {
+                                return Ok(());
+                            }
                         }
                     })
                     .await
@@ -213,7 +243,44 @@ impl RoomDirectory {
         let theme = cx.theme();
         let Some(room_description) = self.current_results.get(i) else {
             // Out of bounds!
-            return div().into_any_element();
+            return div()
+                .id(i)
+                .overflow_x_hidden()
+                .py(px(2.))
+                .child(
+                    layer()
+                        .overflow_x_hidden()
+                        .flex()
+                        .gap(px(4.))
+                        .p(px(4.))
+                        .child(div().child(skeleton("image-skeleton").child(div().size(px(40.)))))
+                        .child(
+                            div()
+                                .overflow_x_hidden()
+                                .flex()
+                                .flex_col()
+                                .flex_grow()
+                                .gap(px(4.))
+                                .child(skeleton("name-skeleton").w(px(150.)))
+                                .child(skeleton("topic-skeleton").w(px(350.)))
+                                .child(
+                                    div()
+                                        .flex()
+                                        .items_center()
+                                        .gap(px(4.))
+                                        .child(div().flex_grow())
+                                        .child(skeleton("count-skeleton").w(px(100.)))
+                                        .child(skeleton("alias-skeleton").w(px(150.)))
+                                        .child(skeleton("join-skeleton").child(
+                                            button("join-button").child(icon_text(
+                                                "list-add".into(),
+                                                tr!("JOIN_ROOM").into(),
+                                            )),
+                                        )),
+                                ),
+                        ),
+                )
+                .into_any_element();
         };
 
         div()
@@ -326,7 +393,7 @@ impl Render for RoomDirectory {
                                 pager(
                                     "directory-pager",
                                     match self.state {
-                                        DirectorySearchState::Searching => 0,
+                                        DirectorySearchState::Searching => 1,
                                         DirectorySearchState::ResultsReady => 1,
                                         DirectorySearchState::Error(_) => 2,
                                     },

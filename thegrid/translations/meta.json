@@ -955,7 +955,7 @@
   },
   "MEMBER_LIST_FILTERS": {
     "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:313",
+    "definedIn": "src/chat/room_directory.rs:380",
     "plural": false,
     "description": null
   },
@@ -1459,13 +1459,13 @@
   },
   "ROOM_DIRECTORY_ERROR": {
     "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:365",
+    "definedIn": "src/chat/room_directory.rs:432",
     "plural": false,
     "description": null
   },
   "ROOM_DIRECTORY_MEMBER_COUNT": {
     "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:257",
+    "definedIn": "src/chat/room_directory.rs:324",
     "plural": true,
     "description": null
   },
@@ -1477,7 +1477,7 @@
   },
   "ROOM_DIRECTORY_TITLE": {
     "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:295",
+    "definedIn": "src/chat/room_directory.rs:362",
     "plural": false,
     "description": null
   },
@@ -1699,7 +1699,7 @@
   },
   "SEARCH_PLACEHOLDER": {
     "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:63",
+    "definedIn": "src/chat/room_directory.rs:62",
     "plural": false,
     "description": null
   },
