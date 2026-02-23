@@ -1,6 +1,5 @@
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
-use crate::chat::sidebar::{Sidebar, SidebarPage};
+use crate::chat::sidebar::Sidebar;
 use cntp_i18n::tr;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
@@ -10,7 +9,6 @@ use gpui::{
     App, AppContext, Context, ElementId, Entity, InteractiveElement, IntoElement, ListAlignment,
     ListState, ParentElement, Render, StatefulInteractiveElement, Styled, Window, div, list, px,
 };
-use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::{OwnedServerName, ServerName};
 use thegrid::session::session_manager::SessionManager;
 
