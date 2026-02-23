@@ -39,7 +39,7 @@ pub fn handle_error(error: &matrix_sdk::Error) -> ClientError {
 
 fn handle_client_api_error(error: &matrix_sdk::ruma::api::client::Error) -> ClientError {
     match &error.body {
-        ErrorBody::Standard { kind, message } => match kind {
+        ErrorBody::Standard(error_body) => match error_body.kind {
             ErrorKind::UnknownToken { soft_logout } => {
                 ClientError::Terminal(TerminalClientError::UnknownToken)
             }

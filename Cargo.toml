@@ -16,8 +16,9 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sysinfo = "0.37"
 tracing = "0.1"
-matrix-sdk = { version = "0.14", features = ["anyhow", "markdown", "sso-login", "e2e-encryption", "qrcode", "bundled-sqlite"] }
-matrix-sdk-ui = "0.14"
+matrix-sdk = { version = "0.16", features = ["anyhow", "markdown", "sso-login", "e2e-encryption", "qrcode", "bundled-sqlite"] }
+matrix-sdk-ui = "0.16"
+matrix-sdk-crypto = "0.16"
 tokio = { version = "1.47", features = ["full"] }
 uuid = "1"
 async-channel = "2"
@@ -27,6 +28,6 @@ chrono = "0.4"
 unicode-segmentation = "1"
 emojis = "0.7"
 directories = "6"
-imbl = "5"
+imbl = "6"
 mime2ext = "0.1"
 anyhow = "1"

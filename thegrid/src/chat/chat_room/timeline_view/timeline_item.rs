@@ -281,7 +281,7 @@ fn is_state_event(content: &TimelineItemContent) -> bool {
         | TimelineItemContent::FailedToParseMessageLike { .. }
         | TimelineItemContent::FailedToParseState { .. }
         | TimelineItemContent::CallInvite
-        | TimelineItemContent::CallNotify => false,
+        | TimelineItemContent::RtcNotification => false,
         TimelineItemContent::MembershipChange(_)
         | TimelineItemContent::ProfileChange(_)
         | TimelineItemContent::OtherState(_) => true,

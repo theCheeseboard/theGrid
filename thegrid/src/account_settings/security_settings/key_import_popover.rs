@@ -17,9 +17,9 @@ use gpui::{
     App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled,
     WeakEntity, Window, div, px,
 };
-use matrix_sdk::crypto::KeyExportError;
 use matrix_sdk::encryption::RoomKeyImportError;
 use std::path::PathBuf;
+use matrix_sdk_crypto::KeyExportError;
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
 use tracing::error;

@@ -241,13 +241,13 @@
   },
   "AUTH_REQUIRED": {
     "context": "uiaa_client.rs",
-    "definedIn": "src/uiaa_client.rs:272",
+    "definedIn": "src/uiaa_client.rs:274",
     "plural": false,
     "description": null
   },
   "AUTH_REQUIRED_BROWSER_GO": {
     "context": "uiaa_client.rs",
-    "definedIn": "src/uiaa_client.rs:255",
+    "definedIn": "src/uiaa_client.rs:257",
     "plural": false,
     "description": null
   },
@@ -553,7 +553,7 @@
   },
   "HEADS_UP": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:370",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:369",
     "plural": false,
     "description": null
   },
@@ -793,73 +793,73 @@
   },
   "KEY_RESET_COMPLETE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:323",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:322",
     "plural": false,
     "description": null
   },
   "KEY_RESET_DESCRIPTION": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:201",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:200",
     "plural": false,
     "description": null
   },
   "KEY_RESET_ERROR_MESSAGE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:234",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:233",
     "plural": false,
     "description": null
   },
   "KEY_RESET_ERROR_TITLE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:244",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:243",
     "plural": false,
     "description": null
   },
   "KEY_RESET_OK_DESCRIPTION": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:330",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:329",
     "plural": false,
     "description": null
   },
   "KEY_RESET_OPTIONS": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:180",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:179",
     "plural": false,
     "description": null
   },
   "KEY_RESET_PASSPHRASE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:210",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:209",
     "plural": false,
     "description": null
   },
   "KEY_RESET_PASSPHRASE_WARNING": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:221",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:220",
     "plural": false,
     "description": null
   },
   "KEY_RESET_TITLE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:308",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:307",
     "plural": false,
     "description": null
   },
   "KEY_RESET_WARNING": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:372",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:371",
     "plural": false,
     "description": null
   },
   "KEY_SETUP_DESCRIPTION": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:192",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:191",
     "plural": false,
     "description": null
   },
   "KEY_SETUP_TITLE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:305",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:304",
     "plural": false,
     "description": null
   },
@@ -1291,7 +1291,7 @@
   },
   "RECOVERY_PASSPHRASE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:54",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:53",
     "plural": false,
     "description": null
   },
@@ -1699,13 +1699,13 @@
   },
   "SECURITY_RECOVERY_KEY_RESET": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:268",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:267",
     "plural": false,
     "description": null
   },
   "SECURITY_RECOVERY_KEY_SETUP": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:258",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:257",
     "plural": false,
     "description": null
   },
@@ -1795,25 +1795,25 @@
   },
   "UIAA_BROWSER_AUTH": {
     "context": "uiaa_client.rs",
-    "definedIn": "src/uiaa_client.rs:230",
+    "definedIn": "src/uiaa_client.rs:232",
     "plural": false,
     "description": null
   },
   "UIAA_BROWSER_OPEN": {
     "context": "uiaa_client.rs",
-    "definedIn": "src/uiaa_client.rs:237",
+    "definedIn": "src/uiaa_client.rs:239",
     "plural": false,
     "description": null
   },
   "UIAA_ERROR": {
     "context": "uiaa_client.rs",
-    "definedIn": "src/uiaa_client.rs:274",
+    "definedIn": "src/uiaa_client.rs:276",
     "plural": false,
     "description": null
   },
   "UIAA_PASSWORD_AUTH": {
     "context": "uiaa_client.rs",
-    "definedIn": "src/uiaa_client.rs:188",
+    "definedIn": "src/uiaa_client.rs:190",
     "plural": false,
     "description": null
   },

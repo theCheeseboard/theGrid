@@ -8,10 +8,12 @@ use gpui::{
     App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled,
     WeakEntity, Window, div, px,
 };
+use matrix_sdk::ruma::api::OutgoingRequest;
+use matrix_sdk::ruma::api::auth_scheme::SendAccessToken;
 use matrix_sdk::ruma::api::client::uiaa::{
     AuthData, AuthType, FallbackAcknowledgement, Password, UiaaInfo, UserIdentifier,
 };
-use matrix_sdk::ruma::api::{OutgoingRequest, SendAccessToken};
+use std::borrow::Cow;
 use std::rc::Rc;
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
@@ -106,7 +108,7 @@ impl UiaaClient {
                         let Ok(http_request) = request.try_into_http_request::<Vec<u8>>(
                             client.homeserver().as_str(),
                             SendAccessToken::None,
-                            &supported_versions,
+                            Cow::Borrowed(&supported_versions),
                         ) else {
                             weak_this
                                 .update(cx, |this, cx| {

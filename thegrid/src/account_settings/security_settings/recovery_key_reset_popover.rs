@@ -17,7 +17,6 @@ use gpui::{
     App, AppContext, AsyncApp, ClipboardItem, Context, Entity, IntoElement, ParentElement, Render,
     Styled, WeakEntity, Window, div, px,
 };
-use matrix_sdk::crypto::KeyExportError;
 use matrix_sdk::encryption::RoomKeyImportError;
 use matrix_sdk::encryption::recovery::{RecoveryError, RecoveryState};
 use std::path::PathBuf;
