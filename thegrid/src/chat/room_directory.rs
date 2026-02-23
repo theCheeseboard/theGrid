@@ -1,15 +1,19 @@
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::mxc_image::{SizePolicy, mxc_image};
 use async_channel::Sender;
-use cntp_i18n::tr;
+use cntp_i18n::{tr, trn};
+use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
+use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::pager::pager;
 use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
+use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
+use gpui::prelude::FluentBuilder;
 use gpui::{
-    AnyElement, AppContext, AsyncApp, Context, Entity, InteractiveElement, IntoElement,
+    AnyElement, AppContext, AsyncApp, Context, Element, Entity, InteractiveElement, IntoElement,
     ListAlignment, ListState, ParentElement, Render, Styled, WeakEntity, Window, div, list, px,
     rgb,
 };
@@ -31,6 +35,8 @@ pub struct RoomDirectory {
     current_results: Vector<RoomDescription>,
     list_state: ListState,
     next_page_channel: Sender<()>,
+
+    search_query: Entity<TextField>,
 }
 
 enum DirectorySearchState {
@@ -53,6 +59,20 @@ impl RoomDirectory {
         let (tx, _) = async_channel::bounded(1);
 
         let list_state = ListState::new(0, ListAlignment::Top, px(200.));
+        let search_query = cx.new(|cx| {
+            let mut text_field = TextField::new("search-query", cx);
+            text_field.set_placeholder(tr!("SEARCH_PLACEHOLDER", "Search...").to_string().as_str());
+            text_field
+        });
+
+        cx.observe(&search_query, |this, search_query, cx| {
+            let new_query = search_query.read(cx).text();
+            if this.query != new_query {
+                this.query = new_query.to_string();
+                this.run_search(cx);
+            }
+        })
+        .detach();
 
         let mut this = Self {
             server_name,
@@ -63,6 +83,8 @@ impl RoomDirectory {
             current_results: Vector::new(),
             list_state,
             next_page_channel: tx,
+
+            search_query,
         };
 
         this.run_search(cx);
@@ -190,9 +212,13 @@ impl RoomDirectory {
         cx: &mut Context<Self>,
     ) -> AnyElement {
         let theme = cx.theme();
-        let room_description = &self.current_results[i];
+        let Some(room_description) = self.current_results.get(i) else {
+            // Out of bounds!
+            return div().into_any_element();
+        };
 
         div()
+            .id(i)
             .overflow_x_hidden()
             .py(px(2.))
             .child(
@@ -212,6 +238,7 @@ impl RoomDirectory {
                             .overflow_x_hidden()
                             .flex()
                             .flex_col()
+                            .flex_grow()
                             .gap(px(4.))
                             .child(div().child(room_description.name.clone().unwrap_or("".into())))
                             .child(
@@ -219,6 +246,32 @@ impl RoomDirectory {
                                     .overflow_x_hidden()
                                     .text_color(theme.foreground.disabled())
                                     .child(room_description.topic.clone().unwrap_or("".into())),
+                            )
+                            .child(
+                                div()
+                                    .flex()
+                                    .items_center()
+                                    .gap(px(4.))
+                                    .child(div().flex_grow())
+                                    .child(div().text_color(theme.foreground.disabled()).child(
+                                        trn!(
+                                            "ROOM_DIRECTORY_MEMBER_COUNT",
+                                            "{{count}} member",
+                                            "{{count}} members",
+                                            count = room_description.joined_members as isize
+                                        ),
+                                    ))
+                                    .when_some(room_description.alias.as_ref(), |david, alias| {
+                                        david.child(
+                                            div()
+                                                .text_color(theme.foreground.disabled())
+                                                .child(alias.to_string()),
+                                        )
+                                    })
+                                    .child(button("join-button").child(icon_text(
+                                        "list-add".into(),
+                                        tr!("JOIN_ROOM").into(),
+                                    ))),
                             ),
                     ),
             )
@@ -255,17 +308,11 @@ impl Render for RoomDirectory {
                     .child(
                         div().flex().flex_col().p(px(4.)).gap(px(4.)).child(
                             layer()
+                                .w(px(150.))
                                 .p(px(8.))
                                 .gap(px(8.))
                                 .child(subtitle(tr!("MEMBER_LIST_FILTERS", "Filters")))
-                                .child(
-                                    div()
-                                        .flex()
-                                        .flex_col()
-                                        .bg(theme.button_background)
-                                        .rounded(theme.border_radius)
-                                        .child("something goes here"),
-                                ),
+                                .child(self.search_query.clone().into_any_element()),
                         ),
                     )
                     .child(

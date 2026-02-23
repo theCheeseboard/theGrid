@@ -239,6 +239,10 @@
   "ROOM_CHANGE_PICTURE": "Change Room Picture",
   "ROOM_COPY_LINK": "Copy link to room",
   "ROOM_DIRECTORY": "Room Directory",
+  "ROOM_DIRECTORY_MEMBER_COUNT": {
+    "one": "{{count}} member",
+    "other": "{{count}} members"
+  },
   "ROOM_DIRECTORY_OTHER_SERVER": "Another server...",
   "ROOM_DIRECTORY_TITLE": "Room Directory of {{server}}",
   "ROOM_ENCRYPTION_BADGE": "Encrypted",
@@ -277,6 +281,7 @@
   "ROOM_VIEW_MEMBERS": "Manage Room Members",
   "ROOT_SIDEBAR_ROOMS": "Rooms",
   "ROOT_SIDEBAR_SPACES": "Spaces",
+  "SEARCH_PLACEHOLDER": "Search...",
   "SECURITY_ENCRYPTION": "Encryption",
   "SECURITY_ENCRYPTION_DESCRIPTION": "Set up a recovery key to ensure you don't lose access to your encrypted messages",
   "SECURITY_IDENTITY_RESET": "Reset Cryptographic Identity",
