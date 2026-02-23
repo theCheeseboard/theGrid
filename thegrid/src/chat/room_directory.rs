@@ -2,6 +2,7 @@ use crate::chat::displayed_room::DisplayedRoom;
 use crate::mxc_image::{SizePolicy, mxc_image};
 use async_channel::Sender;
 use cntp_i18n::{tr, trn};
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
@@ -23,8 +24,6 @@ use matrix_sdk::stream::StreamExt;
 use matrix_sdk::{Error, OwnedServerName};
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
-
-mod directory_view;
 
 pub struct RoomDirectory {
     server_name: OwnedServerName,
@@ -329,7 +328,7 @@ impl Render for RoomDirectory {
                                     match self.state {
                                         DirectorySearchState::Searching => 0,
                                         DirectorySearchState::ResultsReady => 1,
-                                        DirectorySearchState::Error(_) => 1,
+                                        DirectorySearchState::Error(_) => 2,
                                     },
                                 )
                                 .page(
@@ -348,6 +347,29 @@ impl Render for RoomDirectory {
                                     )
                                     .size_full()
                                     .into_any_element(),
+                                )
+                                .page(
+                                    div()
+                                        .p(px(4.))
+                                        .when_some(
+                                            if let DirectorySearchState::Error(err) = &self.state {
+                                                Some(err)
+                                            } else {
+                                                None
+                                            },
+                                            |david, err| {
+                                                david.child(
+                                                    admonition()
+                                                        .severity(AdmonitionSeverity::Error)
+                                                        .title(tr!(
+                                                            "ROOM_DIRECTORY_ERROR",
+                                                            "Unable to load room directory"
+                                                        ))
+                                                        .child(err.to_string()),
+                                                )
+                                            },
+                                        )
+                                        .into_any_element(),
                                 )
                                 .size_full(),
                             ),
