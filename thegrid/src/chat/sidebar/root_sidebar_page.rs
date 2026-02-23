@@ -1,5 +1,6 @@
 use crate::chat::chat_room::invite_popover::InvitePopover;
 use crate::chat::displayed_room::DisplayedRoom;
+use crate::chat::sidebar::directory_sidebar_page::DirectorySidebarPage;
 use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
 use crate::chat::sidebar::standard_room_element::{InviteEvent, StandardRoomElement};
 use crate::chat::sidebar::{Sidebar, SidebarPage};
@@ -34,6 +35,7 @@ pub enum SidebarItem {
     Room(Entity<CachedRoom>),
     Space(Entity<CachedRoom>),
     Create,
+    Directory,
 }
 
 impl RootSidebarPage {
@@ -88,6 +90,15 @@ impl RootSidebarPage {
         }
     }
 
+    fn open_directory(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let sidebar = self.sidebar.clone();
+        let directory_page =
+            cx.new(|cx| DirectorySidebarPage::new(cx, sidebar, self.displayed_room.clone()));
+        self.sidebar.update(cx, |sidebar, cx| {
+            sidebar.push_page(SidebarPage::Directory(directory_page))
+        });
+    }
+
     fn invite_to_room(&mut self, event: &InviteEvent, window: &mut Window, cx: &mut Context<Self>) {
         self.invite_popover.update(cx, |invite_popover, cx| {
             invite_popover.open_invite_popover(event.room_id.clone(), cx)
@@ -119,6 +130,7 @@ impl RootSidebarPage {
 
         let mut vec = Vec::new();
         vec.push(SidebarItem::Create);
+        vec.push(SidebarItem::Directory);
         if !spaces.is_empty() {
             vec.push(SidebarItem::Heading(
                 tr!("ROOT_SIDEBAR_SPACES", "Spaces").into(),
@@ -206,6 +218,21 @@ impl Render for RootSidebarPage {
                                         }))
                                         .into_any_element()
                                 }
+                                SidebarItem::Directory => div()
+                                    .id("directory")
+                                    .m(px(2.))
+                                    .p(px(2.))
+                                    .gap(px(4.))
+                                    .rounded(theme.border_radius)
+                                    .flex()
+                                    .w_full()
+                                    .items_center()
+                                    .child(icon("map-globe".into()))
+                                    .child(tr!("SIDEBAR_DIRECTORY", "Room Directory"))
+                                    .on_click(cx.listener(move |this, _, window, cx| {
+                                        this.open_directory(window, cx);
+                                    }))
+                                    .into_any_element(),
                                 SidebarItem::Heading(heading) => {
                                     div().pt(px(4.)).child(subtitle(heading)).into_any_element()
                                 }

@@ -238,6 +238,9 @@
   "ROOM_CHANGE_NAME_DESCRIPTION": "What do you want to call this room?",
   "ROOM_CHANGE_PICTURE": "Change Room Picture",
   "ROOM_COPY_LINK": "Copy link to room",
+  "ROOM_DIRECTORY": "Room Directory",
+  "ROOM_DIRECTORY_OTHER_SERVER": "Another server...",
+  "ROOM_DIRECTORY_TITLE": "Room Directory of {{server}}",
   "ROOM_ENCRYPTION_BADGE": "Encrypted",
   "ROOM_ENCRYPTION_ENABLE": "Enable Encryption",
   "ROOM_ENCRYPTION_ENABLE_DESCRIPTION": "By enabling encryption, you will prevent anyone joining the room from being able to read message history. If there are any bots or services in this room, they may also stop working.\n\nOnce enabled, encryption cannot be turned off.\n\nDo you want to enable encryption for this room?",
@@ -290,6 +293,7 @@
   "SETUP_RECOVERY_DESCRIPTION": "Set up a recovery key for your account so you don't lose access to your encrypted messages",
   "SETUP_RECOVERY_NOW": "Set up now",
   "SIDEBAR_CREATE_JOIN": "Create or Join",
+  "SIDEBAR_DIRECTORY": "Room Directory",
   "SIDEBAR_PENDING_INVITES": {
     "one": "{{count}} invite",
     "other": "{{count}} invites"

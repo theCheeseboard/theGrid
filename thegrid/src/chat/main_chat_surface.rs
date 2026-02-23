@@ -5,6 +5,8 @@ use crate::chat::chat_room::ChatRoom;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::join_room::JoinRoom;
 use crate::chat::join_room::create_room_popover::CreateRoomPopover;
+use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
+use crate::chat::room_directory::RoomDirectory;
 use crate::chat::sidebar::Sidebar;
 use crate::main_window::{MainWindowSurface, SurfaceChangeEvent, SurfaceChangeHandler};
 use cntp_i18n::{i18n_manager, tr};
@@ -16,7 +18,6 @@ use gpui::{
 };
 use std::rc::Rc;
 use thegrid::session::session_manager::SessionManager;
-use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
 
 pub struct MainChatSurface {
     sidebar: Entity<Sidebar>,
@@ -24,6 +25,7 @@ pub struct MainChatSurface {
     displayed_room: Entity<DisplayedRoom>,
     chat_room: Option<Entity<ChatRoom>>,
     join_room: Entity<JoinRoom>,
+    room_directory: Option<Entity<RoomDirectory>>,
     focus_handle: FocusHandle,
 
     logout_popover_visible: Entity<bool>,
@@ -45,11 +47,21 @@ impl MainChatSurface {
                     (this.on_surface_change)(event, window, cx)
                 });
 
-            cx.observe(&displayed_room, |this, displayed_room, cx| {
-                if let DisplayedRoom::Room(room_id) = displayed_room.read(cx) {
-                    this.chat_room = Some(ChatRoom::new(room_id.clone(), displayed_room, cx))
-                }
-            })
+            cx.observe(
+                &displayed_room,
+                |this, displayed_room, cx| match displayed_room.read(cx).clone() {
+                    DisplayedRoom::Room(room_id) => {
+                        this.chat_room = Some(ChatRoom::new(room_id.clone(), displayed_room, cx))
+                    }
+                    DisplayedRoom::Directory(server_name) => {
+                        this.room_directory =
+                            Some(cx.new(|cx| {
+                                RoomDirectory::new(server_name.clone(), displayed_room, cx)
+                            }));
+                    }
+                    _ => {}
+                },
+            )
             .detach();
 
             let create_room_popover = cx.new(|cx| CreateRoomPopover::new(cx));
@@ -62,10 +74,16 @@ impl MainChatSurface {
                     sidebar
                 }),
                 join_room: cx.new(|cx| {
-                    JoinRoom::new(cx, displayed_room.clone(), create_room_popover.clone(), direct_join_room_popover.clone())
+                    JoinRoom::new(
+                        cx,
+                        displayed_room.clone(),
+                        create_room_popover.clone(),
+                        direct_join_room_popover.clone(),
+                    )
                 }),
                 displayed_room,
                 chat_room: None,
+                room_directory: None,
                 focus_handle: cx.focus_handle(),
                 logout_popover_visible: cx.new(|_| false),
                 on_surface_change: Rc::new(Box::new(on_surface_change)),
@@ -114,7 +132,9 @@ impl MainChatSurface {
 
     pub fn direct_join_room(&mut self, _: &DirectJoinRoom, _: &mut Window, cx: &mut Context<Self>) {
         self.direct_join_room_popover
-            .update(cx, |direct_join_room_popover, cx| direct_join_room_popover.open(cx))
+            .update(cx, |direct_join_room_popover, cx| {
+                direct_join_room_popover.open(cx)
+            })
     }
 }
 
@@ -132,39 +152,51 @@ impl Render for MainChatSurface {
             .on_action(cx.listener(Self::create_room))
             .on_action(cx.listener(Self::direct_join_room))
             .size_full()
-            .flex()
-            .gap(px(2.))
-            .child(self.sidebar.clone())
             .child(
                 div()
-                    .child(match &self.displayed_room.read(cx) {
-                        DisplayedRoom::None => interstitial()
-                            .title(
-                                tr!(
-                                    "NO_DISPLAYED_ROOM_TITLE",
-                                    "Welcome to {{application_name}}",
-                                    application_name = details
-                                        .generatable
-                                        .application_name
-                                        .resolve_languages_or_default(&locale.messages)
-                                )
-                                .into(),
-                            )
-                            .message(
-                                tr!(
-                                    "NO_DISPLAYED_ROOM_MESSAGE",
-                                    "Choose a room to start chatting!"
-                                )
-                                .into(),
-                            )
-                            .size_full()
-                            .into_any_element(),
-                        DisplayedRoom::Room(_) => {
-                            self.chat_room.as_ref().unwrap().clone().into_any_element()
-                        }
-                        DisplayedRoom::CreateRoom => self.join_room.clone().into_any_element(),
-                    })
-                    .flex_grow(),
+                    .size_full()
+                    .flex()
+                    .gap(px(2.))
+                    .child(self.sidebar.clone())
+                    .child(
+                        div()
+                            .child(match &self.displayed_room.read(cx) {
+                                DisplayedRoom::None => interstitial()
+                                    .title(
+                                        tr!(
+                                            "NO_DISPLAYED_ROOM_TITLE",
+                                            "Welcome to {{application_name}}",
+                                            application_name = details
+                                                .generatable
+                                                .application_name
+                                                .resolve_languages_or_default(&locale.messages)
+                                        )
+                                        .into(),
+                                    )
+                                    .message(
+                                        tr!(
+                                            "NO_DISPLAYED_ROOM_MESSAGE",
+                                            "Choose a room to start chatting!"
+                                        )
+                                        .into(),
+                                    )
+                                    .size_full()
+                                    .into_any_element(),
+                                DisplayedRoom::Room(_) => {
+                                    self.chat_room.as_ref().unwrap().clone().into_any_element()
+                                }
+                                DisplayedRoom::CreateRoom => {
+                                    self.join_room.clone().into_any_element()
+                                }
+                                DisplayedRoom::Directory(_) => self
+                                    .room_directory
+                                    .as_ref()
+                                    .unwrap()
+                                    .clone()
+                                    .into_any_element(),
+                            })
+                            .flex_grow(),
+                    ),
             )
             .child(logout_popover(self.logout_popover_visible.clone()))
             .child(self.create_room_popover.clone())

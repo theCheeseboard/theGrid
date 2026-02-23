@@ -1,3 +1,4 @@
+mod directory_sidebar_page;
 mod root_sidebar_page;
 mod space_sidebar_page;
 mod standard_room_element;
@@ -36,6 +37,7 @@ use thegrid::session::room_cache::RoomCategory;
 use thegrid::session::session_manager::SessionManager;
 use thegrid::session::verification_requests_cache::VerificationRequestDetails;
 use thegrid::tokio_helper::TokioHelper;
+use crate::chat::sidebar::directory_sidebar_page::DirectorySidebarPage;
 
 pub struct Sidebar {
     displayed_room: Entity<DisplayedRoom>,
@@ -48,6 +50,7 @@ pub struct Sidebar {
 pub enum SidebarPage {
     Root(Entity<RootSidebarPage>),
     Space(Entity<SpaceSidebarPage>),
+    Directory(Entity<DirectorySidebarPage>),
 }
 
 #[derive(IntoElement)]
@@ -182,6 +185,9 @@ impl Render for Sidebar {
                         }
                         SidebarPage::Space(space_sidebar_page) => {
                             pager.page(space_sidebar_page.clone().into_any_element())
+                        }
+                        SidebarPage::Directory(directory_sidebar_page) => {
+                            pager.page(directory_sidebar_page.clone().into_any_element())
                         }
                     },
                 ),

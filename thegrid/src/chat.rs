@@ -4,4 +4,5 @@ pub mod chat_surface;
 mod displayed_room;
 mod join_room;
 mod main_chat_surface;
+mod room_directory;
 mod sidebar;
