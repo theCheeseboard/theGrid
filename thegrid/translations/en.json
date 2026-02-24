@@ -118,6 +118,8 @@
   "INVITE_TITLE": "Invite to room",
   "INVITE_USER": "Invite",
   "IN_ROOM": "In {{room}}",
+  "JOIN_ERROR_TEXT": "Unable to join the room {{room}}",
+  "JOIN_ERROR_TITLE": "Unable to join room",
   "JOIN_ROOM": "Join Room",
   "JOIN_ROOM_INVITATIONS": "Pending Invitations",
   "KEY_EXPORT_DESCRIPTION": "Enter a password to encrypt the exported encryption keys. This password will be necessary to import these keys again.",
@@ -148,6 +150,7 @@
   "KICK_DESCRIPTION": "They will leave the room, but can rejoin if the room is public, or if they are re-invited.",
   "KICK_TEXT": "Do you want to kick {{user}}?",
   "KICK_TITLE": "Kick",
+  "KNOCK_ON_ROOM": "Knock",
   "LEAVE_ROOM_INFORMATIONAL_NOT_PUBLIC": "You may not be able to rejoin this room unless you are re-invited.",
   "LEAVE_ROOM_INFORMATIONAL_PUBLIC": "You can rejoin this room later.",
   "LEAVE_ROOM_TEXT": "Do you want to leave {{room}}?",
@@ -352,5 +355,6 @@
   "VERIFY_SESSION_OTHER_DEVICE": "Verify with another verified device",
   "VERIFY_SESSION_RECOVERY_KEY": "Enter Recovery Key",
   "VERIFY_SESSION_RESET_CRYPTO": "Reset Recovery Key",
+  "VIEW_ROOM": "View Room",
   "WARNING": "Warning"
 }

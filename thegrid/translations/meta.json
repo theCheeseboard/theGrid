@@ -713,6 +713,18 @@
     "plural": false,
     "description": null
   },
+  "JOIN_ERROR_TEXT": {
+    "context": "room_directory.rs",
+    "definedIn": "src/chat/room_directory.rs:300",
+    "plural": false,
+    "description": null
+  },
+  "JOIN_ERROR_TITLE": {
+    "context": "room_directory.rs",
+    "definedIn": "src/chat/room_directory.rs:297",
+    "plural": false,
+    "description": null
+  },
   "JOIN_ROOM": {
     "context": "direct_join_room_popover.rs",
     "definedIn": "src/chat/join_room/direct_join_room_popover.rs:154",
@@ -893,6 +905,12 @@
     "plural": false,
     "description": null
   },
+  "KNOCK_ON_ROOM": {
+    "context": "room_directory.rs",
+    "definedIn": "src/chat/room_directory.rs:465",
+    "plural": false,
+    "description": null
+  },
   "LEAVE_ROOM_INFORMATIONAL_NOT_PUBLIC": {
     "context": "standard_room_element.rs",
     "definedIn": "src/chat/sidebar/standard_room_element.rs:230",
@@ -955,7 +973,7 @@
   },
   "MEMBER_LIST_FILTERS": {
     "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:380",
+    "definedIn": "src/chat/room_directory.rs:519",
     "plural": false,
     "description": null
   },
@@ -1459,13 +1477,13 @@
   },
   "ROOM_DIRECTORY_ERROR": {
     "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:432",
+    "definedIn": "src/chat/room_directory.rs:571",
     "plural": false,
     "description": null
   },
   "ROOM_DIRECTORY_MEMBER_COUNT": {
     "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:324",
+    "definedIn": "src/chat/room_directory.rs:434",
     "plural": true,
     "description": null
   },
@@ -1477,7 +1495,7 @@
   },
   "ROOM_DIRECTORY_TITLE": {
     "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:362",
+    "definedIn": "src/chat/room_directory.rs:501",
     "plural": false,
     "description": null
   },
@@ -1699,7 +1717,7 @@
   },
   "SEARCH_PLACEHOLDER": {
     "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:62",
+    "definedIn": "src/chat/room_directory.rs:80",
     "plural": false,
     "description": null
   },
@@ -2042,6 +2060,12 @@
   "VERIFY_SESSION_RESET_CRYPTO": {
     "context": "sidebar.rs",
     "definedIn": "src/chat/sidebar.rs:471",
+    "plural": false,
+    "description": null
+  },
+  "VIEW_ROOM": {
+    "context": "room_directory.rs",
+    "definedIn": "src/chat/room_directory.rs:453",
     "plural": false,
     "description": null
   },
