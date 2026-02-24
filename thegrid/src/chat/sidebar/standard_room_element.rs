@@ -146,7 +146,7 @@ impl RenderOnce for StandardRoomElement {
                 .build(),
             ContextMenuItem::separator().build(),
             ContextMenuItem::menu_item()
-                .label(tr!("ROOM_SETTINGS", "Room Settings..."))
+                .label(tr!("ROOM_SETTINGS_ACTION", "Room Settings..."))
                 .icon("configure")
                 .disabled()
                 .build(),

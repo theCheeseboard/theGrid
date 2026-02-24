@@ -1,5 +1,6 @@
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::join_room::create_room_popover::CreateRoomPopover;
+use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
 use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::tr;
 use contemporary::components::button::button;
@@ -20,7 +21,6 @@ use thegrid::session::room_cache::CachedRoom;
 use thegrid::session::session_manager::SessionManager;
 use thegrid::tokio_helper::TokioHelper;
 use tracing::error;
-use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
 
 pub mod create_room_popover;
 pub mod direct_join_room_popover;
@@ -99,7 +99,7 @@ impl Render for JoinRoom {
             .flex_col()
             .child(
                 grandstand("join-room-grandstand")
-                    .text(tr!("JOIN_ROOM", "Create or Join Room"))
+                    .text(tr!("CREATE_JOIN_ROOM", "Create or Join Room"))
                     .pt(px(36.)),
             )
             .child(

@@ -296,7 +296,7 @@ impl DeactivateSurface {
             .gap(px(4.))
             .child(
                 grandstand("devices-grandstand")
-                    .text(tr!("ACCOUNT_DEACTIVATE", "Deactivate Account"))
+                    .text(tr!("ACCOUNT_DEACTIVATE"))
                     .pt(px(36.))
                     .on_back_click(cx.listener(|this, _, window, cx| {
                         this.state = DeactivateState::TypeSelect;
@@ -422,10 +422,7 @@ impl DeactivateSurface {
                             ))
                             .child(
                                 button("deactivate-ok")
-                                    .child(icon_text(
-                                        "dialog-ok".into(),
-                                        tr!("DONE", "Done").into(),
-                                    ))
+                                    .child(icon_text("dialog-ok".into(), tr!("DONE").into()))
                                     .on_click(cx.listener(|this, _, window, cx| {
                                         // Pop twice to get back to
                                         // home page

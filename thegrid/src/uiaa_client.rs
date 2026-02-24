@@ -271,7 +271,7 @@ impl Render for UiaaClient {
             }
             CurrentStep::Error => dialog_box("uiaa-dialog")
                 .visible(true)
-                .title(tr!("AUTH_REQUIRED", "Authentication Required").into())
+                .title(tr!("AUTH_REQUIRED").into())
                 .content(tr!(
                     "UIAA_ERROR",
                     "There was a problem authenticating with the homeserver."

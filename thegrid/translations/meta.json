@@ -13,7 +13,7 @@
   },
   "ACCOUNT_DEACTIVATE": {
     "context": "deactivate_account.rs",
-    "definedIn": "src/account_settings/deactivate_account.rs:299",
+    "definedIn": "src/account_settings/deactivate_account.rs:198",
     "plural": false,
     "description": null
   },
@@ -241,7 +241,7 @@
   },
   "AUTH_REQUIRED": {
     "context": "uiaa_client.rs",
-    "definedIn": "src/uiaa_client.rs:274",
+    "definedIn": "src/uiaa_client.rs:226",
     "plural": false,
     "description": null
   },
@@ -355,7 +355,13 @@
   },
   "CLOSE": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:452",
+    "definedIn": "src/auth/verification_popover.rs:276",
+    "plural": false,
+    "description": null
+  },
+  "CREATE_JOIN_ROOM": {
+    "context": "join_room.rs",
+    "definedIn": "src/chat/join_room.rs:102",
     "plural": false,
     "description": null
   },
@@ -498,8 +504,8 @@
     "description": null
   },
   "DONE": {
-    "context": "deactivate_account.rs",
-    "definedIn": "src/account_settings/deactivate_account.rs:427",
+    "context": "identity_reset.rs",
+    "definedIn": "src/account_settings/security_settings/identity_reset.rs:366",
     "plural": false,
     "description": null
   },
@@ -545,6 +551,12 @@
     "plural": false,
     "description": null
   },
+  "FILTERS": {
+    "context": "room_directory.rs",
+    "definedIn": "src/chat/room_directory.rs:519",
+    "plural": false,
+    "description": null
+  },
   "FOR_ROOM": {
     "context": "standard_room_element.rs",
     "definedIn": "src/chat/sidebar/standard_room_element.rs:64",
@@ -553,7 +565,7 @@
   },
   "HEADS_UP": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:369",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:359",
     "plural": false,
     "description": null
   },
@@ -805,7 +817,7 @@
   },
   "KEY_RESET_COMPLETE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:322",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:312",
     "plural": false,
     "description": null
   },
@@ -829,7 +841,7 @@
   },
   "KEY_RESET_OK_DESCRIPTION": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:329",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:319",
     "plural": false,
     "description": null
   },
@@ -853,13 +865,13 @@
   },
   "KEY_RESET_TITLE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:307",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:163",
     "plural": false,
     "description": null
   },
   "KEY_RESET_WARNING": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:371",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:361",
     "plural": false,
     "description": null
   },
@@ -871,7 +883,7 @@
   },
   "KEY_SETUP_TITLE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:304",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:160",
     "plural": false,
     "description": null
   },
@@ -968,12 +980,6 @@
   "MAIN_CHAT_WELCOME": {
     "context": "chat_surface.rs",
     "definedIn": "src/chat/chat_surface.rs:98",
-    "plural": false,
-    "description": null
-  },
-  "MEMBER_LIST_FILTERS": {
-    "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:519",
     "plural": false,
     "description": null
   },
@@ -1105,7 +1111,7 @@
   },
   "OPEN_ACCOUNT_HOMESERVER_TITLE": {
     "context": "register_homeserver_page.rs",
-    "definedIn": "src/register/register_homeserver_page.rs:70",
+    "definedIn": "src/register/register_homeserver_page.rs:69",
     "plural": false,
     "description": null
   },
@@ -1117,7 +1123,7 @@
   },
   "OPEN_ACCOUNT_TITLE_HOMESERVER_DESCRIPTION": {
     "context": "register_homeserver_page.rs",
-    "definedIn": "src/register/register_homeserver_page.rs:74",
+    "definedIn": "src/register/register_homeserver_page.rs:73",
     "plural": false,
     "description": null
   },
@@ -1153,25 +1159,25 @@
   },
   "POPOVER_RECOVERY_PASSPHRASE": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:146",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:143",
     "plural": false,
     "description": null
   },
   "POPOVER_RECOVERY_PASSPHRASE_DESCRIPTION": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:155",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:152",
     "plural": false,
     "description": null
   },
   "POPOVER_RECOVERY_PASSPHRASE_GRANDSTAND": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:267",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:261",
     "plural": false,
     "description": null
   },
   "POPOVER_VERIFY": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:472",
+    "definedIn": "src/auth/verification_popover.rs:224",
     "plural": false,
     "description": null
   },
@@ -1297,13 +1303,13 @@
   },
   "RECOVERY_KEY_WHAT_DESCRIPTION": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:168",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:165",
     "plural": false,
     "description": null
   },
   "RECOVERY_KEY_WHAT_TITLE": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:164",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:161",
     "plural": false,
     "description": null
   },
@@ -1321,37 +1327,37 @@
   },
   "RECOVERY_PASSPHRASE_POPOVER_CORRUPT": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:284",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:278",
     "plural": false,
     "description": null
   },
   "RECOVERY_PASSPHRASE_POPOVER_CORRUPT_MESSAGE": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:293",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:287",
     "plural": false,
     "description": null
   },
   "RECOVERY_PASSPHRASE_POPOVER_OK": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:229",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:223",
     "plural": false,
     "description": null
   },
   "RECOVERY_PASSPHRASE_POPOVER_OK_MESSAGE": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:238",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:232",
     "plural": false,
     "description": null
   },
   "RECOVER_ACCOUNT": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:183",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:180",
     "plural": false,
     "description": null
   },
   "REGISTER_TITLE": {
     "context": "register_homeserver_page.rs",
-    "definedIn": "src/register/register_homeserver_page.rs:48",
+    "definedIn": "src/register/register_homeserver_page.rs:47",
     "plural": false,
     "description": null
   },
@@ -1578,6 +1584,12 @@
     "description": null
   },
   "ROOM_SETTINGS": {
+    "context": "room_settings.rs",
+    "definedIn": "src/chat/chat_room/room_settings.rs:171",
+    "plural": false,
+    "description": null
+  },
+  "ROOM_SETTINGS_ACTION": {
     "context": "standard_room_element.rs",
     "definedIn": "src/chat/sidebar/standard_room_element.rs:149",
     "plural": false,
@@ -1770,14 +1782,14 @@
     "description": null
   },
   "SECURITY_RECOVERY_KEY_RESET": {
-    "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:267",
+    "context": "security_settings.rs",
+    "definedIn": "src/account_settings/security_settings.rs:134",
     "plural": false,
     "description": null
   },
   "SECURITY_RECOVERY_KEY_SETUP": {
-    "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:257",
+    "context": "security_settings.rs",
+    "definedIn": "src/account_settings/security_settings.rs:124",
     "plural": false,
     "description": null
   },
@@ -1926,8 +1938,8 @@
     "description": null
   },
   "UNKNOWN_DEVICE": {
-    "context": "verification_requests_cache.rs",
-    "definedIn": "src/session/verification_requests_cache.rs:240",
+    "context": "sidebar.rs",
+    "definedIn": "src/chat/sidebar.rs:267",
     "plural": false,
     "description": null
   },

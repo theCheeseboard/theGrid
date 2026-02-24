@@ -282,7 +282,7 @@ impl Render for RoomMembers {
                                 layer()
                                     .p(px(8.))
                                     .gap(px(8.))
-                                    .child(subtitle(tr!("MEMBER_LIST_FILTERS", "Filters")))
+                                    .child(subtitle(tr!("FILTERS")))
                                     .child(
                                         div()
                                             .flex()

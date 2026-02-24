@@ -243,7 +243,7 @@ impl Render for VerificationPopover {
                         .gap(px(9.))
                         .child(
                             grandstand("verify-popover-grandstand")
-                                .text(tr!("POPOVER_VERIFY", "Verification"))
+                                .text(tr!("POPOVER_VERIFY"))
                                 .on_back_click(
                                     cx.listener(move |this, _, _, cx| this.on_back_click(cx)),
                                 ),
@@ -293,7 +293,7 @@ impl Render for VerificationPopover {
                         .gap(px(9.))
                         .child(
                             grandstand("verify-popover-grandstand")
-                                .text(tr!("POPOVER_VERIFY", "Verification"))
+                                .text(tr!("POPOVER_VERIFY"))
                                 .on_back_click(
                                     cx.listener(move |this, _, _, cx| this.on_back_click(cx)),
                                 ),
@@ -420,7 +420,7 @@ impl Render for VerificationPopover {
                         .gap(px(9.))
                         .child(
                             grandstand("verify-popover-grandstand")
-                                .text(tr!("POPOVER_VERIFY", "Verification"))
+                                .text(tr!("POPOVER_VERIFY"))
                                 .on_back_click(
                                     cx.listener(move |this, _, _, cx| this.on_back_click(cx)),
                                 ),
@@ -449,7 +449,7 @@ impl Render for VerificationPopover {
                                             button("verification-popover-ok")
                                                 .child(icon_text(
                                                     "dialog-ok".into(),
-                                                    tr!("CLOSE", "Close").into(),
+                                                    tr!("CLOSE").into(),
                                                 ))
                                                 .on_click(cx.listener(|this, _, _, cx| {
                                                     this.verification_request = None;
@@ -469,7 +469,7 @@ impl Render for VerificationPopover {
                         .gap(px(9.))
                         .child(
                             grandstand("verify-popover-grandstand")
-                                .text(tr!("POPOVER_VERIFY", "Verification"))
+                                .text(tr!("POPOVER_VERIFY"))
                                 .on_back_click(
                                     cx.listener(move |this, _, _, cx| this.on_back_click(cx)),
                                 ),

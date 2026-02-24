@@ -253,21 +253,15 @@ impl Render for RecoveryKeyResetPopover {
                                                         |button| {
                                                             button.child(icon_text(
                                                                 "dialog-ok".into(),
-                                                                tr!(
-                                                                    "SECURITY_RECOVERY_KEY_SETUP",
-                                                                    "Set up Recovery Key"
-                                                                )
-                                                                .into(),
+                                                                tr!("SECURITY_RECOVERY_KEY_SETUP")
+                                                                    .into(),
                                                             ))
                                                         },
                                                         |button| {
                                                             button.child(icon_text(
                                                                 "edit-rename".into(),
-                                                                tr!(
-                                                                    "SECURITY_RECOVERY_KEY_RESET",
-                                                                    "Reset Recovery Key"
-                                                                )
-                                                                .into(),
+                                                                tr!("SECURITY_RECOVERY_KEY_RESET")
+                                                                    .into(),
                                                             ))
                                                         },
                                                     )
@@ -300,12 +294,8 @@ impl Render for RecoveryKeyResetPopover {
                             grandstand("key-reset-grandstand")
                                 .when_else(
                                     self.recovery_not_set_up,
-                                    |david| {
-                                        david.text(tr!("KEY_SETUP_TITLE", "Set up Recovery Key"))
-                                    },
-                                    |david| {
-                                        david.text(tr!("KEY_RESET_TITLE", "Reset Recovery Key"))
-                                    },
+                                    |david| david.text(tr!("KEY_SETUP_TITLE")),
+                                    |david| david.text(tr!("KEY_RESET_TITLE")),
                                 )
                                 .on_back_click(cx.listener(move |this, _, _, cx| {
                                     this.visible = false;

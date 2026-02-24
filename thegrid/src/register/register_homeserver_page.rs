@@ -10,8 +10,7 @@ use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, AppContext, Context,
-    Entity, IntoElement, ParentElement, Render, Styled, Window,
+    AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window, div, px,
 };
 use matrix_sdk::OwnedServerName;
 
@@ -78,7 +77,7 @@ impl Render for RegisterHomeserverPage {
                             .child(self.homeserver_field.clone().into_any_element())
                             .child(
                                 button("next")
-                                    .child(icon_text("go-next".into(), tr!("NEXT", "Next").into()))
+                                    .child(icon_text("go-next".into(), tr!("NEXT").into()))
                                     .on_click(cx.listener(|this, _, window, cx| {
                                         let homeserver = OwnedServerName::try_from(
                                             this.homeserver_field.read(cx).text(),

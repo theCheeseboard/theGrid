@@ -237,8 +237,7 @@ impl VerificationRequestsCache {
                                                             .clone()
                                                             .map(|id| id.to_string())
                                                             .unwrap_or_else(|| tr!(
-                                                                "UNKNOWN_DEVICE",
-                                                                "Unknown Device"
+                                                                "UNKNOWN_DEVICE"
                                                             )
                                                             .to_string())
                                                     )

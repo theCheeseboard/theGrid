@@ -125,10 +125,7 @@ impl Render for RecoveryPassphrasePopover {
                         .gap(px(9.))
                         .child(
                             grandstand("recovery-passphrase-popover-grandstand")
-                                .text(tr!(
-                                    "POPOVER_RECOVERY_PASSPHRASE_GRANDSTAND",
-                                    "Verify with Recovery Key"
-                                ))
+                                .text(tr!("POPOVER_RECOVERY_PASSPHRASE_GRANDSTAND"))
                                 .on_back_click(cx.listener(move |this, _, _, cx| {
                                     this.visible = false;
                                     this.recovery_state = RecoveryState::Idle;
@@ -208,10 +205,7 @@ impl Render for RecoveryPassphrasePopover {
                         .gap(px(9.))
                         .child(
                             grandstand("recovery-passphrase-popover-grandstand")
-                                .text(tr!(
-                                    "POPOVER_RECOVERY_PASSPHRASE_GRANDSTAND",
-                                    "Verify with Recovery Key"
-                                ))
+                                .text(tr!("POPOVER_RECOVERY_PASSPHRASE_GRANDSTAND"))
                                 .on_back_click(cx.listener(move |this, _, _, cx| {
                                     this.visible = false;
                                     this.recovery_state = RecoveryState::Idle;
@@ -242,7 +236,7 @@ impl Render for RecoveryPassphrasePopover {
                                                 button("recovery-passphrase-popover-ok")
                                                     .child(icon_text(
                                                         "dialog-ok".into(),
-                                                        tr!("CLOSE", "Close").into(),
+                                                        tr!("CLOSE").into(),
                                                     ))
                                                     .on_click(cx.listener(|this, _, _, cx| {
                                                         this.visible = false;
@@ -302,7 +296,7 @@ impl Render for RecoveryPassphrasePopover {
                                                 button("recovery-passphrase-popover-ok")
                                                     .child(icon_text(
                                                         "dialog-ok".into(),
-                                                        tr!("SORRY", "Sorry").into(),
+                                                        tr!("SORRY").into(),
                                                     ))
                                                     .on_click(cx.listener(|this, _, _, cx| {
                                                         this.visible = false;
