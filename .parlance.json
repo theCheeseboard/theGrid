@@ -1,0 +1,17 @@
+{
+  "name": "theGrid",
+  "subprojects": [
+    {
+      "name": "theGrid",
+      "type": "cntp-rs",
+      "path": "/thegrid/translations/{lang}.json",
+      "baseLang": "en"
+    },
+    {
+      "name": "theGrid Metadata",
+      "type": "i18next",
+      "path": "/thegrid/dist/contemporary_toml_translations/{lang}.json",
+      "baseLang": "en"
+    }
+  ]
+}
