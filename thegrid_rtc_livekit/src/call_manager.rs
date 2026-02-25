@@ -33,6 +33,10 @@ impl LivekitCallManager {
     pub fn current_call(&self) -> Option<Entity<LivekitCall>> {
         self.current_call.clone()
     }
+    
+    pub fn mute(&self) -> Entity<bool> {
+        self.mute.clone()
+    }
 }
 
 impl Global for LivekitCallManager {}

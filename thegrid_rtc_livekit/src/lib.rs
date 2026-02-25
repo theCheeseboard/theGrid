@@ -2,6 +2,7 @@ use async_ringbuf::traits::{AsyncProducer, Consumer, Producer, Split};
 pub mod active_call_sidebar_alert;
 pub mod call_manager;
 
+use crate::call_manager::LivekitCallManager;
 use async_ringbuf::AsyncHeapRb;
 use cancellation_token::CancellationTokenSource;
 use cntp_i18n::{I18N_MANAGER, tr, tr_load};
@@ -307,16 +308,13 @@ impl LivekitCall {
     }
 
     fn setup_local_mic(&mut self, cx: &mut Context<Self>) {
-        let Some(device) = &self.cpal_input_device else {
-            warn!("No input device available for audio track: ignoring");
-            return;
-        };
-
+        let call_manager = cx.global::<LivekitCallManager>();
         let cancellation_token = self.cancellation_source.token();
         let local_participant = match &self.state {
             CallState::Active { local_participant } => local_participant.clone(),
             _ => return,
         };
+
         if let Some(mic_track_sid) = &self.mic_track_sid {
             let local_participant_clone = local_participant.clone();
             let mic_track_sid = mic_track_sid.clone();
@@ -335,6 +333,11 @@ impl LivekitCall {
 
             self.mic_track_sid = None;
         }
+
+        let Some(device) = &self.cpal_input_device else {
+            warn!("No input device available for audio track: ignoring");
+            return;
+        };
 
         let (mut producer, mut consumer) = AsyncHeapRb::<Vec<i16>>::new(32).split();
 
@@ -366,6 +369,19 @@ impl LivekitCall {
         );
         let track =
             LocalAudioTrack::create_audio_track("mic", RtcAudioSource::Native(source.clone()));
+        
+        if *call_manager.mute().read(cx) {
+            track.mute();
+        }
+        
+        let track_clone = track.clone();
+        cx.observe(&call_manager.mute(), move |this, mute, cx| {
+            if *mute.read(cx) {
+                track_clone.mute();
+            } else {
+                track_clone.unmute();
+            }
+        }).detach();
 
         let num_channels = supported_config.channels() as u32;
         let sample_rate = supported_config.sample_rate();

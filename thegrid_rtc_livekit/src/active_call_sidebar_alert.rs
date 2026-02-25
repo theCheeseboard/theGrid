@@ -3,7 +3,9 @@ use crate::call_manager::LivekitCallManager;
 use cntp_i18n::tr;
 use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
+use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
+use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{App, IntoElement, ParentElement, RenderOnce, Styled, Window, div, px};
 use thegrid_common::session::session_manager::SessionManager;
@@ -17,8 +19,11 @@ pub fn active_call_sidebar_alert() -> ActiveCallSidebarAlert {
 
 impl RenderOnce for ActiveCallSidebarAlert {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        let theme = cx.theme();
+
         let call_manager = cx.global::<LivekitCallManager>();
         let call = call_manager.current_call().unwrap().read(cx);
+        let mute = call_manager.mute();
 
         let session_manager = cx.global::<SessionManager>();
         let room = session_manager
@@ -73,19 +78,38 @@ impl RenderOnce for ActiveCallSidebarAlert {
                         david.child(icon_text("exception".into(), err.to_string().into()))
                     })
                     .child(
-                        button("call-end")
-                            .destructive()
-                            .child(icon_text(
-                                "call-stop".into(),
-                                tr!("CALL_HANG_UP", "Hang Up").into(),
-                            ))
-                            .on_click(|_, _, cx| {
-                                let call_manager = cx.global::<LivekitCallManager>();
-                                call_manager
-                                    .current_call()
-                                    .unwrap()
-                                    .update(cx, |call, cx| call.end_call(cx))
-                            }),
+                        div()
+                            .flex()
+                            .bg(theme.button_background)
+                            .rounded(theme.border_radius)
+                            .child(
+                                button("mute")
+                                    .child(icon(
+                                        if *mute.read(cx) { "mic-off" } else { "mic-on" }.into(),
+                                    ))
+                                    .checked_when(*mute.read(cx))
+                                    .on_click(move |_, _, cx| {
+                                        let muted = *mute.read(cx);
+                                        mute.write(cx, !muted);
+                                    })
+                                    .flex_grow(),
+                            )
+                            .child(
+                                button("call-end")
+                                    .destructive()
+                                    .child(icon_text(
+                                        "call-stop".into(),
+                                        tr!("CALL_HANG_UP", "Hang Up").into(),
+                                    ))
+                                    .on_click(|_, _, cx| {
+                                        let call_manager = cx.global::<LivekitCallManager>();
+                                        call_manager
+                                            .current_call()
+                                            .unwrap()
+                                            .update(cx, |call, cx| call.end_call(cx))
+                                    })
+                                    .flex_grow(),
+                            ),
                     ),
             )
     }
