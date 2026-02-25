@@ -2,6 +2,7 @@ pub mod author_flyout;
 mod membership_change_item;
 mod profile_change_item;
 pub mod room_head;
+mod rtc_notification_item;
 mod state_change_element;
 mod state_event_item;
 mod timeline_item;

@@ -415,7 +415,7 @@
   },
   "DATE_DIVIDER": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:261",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:265",
     "plural": false,
     "description": null
   },
@@ -511,7 +511,7 @@
   },
   "EDITED_MESSAGE_INDICATOR": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:130",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:134",
     "plural": false,
     "description": null
   },
@@ -1015,7 +1015,7 @@
   },
   "MESSAGE_UNSUPPORTED": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:119",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:123",
     "plural": false,
     "description": null
   },
@@ -1670,6 +1670,12 @@
   "ROOT_SIDEBAR_SPACES": {
     "context": "root_sidebar_page.rs",
     "definedIn": "src/chat/sidebar/root_sidebar_page.rs:136",
+    "plural": false,
+    "description": null
+  },
+  "RTC_NOTIFICATION_TEXT": {
+    "context": "rtc_notification_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/rtc_notification_item.rs:17",
     "plural": false,
     "description": null
   },

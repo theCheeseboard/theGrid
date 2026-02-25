@@ -34,3 +34,8 @@ imbl = "6"
 mime2ext = "0.1"
 anyhow = "1"
 log = "0.4.28"
+livekit = { version = "0.7", features = ["native-tls"] }
+#isahc = { version = "1", features = ["static-ssl"] }
+reqwest = "0.13"
+async-ringbuf = "0.3"
+cancellation-token = "0.1"

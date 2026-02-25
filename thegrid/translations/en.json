@@ -281,6 +281,7 @@
   "ROOM_VIEW_MEMBERS": "Manage Room Members",
   "ROOT_SIDEBAR_ROOMS": "Rooms",
   "ROOT_SIDEBAR_SPACES": "Spaces",
+  "RTC_NOTIFICATION_TEXT": "Call started",
   "SEARCH_PLACEHOLDER": "Search...",
   "SECURITY_ENCRYPTION": "Encryption",
   "SECURITY_ENCRYPTION_DESCRIPTION": "Set up a recovery key to ensure you don't lose access to your encrypted messages",
