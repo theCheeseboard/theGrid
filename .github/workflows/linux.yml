@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config libxkbcommon-dev libxkbcommon-x11-dev libx11-xcb-dev desktop-file-utils
+          sudo apt-get install -y pkg-config libxkbcommon-dev libxkbcommon-x11-dev libx11-xcb-dev desktop-file-utils libasound2-dev
           rustup update
       - uses: Swatinem/rust-cache@v2
       - uses: r7kamura/rust-problem-matchers@v1
