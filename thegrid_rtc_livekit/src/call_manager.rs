@@ -4,6 +4,7 @@ use matrix_sdk::ruma::OwnedRoomId;
 
 pub struct LivekitCallManager {
     current_call: Option<Entity<LivekitCall>>,
+    mute: Entity<bool>,
 }
 
 impl LivekitCallManager {
@@ -19,7 +20,7 @@ impl LivekitCallManager {
                     return;
                 }
 
-                if call.read(cx).state == CallState::Ended {
+                if matches!(call.read(cx).state, CallState::Ended) {
                     // This call is over
                     call_manager.current_call = None;
                 }
@@ -37,5 +38,9 @@ impl LivekitCallManager {
 impl Global for LivekitCallManager {}
 
 pub fn setup_call_manager(cx: &mut gpui::App) {
-    cx.set_global(LivekitCallManager { current_call: None });
+    let mute = cx.new(|_| false);
+    cx.set_global(LivekitCallManager {
+        current_call: None,
+        mute,
+    });
 }

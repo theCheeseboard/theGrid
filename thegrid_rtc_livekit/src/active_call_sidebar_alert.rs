@@ -30,7 +30,7 @@ impl RenderOnce for ActiveCallSidebarAlert {
 
         let call_error = match call.state {
             CallState::Connecting => None,
-            CallState::Active => None,
+            CallState::Active { .. } => None,
             CallState::Ended => None,
             CallState::Error(error) => Some(error),
         };
@@ -47,20 +47,20 @@ impl RenderOnce for ActiveCallSidebarAlert {
                     .flex()
                     .flex_col()
                     .gap(px(4.))
-                    .when(call.state == CallState::Connecting, |david| {
+                    .when(matches!(call.state, CallState::Connecting), |david| {
                         david.child(format!(
                             "{} - {}",
                             room.display_name(),
                             tr!("CALL_CONNECTING", "Connecting...")
                         ))
                     })
-                    .when(call.state == CallState::Active, |david| {
+                    .when(matches!(call.state, CallState::Active { .. }), |david| {
                         let secs = call.started_at.elapsed().as_secs();
                         let mins = secs / 60;
                         let secs = secs % 60;
                         let hours = mins / 60;
                         let mins = mins % 60;
-                        
+
                         david.child(format!(
                             "{} - {:02}:{:02}:{:02}",
                             room.display_name(),
