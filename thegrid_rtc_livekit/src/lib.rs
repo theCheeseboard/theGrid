@@ -341,7 +341,7 @@ impl LivekitCall {
 
         let (mut producer, mut consumer) = AsyncHeapRb::<Vec<i16>>::new(32).split();
 
-        let mut supported_device_configs = device.supported_output_configs().unwrap();
+        let mut supported_device_configs = device.supported_input_configs().unwrap();
         let supported_config = supported_device_configs
             .next()
             .unwrap()
@@ -369,11 +369,11 @@ impl LivekitCall {
         );
         let track =
             LocalAudioTrack::create_audio_track("mic", RtcAudioSource::Native(source.clone()));
-        
+
         if *call_manager.mute().read(cx) {
             track.mute();
         }
-        
+
         let track_clone = track.clone();
         cx.observe(&call_manager.mute(), move |this, mute, cx| {
             if *mute.read(cx) {
@@ -381,7 +381,8 @@ impl LivekitCall {
             } else {
                 track_clone.unmute();
             }
-        }).detach();
+        })
+        .detach();
 
         let num_channels = supported_config.channels() as u32;
         let sample_rate = supported_config.sample_rate();
