@@ -19,9 +19,9 @@ use gpui_tokio::Tokio;
 use matrix_sdk::encryption::identities::Device;
 use matrix_sdk::encryption::verification::VerificationRequestState;
 use matrix_sdk::ruma::events::key::verification::VerificationMethod;
-use thegrid::session::session_manager::SessionManager;
-use thegrid::session::verification_requests_cache::VerificationRequestDetails;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::session::verification_requests_cache::VerificationRequestDetails;
+use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct VerificationPopover {
     verification_request: Option<String>,

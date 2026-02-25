@@ -16,8 +16,8 @@ use matrix_sdk::Room;
 use matrix_sdk::room::{RoomMember, RoomMemberRole};
 use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::ruma::events::room::power_levels::UserPowerLevel;
-use thegrid::session::session_manager::SessionManager;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct UserActionDialogs {
     current_dialog: Option<CurrentDialog>,

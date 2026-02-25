@@ -1,9 +1,7 @@
 use crate::session::account_cache::AccountCache;
 use crate::session::caches::Caches;
 use crate::session::devices_cache::DevicesCache;
-use crate::session::error_handling::{
-    ClientError, RecoverableClientError, TerminalClientError, handle_error,
-};
+use crate::session::error_handling::{ClientError, TerminalClientError, handle_error};
 use crate::session::media_cache::MediaCache;
 use crate::session::notifications::trigger_notification;
 use crate::session::room_cache::RoomCache;

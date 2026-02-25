@@ -6,8 +6,8 @@ use gpui::{
     App, BorrowAppContext, ElementId, IntoElement, ParentElement, Refineable, RenderOnce,
     StyleRefinement, Styled, Window, div, img, px, rgb, rgba,
 };
-use thegrid::session::media_cache::{MediaCacheEntry, MediaState};
-use thegrid::session::session_manager::SessionManager;
+use thegrid_common::session::media_cache::{MediaCacheEntry, MediaState};
+use thegrid_common::session::session_manager::SessionManager;
 
 #[derive(IntoElement)]
 pub struct MxcImage {

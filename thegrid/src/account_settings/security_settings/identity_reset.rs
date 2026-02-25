@@ -23,8 +23,8 @@ use matrix_sdk::encryption::CrossSigningResetAuthType;
 use matrix_sdk::encryption::recovery::{IdentityResetHandle, RecoveryError};
 use matrix_sdk::ruma::api::client::uiaa::AuthData;
 use std::rc::Rc;
-use thegrid::session::session_manager::SessionManager;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 use tracing::{Id, error};
 
 pub struct IdentityResetSurface {

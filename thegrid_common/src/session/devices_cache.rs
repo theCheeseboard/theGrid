@@ -3,7 +3,7 @@ use gpui::http_client::anyhow;
 use gpui::{App, AppContext, AsyncApp, Entity, WeakEntity};
 use matrix_sdk::Client;
 use matrix_sdk::ruma::api::client::device::Device;
-use smol::stream::StreamExt;
+use matrix_sdk::stream::StreamExt;
 use std::time::Duration;
 
 pub struct DevicesCache {

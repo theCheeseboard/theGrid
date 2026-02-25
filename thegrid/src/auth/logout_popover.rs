@@ -17,7 +17,7 @@ use gpui::{
 };
 use gpui_tokio::Tokio;
 use std::fs::remove_dir_all;
-use thegrid::session::session_manager::SessionManager;
+use thegrid_common::session::session_manager::SessionManager;
 
 enum LogoutPopoverState {
     Idle,

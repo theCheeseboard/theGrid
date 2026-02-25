@@ -1,38 +1,25 @@
-use crate::auth::emoji_flyout::EmojiFlyout;
 use crate::chat::chat_input::{ChatInput, PasteRichEvent};
 use crate::chat::chat_room::chat_bar::ChatBar;
 use crate::chat::chat_room::timeline::Timeline;
-use crate::chat::chat_room::user_action_dialogs::UserActionDialogs;
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::tr;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{
-    AppContext, AsyncApp, ClipboardEntry, Context, Entity, ListAlignment, ListScrollEvent,
-    ListState, PathPromptOptions, WeakEntity, Window, px,
+    AppContext, AsyncApp, ClipboardEntry, Context, Entity, PathPromptOptions, WeakEntity, Window,
 };
-use log::{error, info};
 use matrix_sdk::Room;
-use matrix_sdk::deserialized_responses::TimelineEvent;
-use matrix_sdk::event_cache::{RoomEventCache, RoomPaginationStatus};
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::OwnedRoomId;
-use matrix_sdk::ruma::api::client::receipt::create_receipt::v3::ReceiptType;
-use matrix_sdk::ruma::events::receipt::ReceiptThread;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
-use matrix_sdk::send_queue::RoomSendQueueUpdate;
-use matrix_sdk_ui::Timeline as MatrixUiTimeline;
-use matrix_sdk_ui::timeline::{AttachmentConfig, AttachmentSource, Error, RoomExt};
+use matrix_sdk::ruma::events::tag::Tags;
+use matrix_sdk_ui::timeline::{AttachmentConfig, AttachmentSource, RoomExt};
 use mime2ext::mime2ext;
 use std::fs::read;
-use std::iter::Map;
 use std::mem;
 use std::path::PathBuf;
-use imbl::HashMap;
-use matrix_sdk::ruma::events::tag::{TagInfo, TagName, Tags};
-use thegrid::session::session_manager::SessionManager;
-use thegrid::thegrid_error::TheGridError;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct OpenRoom {
     pub room: Option<Room>,
@@ -91,7 +78,7 @@ impl OpenRoom {
             typing_users: Vec::new(),
             chat_input,
             timeline: None,
-            tags: Default::default()
+            tags: Default::default(),
         };
 
         let Some(room) = client.get_room(&room_id) else {
@@ -104,7 +91,9 @@ impl OpenRoom {
         let room_clone = room.clone();
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let timeline = cx.spawn_tokio(async move { room_clone.timeline().await }).await;
+                let timeline = cx
+                    .spawn_tokio(async move { room_clone.timeline().await })
+                    .await;
 
                 if let Ok(timeline) = timeline {
                     let _ = weak_this.update(cx, |this, cx| {
@@ -117,15 +106,18 @@ impl OpenRoom {
         )
         .detach();
 
-        cx.spawn(async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-            let tags = cx.spawn_tokio(async move {room.tags().await}).await;
-            if let Ok(Some(tags)) = tags {
-                let _ = weak_this.update(cx, |this, cx| {
-                    this.tags = tags;
-                    cx.notify()
-                });
-            }
-        }).detach();
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                let tags = cx.spawn_tokio(async move { room.tags().await }).await;
+                if let Ok(Some(tags)) = tags {
+                    let _ = weak_this.update(cx, |this, cx| {
+                        this.tags = tags;
+                        cx.notify()
+                    });
+                }
+            },
+        )
+        .detach();
 
         self_return
     }

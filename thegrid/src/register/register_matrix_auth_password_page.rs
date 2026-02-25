@@ -23,7 +23,7 @@ use gpui::{
 };
 use matrix_sdk::OwnedServerName;
 use matrix_sdk::encryption::CrossSigningResetAuthType;
-use thegrid::session::session_manager::SessionManager;
+use thegrid_common::session::session_manager::SessionManager;
 
 pub struct RegisterMatrixAuthPasswordPage {
     register_surface: Entity<RegisterSurface>,
@@ -33,27 +33,27 @@ pub struct RegisterMatrixAuthPasswordPage {
 }
 
 impl RegisterMatrixAuthPasswordPage {
-    pub fn new(cx: &mut Context<Self>, parent: Entity<RegisterSurface>) -> RegisterMatrixAuthPasswordPage {
+    pub fn new(
+        cx: &mut Context<Self>,
+        parent: Entity<RegisterSurface>,
+    ) -> RegisterMatrixAuthPasswordPage {
         RegisterMatrixAuthPasswordPage {
             register_surface: parent,
             username_field: cx.new(|cx| {
                 let mut text_field = TextField::new("homeserver", cx);
-                text_field
-                    .set_placeholder(tr!("USERNAME", "Username").to_string().as_str());
+                text_field.set_placeholder(tr!("USERNAME", "Username").to_string().as_str());
                 text_field
             }),
             password_field: cx.new(|cx| {
                 let mut text_field = TextField::new("homeserver", cx);
                 text_field.set_mask_mode(MaskMode::password_mask());
-                text_field
-                    .set_placeholder(tr!("PASSWORD").to_string().as_str());
+                text_field.set_placeholder(tr!("PASSWORD").to_string().as_str());
                 text_field
             }),
             confirm_password_field: cx.new(|cx| {
                 let mut text_field = TextField::new("homeserver", cx);
                 text_field.set_mask_mode(MaskMode::password_mask());
-                text_field
-                    .set_placeholder(tr!("PASSWORD_CONFIRM").to_string().as_str());
+                text_field.set_placeholder(tr!("PASSWORD_CONFIRM").to_string().as_str());
                 text_field
             }),
         }
@@ -112,9 +112,7 @@ impl Render for RegisterMatrixAuthPasswordPage {
                             .child(
                                 button("next")
                                     .child(icon_text("go-next".into(), tr!("NEXT", "Next").into()))
-                                    .on_click(cx.listener(|this, _, window, cx| {
-
-                                    })),
+                                    .on_click(cx.listener(|this, _, window, cx| {})),
                             ),
                     ),
             )

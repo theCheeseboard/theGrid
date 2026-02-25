@@ -14,8 +14,8 @@ use gpui::{
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use std::rc::Rc;
-use thegrid::session::room_cache::{CachedRoom, RoomCategory};
-use thegrid::session::session_manager::SessionManager;
+use thegrid_common::session::room_cache::{CachedRoom, RoomCategory};
+use thegrid_common::session::session_manager::SessionManager;
 
 pub struct SpaceSidebarPage {
     room_id: OwnedRoomId,

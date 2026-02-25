@@ -16,8 +16,8 @@ use gpui::{
     App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled,
     WeakEntity, Window, div, px,
 };
-use thegrid::session::session_manager::SessionManager;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct KeyExportPopover {
     visible: bool,
@@ -34,8 +34,7 @@ impl KeyExportPopover {
             password_field: cx.new(|cx| {
                 let mut text_field = TextField::new("password", cx);
                 text_field.set_mask_mode(MaskMode::password_mask());
-                text_field
-                    .set_placeholder(tr!("PASSWORD", "Password").to_string().as_str());
+                text_field.set_placeholder(tr!("PASSWORD", "Password").to_string().as_str());
                 text_field
             }),
             password_confirm_field: cx.new(|cx| {

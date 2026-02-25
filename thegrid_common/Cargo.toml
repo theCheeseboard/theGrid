@@ -1,0 +1,24 @@
+[package]
+name = "thegrid_common"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gpui = { workspace = true }
+gpui_tokio = { workspace = true }
+matrix-sdk = { workspace = true }
+matrix-sdk-ui = { workspace = true }
+async-channel = { workspace = true }
+contemporary = { workspace = true }
+cntp_i18n = { workspace = true }
+image = { workspace = true }
+log = { workspace = true }
+smol = { workspace = true }
+imbl = { workspace = true }
+smallvec = { workspace = true }
+uuid = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[build-dependencies]
+cntp_i18n_gen = { workspace = true }

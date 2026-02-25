@@ -1,0 +1,16 @@
+{
+  "INCOMING_SELF_VERIFICATION_DESCRIPTION": "Verify your other device ({{device_id}}) to share encryption keys. The other device will be able to decrypt your messages.",
+  "INCOMING_VERIFICATION": "Incoming Verification Request",
+  "NOTIFICATION_INVITE_BODY": "{{user}} invited you to join {{room}}",
+  "NOTIFICATION_INVITE_SUMMARY": "New room invitation",
+  "NOTIFICATION_MESSAGE_BODY_AUDIO": "sent a voice message",
+  "NOTIFICATION_MESSAGE_BODY_FILE": "sent {{filename}}",
+  "NOTIFICATION_MESSAGE_BODY_IMAGE": "sent an image",
+  "NOTIFICATION_MESSAGE_BODY_VIDEO": "sent a video",
+  "NOTIFICATION_MESSAGE_SUMMARY": "{{sender}} in {{room}}",
+  "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE": "Disconnected from Homeserver",
+  "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE_DESCRIPTION": "Trying to reconnect...",
+  "TERMINAL_ERROR_UNKNOWN_ERROR": "An unknown error occurred.",
+  "TERMINAL_ERROR_UNKNOWN_TOKEN": "This session was logged out by another device.",
+  "UNKNOWN_DEVICE": "Unknown Device"
+}

@@ -1,10 +1,12 @@
 [workspace]
 resolver = "3"
-members = ["gpui_tokio", "thegrid", "thegrid_text_rendering"]
+members = ["gpui_tokio", "thegrid", "thegrid_common", "thegrid_rtc_livekit", "thegrid_text_rendering"]
 
 [workspace.dependencies]
 gpui = "*"
 gpui_tokio = { path = "gpui_tokio" }
+thegrid_common = { path = "thegrid_common" }
+thegrid_rtc_livekit = { path = "thegrid_rtc_livekit" }
 smol = "2"
 smol-macros = "0.1"
 contemporary = { git = "https://github.com/vicr123/contemporary-rs" }
@@ -31,3 +33,4 @@ directories = "6"
 imbl = "6"
 mime2ext = "0.1"
 anyhow = "1"
+log = "0.4.28"

@@ -15,7 +15,7 @@ use gpui::{
     WeakEntity, Window, div, list, px,
 };
 use matrix_sdk::{OwnedServerName, ServerName};
-use thegrid::session::session_manager::SessionManager;
+use thegrid_common::session::session_manager::SessionManager;
 
 pub struct DirectorySidebarPage {
     list_state: ListState,

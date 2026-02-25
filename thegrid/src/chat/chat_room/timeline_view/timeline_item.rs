@@ -26,7 +26,7 @@ use matrix_sdk_ui::timeline::{
 };
 use std::rc::Rc;
 use std::sync::Arc;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::tokio_helper::TokioHelper;
 
 #[derive(IntoElement)]
 pub struct TimelineItem {

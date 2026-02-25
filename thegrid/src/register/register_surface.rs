@@ -2,6 +2,7 @@ use crate::main_window::{
     MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
 };
 use crate::register::register_homeserver_page::RegisterHomeserverPage;
+use crate::register::register_matrix_auth_password_page::RegisterMatrixAuthPasswordPage;
 use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
 use contemporary::components::pager::slide_horizontal_animation::SlideHorizontalAnimation;
@@ -13,8 +14,7 @@ use gpui::{
 };
 use matrix_sdk::{Client, ClientBuildError, OwnedServerName, ServerName};
 use std::rc::Rc;
-use thegrid::tokio_helper::TokioHelper;
-use crate::register::register_matrix_auth_password_page::RegisterMatrixAuthPasswordPage;
+use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct RegisterSurface {
     current_page: CurrentPage,
@@ -49,7 +49,8 @@ impl RegisterSurface {
                 on_surface_change(event, window, cx)
             })),
             homeserver_page: cx.new(|cx| RegisterHomeserverPage::new(cx, this_entity.clone())),
-            matrix_auth_password_page: cx.new(|cx| RegisterMatrixAuthPasswordPage::new(cx, this_entity.clone())),
+            matrix_auth_password_page: cx
+                .new(|cx| RegisterMatrixAuthPasswordPage::new(cx, this_entity.clone())),
         }
     }
 
@@ -74,19 +75,27 @@ impl RegisterSurface {
         }
     }
 
-    pub fn provide_homeserver(&mut self, homeserver: HomeserverOrServerUrl, cx: &mut Context<Self>) {
+    pub fn provide_homeserver(
+        &mut self,
+        homeserver: HomeserverOrServerUrl,
+        cx: &mut Context<Self>,
+    ) {
         self.current_page = CurrentPage::ConnectingHomeserver;
 
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
             let client = cx
-                .spawn_tokio(async move { match homeserver {
-                    HomeserverOrServerUrl::Homeserver(homeserver) => {
-                        Client::builder().server_name(&homeserver)
+                .spawn_tokio(async move {
+                    match homeserver {
+                        HomeserverOrServerUrl::Homeserver(homeserver) => {
+                            Client::builder().server_name(&homeserver)
+                        }
+                        HomeserverOrServerUrl::ServerUrl(server_url) => {
+                            Client::builder().homeserver_url(&server_url)
+                        }
                     }
-                    HomeserverOrServerUrl::ServerUrl(server_url) => {
-                        Client::builder().homeserver_url(&server_url)
-                    }
-                } .build().await })
+                    .build()
+                    .await
+                })
                 .await;
 
             let _ = this.update(cx, |this, cx| {
@@ -132,7 +141,7 @@ impl Render for RegisterSurface {
                         .child(spinner())
                         .into_any_element(),
                 )
-                    .page(self.matrix_auth_password_page.clone().into_any_element())
+                .page(self.matrix_auth_password_page.clone().into_any_element()),
             ),
         )
     }

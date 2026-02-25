@@ -29,8 +29,8 @@ use gpui::{
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::ruma::events::tag::TagName;
-use thegrid::session::session_manager::SessionManager;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 use timeline_view::author_flyout::{AuthorFlyoutUserActionEvent, UserAction};
 
 pub struct ChatRoom {
@@ -185,6 +185,19 @@ impl Render for ChatRoom {
                                         .unwrap_or_default(),
                                 )
                                 .pt(px(36.))
+                                // .when(
+                                //     room.room_type().is_some_and(|room_type| {
+                                //         room_type.to_string() == "org.matrix.msc3417.call"
+                                //     }),
+                                //     |david| {
+                                //         david.child(
+                                //             button("call-start")
+                                //                 .flat()
+                                //                 .child(icon("call-start".into()))
+                                //                 .on_click(cx.listener(|this, _, _, cx| {})),
+                                //         )
+                                //     },
+                                // )
                                 .child(
                                     button("room-settings-button")
                                         .flat()

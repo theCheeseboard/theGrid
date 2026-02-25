@@ -9,7 +9,7 @@ use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
 use contemporary::window::contemporary_window;
 use gpui::{App, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window};
-use thegrid::session::session_manager::SessionManager;
+use thegrid_common::session::session_manager::SessionManager;
 
 pub struct MainWindow {
     main_surface: Entity<ChatSurface>,

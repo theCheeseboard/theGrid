@@ -1,9 +1,9 @@
+pub mod deactivate_account;
 mod devices_settings;
 mod ignored_users_settings;
 mod notifications_settings;
 mod profile_settings;
 pub mod security_settings;
-pub mod deactivate_account;
 
 use crate::account_settings::devices_settings::DevicesSettings;
 use crate::account_settings::ignored_users_settings::IgnoredUsersSettings;
@@ -25,7 +25,7 @@ use gpui::{
     StatefulInteractiveElement, Styled, Window, div, px, uniform_list,
 };
 use std::rc::Rc;
-use thegrid::session::session_manager::SessionManager;
+use thegrid_common::session::session_manager::SessionManager;
 
 #[derive(Clone)]
 pub enum AccountSettingsPage {

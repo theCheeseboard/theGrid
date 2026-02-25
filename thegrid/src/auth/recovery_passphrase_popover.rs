@@ -16,8 +16,8 @@ use gpui::{
     WeakEntity, Window, div, px,
 };
 use matrix_sdk::encryption::recovery::RecoveryState::Enabled;
-use thegrid::session::session_manager::SessionManager;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct RecoveryPassphrasePopover {
     visible: bool,

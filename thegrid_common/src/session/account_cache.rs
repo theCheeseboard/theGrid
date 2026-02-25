@@ -1,4 +1,3 @@
-use crate::thegrid_error::TheGridError;
 use crate::tokio_helper::TokioHelper;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;

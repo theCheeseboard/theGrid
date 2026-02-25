@@ -17,7 +17,7 @@ use gpui::{
     IntoElement, ParentElement, Render, Styled, Window, div, px,
 };
 use std::rc::Rc;
-use thegrid::session::session_manager::SessionManager;
+use thegrid_common::session::session_manager::SessionManager;
 
 pub struct MainChatSurface {
     sidebar: Entity<Sidebar>,

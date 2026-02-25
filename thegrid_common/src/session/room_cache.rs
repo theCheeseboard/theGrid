@@ -1,5 +1,4 @@
 use crate::tokio_helper::TokioHelper;
-use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{App, AppContext, AsyncApp, Context, Entity, WeakEntity};
 use imbl::Vector;

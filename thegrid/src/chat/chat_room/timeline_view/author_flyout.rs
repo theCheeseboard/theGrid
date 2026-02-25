@@ -23,8 +23,8 @@ use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::events::room::power_levels::UserPowerLevel;
 use matrix_sdk_ui::timeline::RoomExt;
 use std::rc::Rc;
-use thegrid::session::session_manager::SessionManager;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 use thegrid_text_rendering::Text;
 
 pub type AuthorFlyoutCloseListener =

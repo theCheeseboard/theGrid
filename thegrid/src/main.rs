@@ -3,9 +3,9 @@
 
 mod actions;
 pub mod auth;
-pub mod register;
 mod chat;
 mod main_window;
+pub mod register;
 mod utilities;
 
 mod account_settings;
@@ -25,7 +25,7 @@ use gpui::{App, Bounds, Menu, MenuItem, WindowBounds, WindowOptions, px, size};
 use smol_macros::main;
 use std::any::TypeId;
 use std::rc::Rc;
-use thegrid::session::session_manager::setup_session_manager;
+use thegrid_common::session::session_manager::setup_session_manager;
 
 fn mane() {
     application_icon!("../dist/baseicon.svg");
@@ -92,13 +92,16 @@ fn mane() {
                                 },
                                 Menu {
                                     name: tr!("MENU_ROOMS", "Rooms").into(),
-                                    items: vec![MenuItem::action(
-                                        tr!("ROOMS_CREATE", "Create Room..."),
-                                        CreateRoom,
-                                    ), MenuItem::action(
-                                        tr!("ROOMS_DIRECT_JOIN", "Join a room..."),
-                                        CreateRoom,
-                                    )],
+                                    items: vec![
+                                        MenuItem::action(
+                                            tr!("ROOMS_CREATE", "Create Room..."),
+                                            CreateRoom,
+                                        ),
+                                        MenuItem::action(
+                                            tr!("ROOMS_DIRECT_JOIN", "Join a room..."),
+                                            CreateRoom,
+                                        ),
+                                    ],
                                 },
                             ],
                             on_about: Rc::new(move |cx| {

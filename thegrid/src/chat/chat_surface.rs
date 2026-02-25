@@ -19,8 +19,8 @@ use gpui::{
     MenuItem, ParentElement, Render, Styled, Window, div, px,
 };
 use std::fs::remove_dir_all;
-use thegrid::session::error_handling::ClientError;
-use thegrid::session::session_manager::SessionManager;
+use thegrid_common::session::error_handling::ClientError;
+use thegrid_common::session::session_manager::SessionManager;
 
 pub type ChangeRoomHandler = dyn Fn(&ChangeRoomEvent, &mut Window, &mut App) + 'static;
 

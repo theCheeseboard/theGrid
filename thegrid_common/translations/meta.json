@@ -1,0 +1,86 @@
+{
+  "INCOMING_SELF_VERIFICATION_DESCRIPTION": {
+    "context": "verification_requests_cache.rs",
+    "definedIn": "src/session/verification_requests_cache.rs:237",
+    "plural": false,
+    "description": null
+  },
+  "INCOMING_VERIFICATION": {
+    "context": "verification_requests_cache.rs",
+    "definedIn": "src/session/verification_requests_cache.rs:229",
+    "plural": false,
+    "description": null
+  },
+  "NOTIFICATION_INVITE_BODY": {
+    "context": "notifications.rs",
+    "definedIn": "src/session/notifications.rs:123",
+    "plural": false,
+    "description": null
+  },
+  "NOTIFICATION_INVITE_SUMMARY": {
+    "context": "notifications.rs",
+    "definedIn": "src/session/notifications.rs:117",
+    "plural": false,
+    "description": null
+  },
+  "NOTIFICATION_MESSAGE_BODY_AUDIO": {
+    "context": "notifications.rs",
+    "definedIn": "src/session/notifications.rs:86",
+    "plural": false,
+    "description": null
+  },
+  "NOTIFICATION_MESSAGE_BODY_FILE": {
+    "context": "notifications.rs",
+    "definedIn": "src/session/notifications.rs:73",
+    "plural": false,
+    "description": null
+  },
+  "NOTIFICATION_MESSAGE_BODY_IMAGE": {
+    "context": "notifications.rs",
+    "definedIn": "src/session/notifications.rs:62",
+    "plural": false,
+    "description": null
+  },
+  "NOTIFICATION_MESSAGE_BODY_VIDEO": {
+    "context": "notifications.rs",
+    "definedIn": "src/session/notifications.rs:96",
+    "plural": false,
+    "description": null
+  },
+  "NOTIFICATION_MESSAGE_SUMMARY": {
+    "context": "notifications.rs",
+    "definedIn": "src/session/notifications.rs:44",
+    "plural": false,
+    "description": null
+  },
+  "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE": {
+    "context": "error_handling.rs",
+    "definedIn": "src/session/error_handling.rs:83",
+    "plural": false,
+    "description": null
+  },
+  "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE_DESCRIPTION": {
+    "context": "error_handling.rs",
+    "definedIn": "src/session/error_handling.rs:94",
+    "plural": false,
+    "description": null
+  },
+  "TERMINAL_ERROR_UNKNOWN_ERROR": {
+    "context": "error_handling.rs",
+    "definedIn": "src/session/error_handling.rs:65",
+    "plural": false,
+    "description": null
+  },
+  "TERMINAL_ERROR_UNKNOWN_TOKEN": {
+    "context": "error_handling.rs",
+    "definedIn": "src/session/error_handling.rs:61",
+    "plural": false,
+    "description": null
+  },
+  "UNKNOWN_DEVICE": {
+    "context": "verification_requests_cache.rs",
+    "definedIn": "src/session/verification_requests_cache.rs:246",
+    "plural": false,
+    "description": null
+  }
+}

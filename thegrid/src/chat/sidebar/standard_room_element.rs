@@ -13,9 +13,9 @@ use matrix_sdk::RoomMemberships;
 use matrix_sdk::ruma::OwnedRoomId;
 use std::collections::HashMap;
 use std::rc::Rc;
-use thegrid::session::room_cache::CachedRoom;
-use thegrid::session::session_manager::SessionManager;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::room_cache::CachedRoom;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 use url::Url;
 
 pub struct InviteEvent {

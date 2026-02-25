@@ -23,9 +23,9 @@ use matrix_sdk::encryption::recovery::RecoveryState;
 use matrix_sdk::ruma::OwnedDeviceId;
 use matrix_sdk::ruma::api::client::uiaa::AuthData;
 use std::rc::Rc;
-use thegrid::session::devices_cache::CachedDevice;
-use thegrid::session::session_manager::SessionManager;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::devices_cache::CachedDevice;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 use tracing::error;
 
 pub struct DevicesSettings {

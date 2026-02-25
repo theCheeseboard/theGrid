@@ -1,21 +1,17 @@
 use crate::tokio_helper::TokioHelper;
-use cntp_i18n::tr;
-use contemporary::jobs::standard_job::StandardJob;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{App, AppContext, AsyncApp, Context, Entity, RenderImage, WeakEntity};
 use image::{Frame, ImageReader, Pixel, RgbaImage};
-use log::warn;
+use matrix_sdk::Client;
 use matrix_sdk::media::{MediaFileHandle, MediaFormat, MediaRequestParameters, UniqueKey};
 use matrix_sdk::ruma::OwnedMxcUri;
 use matrix_sdk::ruma::events::room::MediaSource;
-use matrix_sdk::{Client, Error};
 use smallvec::smallvec;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::hash::Hash;
-use std::rc::Rc;
 use std::sync::{Arc, Mutex, Weak};
 
 pub struct MediaCache {

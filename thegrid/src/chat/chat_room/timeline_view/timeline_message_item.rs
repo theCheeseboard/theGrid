@@ -16,8 +16,8 @@ use matrix_sdk_ui::timeline::{
     EmbeddedEvent, MsgLikeContent, MsgLikeKind, TimelineDetails, TimelineItemContent,
 };
 use std::fs::copy;
-use thegrid::session::media_cache::{MediaCacheEntry, MediaFile, MediaState};
-use thegrid::session::session_manager::SessionManager;
+use thegrid_common::session::media_cache::{MediaCacheEntry, MediaFile, MediaState};
+use thegrid_common::session::session_manager::SessionManager;
 use thegrid_text_rendering::TextView;
 
 #[derive(IntoElement)]
@@ -48,13 +48,15 @@ impl RenderOnce for TimelineMessageItem {
                                 TimelineDetails::Ready(reply) => match reply.content {
                                     TimelineItemContent::MsgLike(msg_like) => match msg_like.kind {
                                         MsgLikeKind::Message(message) => Some(
-                                            div().flex().child(msgtype_to_message_line(
-                                                message.msgtype(),
-                                                true,
-                                                window,
-                                                cx,
-                                            ))
-                                            .into_any_element(),
+                                            div()
+                                                .flex()
+                                                .child(msgtype_to_message_line(
+                                                    message.msgtype(),
+                                                    true,
+                                                    window,
+                                                    cx,
+                                                ))
+                                                .into_any_element(),
                                         ),
                                         _ => None,
                                     },

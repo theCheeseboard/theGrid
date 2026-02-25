@@ -17,9 +17,9 @@ use gpui::{
     div, list, px,
 };
 use matrix_sdk::room::RoomMember;
-use thegrid::session::room_cache::CachedRoom;
-use thegrid::session::session_manager::SessionManager;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::room_cache::CachedRoom;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 use tracing::error;
 
 pub mod create_room_popover;

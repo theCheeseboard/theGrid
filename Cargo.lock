@@ -8175,12 +8175,45 @@ dependencies = [
  "smol",
  "smol-macros",
  "sysinfo 0.37.2",
+ "thegrid_common",
+ "thegrid_rtc_livekit",
  "thegrid_text_rendering",
  "tokio",
  "tracing",
  "unicode-segmentation",
  "url",
  "uuid",
+]
+
+[[package]]
+name = "thegrid_common"
+version = "0.1.0"
+dependencies = [
+ "async-channel 2.5.0",
+ "cntp_i18n 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cntp_i18n_gen 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "contemporary",
+ "gpui",
+ "gpui_tokio",
+ "image",
+ "imbl",
+ "log",
+ "matrix-sdk",
+ "matrix-sdk-ui",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "smol",
+ "uuid",
+]
+
+[[package]]
+name = "thegrid_rtc_livekit"
+version = "0.1.0"
+dependencies = [
+ "gpui",
+ "matrix-sdk",
+ "thegrid_common",
 ]
 
 [[package]]

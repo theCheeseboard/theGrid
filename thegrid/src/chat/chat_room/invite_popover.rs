@@ -20,8 +20,8 @@ use gpui::{
     Styled, WeakEntity, Window, div, px,
 };
 use matrix_sdk::ruma::{OwnedRoomId, OwnedUserId, UserId};
-use thegrid::session::session_manager::SessionManager;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct InvitePopover {
     room_id: Option<OwnedRoomId>,

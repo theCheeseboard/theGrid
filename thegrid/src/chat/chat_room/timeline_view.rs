@@ -23,7 +23,7 @@ use image::open;
 use log::info;
 use matrix_sdk::ruma::api::client::receipt::create_receipt::v3::ReceiptType;
 use std::rc::Rc;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct TimelineView {
     open_room: Entity<OpenRoom>,

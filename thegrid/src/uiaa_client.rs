@@ -15,8 +15,8 @@ use matrix_sdk::ruma::api::client::uiaa::{
 };
 use std::borrow::Cow;
 use std::rc::Rc;
-use thegrid::session::session_manager::SessionManager;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 use url::Url;
 
 use matrix_sdk::ruma::api::client::uiaa::get_uiaa_fallback_page::v3::Request as UiaaFallbackRequest;

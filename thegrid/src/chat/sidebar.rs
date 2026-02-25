@@ -8,6 +8,7 @@ use crate::account_settings::security_settings::recovery_key_reset_popover::Reco
 use crate::auth::recovery_passphrase_popover::RecoveryPassphrasePopover;
 use crate::auth::verification_popover::VerificationPopover;
 use crate::chat::displayed_room::DisplayedRoom;
+use crate::chat::sidebar::directory_sidebar_page::DirectorySidebarPage;
 use crate::chat::sidebar::root_sidebar_page::RootSidebarPage;
 use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
 use crate::main_window::{MainWindowSurface, SurfaceChangeEvent, SurfaceChangeHandler};
@@ -32,12 +33,11 @@ use matrix_sdk::encryption::recovery::RecoveryState;
 use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use matrix_sdk::ruma::room_id;
 use std::rc::Rc;
-use thegrid::session::error_handling::{ClientError, RecoverableClientError};
-use thegrid::session::room_cache::RoomCategory;
-use thegrid::session::session_manager::SessionManager;
-use thegrid::session::verification_requests_cache::VerificationRequestDetails;
-use thegrid::tokio_helper::TokioHelper;
-use crate::chat::sidebar::directory_sidebar_page::DirectorySidebarPage;
+use thegrid_common::session::error_handling::{ClientError, RecoverableClientError};
+use thegrid_common::session::room_cache::RoomCategory;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::session::verification_requests_cache::VerificationRequestDetails;
+use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct Sidebar {
     displayed_room: Entity<DisplayedRoom>,

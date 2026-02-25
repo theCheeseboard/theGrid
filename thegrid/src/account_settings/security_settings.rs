@@ -24,7 +24,7 @@ use gpui::{
 };
 use matrix_sdk::encryption::recovery::RecoveryState;
 use std::rc::Rc;
-use thegrid::session::session_manager::SessionManager;
+use thegrid_common::session::session_manager::SessionManager;
 
 pub struct SecuritySettings {
     recovery_key_reset_popover: Entity<RecoveryKeyResetPopover>,

@@ -22,8 +22,8 @@ use matrix_sdk::ruma::matrix_uri::MatrixId;
 use matrix_sdk::ruma::serde::Raw;
 use matrix_sdk::ruma::{MatrixToUri, OwnedRoomOrAliasId};
 use matrix_sdk::{Error, Room};
-use thegrid::session::session_manager::SessionManager;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct DirectJoinRoomPopover {
     visible: bool,
@@ -76,9 +76,10 @@ impl DirectJoinRoomPopover {
                     MatrixId::Room(room) => {
                         Some((OwnedRoomOrAliasId::from(room.clone()), uri.via().to_vec()))
                     }
-                    MatrixId::RoomAlias(room_alias) => {
-                        Some((OwnedRoomOrAliasId::from(room_alias.clone()), uri.via().to_vec()))
-                    }
+                    MatrixId::RoomAlias(room_alias) => Some((
+                        OwnedRoomOrAliasId::from(room_alias.clone()),
+                        uri.via().to_vec(),
+                    )),
                     _ => None,
                 },
                 Err(_) => None,

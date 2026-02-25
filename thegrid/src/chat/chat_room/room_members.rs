@@ -24,7 +24,7 @@ use matrix_sdk::room::{RoomMember, RoomMemberRole};
 use matrix_sdk::ruma::events::room::member::MembershipState;
 use std::cmp::Reverse;
 use std::rc::Rc;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct RoomMembers {
     open_room: Entity<OpenRoom>,

@@ -163,7 +163,7 @@
   },
   "ATTACH_PROMPT": {
     "context": "open_room.rs",
-    "definedIn": "src/chat/chat_room/open_room.rs:209",
+    "definedIn": "src/chat/chat_room/open_room.rs:201",
     "plural": false,
     "description": null
   },
@@ -475,7 +475,7 @@
   },
   "DIRECT_JOIN_ROOM_DESCRIPTION": {
     "context": "direct_join_room_popover.rs",
-    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:145",
+    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:146",
     "plural": false,
     "description": null
   },
@@ -535,19 +535,19 @@
   },
   "FILE_OPEN": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:181",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:183",
     "plural": false,
     "description": null
   },
   "FILE_OPEN_MENU_HEADER": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:175",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:177",
     "plural": false,
     "description": null
   },
   "FILE_SAVE_AS": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:196",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:198",
     "plural": false,
     "description": null
   },
@@ -739,7 +739,7 @@
   },
   "JOIN_ROOM": {
     "context": "direct_join_room_popover.rs",
-    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:154",
+    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:155",
     "plural": false,
     "description": null
   },
@@ -751,19 +751,19 @@
   },
   "KEY_EXPORT_DESCRIPTION": {
     "context": "key_export_popover.rs",
-    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:156",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:155",
     "plural": false,
     "description": null
   },
   "KEY_EXPORT_OPTIONS": {
     "context": "key_export_popover.rs",
-    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:147",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:146",
     "plural": false,
     "description": null
   },
   "KEY_EXPORT_TITLE": {
     "context": "key_export_popover.rs",
-    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:133",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:132",
     "plural": false,
     "description": null
   },
@@ -1027,7 +1027,7 @@
   },
   "NEW_DISPLAY_NAME_PLACEHOLDER": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:41",
+    "definedIn": "src/account_settings/profile_settings.rs:43",
     "plural": false,
     "description": null
   },
@@ -1052,48 +1052,6 @@
   "NOTIFICATIONS_SYSTEM": {
     "context": "notifications_settings.rs",
     "definedIn": "src/account_settings/notifications_settings.rs:48",
-    "plural": false,
-    "description": null
-  },
-  "NOTIFICATION_INVITE_BODY": {
-    "context": "notifications.rs",
-    "definedIn": "src/session/notifications.rs:123",
-    "plural": false,
-    "description": null
-  },
-  "NOTIFICATION_INVITE_SUMMARY": {
-    "context": "notifications.rs",
-    "definedIn": "src/session/notifications.rs:117",
-    "plural": false,
-    "description": null
-  },
-  "NOTIFICATION_MESSAGE_BODY_AUDIO": {
-    "context": "notifications.rs",
-    "definedIn": "src/session/notifications.rs:86",
-    "plural": false,
-    "description": null
-  },
-  "NOTIFICATION_MESSAGE_BODY_FILE": {
-    "context": "notifications.rs",
-    "definedIn": "src/session/notifications.rs:73",
-    "plural": false,
-    "description": null
-  },
-  "NOTIFICATION_MESSAGE_BODY_IMAGE": {
-    "context": "notifications.rs",
-    "definedIn": "src/session/notifications.rs:62",
-    "plural": false,
-    "description": null
-  },
-  "NOTIFICATION_MESSAGE_BODY_VIDEO": {
-    "context": "notifications.rs",
-    "definedIn": "src/session/notifications.rs:96",
-    "plural": false,
-    "description": null
-  },
-  "NOTIFICATION_MESSAGE_SUMMARY": {
-    "context": "notifications.rs",
-    "definedIn": "src/session/notifications.rs:44",
     "plural": false,
     "description": null
   },
@@ -1129,13 +1087,13 @@
   },
   "PASSWORD": {
     "context": "key_export_popover.rs",
-    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:38",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:37",
     "plural": false,
     "description": null
   },
   "PASSWORD_CONFIRM": {
     "context": "key_export_popover.rs",
-    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:45",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:44",
     "plural": false,
     "description": null
   },
@@ -1237,37 +1195,37 @@
   },
   "PROFILE_ACCOUNT": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:156",
+    "definedIn": "src/account_settings/profile_settings.rs:158",
     "plural": false,
     "description": null
   },
   "PROFILE_CHANGE_DISPLAY_NAME": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:122",
+    "definedIn": "src/account_settings/profile_settings.rs:124",
     "plural": false,
     "description": null
   },
   "PROFILE_CHANGE_DISPLAY_NAME_DESCRIPTION": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:198",
+    "definedIn": "src/account_settings/profile_settings.rs:200",
     "plural": false,
     "description": null
   },
   "PROFILE_CHANGE_PROFILE_PICTURE": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:142",
+    "definedIn": "src/account_settings/profile_settings.rs:144",
     "plural": false,
     "description": null
   },
   "PROFILE_DEACTIVATE": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:167",
+    "definedIn": "src/account_settings/profile_settings.rs:169",
     "plural": false,
     "description": null
   },
   "PROFILE_PROFILE": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:110",
+    "definedIn": "src/account_settings/profile_settings.rs:112",
     "plural": false,
     "description": null
   },
@@ -1286,18 +1244,6 @@
   "PROFILE_UPDATE_DISPLAY_NAME_AVATAR": {
     "context": "profile_change_item.rs",
     "definedIn": "src/chat/chat_room/timeline_view/profile_change_item.rs:25",
-    "plural": false,
-    "description": null
-  },
-  "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE": {
-    "context": "error_handling.rs",
-    "definedIn": "src/session/error_handling.rs:83",
-    "plural": false,
-    "description": null
-  },
-  "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE_DESCRIPTION": {
-    "context": "error_handling.rs",
-    "definedIn": "src/session/error_handling.rs:94",
     "plural": false,
     "description": null
   },
@@ -1363,7 +1309,7 @@
   },
   "REPLY_UNAVAILABLE": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:67",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:69",
     "plural": false,
     "description": null
   },
@@ -1375,13 +1321,13 @@
   },
   "ROOMS_CREATE": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:96",
+    "definedIn": "src/main.rs:97",
     "plural": false,
     "description": null
   },
   "ROOMS_DIRECT_JOIN": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:99",
+    "definedIn": "src/main.rs:101",
     "plural": false,
     "description": null
   },
@@ -1777,7 +1723,7 @@
   },
   "SECURITY_KEY_EXPORT_WARNING": {
     "context": "key_export_popover.rs",
-    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:168",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:167",
     "plural": false,
     "description": null
   },
@@ -1795,13 +1741,13 @@
   },
   "SERVER_NOTICE_ROOM_CONTENT": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:218",
+    "definedIn": "src/chat/chat_room.rs:231",
     "plural": false,
     "description": null
   },
   "SERVER_NOTICE_ROOM_TITLE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:216",
+    "definedIn": "src/chat/chat_room.rs:229",
     "plural": false,
     "description": null
   },
@@ -1844,18 +1790,6 @@
   "SORRY": {
     "context": "auth_surface.rs",
     "definedIn": "src/auth/auth_surface.rs:573",
-    "plural": false,
-    "description": null
-  },
-  "TERMINAL_ERROR_UNKNOWN_ERROR": {
-    "context": "error_handling.rs",
-    "definedIn": "src/session/error_handling.rs:65",
-    "plural": false,
-    "description": null
-  },
-  "TERMINAL_ERROR_UNKNOWN_TOKEN": {
-    "context": "error_handling.rs",
-    "definedIn": "src/session/error_handling.rs:61",
     "plural": false,
     "description": null
   },
@@ -1975,7 +1909,7 @@
   },
   "USERNAME": {
     "context": "register_matrix_auth_password_page.rs",
-    "definedIn": "src/register/register_matrix_auth_password_page.rs:42",
+    "definedIn": "src/register/register_matrix_auth_password_page.rs:44",
     "plural": false,
     "description": null
   },

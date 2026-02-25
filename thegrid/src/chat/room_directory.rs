@@ -28,8 +28,8 @@ use matrix_sdk::ruma::{OwnedRoomId, OwnedRoomOrAliasId};
 use matrix_sdk::stream::StreamExt;
 use matrix_sdk::{Error, OwnedServerName, Room, RoomState};
 use std::collections::HashSet;
-use thegrid::session::session_manager::SessionManager;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct RoomDirectory {
     server_name: OwnedServerName,

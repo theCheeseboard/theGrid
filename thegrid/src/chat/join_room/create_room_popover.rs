@@ -20,8 +20,8 @@ use matrix_sdk::ruma::api::client::room::Visibility;
 use matrix_sdk::ruma::api::client::room::create_room::v3::{CreationContent, Request};
 use matrix_sdk::ruma::serde::Raw;
 use matrix_sdk::{Error, Room};
-use thegrid::session::session_manager::SessionManager;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct CreateRoomPopover {
     visible: bool,

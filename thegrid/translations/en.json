@@ -175,13 +175,6 @@
   "NEW_USERNAME_DESCRIPTION": "Choose a username for your account.",
   "NEXT": "Next",
   "NOTIFICATIONS_SYSTEM": "System Notifications",
-  "NOTIFICATION_INVITE_BODY": "{{user}} invited you to join {{room}}",
-  "NOTIFICATION_INVITE_SUMMARY": "New room invitation",
-  "NOTIFICATION_MESSAGE_BODY_AUDIO": "sent a voice message",
-  "NOTIFICATION_MESSAGE_BODY_FILE": "sent {{filename}}",
-  "NOTIFICATION_MESSAGE_BODY_IMAGE": "sent an image",
-  "NOTIFICATION_MESSAGE_BODY_VIDEO": "sent a video",
-  "NOTIFICATION_MESSAGE_SUMMARY": "{{sender}} in {{room}}",
   "NO_DISPLAYED_ROOM_MESSAGE": "Choose a room to start chatting!",
   "NO_DISPLAYED_ROOM_TITLE": "Welcome to {{application_name}}",
   "OPEN_ACCOUNT_HOMESERVER_TITLE": "Welcome to Matrix!",
@@ -214,8 +207,6 @@
   "PROFILE_UPDATE_AVATAR": "{{user}} updated their profile picture",
   "PROFILE_UPDATE_DISPLAY_NAME": "{{user}} updated their display name from {{old_name}} to {{new_name}}",
   "PROFILE_UPDATE_DISPLAY_NAME_AVATAR": "{{user}} updated their profile picture and their display name to {{new_name}}",
-  "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE": "Disconnected from Homeserver",
-  "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE_DESCRIPTION": "Trying to reconnect...",
   "RECOVERY_KEY_WHAT_DESCRIPTION": "The recovery passphrase and key was set up when you first set up your account. If you don't know your recovery passphrase or key, and you don't have any verified devices to recover from, you'll have to reset your account's encryption details.",
   "RECOVERY_KEY_WHAT_TITLE": "Recovery what?",
   "RECOVERY_PASSPHRASE": "Recovery Passphrase (optional)",
@@ -313,8 +304,6 @@
     "other": "{{count}} invites"
   },
   "SORRY": "Sorry",
-  "TERMINAL_ERROR_UNKNOWN_ERROR": "An unknown error occurred.",
-  "TERMINAL_ERROR_UNKNOWN_TOKEN": "This session was logged out by another device.",
   "TYPING_NOTIFICATION": {
     "one": "{{count}} user is typing...",
     "other": "{{count}} users are typing..."

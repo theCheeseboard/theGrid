@@ -225,19 +225,26 @@ impl VerificationRequestsCache {
                                             // Trigger a notification
                                             let _ = Notification::new()
                                                 .summary(
-                                                    tr!("INCOMING_VERIFICATION")
-                                                        .to_string()
-                                                        .as_str(),
+                                                    tr!(
+                                                        "INCOMING_VERIFICATION",
+                                                        "Incoming Verification Request"
+                                                    )
+                                                    .to_string()
+                                                    .as_str(),
                                                 )
                                                 .body(
                                                     tr!(
                                                         "INCOMING_SELF_VERIFICATION_DESCRIPTION",
+                                                        "Verify your other device ({{device_id}}) \
+                                                        to share encryption keys. The other device \
+                                                        will be able to decrypt your messages.",
                                                         device_id = verification_request
                                                             .device_id
                                                             .clone()
                                                             .map(|id| id.to_string())
                                                             .unwrap_or_else(|| tr!(
-                                                                "UNKNOWN_DEVICE"
+                                                                "UNKNOWN_DEVICE",
+                                                                "Unknown Device"
                                                             )
                                                             .to_string())
                                                     )

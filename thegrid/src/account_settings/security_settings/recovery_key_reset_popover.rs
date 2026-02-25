@@ -20,8 +20,8 @@ use gpui::{
 use matrix_sdk::encryption::RoomKeyImportError;
 use matrix_sdk::encryption::recovery::{RecoveryError, RecoveryState};
 use std::path::PathBuf;
-use thegrid::session::session_manager::SessionManager;
-use thegrid::tokio_helper::TokioHelper;
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 use tracing::error;
 
 pub struct RecoveryKeyResetPopover {
