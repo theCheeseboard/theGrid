@@ -38,6 +38,8 @@ use thegrid_common::session::room_cache::RoomCategory;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::session::verification_requests_cache::VerificationRequestDetails;
 use thegrid_common::tokio_helper::TokioHelper;
+use thegrid_rtc_livekit::active_call_sidebar_alert::active_call_sidebar_alert;
+use thegrid_rtc_livekit::call_manager::LivekitCallManager;
 
 pub struct Sidebar {
     displayed_room: Entity<DisplayedRoom>,
@@ -61,6 +63,7 @@ enum SidebarAlert {
     VerifySession(bool),
     UnverifiedDevices(usize, Option<Rc<Box<SurfaceChangeHandler>>>),
     ClientError(RecoverableClientError),
+    ActiveCall,
 }
 
 impl Sidebar {
@@ -103,6 +106,11 @@ impl Sidebar {
             return SidebarAlert::IncomingVerificationRequest(
                 shown_verification_requests[0].clone(),
             );
+        }
+
+        let call_manager = cx.global::<LivekitCallManager>();
+        if call_manager.current_call().is_some() {
+            return SidebarAlert::ActiveCall;
         }
 
         let client = session_manager.client().unwrap().read(cx);
@@ -534,6 +542,7 @@ impl RenderOnce for SidebarAlert {
                         .title(recoverable_client_error.title())
                         .child(recoverable_client_error.description()),
                 ),
+                SidebarAlert::ActiveCall => div().p(px(4.)).child(active_call_sidebar_alert()),
             })
             .child(verification_popover_clone.clone().into_any_element())
             .child(recovery_passphrase_popover_clone.clone().into_any_element())

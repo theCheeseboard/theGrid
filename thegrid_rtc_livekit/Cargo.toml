@@ -7,3 +7,8 @@ edition = "2024"
 gpui = { workspace = true }
 matrix-sdk = { workspace = true }
 thegrid_common = { workspace = true }
+contemporary = { workspace = true }
+cntp_i18n = { workspace = true }
+
+[build-dependencies]
+cntp_i18n_gen = { workspace = true }

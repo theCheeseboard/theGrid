@@ -26,6 +26,9 @@ use smol_macros::main;
 use std::any::TypeId;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::setup_session_manager;
+use thegrid_common::setup_thegrid_common;
+use thegrid_rtc_livekit::call_manager::setup_call_manager;
+use thegrid_rtc_livekit::setup_thegrid_rtc_livekit;
 
 fn mane() {
     application_icon!("../dist/baseicon.svg");
@@ -34,9 +37,12 @@ fn mane() {
         gpui_tokio::init(cx);
         thegrid_text_rendering::init(cx);
         I18N_MANAGER.write().unwrap().load_source(tr_load!());
+        setup_thegrid_common();
+        setup_thegrid_rtc_livekit();
         let bounds = Bounds::centered(None, size(px(800.0), px(600.0)), cx);
 
         setup_session_manager(cx);
+        setup_call_manager(cx);
         bind_chat_input_keys(cx);
 
         let default_window_options = contemporary_window_options(cx, "theGrid".into());

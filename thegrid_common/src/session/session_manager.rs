@@ -16,6 +16,7 @@ use log::{error, info};
 use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::config::SyncSettings;
 use matrix_sdk::ruma::OwnedUserId;
+use matrix_sdk::ruma::api::client::discovery::discover_homeserver::RtcFocusInfo;
 use matrix_sdk::ruma::api::error::FromHttpResponseError;
 use matrix_sdk::ruma::events::key::verification::request::ToDeviceKeyVerificationRequestEvent;
 use matrix_sdk::store::RoomLoadSettings;
@@ -223,6 +224,22 @@ impl SessionManager {
         })
         .detach();
 
+        let client_clone = client.clone();
+        cx.spawn(async move |cx: &mut AsyncApp| {
+            let rtc_foci = cx
+                .spawn_tokio(async move {
+                    let _ = client_clone.reset_well_known().await;
+                    client_clone.rtc_foci().await
+                })
+                .await;
+
+            let _ = cx.update_global::<Self, ()>(|session_manager, _| {
+                session_manager.current_caches.as_mut().unwrap().rtc_foci =
+                    rtc_foci.unwrap_or_default();
+            });
+        })
+        .detach();
+
         cx.update_global::<Self, ()>(|session_manager, cx| {
             session_manager.current_caches = Some(Caches::new(&client, cx));
             session_manager.current_session_client = Some(cx.new(|_| client));
@@ -272,6 +289,10 @@ impl SessionManager {
 
     pub fn rooms(&self) -> Entity<RoomCache> {
         self.current_caches.as_ref().unwrap().room_cache.clone()
+    }
+
+    pub fn rtc_foci(&self) -> &Vec<RtcFocusInfo> {
+        &self.current_caches.as_ref().unwrap().rtc_foci
     }
 }
 

@@ -24,13 +24,15 @@ use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AnimationExt, App, AppContext, Context, Entity, ExternalPaths, InteractiveElement, IntoElement,
-    ParentElement, Render, StatefulInteractiveElement, Styled, Window, div, px,
+    AnimationExt, App, AppContext, BorrowAppContext, Context, Entity, ExternalPaths,
+    InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled,
+    Window, div, px,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::ruma::events::tag::TagName;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
+use thegrid_rtc_livekit::call_manager::LivekitCallManager;
 use timeline_view::author_flyout::{AuthorFlyoutUserActionEvent, UserAction};
 
 pub struct ChatRoom {
@@ -156,6 +158,7 @@ impl Render for ChatRoom {
         let pending_attachments = &open_room.pending_attachments;
 
         let room_id = room.room_id().to_owned();
+        let room_id_2 = room.room_id().to_owned();
         let chat_bar = open_room.chat_bar.clone();
 
         div()
@@ -185,19 +188,26 @@ impl Render for ChatRoom {
                                         .unwrap_or_default(),
                                 )
                                 .pt(px(36.))
-                                // .when(
-                                //     room.room_type().is_some_and(|room_type| {
-                                //         room_type.to_string() == "org.matrix.msc3417.call"
-                                //     }),
-                                //     |david| {
-                                //         david.child(
-                                //             button("call-start")
-                                //                 .flat()
-                                //                 .child(icon("call-start".into()))
-                                //                 .on_click(cx.listener(|this, _, _, cx| {})),
-                                //         )
-                                //     },
-                                // )
+                                .when(
+                                    room.room_type().is_some_and(|room_type| {
+                                        room_type.to_string() == "org.matrix.msc3417.call"
+                                    }),
+                                    |david| {
+                                        david.child(
+                                            button("call-start")
+                                                .flat()
+                                                .child(icon("call-start".into()))
+                                                .on_click(cx.listener(move |this, _, _, cx| {
+                                                    let room_id = room_id_2.clone();
+                                                    cx.update_global::<LivekitCallManager, _>(
+                                                        |call_manager, cx| {
+                                                            call_manager.start_call(room_id, cx);
+                                                        },
+                                                    )
+                                                })),
+                                        )
+                                    },
+                                )
                                 .child(
                                     button("room-settings-button")
                                         .flat()

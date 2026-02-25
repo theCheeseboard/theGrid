@@ -1,18 +1,9 @@
+use cntp_i18n::{I18N_MANAGER, tr_load};
+
 pub mod session;
 pub mod thegrid_error;
 pub mod tokio_helper;
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+pub fn setup_thegrid_common() {
+    I18N_MANAGER.write().unwrap().load_source(tr_load!());
 }
