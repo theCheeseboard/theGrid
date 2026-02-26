@@ -1,4 +1,4 @@
-use crate::{CallState, LivekitCall};
+use crate::{sfx, CallState, LivekitCall};
 use gpui::{App, AppContext, BorrowAppContext, Entity, Global};
 use matrix_sdk::ruma::OwnedRoomId;
 
@@ -43,6 +43,15 @@ impl Global for LivekitCallManager {}
 
 pub fn setup_call_manager(cx: &mut gpui::App) {
     let mute = cx.new(|_| false);
+    
+    cx.observe(&mute, |mute, cx| {
+        if *mute.read(cx) {
+            sfx::play_sound_effect(include_bytes!("../assets/mute-on.ogg"));
+        } else {
+            sfx::play_sound_effect(include_bytes!("../assets/mute-off.ogg"));
+        }
+    }).detach();
+    
     cx.set_global(LivekitCallManager {
         current_call: None,
         mute,

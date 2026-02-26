@@ -24,11 +24,10 @@ impl RenderOnce for ActiveCallSidebarAlert {
         let call_manager = cx.global::<LivekitCallManager>();
         let mute = call_manager.mute();
 
-        let call_entity = call_manager.current_call().unwrap().clone();
-        let call_members = call_entity.update(cx, |call, cx| call.call_members(cx));
+        let call = call_manager.current_call().unwrap().clone().read(cx);
+        let call_members = call.call_members().read(cx);
 
         let theme = cx.theme();
-        let call = call_entity.read(cx);
 
         let session_manager = cx.global::<SessionManager>();
         let room = session_manager

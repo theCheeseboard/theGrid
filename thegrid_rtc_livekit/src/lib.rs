@@ -2,6 +2,7 @@ use async_ringbuf::traits::{AsyncProducer, Consumer, Producer, Split};
 use std::collections::{HashMap, HashSet};
 pub mod active_call_sidebar_alert;
 pub mod call_manager;
+pub(crate) mod sfx;
 
 use crate::call_manager::LivekitCallManager;
 use async_ringbuf::AsyncHeapRb;
@@ -11,7 +12,7 @@ use cpal::Host;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use gpui::http_client::anyhow;
 use gpui::private::{anyhow, serde_json};
-use gpui::{AppContext, AsyncApp, BorrowAppContext, Context, WeakEntity};
+use gpui::{AppContext, AsyncApp, BorrowAppContext, Context, Entity, WeakEntity};
 use livekit::id::TrackSid;
 use livekit::options::TrackPublishOptions;
 use livekit::prelude::LocalParticipant;
@@ -60,6 +61,7 @@ pub struct LivekitCall {
     active_call_participants_state: Vec<OwnedUserId>,
     cached_room_users: HashMap<OwnedUserId, Option<RoomMember>>,
     muted_streams: HashSet<TrackSid>,
+    cached_call_members: Entity<Vec<CallMember>>,
 
     cancellation_source: CancellationTokenSource,
     started_at: Instant,
@@ -423,7 +425,26 @@ impl LivekitCall {
         )
         .detach();
 
+        let cached_call_members = cx.new(|_| Vec::new());
+        cx.observe_self(|this, cx| {
+            let old_call_members = this.cached_call_members.read(cx).len();
+            let call_members = this.calculate_call_members(cx);
+
+            if matches!(this.state, CallState::Active { .. }) {
+                if old_call_members < call_members.len() {
+                    sfx::play_sound_effect(include_bytes!("../assets/call-join.ogg"));
+                } else if old_call_members > call_members.len() {
+                    sfx::play_sound_effect(include_bytes!("../assets/call-leave.ogg"));
+                }
+            }
+
+            this.cached_call_members.write(cx, call_members);
+        })
+        .detach();
+
         let cpal_host = cpal::default_host();
+
+        sfx::play_sound_effect(include_bytes!("../assets/call-join.ogg"));
 
         LivekitCall {
             room: room_id,
@@ -437,10 +458,15 @@ impl LivekitCall {
             subscribed_streams: Vec::new(),
             cached_room_users: HashMap::new(),
             muted_streams: HashSet::new(),
+            cached_call_members,
         }
     }
 
-    pub fn call_members(&mut self, cx: &mut Context<Self>) -> Vec<CallMember> {
+    pub fn call_members(&self) -> Entity<Vec<CallMember>> {
+        self.cached_call_members.clone()
+    }
+
+    fn calculate_call_members(&mut self, cx: &mut Context<Self>) -> Vec<CallMember> {
         let session_manager = cx.global::<SessionManager>();
         let this_user_id = session_manager
             .client()
@@ -808,6 +834,8 @@ impl LivekitCall {
 
         self.state = CallState::Ended;
         cx.notify();
+
+        sfx::play_sound_effect(include_bytes!("../assets/call-leave.ogg"));
     }
 
     pub fn state(&self) -> &CallState {
