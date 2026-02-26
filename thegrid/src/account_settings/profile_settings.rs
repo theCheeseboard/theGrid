@@ -1,7 +1,6 @@
 use crate::main_window::{
     MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
 };
-use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
@@ -18,6 +17,7 @@ use gpui::{
     WeakEntity, Window, div, px, rgb,
 };
 use std::rc::Rc;
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 

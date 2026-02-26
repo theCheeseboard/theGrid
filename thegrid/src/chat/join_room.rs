@@ -1,7 +1,6 @@
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::join_room::create_room_popover::CreateRoomPopover;
 use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
-use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
@@ -17,6 +16,7 @@ use gpui::{
     div, list, px,
 };
 use matrix_sdk::room::RoomMember;
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::room_cache::CachedRoom;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;

@@ -1,4 +1,3 @@
-use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::{Quote, tr};
 use contemporary::components::button::button;
 use contemporary::components::context_menu::ContextMenuItem;
@@ -16,6 +15,7 @@ use matrix_sdk_ui::timeline::{
     EmbeddedEvent, MsgLikeContent, MsgLikeKind, TimelineDetails, TimelineItemContent,
 };
 use std::fs::copy;
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::media_cache::{MediaCacheEntry, MediaFile, MediaState};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_text_rendering::TextView;

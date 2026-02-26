@@ -9,7 +9,6 @@ pub mod register;
 mod utilities;
 
 mod account_settings;
-mod mxc_image;
 mod uiaa_client;
 
 use crate::actions::{AccountSettings, AccountSwitcher, CreateRoom, LogOut, register_actions};

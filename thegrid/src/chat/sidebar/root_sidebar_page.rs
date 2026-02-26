@@ -4,7 +4,6 @@ use crate::chat::sidebar::directory_sidebar_page::DirectorySidebarPage;
 use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
 use crate::chat::sidebar::standard_room_element::{InviteEvent, StandardRoomElement};
 use crate::chat::sidebar::{Sidebar, SidebarPage};
-use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::{tr, trn};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
@@ -18,6 +17,7 @@ use gpui::{
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use std::rc::Rc;
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::room_cache::{CachedRoom, RoomCategory};
 use thegrid_common::session::session_manager::SessionManager;
 

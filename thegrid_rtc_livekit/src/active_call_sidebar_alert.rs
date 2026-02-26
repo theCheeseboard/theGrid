@@ -1,5 +1,5 @@
-use crate::CallState;
 use crate::call_manager::LivekitCallManager;
+use crate::{CallMember, CallState, StreamState};
 use cntp_i18n::tr;
 use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
@@ -7,7 +7,9 @@ use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
-use gpui::{App, IntoElement, ParentElement, RenderOnce, Styled, Window, div, px};
+use gpui::{App, IntoElement, ParentElement, Render, RenderOnce, Styled, Window, div, px};
+use matrix_sdk::room::RoomMember;
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
 
 #[derive(IntoElement)]
@@ -19,11 +21,14 @@ pub fn active_call_sidebar_alert() -> ActiveCallSidebarAlert {
 
 impl RenderOnce for ActiveCallSidebarAlert {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
-        let theme = cx.theme();
-
         let call_manager = cx.global::<LivekitCallManager>();
-        let call = call_manager.current_call().unwrap().read(cx);
         let mute = call_manager.mute();
+
+        let call_entity = call_manager.current_call().unwrap().clone();
+        let call_members = call_entity.update(cx, |call, cx| call.call_members(cx));
+
+        let theme = cx.theme();
+        let call = call_entity.read(cx);
 
         let session_manager = cx.global::<SessionManager>();
         let room = session_manager
@@ -74,6 +79,16 @@ impl RenderOnce for ActiveCallSidebarAlert {
                             secs
                         ))
                     })
+                    .child(call_members.iter().fold(
+                        div().flex().flex_col(),
+                        |david, call_member| match call.get_cached_room_user(&call_member.user_id) {
+                            None => david,
+                            Some(room_member) => david.child(CallMemberState {
+                                room_member,
+                                call_member: call_member.clone(),
+                            }),
+                        },
+                    ))
                     .when_some(call_error, |david, err| {
                         david.child(icon_text("exception".into(), err.to_string().into()))
                     })
@@ -112,5 +127,40 @@ impl RenderOnce for ActiveCallSidebarAlert {
                             ),
                     ),
             )
+    }
+}
+
+#[derive(IntoElement)]
+struct CallMemberState {
+    room_member: RoomMember,
+    call_member: CallMember,
+}
+
+impl RenderOnce for CallMemberState {
+    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        let theme = cx.theme();
+
+        let member_is_connecting = self.call_member.mic_state == StreamState::Unavailable;
+
+        div()
+            .flex()
+            .gap(px(2.))
+            .when(member_is_connecting, |david| david.opacity(0.5))
+            .child(
+                mxc_image(self.room_member.avatar_url().map(|url| url.to_owned()))
+                    .size(px(16.))
+                    .size_policy(SizePolicy::Fit)
+                    .rounded(theme.border_radius),
+            )
+            .child(
+                self.room_member
+                    .display_name()
+                    .unwrap_or_default()
+                    .to_string(),
+            )
+            .child(div().flex_grow())
+            .when(self.call_member.mic_state == StreamState::Off, |david| {
+                david.child(icon("mic-off".into()))
+            })
     }
 }

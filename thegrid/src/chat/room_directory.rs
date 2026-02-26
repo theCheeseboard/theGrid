@@ -1,6 +1,5 @@
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::SidebarPage;
-use crate::mxc_image::{SizePolicy, mxc_image};
 use async_channel::Sender;
 use cntp_i18n::{tr, trn};
 use contemporary::components::admonition::{AdmonitionSeverity, admonition};
@@ -28,6 +27,7 @@ use matrix_sdk::ruma::{OwnedRoomId, OwnedRoomOrAliasId};
 use matrix_sdk::stream::StreamExt;
 use matrix_sdk::{Error, OwnedServerName, Room, RoomState};
 use std::collections::HashSet;
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 

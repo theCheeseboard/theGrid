@@ -1,4 +1,5 @@
 use async_ringbuf::traits::{AsyncProducer, Consumer, Producer, Split};
+use std::collections::{HashMap, HashSet};
 pub mod active_call_sidebar_alert;
 pub mod call_manager;
 
@@ -8,6 +9,7 @@ use cancellation_token::CancellationTokenSource;
 use cntp_i18n::{I18N_MANAGER, tr, tr_load};
 use cpal::Host;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use gpui::http_client::anyhow;
 use gpui::private::{anyhow, serde_json};
 use gpui::{AppContext, AsyncApp, BorrowAppContext, Context, WeakEntity};
 use livekit::id::TrackSid;
@@ -20,7 +22,7 @@ use livekit::webrtc::audio_stream::native::NativeAudioStream;
 use livekit::webrtc::prelude::RtcAudioSource;
 use livekit::{Room, RoomError, RoomEvent, RoomOptions};
 use log::{error, info, warn};
-use matrix_sdk::ruma::OwnedRoomId;
+use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::api::client::account::request_openid_token;
 use matrix_sdk::ruma::api::client::account::request_openid_token::v3::Response;
 use matrix_sdk::ruma::api::client::discovery::discover_homeserver::RtcFocusInfo;
@@ -30,11 +32,13 @@ use matrix_sdk::ruma::events::call::member::{
 };
 use matrix_sdk::ruma::events::rtc::notification::RtcNotificationEvent;
 use matrix_sdk::ruma::exports::serde_json::json;
+use matrix_sdk::ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId, UserId};
 use matrix_sdk::stream::StreamExt;
 use matrix_sdk::{HttpError, reqwest};
 use reqwest::header;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
+use std::rc::Weak;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
@@ -52,8 +56,33 @@ pub struct LivekitCall {
 
     mic_track_sid: Option<TrackSid>,
 
+    subscribed_streams: Vec<SubscribedStream>,
+    active_call_participants_state: Vec<OwnedUserId>,
+    cached_room_users: HashMap<OwnedUserId, Option<RoomMember>>,
+
     cancellation_source: CancellationTokenSource,
     started_at: Instant,
+}
+
+#[derive(Clone)]
+pub struct CallMember {
+    user_id: OwnedUserId,
+    device_id: Option<OwnedDeviceId>,
+    mic_state: StreamState,
+}
+
+#[derive(Copy, Clone, PartialEq)]
+pub enum StreamState {
+    Unavailable,
+    Off,
+    On,
+}
+
+pub struct SubscribedStream {
+    stream_sid: TrackSid,
+    user_id: OwnedUserId,
+    device_id: OwnedDeviceId,
+    source: TrackSource,
 }
 
 #[derive(Clone)]
@@ -112,10 +141,38 @@ impl LivekitCall {
             .read(cx)
             .inner
             .clone();
+        let active_call_participants_state = room.active_room_call_participants();
         let room_id_clone = room_id.clone();
         let device_id = client.device_id().unwrap().to_owned();
 
         let rtc_foci = session_manager.rtc_foci().clone();
+
+        let room_clone = room.clone();
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                loop {
+                    let room = room_clone.clone();
+                    let _ = cx
+                        .spawn_tokio(async move {
+                            room.sync_up().await;
+                            Ok::<_, anyhow::Error>(())
+                        })
+                        .await;
+
+                    let active_call_participants = room_clone.active_room_call_participants();
+                    if weak_this
+                        .update(cx, |this, cx| {
+                            this.active_call_participants_state = active_call_participants;
+                            cx.notify();
+                        })
+                        .is_err()
+                    {
+                        return;
+                    }
+                }
+            },
+        )
+        .detach();
 
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
@@ -265,9 +322,44 @@ impl LivekitCall {
                                 publication,
                                 participant,
                             } => {
+                                let identity: String = participant.identity().into();
+                                let Ok((user_id, device_id)) = decode_livekit_identity(&identity)
+                                else {
+                                    error!(
+                                        "Subscribed to stream but failed to decode identity: {}. \
+                                         The stream will not be played.",
+                                        identity
+                                    );
+                                    return;
+                                };
+
                                 if weak_this_clone
                                     .update(cx, |this, cx| {
+                                        this.subscribed_streams.push(SubscribedStream {
+                                            stream_sid: track.sid(),
+                                            user_id,
+                                            device_id,
+                                            source: track.source(),
+                                        });
+                                        cx.notify();
+
                                         this.start_track(track, cx);
+                                    })
+                                    .is_err()
+                                {
+                                    // TODO: End call?
+                                    return;
+                                }
+                            }
+                            RoomEvent::TrackUnsubscribed {
+                                track,
+                                publication,
+                                participant,
+                            } => {
+                                if weak_this_clone
+                                    .update(cx, |this, cx| {
+                                        this.subscribed_streams
+                                            .retain(|stream| stream.stream_sid != track.sid());
                                     })
                                     .is_err()
                                 {
@@ -290,6 +382,8 @@ impl LivekitCall {
 
                     this.setup_local_mic(cx);
                 });
+
+                // TODO: Delay a disconnection message
             },
         )
         .detach();
@@ -304,7 +398,121 @@ impl LivekitCall {
             cancellation_source: CancellationTokenSource::new(),
             started_at: Instant::now(),
             mic_track_sid: None,
+            active_call_participants_state,
+            subscribed_streams: Vec::new(),
+            cached_room_users: HashMap::new(),
         }
+    }
+
+    pub fn call_members(&mut self, cx: &mut Context<Self>) -> Vec<CallMember> {
+        let session_manager = cx.global::<SessionManager>();
+        let this_user_id = session_manager
+            .client()
+            .unwrap()
+            .read(cx)
+            .user_id()
+            .unwrap()
+            .to_owned();
+
+        let call_manager = cx.global::<LivekitCallManager>();
+        let muted = *call_manager.mute().read(cx);
+
+        let mut devices = self
+            .subscribed_streams
+            .iter()
+            .map(|stream| (stream.user_id.clone(), stream.device_id.clone()))
+            .collect::<HashSet<_>>();
+
+        let mut call_members = Vec::new();
+        let active_call_participants = self.active_call_participants_state.clone();
+        let mut this_device_processed = false;
+        for participant in active_call_participants.iter() {
+            if let Some(tuple) = devices.iter().find(|(user_id, _)| user_id == participant) {
+                self.cache_room_user(tuple.0.clone(), cx);
+                let subscribed_streams = self
+                    .subscribed_streams
+                    .iter()
+                    .filter(|stream| stream.user_id == tuple.0 && stream.device_id == tuple.1)
+                    .collect::<Vec<_>>();
+
+                let mut call_member = CallMember {
+                    user_id: tuple.0.clone(),
+                    device_id: Some(tuple.1.clone()),
+                    mic_state: StreamState::Unavailable,
+                };
+
+                for stream in subscribed_streams {
+                    match stream.source {
+                        TrackSource::Unknown => {}
+                        TrackSource::Camera => {}
+                        TrackSource::Microphone => {
+                            call_member.mic_state = StreamState::On;
+                        }
+                        TrackSource::Screenshare => {}
+                        TrackSource::ScreenshareAudio => {}
+                    }
+                }
+
+                let tuple = tuple.clone();
+                call_members.push(call_member);
+                devices.remove(&tuple);
+            } else {
+                call_members.push(CallMember {
+                    user_id: participant.clone(),
+                    device_id: None,
+                    mic_state: if !this_device_processed && participant == &this_user_id {
+                        this_device_processed = true;
+                        if muted {
+                            StreamState::Off
+                        } else {
+                            StreamState::On
+                        }
+                    } else {
+                        StreamState::Unavailable
+                    },
+                });
+            };
+        }
+        call_members
+    }
+
+    fn cache_room_user(&mut self, user: OwnedUserId, cx: &mut Context<Self>) {
+        if self.cached_room_users.contains_key(&user) {
+            return;
+        }
+
+        self.cached_room_users.insert(user.clone(), None);
+
+        let session_manager = cx.global::<SessionManager>();
+        let room = session_manager
+            .rooms()
+            .read(cx)
+            .room(&self.room)
+            .unwrap()
+            .read(cx)
+            .inner
+            .clone();
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                let user_id = user.clone();
+                let Ok(room_member) = cx
+                    .spawn_tokio(async move { room.get_member(&user).await })
+                    .await
+                else {
+                    return;
+                };
+
+                let _ = weak_this.update(cx, |this, cx| {
+                    this.cached_room_users.insert(user_id, room_member);
+                    cx.notify();
+                });
+            },
+        )
+        .detach();
+    }
+
+    pub fn get_cached_room_user(&self, user: &OwnedUserId) -> Option<RoomMember> {
+        self.cached_room_users.get(user).cloned().flatten()
     }
 
     fn setup_local_mic(&mut self, cx: &mut Context<Self>) {
@@ -555,4 +763,14 @@ impl LivekitCall {
     pub fn state(&self) -> &CallState {
         &self.state
     }
+}
+
+fn decode_livekit_identity(identity: &str) -> Result<(OwnedUserId, OwnedDeviceId), anyhow::Error> {
+    let final_colon = identity
+        .rfind(':')
+        .ok_or(anyhow!("Identity does not contain a colon"))?;
+    let user_part = &identity[..final_colon];
+    let device_part = &identity[final_colon + 1..];
+
+    Ok((UserId::parse(user_part)?, device_part.into()))
 }

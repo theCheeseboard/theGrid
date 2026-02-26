@@ -9,7 +9,6 @@ use crate::chat::chat_room::timeline_view::rtc_notification_item::rtc_notificati
 use crate::chat::chat_room::timeline_view::state_event_item::state_event_item;
 use crate::chat::chat_room::timeline_view::timeline_message_item::timeline_message_item;
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::mxc_image::{SizePolicy, mxc_image};
 use chrono::{DateTime, Local};
 use cntp_i18n::tr;
 use contemporary::components::anchorer::WithAnchorer;
@@ -27,6 +26,7 @@ use matrix_sdk_ui::timeline::{
 };
 use std::rc::Rc;
 use std::sync::Arc;
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::tokio_helper::TokioHelper;
 
 #[derive(IntoElement)]

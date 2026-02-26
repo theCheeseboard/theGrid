@@ -4,7 +4,6 @@ use crate::chat::chat_room::timeline_view::author_flyout::{
     AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener, author_flyout,
 };
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::tr;
 use contemporary::components::anchorer::WithAnchorer;
 use contemporary::components::button::button;
@@ -24,6 +23,7 @@ use matrix_sdk::room::{RoomMember, RoomMemberRole};
 use matrix_sdk::ruma::events::room::member::MembershipState;
 use std::cmp::Reverse;
 use std::rc::Rc;
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct RoomMembers {

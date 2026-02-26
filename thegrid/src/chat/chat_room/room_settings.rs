@@ -1,5 +1,4 @@
 use crate::chat::chat_room::open_room::OpenRoom;
-use crate::mxc_image::{SizePolicy, mxc_image};
 use cntp_i18n::{tr, trn};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
@@ -22,6 +21,7 @@ use matrix_sdk::ruma::api::client::room::Visibility;
 use matrix_sdk::ruma::room::JoinRule;
 use matrix_sdk::{EncryptionState, RoomInfo};
 use std::rc::Rc;
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 
