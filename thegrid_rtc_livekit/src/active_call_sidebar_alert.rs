@@ -144,6 +144,7 @@ impl RenderOnce for CallMemberState {
 
         div()
             .flex()
+            .items_center()
             .gap(px(2.))
             .when(member_is_connecting, |david| david.opacity(0.5))
             .child(
@@ -159,6 +160,13 @@ impl RenderOnce for CallMemberState {
                     .to_string(),
             )
             .child(div().flex_grow())
+            .when(
+                self.call_member.screenshare_state == StreamState::On,
+                |david| david.child(icon("video-display".into())),
+            )
+            .when(self.call_member.camera_state == StreamState::On, |david| {
+                david.child(icon("camera-photo".into()))
+            })
             .when(self.call_member.mic_state == StreamState::Off, |david| {
                 david.child(icon("mic-off".into()))
             })
