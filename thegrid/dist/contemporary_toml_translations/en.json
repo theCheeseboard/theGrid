@@ -1,4 +1,6 @@
 {
   "APPLICATION_NAME": "theGrid",
-  "APPLICATION_GENERIC_NAME": "Matrix Client"
+  "APPLICATION_GENERIC_NAME": "Matrix Client",
+  "CAMERA_USAGE_DESCRIPTION": "theGrid needs access to your camera for video calls.",
+  "MICROPHONE_USAGE_DESCRIPTION": "theGrid needs access to your microphone for voice calls."
 }

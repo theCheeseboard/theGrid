@@ -13,6 +13,7 @@ desktop_entry = "com.vicr123.thegrid"
 contemporary_base_icon = "dist/baseicon.svg"
 disk_image_background = "dist/app-dmg-background.svg"
 desktop_entry_categories = ["Utility", "System", "TerminalEmulator"]
+extra_info_plist_attributes = { NSCameraUsageDescription = "t:CAMERA_USAGE_DESCRIPTION", NSMicrophoneUsageDescription = "t:MICROPHONE_USAGE_DESCRIPTION" }
 
 [deployment."aarch64-apple-darwin"]
 contemporary_base_icon = "dist/baseicon-mac.svg"
