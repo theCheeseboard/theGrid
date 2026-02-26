@@ -59,6 +59,7 @@ pub struct LivekitCall {
     subscribed_streams: Vec<SubscribedStream>,
     active_call_participants_state: Vec<OwnedUserId>,
     cached_room_users: HashMap<OwnedUserId, Option<RoomMember>>,
+    muted_streams: HashSet<TrackSid>,
 
     cancellation_source: CancellationTokenSource,
     started_at: Instant,
@@ -69,6 +70,8 @@ pub struct CallMember {
     user_id: OwnedUserId,
     device_id: Option<OwnedDeviceId>,
     mic_state: StreamState,
+    camera_state: StreamState,
+    screenshare_state: StreamState,
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -341,6 +344,9 @@ impl LivekitCall {
                                             device_id,
                                             source: track.source(),
                                         });
+                                        if track.is_muted() {
+                                            this.muted_streams.insert(track.sid());
+                                        }
                                         cx.notify();
 
                                         this.start_track(track, cx);
@@ -358,8 +364,37 @@ impl LivekitCall {
                             } => {
                                 if weak_this_clone
                                     .update(cx, |this, cx| {
+                                        this.muted_streams.remove(&track.sid());
                                         this.subscribed_streams
                                             .retain(|stream| stream.stream_sid != track.sid());
+                                    })
+                                    .is_err()
+                                {
+                                    // TODO: End call?
+                                    return;
+                                }
+                            }
+                            RoomEvent::TrackMuted {
+                                participant,
+                                publication,
+                            } => {
+                                if weak_this_clone
+                                    .update(cx, |this, cx| {
+                                        this.muted_streams.insert(publication.sid());
+                                    })
+                                    .is_err()
+                                {
+                                    // TODO: End call?
+                                    return;
+                                }
+                            }
+                            RoomEvent::TrackUnmuted {
+                                participant,
+                                publication,
+                            } => {
+                                if weak_this_clone
+                                    .update(cx, |this, cx| {
+                                        this.muted_streams.remove(&publication.sid());
                                     })
                                     .is_err()
                                 {
@@ -401,6 +436,7 @@ impl LivekitCall {
             active_call_participants_state,
             subscribed_streams: Vec::new(),
             cached_room_users: HashMap::new(),
+            muted_streams: HashSet::new(),
         }
     }
 
@@ -439,16 +475,28 @@ impl LivekitCall {
                     user_id: tuple.0.clone(),
                     device_id: Some(tuple.1.clone()),
                     mic_state: StreamState::Unavailable,
+                    screenshare_state: StreamState::Unavailable,
+                    camera_state: StreamState::Unavailable,
                 };
 
                 for stream in subscribed_streams {
+                    let stream_state = if self.muted_streams.contains(&stream.stream_sid) {
+                        StreamState::Off
+                    } else {
+                        StreamState::On
+                    };
+
                     match stream.source {
                         TrackSource::Unknown => {}
-                        TrackSource::Camera => {}
-                        TrackSource::Microphone => {
-                            call_member.mic_state = StreamState::On;
+                        TrackSource::Camera => {
+                            call_member.camera_state = stream_state;
                         }
-                        TrackSource::Screenshare => {}
+                        TrackSource::Microphone => {
+                            call_member.mic_state = stream_state;
+                        }
+                        TrackSource::Screenshare => {
+                            call_member.screenshare_state = stream_state;
+                        }
                         TrackSource::ScreenshareAudio => {}
                     }
                 }
@@ -470,6 +518,8 @@ impl LivekitCall {
                     } else {
                         StreamState::Unavailable
                     },
+                    camera_state: StreamState::Unavailable,
+                    screenshare_state: StreamState::Unavailable,
                 });
             };
         }
