@@ -27,9 +27,8 @@ jobs:
       - uses: r7kamura/rust-problem-matchers@v1
       - name: Install libcontemporary utils
         run: |
-          git clone https://github.com/vicr123/contemporary-rs
-          cargo install --path ./contemporary-rs/deploy_tool/cargo_cntp_bundle
-          cargo install --path ./contemporary-rs/deploy_tool/cargo_cntp_deploy
+          cargo install --git https://github.com/vicr123/contemporary-rs.git cargo-cntp-bundle
+          cargo install --git https://github.com/vicr123/contemporary-rs.git cargo-cntp-deploy
       - name: Build
         run: cargo build --verbose --release
       - name: Bundle
