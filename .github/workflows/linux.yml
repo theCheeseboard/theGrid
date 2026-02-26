@@ -8,7 +8,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ ubuntu-24.04 ]
+        os: [ ubuntu-24.04, ubuntu-24.04-arm ]
     runs-on: ${{ matrix.os }}
     env:
       ARCH: "${{ endsWith(matrix.os, 'arm') && 'aarch64' || 'x86_64' }}"
@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config libxkbcommon-dev libxkbcommon-x11-dev libx11-xcb-dev desktop-file-utils libasound2-dev libva-dev nvidia-cuda-dev
+          sudo apt-get install -y pkg-config libxkbcommon-dev libxkbcommon-x11-dev libx11-xcb-dev desktop-file-utils libasound2-dev libssl-dev libx11-dev libgl1-mesa-dev libxext-dev ibva-dev libdrm-dev libnvidia-compute-570 libnvidia-decode-570 nvidia-cuda-dev
           rustup update
       - uses: Swatinem/rust-cache@v2
       - uses: r7kamura/rust-problem-matchers@v1
