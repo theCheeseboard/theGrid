@@ -7,7 +7,10 @@ use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
-use gpui::{App, IntoElement, ParentElement, Render, RenderOnce, Styled, Window, div, px};
+use gpui::{
+    App, BorrowAppContext, ElementId, InteractiveElement, IntoElement, ParentElement, Render,
+    RenderOnce, Styled, Window, div, px,
+};
 use matrix_sdk::room::RoomMember;
 use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
@@ -24,7 +27,8 @@ impl RenderOnce for ActiveCallSidebarAlert {
         let call_manager = cx.global::<LivekitCallManager>();
         let mute = call_manager.mute();
 
-        let call = call_manager.current_call().unwrap().clone().read(cx);
+        let call_entity = call_manager.current_call().unwrap().clone();
+        let call = call_entity.read(cx);
         let call_members = call.call_members().read(cx);
 
         let theme = cx.theme();
@@ -44,88 +48,177 @@ impl RenderOnce for ActiveCallSidebarAlert {
             CallState::Error(error) => Some(error),
         };
 
-        admonition()
-            .title(tr!("ACTIVE_CALL", "Active Call"))
-            .severity(if call_error.is_some() {
-                AdmonitionSeverity::Error
-            } else {
-                AdmonitionSeverity::Info
-            })
-            .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .gap(px(4.))
-                    .when(matches!(call.state, CallState::Connecting), |david| {
-                        david.child(format!(
-                            "{} - {}",
-                            room.display_name(),
-                            tr!("CALL_CONNECTING", "Connecting...")
-                        ))
-                    })
-                    .when(matches!(call.state, CallState::Active { .. }), |david| {
-                        let secs = call.started_at.elapsed().as_secs();
-                        let mins = secs / 60;
-                        let secs = secs % 60;
-                        let hours = mins / 60;
-                        let mins = mins % 60;
+        let other_calls = call_manager
+            .calls()
+            .iter()
+            .filter(|other_call| !call_entity.eq(*other_call))
+            .cloned()
+            .collect::<Vec<_>>();
 
-                        david.child(format!(
-                            "{} - {:02}:{:02}:{:02}",
-                            room.display_name(),
-                            hours,
-                            mins,
-                            secs
-                        ))
-                    })
-                    .child(call_members.iter().fold(
-                        div().flex().flex_col(),
-                        |david, call_member| match call.get_cached_room_user(&call_member.user_id) {
-                            None => david,
-                            Some(room_member) => david.child(CallMemberState {
-                                room_member,
-                                call_member: call_member.clone(),
-                            }),
-                        },
-                    ))
-                    .when_some(call_error, |david, err| {
-                        david.child(icon_text("exception".into(), err.to_string().into()))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(4.))
+            .child(
+                admonition()
+                    .title(tr!("ACTIVE_CALL", "Active Call"))
+                    .severity(if call_error.is_some() {
+                        AdmonitionSeverity::Error
+                    } else {
+                        AdmonitionSeverity::Info
                     })
                     .child(
                         div()
                             .flex()
-                            .bg(theme.button_background)
-                            .rounded(theme.border_radius)
+                            .flex_col()
+                            .gap(px(4.))
+                            .when(matches!(call.state, CallState::Connecting), |david| {
+                                david.child(format!(
+                                    "{} - {}",
+                                    room.display_name(),
+                                    tr!("CALL_CONNECTING", "Connecting...")
+                                ))
+                            })
+                            .when(matches!(call.state, CallState::Active { .. }), |david| {
+                                let secs = call.started_at.elapsed().as_secs();
+                                let mins = secs / 60;
+                                let secs = secs % 60;
+                                let hours = mins / 60;
+                                let mins = mins % 60;
+
+                                david.child(format!(
+                                    "{} - {:02}:{:02}:{:02}",
+                                    room.display_name(),
+                                    hours,
+                                    mins,
+                                    secs
+                                ))
+                            })
+                            .child(call_members.iter().fold(
+                                div().flex().flex_col(),
+                                |david, call_member| {
+                                    match call.get_cached_room_user(&call_member.user_id) {
+                                        None => david,
+                                        Some(room_member) => david.child(CallMemberState {
+                                            room_member,
+                                            call_member: call_member.clone(),
+                                        }),
+                                    }
+                                },
+                            ))
+                            .when_some(call_error, |david, err| {
+                                david.child(icon_text("exception".into(), err.to_string().into()))
+                            })
                             .child(
-                                button("mute")
-                                    .child(icon(
-                                        if *mute.read(cx) { "mic-off" } else { "mic-on" }.into(),
-                                    ))
-                                    .checked_when(*mute.read(cx))
-                                    .on_click(move |_, _, cx| {
-                                        let muted = *mute.read(cx);
-                                        mute.write(cx, !muted);
-                                    })
-                                    .flex_grow(),
-                            )
-                            .child(
-                                button("call-end")
-                                    .destructive()
-                                    .child(icon_text(
-                                        "call-stop".into(),
-                                        tr!("CALL_HANG_UP", "Hang Up").into(),
-                                    ))
-                                    .on_click(|_, _, cx| {
-                                        let call_manager = cx.global::<LivekitCallManager>();
-                                        call_manager
-                                            .current_call()
-                                            .unwrap()
-                                            .update(cx, |call, cx| call.end_call(cx))
-                                    })
-                                    .flex_grow(),
+                                div()
+                                    .flex()
+                                    .bg(theme.button_background)
+                                    .rounded(theme.border_radius)
+                                    .child(
+                                        button("mute")
+                                            .child(icon(
+                                                if *mute.read(cx) { "mic-off" } else { "mic-on" }
+                                                    .into(),
+                                            ))
+                                            .checked_when(*mute.read(cx))
+                                            .on_click(move |_, _, cx| {
+                                                let muted = *mute.read(cx);
+                                                mute.write(cx, !muted);
+                                            })
+                                            .flex_grow(),
+                                    )
+                                    .when_else(
+                                        call.on_hold(),
+                                        |david| {
+                                            david.child(
+                                                button("call-off-hold")
+                                                    .checked()
+                                                    .child(icon_text(
+                                                        "media-playback-pause".into(),
+                                                        tr!("CALL_HOLD", "Put on hold").into(),
+                                                    ))
+                                                    .on_click(|_, _, cx| {
+                                                        let call_manager =
+                                                            cx.global::<LivekitCallManager>();
+                                                        call_manager
+                                                            .current_call()
+                                                            .unwrap()
+                                                            .update(cx, |call, cx| {
+                                                                call.set_on_hold(false, cx)
+                                                            })
+                                                    })
+                                                    .flex_grow(),
+                                            )
+                                        },
+                                        |david| {
+                                            david.child(
+                                                button("call-end")
+                                                    .destructive()
+                                                    .child(icon_text(
+                                                        "call-stop".into(),
+                                                        tr!("CALL_HANG_UP", "Hang Up").into(),
+                                                    ))
+                                                    .on_click(|_, _, cx| {
+                                                        let call_manager =
+                                                            cx.global::<LivekitCallManager>();
+                                                        call_manager
+                                                            .current_call()
+                                                            .unwrap()
+                                                            .update(cx, |call, cx| {
+                                                                call.end_call(cx)
+                                                            })
+                                                    })
+                                                    .flex_grow(),
+                                            )
+                                        },
+                                    ),
                             ),
                     ),
             )
+            .when(!other_calls.is_empty(), |david| {
+                david.child(
+                    admonition()
+                        .title(tr!("CALLS_ON_HOLD", "Calls on hold"))
+                        .severity(AdmonitionSeverity::Info)
+                        .child(other_calls.iter().fold(
+                            div().flex().flex_col(),
+                            |david, call_entity| {
+                                let call_entity_clone = call_entity.clone();
+                                let call = call_entity.read(cx);
+
+                                let room = session_manager
+                                    .rooms()
+                                    .read(cx)
+                                    .room(&call.room)
+                                    .unwrap()
+                                    .read(cx);
+
+                                david.child(
+                                    div()
+                                        .id(ElementId::Name(call.room.to_string().into()))
+                                        .flex()
+                                        .items_center()
+                                        .child(room.display_name())
+                                        .child(div().flex_grow())
+                                        .child(
+                                            button("switch-button")
+                                                .child(icon("call-start".into()))
+                                                .on_click(move |_, _, cx| {
+                                                    cx.update_global::<LivekitCallManager, _>(
+                                                        |call_manager, cx| {
+                                                            call_manager.switch_to_call(
+                                                                call_entity_clone.clone(),
+                                                                cx,
+                                                            );
+                                                        },
+                                                    );
+                                                }),
+                                        ),
+                                )
+                            },
+                        )),
+                )
+            })
     }
 }
 

@@ -37,7 +37,7 @@ use matrix_sdk::ruma::events::rtc::notification::RtcNotificationEvent;
 use matrix_sdk::ruma::events::{AnySyncStateEvent, StateEventType};
 use matrix_sdk::ruma::exports::serde_json::json;
 use matrix_sdk::ruma::serde::Raw;
-use matrix_sdk::ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId, UserId};
+use matrix_sdk::ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId, RoomId, UserId};
 use matrix_sdk::stream::StreamExt;
 use matrix_sdk::{HttpError, reqwest};
 use reqwest::header;
@@ -69,6 +69,8 @@ pub struct LivekitCall {
 
     cancellation_source: CancellationTokenSource,
     started_at: Instant,
+
+    on_hold: bool,
 }
 
 #[derive(Clone)]
@@ -523,6 +525,18 @@ impl LivekitCall {
 
         sfx::play_sound_effect(include_bytes!("../assets/call-join.ogg"));
 
+        cx.observe_global::<LivekitCallManager>(|this, cx| {
+            let call_manager = cx.global::<LivekitCallManager>();
+            if call_manager
+                .current_call()
+                .is_none_or(|current_call| current_call != cx.entity() && !this.on_hold)
+            {
+                this.on_hold = true;
+                cx.notify();
+            }
+        })
+        .detach();
+
         LivekitCall {
             room: room_id,
             state: CallState::Connecting,
@@ -535,8 +549,22 @@ impl LivekitCall {
             subscribed_streams: Vec::new(),
             cached_room_users: HashMap::new(),
             muted_streams: HashSet::new(),
+            on_hold: false,
             cached_call_members,
         }
+    }
+
+    pub fn room(&self) -> &RoomId {
+        &self.room
+    }
+    
+    pub fn on_hold(&self) -> bool {
+        self.on_hold
+    }
+
+    pub fn set_on_hold(&mut self, on_hold: bool, cx: &mut Context<Self>) {
+        self.on_hold = on_hold;
+        cx.notify();
     }
 
     pub fn call_members(&self) -> Entity<Vec<CallMember>> {
@@ -737,11 +765,12 @@ impl LivekitCall {
 
         let track_clone = track.clone();
         cx.observe(&call_manager.mute(), move |this, mute, cx| {
-            if *mute.read(cx) {
-                track_clone.mute();
-            } else {
-                track_clone.unmute();
-            }
+            this.update_audio_track_mute_status(track_clone.clone(), cx);
+        })
+        .detach();
+        let track_clone = track.clone();
+        cx.observe_self(move |this, cx| {
+            this.update_audio_track_mute_status(track_clone.clone(), cx);
         })
         .detach();
 
@@ -917,6 +946,16 @@ impl LivekitCall {
 
     pub fn state(&self) -> &CallState {
         &self.state
+    }
+
+    fn update_audio_track_mute_status(&mut self, track: LocalAudioTrack, cx: &mut Context<Self>) {
+        let call_manager = cx.global::<LivekitCallManager>();
+        let mute = call_manager.mute();
+        if *mute.read(cx) || self.on_hold {
+            track.mute();
+        } else {
+            track.unmute();
+        }
     }
 }
 
