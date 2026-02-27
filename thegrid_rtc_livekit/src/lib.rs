@@ -23,16 +23,19 @@ use livekit::webrtc::audio_stream::native::NativeAudioStream;
 use livekit::webrtc::prelude::RtcAudioSource;
 use livekit::{Room, RoomError, RoomEvent, RoomOptions};
 use log::{error, info, warn};
+use matrix_sdk::deserialized_responses::RawAnySyncOrStrippedState;
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::api::client::account::request_openid_token;
 use matrix_sdk::ruma::api::client::account::request_openid_token::v3::Response;
 use matrix_sdk::ruma::api::client::discovery::discover_homeserver::RtcFocusInfo;
 use matrix_sdk::ruma::events::call::member::{
     ActiveFocus, ActiveLivekitFocus, Application, CallApplicationContent, CallMemberEvent,
-    CallMemberEventContent, CallMemberStateKey, CallScope, Focus, LivekitFocus,
+    CallMemberEventContent, CallMemberStateKey, CallScope, Focus, FocusSelection, LivekitFocus,
 };
 use matrix_sdk::ruma::events::rtc::notification::RtcNotificationEvent;
+use matrix_sdk::ruma::events::{AnySyncStateEvent, StateEventType};
 use matrix_sdk::ruma::exports::serde_json::json;
+use matrix_sdk::ruma::serde::Raw;
 use matrix_sdk::ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId, UserId};
 use matrix_sdk::stream::StreamExt;
 use matrix_sdk::{HttpError, reqwest};
@@ -100,6 +103,7 @@ pub enum CallState {
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum CallError {
+    RoomError,
     NoRtcFocus,
     OpenIdTokenRequestFailed,
     LivekitJwtRequestFailed,
@@ -115,6 +119,7 @@ struct LivekitJwtResponse {
 impl Display for CallError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let str = match self {
+            CallError::RoomError => tr!("CALL_ERROR_ROOM_ERROR", "Room error"),
             CallError::NoRtcFocus => tr!("CALL_ERROR_NO_RTC_FOCUS", "No RTC focus available"),
             CallError::OpenIdTokenRequestFailed => tr!(
                 "CALL_ERROR_OPENID_TOKEN_REQUEST_FAILED",
@@ -134,6 +139,7 @@ impl Display for CallError {
 }
 
 impl LivekitCall {
+    //noinspection RsRedundantElse
     pub fn new(room_id: OwnedRoomId, cx: &mut Context<Self>) -> Self {
         let session_manager = cx.global::<SessionManager>();
         let client = session_manager.client().unwrap().read(cx).clone();
@@ -181,7 +187,78 @@ impl LivekitCall {
 
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                // TODO: What if there exists an active call on a different LiveKit server?
+                let room_clone = room.clone();
+                let Ok(call_member_state_events) = cx
+                    .spawn_tokio(async move {
+                        room_clone
+                            .get_state_events(StateEventType::CallMember)
+                            .await
+                    })
+                    .await
+                else {
+                    let _ = weak_this.update(cx, |this, cx| {
+                        this.state = CallState::Error(CallError::RoomError);
+                        cx.notify();
+                    });
+                    return;
+                };
+
+                // Find the best focus URL
+                let service_url = call_member_state_events
+                    .iter()
+                    .find_map(|state_event| {
+                        let RawAnySyncOrStrippedState::Sync(event) = state_event else {
+                            return None;
+                        };
+
+                        let Ok(AnySyncStateEvent::CallMember(event)) = event.deserialize() else {
+                            return None;
+                        };
+
+                        let event = event.as_original()?;
+                        let CallMemberEventContent::SessionContent(content) = &event.content else {
+                            return None;
+                        };
+
+                        let ActiveFocus::Livekit(livekit_focus) = &content.focus_active else {
+                            return None;
+                        };
+
+                        if livekit_focus.focus_selection != FocusSelection::OldestMembership {
+                            return None;
+                        };
+
+                        content.foci_preferred.iter().find_map(|focus| {
+                            let Focus::Livekit(lk_focus) = focus else {
+                                return None;
+                            };
+
+                            if lk_focus.alias != room_id_clone {
+                                return None;
+                            }
+
+                            Some(lk_focus.service_url.clone())
+                        })
+                    })
+                    .or_else(|| {
+                        let Some(RtcFocusInfo::LiveKit(livekit_focus)) = rtc_foci
+                            .iter()
+                            .find(|focus| matches!(focus, RtcFocusInfo::LiveKit(_)))
+                        else {
+                            return None;
+                        };
+
+                        Some(livekit_focus.service_url.clone())
+                    });
+
+                let Some(service_url) = service_url else {
+                    let _ = weak_this.update(cx, |this, cx| {
+                        this.state = CallState::Error(CallError::NoRtcFocus);
+                        cx.notify();
+                    });
+                    return;
+                };
+
                 let openid_token_request =
                     request_openid_token::v3::Request::new(client.user_id().unwrap().to_owned());
                 let openid_token_response = cx
@@ -199,20 +276,8 @@ impl LivekitCall {
                     }
                 };
 
-                let Some(RtcFocusInfo::LiveKit(livekit_focus)) = rtc_foci
-                    .iter()
-                    .find(|focus| matches!(focus, RtcFocusInfo::LiveKit(_)))
-                else {
-                    let _ = weak_this.update(cx, |this, cx| {
-                        this.state = CallState::Error(CallError::NoRtcFocus);
-                        cx.notify();
-                    });
-                    return;
-                };
-
                 // Get the LiveKit JWT
                 let client = reqwest::Client::new();
-                let service_url = livekit_focus.service_url.clone();
                 let Ok(livekit_jwt_response) = client
                     .post(format!("{}/sfu/get", service_url))
                     .body(
