@@ -24,6 +24,7 @@ use livekit::webrtc::prelude::RtcAudioSource;
 use livekit::{Room, RoomError, RoomEvent, RoomOptions};
 use log::{error, info, warn};
 use matrix_sdk::deserialized_responses::RawAnySyncOrStrippedState;
+use matrix_sdk::reqwest::StatusCode;
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::api::client::account::request_openid_token;
 use matrix_sdk::ruma::api::client::account::request_openid_token::v3::Response;
@@ -108,6 +109,7 @@ pub enum CallError {
     OpenIdTokenRequestFailed,
     LivekitJwtRequestFailed,
     LivekitRtcFailed,
+    StateEventForbidden,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -132,6 +134,10 @@ impl Display for CallError {
             CallError::LivekitRtcFailed => tr!(
                 "CALL_ERROR_LIVEKIT_RTC_FAILED",
                 "Failed to join LiveKit room"
+            ),
+            CallError::StateEventForbidden => tr!(
+                "CALL_ERROR_STATE_EVENT_FORBIDDEN",
+                "No permission to join call"
             ),
         };
         write!(f, "{}", str)
@@ -347,7 +353,13 @@ impl LivekitCall {
                 {
                     error!("Unable to send call state event: {:?}", e);
                     let _ = weak_this.update(cx, |this, cx| {
-                        this.state = CallState::Error(CallError::LivekitRtcFailed);
+                        this.state = if let Some(client_api_error) = e.as_client_api_error()
+                            && client_api_error.status_code == StatusCode::FORBIDDEN
+                        {
+                            CallState::Error(CallError::StateEventForbidden)
+                        } else {
+                            CallState::Error(CallError::LivekitRtcFailed)
+                        };
                         cx.notify();
                     });
                     return;
