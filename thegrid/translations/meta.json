@@ -1103,6 +1103,18 @@
     "plural": false,
     "description": null
   },
+  "PERMISSION_MICROPHONE_DENIED_CONTENT": {
+    "context": "chat_room.rs",
+    "definedIn": "src/chat/chat_room.rs:322",
+    "plural": false,
+    "description": null
+  },
+  "PERMISSION_MICROPHONE_DENIED_TITLE": {
+    "context": "chat_room.rs",
+    "definedIn": "src/chat/chat_room.rs:316",
+    "plural": false,
+    "description": null
+  },
   "POPOVER_LOGIN": {
     "context": "auth_surface.rs",
     "definedIn": "src/auth/auth_surface.rs:877",
@@ -1747,13 +1759,13 @@
   },
   "SERVER_NOTICE_ROOM_CONTENT": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:241",
+    "definedIn": "src/chat/chat_room.rs:282",
     "plural": false,
     "description": null
   },
   "SERVER_NOTICE_ROOM_TITLE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:239",
+    "definedIn": "src/chat/chat_room.rs:280",
     "plural": false,
     "description": null
   },
@@ -1885,7 +1897,7 @@
   },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:152",
+    "definedIn": "src/chat/chat_room.rs:198",
     "plural": false,
     "description": null
   },

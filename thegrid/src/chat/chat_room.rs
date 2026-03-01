@@ -18,18 +18,21 @@ use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::tr;
 use contemporary::components::admonition::admonition;
 use contemporary::components::button::button;
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
+use contemporary::permissions::{GrantStatus, PermissionType, Permissions};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AnimationExt, App, AppContext, BorrowAppContext, Context, Entity, ExternalPaths,
-    InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled,
-    Window, div, px,
+    AnimationExt, App, AppContext, AsyncApp, AsyncWindowContext, BorrowAppContext, Context, Entity,
+    ExternalPaths, InteractiveElement, IntoElement, ParentElement, Render,
+    StatefulInteractiveElement, Styled, VisualContext, WeakEntity, Window, div, px,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::ruma::events::tag::TagName;
+use smol::stream::StreamExt;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 use thegrid_rtc_livekit::call_manager::LivekitCallManager;
@@ -42,6 +45,8 @@ pub struct ChatRoom {
     user_action_dialogs: Entity<UserActionDialogs>,
     timeline_view: Entity<TimelineView>,
     current_page: ChatRoomPage,
+
+    microphone_access_dialog: bool,
 }
 
 enum ChatRoomPage {
@@ -104,6 +109,8 @@ impl ChatRoom {
                 room_members,
                 current_page: ChatRoomPage::Chat,
                 timeline_view,
+
+                microphone_access_dialog: false,
             }
         })
     }
@@ -133,6 +140,45 @@ impl ChatRoom {
 
                 cx.notify()
             })
+    }
+
+    fn start_call(&mut self, cx: &mut Context<Self>) {
+        let room_id = self.open_room.read(cx).room_id.clone();
+        match Permissions::grant_status(PermissionType::Microphone) {
+            GrantStatus::Granted | GrantStatus::PlatformUnsupported => cx
+                .update_global::<LivekitCallManager, _>(|call_manager, cx| {
+                    call_manager.start_call(room_id, cx);
+                }),
+            GrantStatus::Denied => {
+                self.microphone_access_dialog = true;
+                cx.notify();
+            }
+            GrantStatus::NotDetermined => {
+                let (tx, rx) = async_channel::bounded(1);
+                cx.spawn(
+                    async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                        let Ok(success) = rx.recv().await else {
+                            return;
+                        };
+
+                        let _ = weak_this.update(cx, |this, cx| {
+                            if success {
+                                // Try to start the call again
+                                this.start_call(cx);
+                            } else {
+                                this.microphone_access_dialog = true;
+                                cx.notify();
+                            }
+                        });
+                    },
+                )
+                .detach();
+
+                Permissions::request_permission(PermissionType::Microphone, move |success| {
+                    let _ = smol::block_on(tx.send(success));
+                })
+            }
+        }
     }
 }
 
@@ -198,12 +244,7 @@ impl Render for ChatRoom {
                                                 .flat()
                                                 .child(icon("call-start".into()))
                                                 .on_click(cx.listener(move |this, _, _, cx| {
-                                                    let room_id = room_id_2.clone();
-                                                    cx.update_global::<LivekitCallManager, _>(
-                                                        |call_manager, cx| {
-                                                            call_manager.start_call(room_id, cx);
-                                                        },
-                                                    )
+                                                    this.start_call(cx);
                                                 })),
                                         )
                                     },
@@ -267,5 +308,28 @@ impl Render for ChatRoom {
                 .page(self.room_members.clone().into_any_element()),
             )
             .child(self.user_action_dialogs.clone())
+            .child(
+                dialog_box("microphone-access")
+                    .visible(self.microphone_access_dialog)
+                    .title(
+                        tr!(
+                            "PERMISSION_MICROPHONE_DENIED_TITLE",
+                            "Unable to access the microphone"
+                        )
+                        .into(),
+                    )
+                    .content(tr!(
+                        "PERMISSION_MICROPHONE_DENIED_CONTENT",
+                        "theGrid needs access to your microphone. Check your privacy settings \
+                        and allow theGrid to access the microphone to start a voice call."
+                    ))
+                    .standard_button(
+                        StandardButton::Sorry,
+                        cx.listener(|this, _, _, cx| {
+                            this.microphone_access_dialog = false;
+                            cx.notify();
+                        }),
+                    ),
+            )
     }
 }

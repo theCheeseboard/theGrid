@@ -183,6 +183,8 @@
   "PASSWORD": "Password",
   "PASSWORD_CONFIRM": "Confirm Password",
   "PASSWORD_DESCRIPTION": "Make it a good password and save it for this account. You don't want to be reusing this password.",
+  "PERMISSION_MICROPHONE_DENIED_CONTENT": "theGrid needs access to your microphone. Check your privacy settings and allow theGrid to access the microphone to start a voice call.",
+  "PERMISSION_MICROPHONE_DENIED_TITLE": "Unable to access the microphone",
   "POPOVER_LOGIN": "Log in",
   "POPOVER_LOGIN_HOMESERVER": "Log in to {{homeserver}}",
   "POPOVER_RECOVERY_PASSPHRASE": "Enter the recovery passphrase",
