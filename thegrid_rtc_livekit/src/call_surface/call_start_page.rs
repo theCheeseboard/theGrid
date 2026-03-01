@@ -294,7 +294,7 @@ impl CallStartPage {
         )
         .detach();
 
-        Permissions::request_permission(PermissionType::Microphone, move |success| {
+        Permissions::request_permission(permission, move |success| {
             let _ = smol::block_on(tx.send(success));
         })
     }
