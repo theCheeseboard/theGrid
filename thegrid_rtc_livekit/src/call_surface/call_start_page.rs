@@ -41,27 +41,41 @@ impl CallStartPage {
         let call_manager = cx.global::<LivekitCallManager>();
         let muted = *call_manager.mute().read(cx);
 
+        let (input_devices, selected_input_device) = Self::get_default_mic_settings();
+
         let host = cpal::default_host();
         let output_devices = host
             .output_devices()
             .map(|devices| devices.collect())
             .unwrap_or_default();
-        let input_devices = host
-            .input_devices()
-            .map(|devices| devices.collect())
-            .unwrap_or_default();
+        let selected_output_device = host.default_output_device();
 
         Self {
             room_id,
             on_surface_change,
             audio_output_devices: output_devices,
             audio_input_devices: input_devices,
-            selected_output_device: host.default_output_device(),
-            selected_input_device: if muted {
-                None
-            } else {
-                host.default_input_device()
-            },
+            selected_output_device,
+            selected_input_device: if muted { None } else { selected_input_device },
+        }
+    }
+
+    fn get_default_mic_settings() -> (Vec<Device>, Option<Device>) {
+        match Permissions::grant_status(PermissionType::Microphone) {
+            GrantStatus::Granted | GrantStatus::PlatformUnsupported => {
+                let host = cpal::default_host();
+                let input_devices = host
+                    .input_devices()
+                    .map(|devices| devices.collect())
+                    .unwrap_or_default();
+                let selected_input_device = host.default_input_device();
+
+                (input_devices, selected_input_device)
+            }
+            GrantStatus::Denied | GrantStatus::NotDetermined => {
+                // Avoid loading mic information
+                Default::default()
+            }
         }
     }
 
@@ -270,7 +284,10 @@ impl CallStartPage {
                     return;
                 };
 
-                let _ = weak_this.update(cx, |_, cx| {
+                let _ = weak_this.update(cx, |this, cx| {
+                    let (input_devices, selected_input_device) = Self::get_default_mic_settings();
+                    this.audio_input_devices = input_devices;
+                    this.selected_input_device = selected_input_device;
                     cx.notify();
                 });
             },
