@@ -1,11 +1,20 @@
+use crate::focus::get_focus_url;
 use crate::{CallState, LivekitCall, sfx};
-use gpui::{App, AppContext, BorrowAppContext, Entity, Global};
+use gpui::{App, AppContext, AsyncApp, BorrowAppContext, Context, Entity, Global, WeakEntity};
 use matrix_sdk::ruma::OwnedRoomId;
+use thegrid_common::session::session_manager::SessionManager;
 
 pub struct LivekitCallManager {
     current_call: Option<Entity<LivekitCall>>,
     active_calls: Vec<Entity<LivekitCall>>,
     mute: Entity<bool>,
+}
+
+#[derive(Clone)]
+pub enum FocusUrl {
+    Url(String),
+    Processing,
+    NoAvailableFocus,
 }
 
 impl LivekitCallManager {
@@ -63,6 +72,40 @@ impl LivekitCallManager {
         call.update(cx, |call, cx| {
             call.set_on_hold(false, cx);
         });
+    }
+
+    pub fn best_focus_url_for_room(
+        &mut self,
+        room_id: OwnedRoomId,
+        cx: &mut Context<FocusUrl>,
+    ) -> FocusUrl {
+        let session_manager = cx.global::<SessionManager>();
+        let room = session_manager
+            .rooms()
+            .read(cx)
+            .room(&room_id)
+            .unwrap()
+            .read(cx)
+            .inner
+            .clone();
+        let rtc_foci = session_manager.rtc_foci().clone();
+
+        cx.spawn(
+            async move |weak_entity: WeakEntity<FocusUrl>, cx: &mut AsyncApp| {
+                let focus_url = get_focus_url(room, rtc_foci, cx).await;
+                let Some(entity) = weak_entity.upgrade() else {
+                    return;
+                };
+
+                let _ = match focus_url {
+                    Ok(focus_url) => entity.write(cx, FocusUrl::Url(focus_url)),
+                    Err(_) => entity.write(cx, FocusUrl::NoAvailableFocus),
+                };
+            },
+        )
+        .detach();
+
+        FocusUrl::Processing
     }
 }
 

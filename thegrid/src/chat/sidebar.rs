@@ -64,7 +64,7 @@ enum SidebarAlert {
     VerifySession(bool),
     UnverifiedDevices(usize, Option<Rc<Box<SurfaceChangeHandler>>>),
     ClientError(RecoverableClientError),
-    ActiveCall,
+    ActiveCall(Option<Rc<Box<SurfaceChangeHandler>>>),
 }
 
 impl Sidebar {
@@ -111,7 +111,7 @@ impl Sidebar {
 
         let call_manager = cx.global::<LivekitCallManager>();
         if call_manager.current_call().is_some() {
-            return SidebarAlert::ActiveCall;
+            return SidebarAlert::ActiveCall(self.on_surface_change.clone());
         }
 
         let client = session_manager.client().unwrap().read(cx);
@@ -298,7 +298,7 @@ impl RenderOnce for SidebarAlert {
                                                             "INCOMING_VERIFICATION_ACCEPT",
                                                             "Verify Now"
                                                         )
-                                                            .into(),
+                                                        .into(),
                                                     ))
                                                     .on_click(move |_, _, cx| {
                                                         let verification_request =
@@ -317,10 +317,10 @@ impl RenderOnce for SidebarAlert {
                                                                     .await
                                                                     .map_err(|e| anyhow!(e))
                                                             })
-                                                                .unwrap()
-                                                                .await
+                                                            .unwrap()
+                                                            .await
                                                         })
-                                                            .detach();
+                                                        .detach();
 
                                                         verification_popover.update(
                                                             cx,
@@ -342,7 +342,7 @@ impl RenderOnce for SidebarAlert {
                                                             "INCOMING_VERIFICATION_DECLINE",
                                                             "Don't Verify"
                                                         )
-                                                            .into(),
+                                                        .into(),
                                                     ))
                                                     .on_click(move |_, _, cx| {
                                                         let verification_request =
@@ -356,9 +356,9 @@ impl RenderOnce for SidebarAlert {
                                                                     .cancel()
                                                                     .await
                                                             })
-                                                                .await
+                                                            .await
                                                         })
-                                                            .detach()
+                                                        .detach()
                                                     }),
                                             ),
                                     ),
@@ -389,22 +389,18 @@ impl RenderOnce for SidebarAlert {
                                             button("setup-now")
                                                 .child(icon_text(
                                                     "configure".into(),
-                                                    tr!(
-                                                        "SETUP_RECOVERY_NOW",
-                                                        "Set up now"
-                                                    )
-                                                        .into(),
+                                                    tr!("SETUP_RECOVERY_NOW", "Set up now").into(),
                                                 ))
                                                 .on_click(move |_, _, cx| {
-                                                    recovery_key_reset_popover.update(cx,
-                                                          |recovery_key_reset_popover,
-                                                           cx| {
-                                                              recovery_key_reset_popover
-                                                                  .open(cx);
-                                                              cx.notify();
-                                                          })
+                                                    recovery_key_reset_popover.update(
+                                                        cx,
+                                                        |recovery_key_reset_popover, cx| {
+                                                            recovery_key_reset_popover.open(cx);
+                                                            cx.notify();
+                                                        },
+                                                    )
                                                 }),
-                                        )
+                                        ),
                                 ),
                         ),
                 ),
@@ -434,17 +430,19 @@ impl RenderOnce for SidebarAlert {
                                                     .child(icon_text(
                                                         "edit-copy".into(),
                                                         tr!(
-                                                        "VERIFY_SESSION_OTHER_DEVICE",
-                                                        "Verify with another verified device"
-                                                    )
-                                                            .into(),
+                                                            "VERIFY_SESSION_OTHER_DEVICE",
+                                                            "Verify with another verified device"
+                                                        )
+                                                        .into(),
                                                     ))
                                                     .on_click(move |_, _, cx| {
                                                         verification_popover.update(
                                                             cx,
                                                             |verification_popover, cx| {
                                                                 verification_popover
-                                                                    .trigger_outgoing_verification(cx)
+                                                                    .trigger_outgoing_verification(
+                                                                        cx,
+                                                                    )
                                                             },
                                                         );
                                                     }),
@@ -458,7 +456,7 @@ impl RenderOnce for SidebarAlert {
                                                         "VERIFY_SESSION_RECOVERY_KEY",
                                                         "Enter Recovery Key"
                                                     )
-                                                        .into(),
+                                                    .into(),
                                                 ))
                                                 .on_click(move |_, _, cx| {
                                                     recovery_passphrase_popover.update(
@@ -480,7 +478,7 @@ impl RenderOnce for SidebarAlert {
                                                         "VERIFY_SESSION_RESET_CRYPTO",
                                                         "Reset Recovery Key"
                                                     )
-                                                        .into(),
+                                                    .into(),
                                                 ))
                                                 .on_click(move |_, _, cx| {}),
                                         ),
@@ -520,7 +518,7 @@ impl RenderOnce for SidebarAlert {
                                                         "UNVERIFIED_DEVICES_VIEW_DEVICES",
                                                         "View Devices"
                                                     )
-                                                        .into(),
+                                                    .into(),
                                                 ))
                                                 .on_click(move |_, window, cx| {
                                                     if let Some(handler) = handler.clone() {
@@ -543,7 +541,17 @@ impl RenderOnce for SidebarAlert {
                         .title(recoverable_client_error.title())
                         .child(recoverable_client_error.description()),
                 ),
-                SidebarAlert::ActiveCall => div().p(px(4.)).child(active_call_sidebar_alert()),
+                SidebarAlert::ActiveCall(handler) => {
+                    div()
+                        .p(px(4.))
+                        .child(active_call_sidebar_alert(Rc::new(Box::new(
+                            move |event, window, cx| {
+                                if let Some(handler) = handler.clone() {
+                                    handler(event, window, cx);
+                                }
+                            },
+                        ))))
+                }
             })
             .child(verification_popover_clone.clone().into_any_element())
             .child(recovery_passphrase_popover_clone.clone().into_any_element())

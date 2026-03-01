@@ -12,14 +12,22 @@ use gpui::{
     RenderOnce, Styled, Window, div, px,
 };
 use matrix_sdk::room::RoomMember;
+use std::rc::Rc;
 use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::surfaces::{
+    MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
+};
 
 #[derive(IntoElement)]
-pub struct ActiveCallSidebarAlert {}
+pub struct ActiveCallSidebarAlert {
+    on_surface_change: Rc<Box<SurfaceChangeHandler>>,
+}
 
-pub fn active_call_sidebar_alert() -> ActiveCallSidebarAlert {
-    ActiveCallSidebarAlert {}
+pub fn active_call_sidebar_alert(
+    on_surface_change: Rc<Box<SurfaceChangeHandler>>,
+) -> ActiveCallSidebarAlert {
+    ActiveCallSidebarAlert { on_surface_change }
 }
 
 impl RenderOnce for ActiveCallSidebarAlert {
@@ -29,6 +37,7 @@ impl RenderOnce for ActiveCallSidebarAlert {
 
         let call_entity = call_manager.current_call().unwrap().clone();
         let call = call_entity.read(cx);
+        let call_room = call.room.clone();
         let call_members = call.call_members().read(cx);
 
         let theme = cx.theme();
@@ -54,6 +63,8 @@ impl RenderOnce for ActiveCallSidebarAlert {
             .filter(|other_call| !call_entity.eq(*other_call))
             .cloned()
             .collect::<Vec<_>>();
+
+        let on_surface_change = self.on_surface_change.clone();
 
         div()
             .flex()
@@ -115,6 +126,27 @@ impl RenderOnce for ActiveCallSidebarAlert {
                                     .bg(theme.button_background)
                                     .rounded(theme.border_radius)
                                     .child(
+                                        button("return-to-call")
+                                            .child(icon_text(
+                                                "call-start".into(),
+                                                tr!("CALL_RETURN", "Return to call").into(),
+                                            ))
+                                            .on_click(move |_, window, cx| {
+                                                on_surface_change(
+                                                    &SurfaceChangeEvent {
+                                                        change: SurfaceChange::Push(
+                                                            MainWindowSurface::Call(
+                                                                call_room.clone(),
+                                                            ),
+                                                        ),
+                                                    },
+                                                    window,
+                                                    cx,
+                                                )
+                                            })
+                                            .flex_grow(),
+                                    )
+                                    .child(
                                         button("mute")
                                             .child(icon(
                                                 if *mute.read(cx) { "mic-off" } else { "mic-on" }
@@ -124,19 +156,14 @@ impl RenderOnce for ActiveCallSidebarAlert {
                                             .on_click(move |_, _, cx| {
                                                 let muted = *mute.read(cx);
                                                 mute.write(cx, !muted);
-                                            })
-                                            .flex_grow(),
+                                            }),
                                     )
                                     .when_else(
                                         call.on_hold(),
                                         |david| {
                                             david.child(
                                                 button("call-off-hold")
-                                                    .checked()
-                                                    .child(icon_text(
-                                                        "media-playback-pause".into(),
-                                                        tr!("CALL_HOLD", "Put on hold").into(),
-                                                    ))
+                                                    .child(icon("media-playback-start".into()))
                                                     .on_click(|_, _, cx| {
                                                         let call_manager =
                                                             cx.global::<LivekitCallManager>();
@@ -146,18 +173,14 @@ impl RenderOnce for ActiveCallSidebarAlert {
                                                             .update(cx, |call, cx| {
                                                                 call.set_on_hold(false, cx)
                                                             })
-                                                    })
-                                                    .flex_grow(),
+                                                    }),
                                             )
                                         },
                                         |david| {
                                             david.child(
                                                 button("call-end")
                                                     .destructive()
-                                                    .child(icon_text(
-                                                        "call-stop".into(),
-                                                        tr!("CALL_HANG_UP", "Hang Up").into(),
-                                                    ))
+                                                    .child(icon("call-stop".into()))
                                                     .on_click(|_, _, cx| {
                                                         let call_manager =
                                                             cx.global::<LivekitCallManager>();
@@ -167,8 +190,7 @@ impl RenderOnce for ActiveCallSidebarAlert {
                                                             .update(cx, |call, cx| {
                                                                 call.end_call(cx)
                                                             })
-                                                    })
-                                                    .flex_grow(),
+                                                    }),
                                             )
                                         },
                                     ),

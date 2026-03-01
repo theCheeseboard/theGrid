@@ -17,6 +17,8 @@ rodio = "0.22"
 cpal = "0.17"
 async-ringbuf = { workspace = true }
 cancellation-token = { workspace = true }
+async-channel = { workspace = true }
+smol = { workspace = true }
 
 [build-dependencies]
 cntp_i18n_gen = { workspace = true }

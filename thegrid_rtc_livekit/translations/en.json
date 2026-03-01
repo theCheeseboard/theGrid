@@ -1,5 +1,11 @@
 {
   "ACTIVE_CALL": "Active Call",
+  "AUDIO_DEVICE_NONE": "Muted",
+  "AUDIO_SETUP": "Audio Output",
+  "AUDIO_SETUP_ENABLE_MIC": "Turn on mic",
+  "AUDIO_SETUP_INPUT": "Audio Input",
+  "AUDIO_SETUP_MIC_UNAVAILABLE": "Access to microphone prohibited by your device",
+  "AUDIO_SETUP_OUTPUT": "Audio Output",
   "CALLS_ON_HOLD": "Calls on hold",
   "CALL_CONNECTING": "Connecting...",
   "CALL_ERROR_LIVEKIT_JWT_REQUEST_FAILED": "Failed to request LiveKit JWT",
@@ -8,8 +14,14 @@
   "CALL_ERROR_OPENID_TOKEN_REQUEST_FAILED": "Failed to request OpenID token",
   "CALL_ERROR_ROOM_ERROR": "Room error",
   "CALL_ERROR_STATE_EVENT_FORBIDDEN": "No permission to join call",
-  "CALL_HANG_UP": "Hang Up",
-  "CALL_HOLD": "Put on hold",
   "CALL_JOIN_BUTTON": "Join Call",
-  "CALL_JOIN_GRANDSTAND": "Join call in {{room}}"
+  "CALL_JOIN_GRANDSTAND": "Join call in {{room}}",
+  "CALL_JOIN_LIVEKIT_SERVER_ADVICE": "This call will be joined through {{url}}",
+  "CALL_JOIN_NO_FOCUS": "This call cannot be connected because your homeserver is not configured to support calling.",
+  "CALL_JOIN_PROCESSING": "Please wait while the details of this call are checked...",
+  "CALL_RETURN": "Return to call",
+  "CAMERA_SETUP": "Camera",
+  "CAMERA_SETUP_NOT_SUPPORTED": "Coming Soon",
+  "JOIN_CALL": "Join Call",
+  "MIC_SETUP": "Microphone"
 }

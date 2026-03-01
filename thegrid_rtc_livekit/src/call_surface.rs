@@ -3,27 +3,23 @@ mod call_start_page;
 
 use crate::call_manager::LivekitCallManager;
 use crate::call_surface::call_page::CallPage;
-use crate::call_surface::call_start_page::call_start_page;
-use cntp_i18n::tr;
-use contemporary::components::grandstand::grandstand;
-use contemporary::components::layer::layer;
+use crate::call_surface::call_start_page::CallStartPage;
 use contemporary::components::pager::fade_animation::FadeAnimation;
-use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
-use contemporary::components::pager::pager_animation::PagerAnimationDirection;
-use contemporary::styling::theme::Theme;
 use contemporary::surface::surface;
 use gpui::{
-    App, Context, Entity, InteractiveElement, IntoElement, Render, Styled, Window, div, px, rgb,
-    uniform_list,
+    App, AppContext, Context, Entity, InteractiveElement, IntoElement, Render, Styled, Window, div,
+    rgb,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use std::rc::Rc;
-use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
+use thegrid_common::surfaces::{SurfaceChangeEvent, SurfaceChangeHandler};
 
 pub struct CallSurface {
     room_id: OwnedRoomId,
     on_surface_change: Rc<Box<SurfaceChangeHandler>>,
+
+    call_start_page: Entity<CallStartPage>,
 }
 
 impl CallSurface {
@@ -32,12 +28,16 @@ impl CallSurface {
         room_id: OwnedRoomId,
         on_surface_change: impl Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static,
     ) -> Self {
-        let on_surface_change = Rc::new(Box::new(on_surface_change));
+        let on_surface_change: Rc<Box<SurfaceChangeHandler>> =
+            Rc::new(Box::new(move |event, window, cx| {
+                on_surface_change(event, window, cx)
+            }));
+        let start_page =
+            cx.new(|cx| CallStartPage::new(room_id.clone(), on_surface_change.clone(), cx));
         Self {
             room_id,
-            on_surface_change: Rc::new(Box::new(move |event, window, cx| {
-                on_surface_change(event, window, cx)
-            })),
+            on_surface_change,
+            call_start_page: start_page,
         }
     }
 }
@@ -63,10 +63,7 @@ impl Render for CallSurface {
                     .bg(rgb(0x000000))
                     .size_full()
                     .animation(FadeAnimation::new())
-                    .page(
-                        call_start_page(self.room_id.clone(), self.on_surface_change.clone())
-                            .into_any_element(),
-                    )
+                    .page(self.call_start_page.clone().into_any_element())
                     .page(if let Some(call_page) = call_page {
                         call_page.into_any_element()
                     } else {

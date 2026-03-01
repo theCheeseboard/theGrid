@@ -3,6 +3,7 @@ use std::collections::{HashMap, HashSet};
 pub mod active_call_sidebar_alert;
 pub mod call_manager;
 pub mod call_surface;
+mod focus;
 pub(crate) mod sfx;
 
 use crate::call_manager::LivekitCallManager;
@@ -48,6 +49,7 @@ use std::rc::Weak;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
+use crate::focus::{get_focus_url, FocusUrlError};
 
 pub fn setup_thegrid_rtc_livekit() {
     I18N_MANAGER.write().unwrap().load_source(tr_load!());
@@ -197,75 +199,23 @@ impl LivekitCall {
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 let room_clone = room.clone();
-                let Ok(call_member_state_events) = cx
-                    .spawn_tokio(async move {
-                        room_clone
-                            .get_state_events(StateEventType::CallMember)
-                            .await
-                    })
-                    .await
-                else {
-                    let _ = weak_this.update(cx, |this, cx| {
-                        this.state = CallState::Error(CallError::RoomError);
-                        cx.notify();
-                    });
-                    return;
-                };
-
-                // Find the best focus URL
-                let service_url = call_member_state_events
-                    .iter()
-                    .find_map(|state_event| {
-                        let RawAnySyncOrStrippedState::Sync(event) = state_event else {
-                            return None;
-                        };
-
-                        let Ok(AnySyncStateEvent::CallMember(event)) = event.deserialize() else {
-                            return None;
-                        };
-
-                        let event = event.as_original()?;
-                        let CallMemberEventContent::SessionContent(content) = &event.content else {
-                            return None;
-                        };
-
-                        let ActiveFocus::Livekit(livekit_focus) = &content.focus_active else {
-                            return None;
-                        };
-
-                        if livekit_focus.focus_selection != FocusSelection::OldestMembership {
-                            return None;
-                        };
-
-                        content.foci_preferred.iter().find_map(|focus| {
-                            let Focus::Livekit(lk_focus) = focus else {
-                                return None;
-                            };
-
-                            if lk_focus.alias != room_id_clone {
-                                return None;
-                            }
-
-                            Some(lk_focus.service_url.clone())
-                        })
-                    })
-                    .or_else(|| {
-                        let Some(RtcFocusInfo::LiveKit(livekit_focus)) = rtc_foci
-                            .iter()
-                            .find(|focus| matches!(focus, RtcFocusInfo::LiveKit(_)))
-                        else {
-                            return None;
-                        };
-
-                        Some(livekit_focus.service_url.clone())
-                    });
-
-                let Some(service_url) = service_url else {
-                    let _ = weak_this.update(cx, |this, cx| {
-                        this.state = CallState::Error(CallError::NoRtcFocus);
-                        cx.notify();
-                    });
-                    return;
+                
+                let service_url = match get_focus_url(room_clone, rtc_foci, cx).await {
+                    Ok(url) => {url}
+                    Err(FocusUrlError::RoomError) => {
+                        let _ = weak_this.update(cx, |this, cx| {
+                            this.state = CallState::Error(CallError::RoomError);
+                            cx.notify();
+                        });
+                        return;
+                    }
+                    Err(FocusUrlError::NoRtcFocus) => {
+                        let _ = weak_this.update(cx, |this, cx| {
+                            this.state = CallState::Error(CallError::NoRtcFocus);
+                            cx.notify();
+                        });
+                        return;
+                    }
                 };
 
                 let openid_token_request =

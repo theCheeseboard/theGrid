@@ -11,7 +11,7 @@ use gpui::{Context, Entity, IntoElement, ParentElement, Render, Styled, Window, 
 use matrix_sdk::ruma::OwnedRoomId;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
-use thegrid_common::surfaces::SurfaceChangeHandler;
+use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 
 pub struct CallPage {
     call: Entity<LivekitCall>,
@@ -66,8 +66,8 @@ impl Render for CallPage {
                     .pt(px(36.))
                     .on_back_click(cx.listener(move |this, _, window, cx| {
                         (this.on_surface_change)(
-                            &thegrid_common::surfaces::SurfaceChangeEvent {
-                                change: thegrid_common::surfaces::SurfaceChange::Pop,
+                            &SurfaceChangeEvent {
+                                change: SurfaceChange::Pop,
                             },
                             window,
                             cx,
@@ -101,7 +101,14 @@ impl Render for CallPage {
                                         .on_click(cx.listener(move |this, _, window, cx| {
                                             this.call.update(cx, |call, cx| {
                                                 call.end_call(cx);
-                                            })
+                                            });
+                                            (this.on_surface_change)(
+                                                &SurfaceChangeEvent {
+                                                    change: SurfaceChange::Pop,
+                                                },
+                                                window,
+                                                cx,
+                                            )
                                         })),
                                 ),
                         ),

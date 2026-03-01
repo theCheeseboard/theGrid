@@ -1783,7 +1783,7 @@
   },
   "SETUP_RECOVERY_NOW": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:393",
+    "definedIn": "src/chat/sidebar.rs:392",
     "plural": false,
     "description": null
   },
@@ -1903,19 +1903,19 @@
   },
   "UNVERIFIED_DEVICES": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:493",
+    "definedIn": "src/chat/sidebar.rs:491",
     "plural": false,
     "description": null
   },
   "UNVERIFIED_DEVICES_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:500",
+    "definedIn": "src/chat/sidebar.rs:498",
     "plural": true,
     "description": null
   },
   "UNVERIFIED_DEVICES_VIEW_DEVICES": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:520",
+    "definedIn": "src/chat/sidebar.rs:518",
     "plural": false,
     "description": null
   },
@@ -1993,13 +1993,13 @@
   },
   "VERIFY_SESSION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:414",
+    "definedIn": "src/chat/sidebar.rs:410",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_DESCRIPTION": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:421",
+    "definedIn": "src/chat/sidebar.rs:417",
     "plural": false,
     "description": null
   },
@@ -2011,19 +2011,19 @@
   },
   "VERIFY_SESSION_OTHER_DEVICE": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:437",
+    "definedIn": "src/chat/sidebar.rs:433",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_RECOVERY_KEY": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:458",
+    "definedIn": "src/chat/sidebar.rs:456",
     "plural": false,
     "description": null
   },
   "VERIFY_SESSION_RESET_CRYPTO": {
     "context": "sidebar.rs",
-    "definedIn": "src/chat/sidebar.rs:480",
+    "definedIn": "src/chat/sidebar.rs:478",
     "plural": false,
     "description": null
   },
