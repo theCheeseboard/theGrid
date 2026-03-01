@@ -1,30 +1,16 @@
-use crate::auth::auth_surface::AuthSurface;
-use crate::main_window::{SurfaceChange, SurfaceChangeEvent};
-use crate::register::register_surface::{HomeserverOrServerUrl, RegisterSurface};
+use crate::register::register_surface::RegisterSurface;
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
-use contemporary::components::pager::pager;
-use contemporary::components::pager::slide_horizontal_animation::SlideHorizontalAnimation;
-use contemporary::components::popover::popover;
-use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::{MaskMode, TextField};
-use contemporary::styling::theme::{Theme, ThemeStorage};
-use contemporary::surface::surface;
-use gpui::prelude::FluentBuilder;
+use contemporary::styling::theme::ThemeStorage;
 use gpui::{
-    App, AppContext, BorrowAppContext, Context, ElementId, Entity, InteractiveElement, IntoElement,
-    ParentElement, Render, RenderOnce, Styled, Window, div, img, px, rgb,
+    AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window, div, px,
 };
-use matrix_sdk::OwnedServerName;
-use matrix_sdk::encryption::CrossSigningResetAuthType;
-use thegrid_common::session::session_manager::SessionManager;
-
 pub struct RegisterMatrixAuthPasswordPage {
     register_surface: Entity<RegisterSurface>,
     username_field: Entity<TextField>,

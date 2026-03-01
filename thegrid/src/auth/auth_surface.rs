@@ -1,6 +1,3 @@
-use crate::main_window::{
-    MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
-};
 use crate::utilities::default_device_name;
 use cntp_i18n::{i18n_manager, tr};
 use contemporary::application::Details;
@@ -36,6 +33,9 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
 use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::surfaces::{
+    MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
+};
 use thegrid_common::tokio_helper::TokioHelper;
 use tracing::{error, info};
 use url::Url;

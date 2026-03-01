@@ -1,19 +1,16 @@
-use crate::main_window::{
-    MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
-};
 use crate::register::register_homeserver_page::RegisterHomeserverPage;
 use crate::register::register_matrix_auth_password_page::RegisterMatrixAuthPasswordPage;
-use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
 use contemporary::components::pager::slide_horizontal_animation::SlideHorizontalAnimation;
 use contemporary::components::spinner::spinner;
 use contemporary::surface::surface;
 use gpui::{
     App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled,
-    WeakEntity, Window, div, rgb,
+    WeakEntity, Window, div,
 };
-use matrix_sdk::{Client, ClientBuildError, OwnedServerName, ServerName};
+use matrix_sdk::{Client, OwnedServerName};
 use std::rc::Rc;
+use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct RegisterSurface {

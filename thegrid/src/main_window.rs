@@ -1,6 +1,6 @@
+use crate::account_settings::AccountSettingsSurface;
 use crate::account_settings::deactivate_account::DeactivateSurface;
 use crate::account_settings::security_settings::identity_reset::IdentityResetSurface;
-use crate::account_settings::{AccountSettingsPage, AccountSettingsSurface};
 use crate::auth::auth_surface::AuthSurface;
 use crate::chat::chat_surface::ChatSurface;
 use crate::register::register_surface::RegisterSurface;
@@ -8,8 +8,12 @@ use contemporary::about_surface::about_surface;
 use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
 use contemporary::window::contemporary_window;
-use gpui::{App, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window};
+use gpui::{
+    App, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window, div,
+};
 use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::surfaces::{MainWindowSurface, SurfaceChange, SurfaceChangeEvent};
+use thegrid_rtc_livekit::call_surface::CallSurface;
 
 pub struct MainWindow {
     main_surface: Entity<ChatSurface>,
@@ -18,36 +22,8 @@ pub struct MainWindow {
     account_settings_surface: Entity<AccountSettingsSurface>,
     identity_reset_surface: Entity<IdentityResetSurface>,
     deactivate_account_surface: Entity<DeactivateSurface>,
+    call_surface: Option<Entity<CallSurface>>,
     current_surface: Vec<MainWindowSurface>,
-}
-
-#[derive(Clone)]
-pub enum MainWindowSurface {
-    Main,
-    AccountSettings(AccountSettingsPage),
-    Register,
-    IdentityReset,
-    DeactivateAccount,
-    About,
-}
-
-pub type SurfaceChangeHandler = dyn Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static;
-
-#[derive(Clone)]
-pub struct SurfaceChangeEvent {
-    pub change: SurfaceChange,
-}
-
-#[derive(Clone)]
-pub enum SurfaceChange {
-    Push(MainWindowSurface),
-    Pop,
-}
-
-impl From<MainWindowSurface> for SurfaceChange {
-    fn from(value: MainWindowSurface) -> Self {
-        SurfaceChange::Push(value)
-    }
 }
 
 impl MainWindow {
@@ -67,6 +43,7 @@ impl MainWindow {
                 account_settings_surface: AccountSettingsSurface::new(cx, handle_surface_change_2),
                 identity_reset_surface: IdentityResetSurface::new(cx, handle_surface_change_3),
                 deactivate_account_surface: DeactivateSurface::new(cx, handle_surface_change_6),
+                call_surface: None,
                 current_surface: vec![MainWindowSurface::Main],
             }
         })
@@ -97,6 +74,13 @@ impl MainWindow {
                             cx.notify();
                         })
                 }
+                if let MainWindowSurface::Call(room_id) = surface {
+                    let handle_surface_change = cx.listener(Self::handle_surface_change);
+                    this.call_surface =
+                        Some(cx.new(|cx| {
+                            CallSurface::new(cx, room_id.clone(), handle_surface_change)
+                        }));
+                }
             }
             SurfaceChange::Pop => this.pop_surface(),
         }
@@ -122,11 +106,12 @@ impl Render for MainWindow {
                         Some(_) => 0,
                         None => 1,
                     },
-                    MainWindowSurface::Register => 2,
-                    MainWindowSurface::AccountSettings(_) => 3,
-                    MainWindowSurface::IdentityReset => 4,
-                    MainWindowSurface::DeactivateAccount => 5,
-                    MainWindowSurface::About => 6,
+                    MainWindowSurface::Call(_) => 2,
+                    MainWindowSurface::Register => 3,
+                    MainWindowSurface::AccountSettings(_) => 4,
+                    MainWindowSurface::IdentityReset => 5,
+                    MainWindowSurface::DeactivateAccount => 6,
+                    MainWindowSurface::About => 7,
                 },
             )
             .w_full()
@@ -134,6 +119,12 @@ impl Render for MainWindow {
             .animation(LiftAnimation::new())
             .page(self.main_surface.clone().into_any_element())
             .page(self.auth_surface.clone().into_any_element())
+            .page(
+                self.call_surface
+                    .clone()
+                    .map(|call_surface| call_surface.into_any_element())
+                    .unwrap_or_else(|| div().into_any_element()),
+            )
             .page(self.register_surface.clone().into_any_element())
             .page(self.account_settings_surface.clone().into_any_element())
             .page(self.identity_reset_surface.clone().into_any_element())

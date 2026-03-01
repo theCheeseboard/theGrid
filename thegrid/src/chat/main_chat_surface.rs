@@ -1,4 +1,3 @@
-use crate::account_settings::AccountSettingsPage;
 use crate::actions::{AccountSettings, AccountSwitcher, CreateRoom, DirectJoinRoom, LogOut};
 use crate::auth::logout_popover::logout_popover;
 use crate::chat::chat_room::ChatRoom;
@@ -8,7 +7,6 @@ use crate::chat::join_room::create_room_popover::CreateRoomPopover;
 use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
 use crate::chat::room_directory::RoomDirectory;
 use crate::chat::sidebar::Sidebar;
-use crate::main_window::{MainWindowSurface, SurfaceChangeEvent, SurfaceChangeHandler};
 use cntp_i18n::{i18n_manager, tr};
 use contemporary::application::Details;
 use contemporary::components::interstitial::interstitial;
@@ -18,6 +16,9 @@ use gpui::{
 };
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::surfaces::{
+    AccountSettingsDeepLink, MainWindowSurface, SurfaceChangeEvent, SurfaceChangeHandler,
+};
 
 pub struct MainChatSurface {
     sidebar: Entity<Sidebar>,
@@ -51,7 +52,7 @@ impl MainChatSurface {
                 &displayed_room,
                 |this, displayed_room, cx| match displayed_room.read(cx).clone() {
                     DisplayedRoom::Room(room_id) => {
-                        this.chat_room = Some(ChatRoom::new(room_id.clone(), displayed_room, cx))
+                        this.chat_room = Some(ChatRoom::new(room_id.clone(), displayed_room, this.on_surface_change.clone(), cx))
                     }
                     DisplayedRoom::Directory(server_name) => {
                         this.room_directory =
@@ -106,7 +107,7 @@ impl MainChatSurface {
     ) {
         (self.on_surface_change)(
             &SurfaceChangeEvent {
-                change: MainWindowSurface::AccountSettings(AccountSettingsPage::Profile).into(),
+                change: MainWindowSurface::AccountSettings(AccountSettingsDeepLink::Profile).into(),
             },
             window,
             cx,

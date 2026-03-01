@@ -3,7 +3,6 @@ mod root_sidebar_page;
 mod space_sidebar_page;
 mod standard_room_element;
 
-use crate::account_settings::AccountSettingsPage;
 use crate::account_settings::security_settings::recovery_key_reset_popover::RecoveryKeyResetPopover;
 use crate::auth::recovery_passphrase_popover::RecoveryPassphrasePopover;
 use crate::auth::verification_popover::VerificationPopover;
@@ -11,7 +10,6 @@ use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::directory_sidebar_page::DirectorySidebarPage;
 use crate::chat::sidebar::root_sidebar_page::RootSidebarPage;
 use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
-use crate::main_window::{MainWindowSurface, SurfaceChangeEvent, SurfaceChangeHandler};
 use cntp_i18n::{tr, trn};
 use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
@@ -37,6 +35,9 @@ use thegrid_common::session::error_handling::{ClientError, RecoverableClientErro
 use thegrid_common::session::room_cache::RoomCategory;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::session::verification_requests_cache::VerificationRequestDetails;
+use thegrid_common::surfaces::{
+    AccountSettingsDeepLink, MainWindowSurface, SurfaceChangeEvent, SurfaceChangeHandler,
+};
 use thegrid_common::tokio_helper::TokioHelper;
 use thegrid_rtc_livekit::active_call_sidebar_alert::active_call_sidebar_alert;
 use thegrid_rtc_livekit::call_manager::LivekitCallManager;
@@ -525,7 +526,7 @@ impl RenderOnce for SidebarAlert {
                                                     if let Some(handler) = handler.clone() {
                                                         handler(
                                                             &SurfaceChangeEvent {
-                                                                change: MainWindowSurface::AccountSettings(AccountSettingsPage::Devices).into(),
+                                                                change: MainWindowSurface::AccountSettings(AccountSettingsDeepLink::Devices).into(),
                                                             },
                                                             window,
                                                             cx,

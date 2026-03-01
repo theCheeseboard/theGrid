@@ -1,4 +1,3 @@
-use crate::main_window::SurfaceChange;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::{
     App, AppContext, Bounds, ClipboardItem, Context, Element, ElementId, ElementInputHandler,
@@ -11,6 +10,7 @@ use gpui::{
 use std::ops::Range;
 use std::panic::Location;
 use std::rc::Rc;
+use thegrid_common::surfaces::SurfaceChange;
 use unicode_segmentation::UnicodeSegmentation;
 
 actions!(

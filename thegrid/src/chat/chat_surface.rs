@@ -1,7 +1,6 @@
 use crate::actions::{AccountSettings, AccountSwitcher, LogOut};
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::main_chat_surface::MainChatSurface;
-use crate::main_window::SurfaceChangeEvent;
 use cntp_i18n::tr;
 use contemporary::application::Details;
 use contemporary::components::application_menu::ApplicationMenu;
@@ -21,6 +20,7 @@ use gpui::{
 use std::fs::remove_dir_all;
 use thegrid_common::session::error_handling::ClientError;
 use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::surfaces::SurfaceChangeEvent;
 
 pub type ChangeRoomHandler = dyn Fn(&ChangeRoomEvent, &mut Window, &mut App) + 'static;
 

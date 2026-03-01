@@ -1,4 +1,3 @@
-use crate::main_window::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use crate::uiaa_client::{CancelAuthenticationEvent, SendAuthDataEvent, UiaaClient};
 use cntp_i18n::tr;
 use contemporary::components::button::button;
@@ -24,6 +23,7 @@ use matrix_sdk::encryption::recovery::{IdentityResetHandle, RecoveryError};
 use matrix_sdk::ruma::api::client::uiaa::AuthData;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use thegrid_common::tokio_helper::TokioHelper;
 use tracing::{Id, error};
 

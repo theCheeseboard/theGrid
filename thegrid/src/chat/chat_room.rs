@@ -33,7 +33,11 @@ use gpui::{
 use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::ruma::events::tag::TagName;
 use smol::stream::StreamExt;
+use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::surfaces::{
+    MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
+};
 use thegrid_common::tokio_helper::TokioHelper;
 use thegrid_rtc_livekit::call_manager::LivekitCallManager;
 use timeline_view::author_flyout::{AuthorFlyoutUserActionEvent, UserAction};
@@ -45,6 +49,8 @@ pub struct ChatRoom {
     user_action_dialogs: Entity<UserActionDialogs>,
     timeline_view: Entity<TimelineView>,
     current_page: ChatRoomPage,
+
+    on_surface_change: Rc<Box<SurfaceChangeHandler>>,
 
     microphone_access_dialog: bool,
 }
@@ -59,6 +65,7 @@ impl ChatRoom {
     pub fn new(
         room_id: OwnedRoomId,
         displayed_room: Entity<DisplayedRoom>,
+        on_surface_change: Rc<Box<SurfaceChangeHandler>>,
         cx: &mut App,
     ) -> Entity<Self> {
         cx.new(|cx| {
@@ -109,6 +116,7 @@ impl ChatRoom {
                 room_members,
                 current_page: ChatRoomPage::Chat,
                 timeline_view,
+                on_surface_change,
 
                 microphone_access_dialog: false,
             }
@@ -142,43 +150,15 @@ impl ChatRoom {
             })
     }
 
-    fn start_call(&mut self, cx: &mut Context<Self>) {
+    fn start_call(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let room_id = self.open_room.read(cx).room_id.clone();
-        match Permissions::grant_status(PermissionType::Microphone) {
-            GrantStatus::Granted | GrantStatus::PlatformUnsupported => cx
-                .update_global::<LivekitCallManager, _>(|call_manager, cx| {
-                    call_manager.start_call(room_id, cx);
-                }),
-            GrantStatus::Denied => {
-                self.microphone_access_dialog = true;
-                cx.notify();
-            }
-            GrantStatus::NotDetermined => {
-                let (tx, rx) = async_channel::bounded(1);
-                cx.spawn(
-                    async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                        let Ok(success) = rx.recv().await else {
-                            return;
-                        };
-
-                        let _ = weak_this.update(cx, |this, cx| {
-                            if success {
-                                // Try to start the call again
-                                this.start_call(cx);
-                            } else {
-                                this.microphone_access_dialog = true;
-                                cx.notify();
-                            }
-                        });
-                    },
-                )
-                .detach();
-
-                Permissions::request_permission(PermissionType::Microphone, move |success| {
-                    let _ = smol::block_on(tx.send(success));
-                })
-            }
-        }
+        (self.on_surface_change)(
+            &SurfaceChangeEvent {
+                change: SurfaceChange::Push(MainWindowSurface::Call(room_id)),
+            },
+            window,
+            cx,
+        );
     }
 }
 
@@ -243,9 +223,11 @@ impl Render for ChatRoom {
                                             button("call-start")
                                                 .flat()
                                                 .child(icon("call-start".into()))
-                                                .on_click(cx.listener(move |this, _, _, cx| {
-                                                    this.start_call(cx);
-                                                })),
+                                                .on_click(cx.listener(
+                                                    move |this, _, window, cx| {
+                                                        this.start_call(window, cx);
+                                                    },
+                                                )),
                                         )
                                     },
                                 )

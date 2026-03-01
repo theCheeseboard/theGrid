@@ -10,7 +10,6 @@ use crate::account_settings::ignored_users_settings::IgnoredUsersSettings;
 use crate::account_settings::notifications_settings::NotificationsSettings;
 use crate::account_settings::profile_settings::ProfileSettings;
 use crate::account_settings::security_settings::SecuritySettings;
-use crate::main_window::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use cntp_i18n::tr;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::layer::layer;
@@ -26,12 +25,9 @@ use gpui::{
 };
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
-
-#[derive(Clone)]
-pub enum AccountSettingsPage {
-    Profile,
-    Devices,
-}
+use thegrid_common::surfaces::{
+    AccountSettingsDeepLink, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
+};
 
 pub struct AccountSettingsSurface {
     current_page: usize,
@@ -71,10 +67,10 @@ impl AccountSettingsSurface {
         })
     }
 
-    pub fn set_current_page(&mut self, page: AccountSettingsPage) {
+    pub fn set_current_page(&mut self, page: AccountSettingsDeepLink) {
         self.current_page = match page {
-            AccountSettingsPage::Profile => 0,
-            AccountSettingsPage::Devices => 3,
+            AccountSettingsDeepLink::Profile => 0,
+            AccountSettingsDeepLink::Devices => 3,
         }
     }
 }

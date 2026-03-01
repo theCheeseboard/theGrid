@@ -1,4 +1,3 @@
-use crate::main_window::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use crate::uiaa_client::{CancelAuthenticationEvent, SendAuthDataEvent, UiaaClient};
 use cntp_i18n::tr;
 use contemporary::application::Details;
@@ -30,6 +29,7 @@ use matrix_sdk::ruma::api::client::uiaa::AuthData;
 use std::fs::remove_dir_all;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use thegrid_common::tokio_helper::TokioHelper;
 use tracing::{Id, error};
 

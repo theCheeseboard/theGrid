@@ -2,6 +2,7 @@ use cntp_i18n::{I18N_MANAGER, tr_load};
 
 pub mod mxc_image;
 pub mod session;
+pub mod surfaces;
 pub mod thegrid_error;
 pub mod tokio_helper;
 

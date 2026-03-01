@@ -6,9 +6,6 @@ pub mod recovery_key_reset_popover;
 use crate::account_settings::security_settings::key_export_popover::KeyExportPopover;
 use crate::account_settings::security_settings::key_import_popover::KeyImportPopover;
 use crate::account_settings::security_settings::recovery_key_reset_popover::RecoveryKeyResetPopover;
-use crate::main_window::{
-    MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
-};
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
@@ -25,6 +22,9 @@ use gpui::{
 use matrix_sdk::encryption::recovery::RecoveryState;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::surfaces::{
+    MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
+};
 
 pub struct SecuritySettings {
     recovery_key_reset_popover: Entity<RecoveryKeyResetPopover>,

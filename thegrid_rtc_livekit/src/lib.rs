@@ -2,6 +2,7 @@ use async_ringbuf::traits::{AsyncProducer, Consumer, Producer, Split};
 use std::collections::{HashMap, HashSet};
 pub mod active_call_sidebar_alert;
 pub mod call_manager;
+pub mod call_surface;
 pub(crate) mod sfx;
 
 use crate::call_manager::LivekitCallManager;
@@ -529,7 +530,8 @@ impl LivekitCall {
             let call_manager = cx.global::<LivekitCallManager>();
             if call_manager
                 .current_call()
-                .is_none_or(|current_call| current_call != cx.entity() && !this.on_hold)
+                .is_none_or(|current_call| current_call != cx.entity())
+                && !this.on_hold
             {
                 this.on_hold = true;
                 cx.notify();
@@ -557,7 +559,7 @@ impl LivekitCall {
     pub fn room(&self) -> &RoomId {
         &self.room
     }
-    
+
     pub fn on_hold(&self) -> bool {
         self.on_hold
     }

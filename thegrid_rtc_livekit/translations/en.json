@@ -1,0 +1,15 @@
+{
+  "ACTIVE_CALL": "Active Call",
+  "CALLS_ON_HOLD": "Calls on hold",
+  "CALL_CONNECTING": "Connecting...",
+  "CALL_ERROR_LIVEKIT_JWT_REQUEST_FAILED": "Failed to request LiveKit JWT",
+  "CALL_ERROR_LIVEKIT_RTC_FAILED": "Failed to join LiveKit room",
+  "CALL_ERROR_NO_RTC_FOCUS": "No RTC focus available",
+  "CALL_ERROR_OPENID_TOKEN_REQUEST_FAILED": "Failed to request OpenID token",
+  "CALL_ERROR_ROOM_ERROR": "Room error",
+  "CALL_ERROR_STATE_EVENT_FORBIDDEN": "No permission to join call",
+  "CALL_HANG_UP": "Hang Up",
+  "CALL_HOLD": "Put on hold",
+  "CALL_JOIN_BUTTON": "Join Call",
+  "CALL_JOIN_GRANDSTAND": "Join call in {{room}}"
+}
