@@ -1,4 +1,5 @@
 mod attachments_view;
+mod call_members_view;
 mod chat_bar;
 pub mod invite_popover;
 pub mod open_room;
@@ -9,6 +10,7 @@ mod timeline_view;
 mod user_action_dialogs;
 
 use crate::chat::chat_room::attachments_view::AttachmentsView;
+use crate::chat::chat_room::call_members_view::CallMembersView;
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::room_members::RoomMembers;
 use crate::chat::chat_room::room_settings::RoomSettings;
@@ -187,6 +189,8 @@ impl Render for ChatRoom {
         let room_id_2 = room.room_id().to_owned();
         let chat_bar = open_room.chat_bar.clone();
 
+        let call_members = open_room.active_call_users.clone();
+
         div()
             .size_full()
             .child(
@@ -247,6 +251,14 @@ impl Render for ChatRoom {
                                 .flex_col()
                                 .flex_grow()
                                 .child(self.timeline_view.clone())
+                                .when(!call_members.is_empty(), |david| {
+                                    david.child(CallMembersView {
+                                        members: call_members,
+                                        start_call: Box::new(cx.listener(|this, _, window, cx| {
+                                            this.start_call(window, cx);
+                                        })),
+                                    })
+                                })
                                 .when(!pending_attachments.is_empty(), |david| {
                                     david.child(AttachmentsView {
                                         open_room: self.open_room.clone(),

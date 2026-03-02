@@ -24,6 +24,11 @@
   "ACCOUNT_SETTINGS_TITLE": "Account Settings",
   "ACCOUNT_SWITCHER_ERROR": "Account Switcher",
   "ACTIONS": "Actions",
+  "ACTIVE_CALL_CONTENT": {
+    "one": "{{count}} user in this room",
+    "other": "{{count}} users in this room"
+  },
+  "ACTIVE_CALL_TITLE": "Active Call",
   "ATTACHMENTS_TITLE": "Attachments",
   "ATTACH_ERROR": "Attachment Error",
   "ATTACH_PROMPT": "Attach",
@@ -120,6 +125,7 @@
   "INVITE_TITLE": "Invite to room",
   "INVITE_USER": "Invite",
   "IN_ROOM": "In {{room}}",
+  "JOIN_CALL": "Join Call",
   "JOIN_ERROR_TEXT": "Unable to join the room {{room}}",
   "JOIN_ERROR_TITLE": "Unable to join room",
   "JOIN_ROOM": "Join Room",

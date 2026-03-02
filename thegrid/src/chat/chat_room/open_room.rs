@@ -8,11 +8,16 @@ use gpui::private::anyhow;
 use gpui::{
     AppContext, AsyncApp, ClipboardEntry, Context, Entity, PathPromptOptions, WeakEntity, Window,
 };
-use matrix_sdk::Room;
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::OwnedRoomId;
-use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
+use matrix_sdk::ruma::events::call::member::CallMemberEvent;
+use matrix_sdk::ruma::events::room::message::{RoomMessageEventContent, SyncRoomMessageEvent};
+use matrix_sdk::ruma::events::room::name::RoomNameEvent;
 use matrix_sdk::ruma::events::tag::Tags;
+use matrix_sdk::ruma::events::{
+    AnyFullStateEventContent, AnySyncStateEvent, StateEvent, SyncStateEvent,
+};
+use matrix_sdk::{Client, Room};
 use matrix_sdk_ui::timeline::{AttachmentConfig, AttachmentSource, RoomExt};
 use mime2ext::mime2ext;
 use std::fs::read;
@@ -27,6 +32,7 @@ pub struct OpenRoom {
     pub displayed_room: Entity<DisplayedRoom>,
     pub pending_attachments: Vec<PendingAttachment>,
     pub typing_users: Vec<RoomMember>,
+    pub active_call_users: Vec<RoomMember>,
     pub chat_input: Entity<ChatInput>,
     pub room_id: OwnedRoomId,
     pub chat_bar: Entity<ChatBar>,
@@ -76,6 +82,7 @@ impl OpenRoom {
             chat_bar,
             current_user: None,
             typing_users: Vec::new(),
+            active_call_users: Vec::new(),
             chat_input,
             timeline: None,
             tags: Default::default(),
@@ -87,6 +94,7 @@ impl OpenRoom {
         self_return.room = Some(room.clone());
 
         self_return.setup_acquire_own_user(cx);
+        self_return.setup_call_members_listener(cx);
 
         let room_clone = room.clone();
         cx.spawn(
@@ -174,6 +182,58 @@ impl OpenRoom {
                             drop(typing_notification_guard);
                             return;
                         }
+                    }
+                }
+            },
+        )
+        .detach();
+    }
+
+    fn setup_call_members_listener(&mut self, cx: &mut Context<Self>) {
+        let session_manager = cx.global::<SessionManager>();
+        let client = session_manager.client().unwrap().read(cx).clone();
+        let room = self.room.clone().unwrap();
+        let (tx, rx) = async_channel::bounded(1);
+        let room_update = room.add_event_handler(|ev: AnySyncStateEvent| async move {
+            match ev.content() {
+                AnyFullStateEventContent::CallMember(_) => {
+                    let _ = tx.send(ev).await;
+                }
+                _ => {}
+            }
+        });
+
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                loop {
+                    let room = room.clone();
+                    let active_call_participants = room.active_room_call_participants();
+
+                    let mut call_participants = Vec::new();
+                    for participant in active_call_participants {
+                        let room = room.clone();
+                        if let Ok(Some(member)) = cx
+                            .spawn_tokio(async move { room.get_member(&participant).await })
+                            .await
+                        {
+                            call_participants.push(member);
+                        }
+                    }
+
+                    if weak_this
+                        .update(cx, |this, cx| {
+                            this.active_call_users = call_participants;
+                            cx.notify();
+                        })
+                        .is_err()
+                    {
+                        client.remove_event_handler(room_update);
+                        return;
+                    }
+
+                    if rx.recv().await.is_err() {
+                        client.remove_event_handler(room_update);
+                        return;
                     }
                 }
             },
