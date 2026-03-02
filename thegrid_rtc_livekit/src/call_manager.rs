@@ -8,6 +8,9 @@ pub struct LivekitCallManager {
     current_call: Option<Entity<LivekitCall>>,
     active_calls: Vec<Entity<LivekitCall>>,
     mute: Entity<bool>,
+
+    active_output_device: Entity<Option<cpal::Device>>,
+    active_input_device: Entity<Option<cpal::Device>>,
 }
 
 #[derive(Clone)]
@@ -107,6 +110,14 @@ impl LivekitCallManager {
 
         FocusUrl::Processing
     }
+
+    pub fn active_output_device(&self) -> Entity<Option<cpal::Device>> {
+        self.active_output_device.clone()
+    }
+
+    pub fn active_input_device(&self) -> Entity<Option<cpal::Device>> {
+        self.active_input_device.clone()
+    }
 }
 
 impl Global for LivekitCallManager {}
@@ -123,9 +134,14 @@ pub fn setup_call_manager(cx: &mut App) {
     })
     .detach();
 
+    let active_input_device = cx.new(|_| None);
+    let active_output_device = cx.new(|_| None);
+
     cx.set_global(LivekitCallManager {
         current_call: None,
         active_calls: Vec::new(),
         mute,
+        active_input_device,
+        active_output_device,
     });
 }

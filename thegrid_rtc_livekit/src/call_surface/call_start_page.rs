@@ -298,6 +298,19 @@ impl CallStartPage {
             let _ = smol::block_on(tx.send(success));
         })
     }
+    
+    fn start_call(&mut self, cx: &mut Context<Self>) {
+        let room_id = self.room_id.clone();
+        let output_device = self.selected_output_device.clone();
+        let input_device = self.selected_input_device.clone();
+        
+        cx.update_global::<LivekitCallManager, _>(|call_manager, cx| {
+            call_manager.active_output_device().write(cx, output_device);
+            call_manager.active_input_device().write(cx, input_device);
+            
+            call_manager.start_call(room_id, cx);
+        });
+    }
 }
 
 impl Render for CallStartPage {
@@ -440,7 +453,7 @@ impl Render for CallStartPage {
                                             button.disabled()
                                         })
                                         .on_click(cx.listener(move |this, _, _, cx| {
-                                            start_call(this.room_id.clone(), cx);
+                                            this.start_call(cx);
                                         }))
                                         .w(px(300.)),
                                 ),
@@ -448,10 +461,4 @@ impl Render for CallStartPage {
                     ),
             )
     }
-}
-
-fn start_call(room_id: OwnedRoomId, cx: &mut App) {
-    cx.update_global::<LivekitCallManager, _>(|call_manager, cx| {
-        call_manager.start_call(room_id, cx);
-    });
 }

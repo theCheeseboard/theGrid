@@ -7,7 +7,9 @@ mod focus;
 pub(crate) mod sfx;
 
 use crate::call_manager::LivekitCallManager;
+use crate::focus::{FocusUrlError, get_focus_url};
 use async_ringbuf::AsyncHeapRb;
+use async_ringbuf::consumer::AsyncConsumer;
 use cancellation_token::CancellationTokenSource;
 use cntp_i18n::{I18N_MANAGER, tr, tr_load};
 use cpal::Host;
@@ -18,7 +20,7 @@ use gpui::{AppContext, AsyncApp, BorrowAppContext, Context, Entity, WeakEntity};
 use livekit::id::TrackSid;
 use livekit::options::TrackPublishOptions;
 use livekit::prelude::LocalParticipant;
-use livekit::track::{LocalAudioTrack, LocalTrack, RemoteTrack, TrackSource};
+use livekit::track::{LocalAudioTrack, LocalTrack, RemoteAudioTrack, RemoteTrack, TrackSource};
 use livekit::webrtc::audio_frame::AudioFrame;
 use livekit::webrtc::audio_source::native::NativeAudioSource;
 use livekit::webrtc::audio_stream::native::NativeAudioStream;
@@ -49,7 +51,6 @@ use std::rc::Weak;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
-use crate::focus::{get_focus_url, FocusUrlError};
 
 pub fn setup_thegrid_rtc_livekit() {
     I18N_MANAGER.write().unwrap().load_source(tr_load!());
@@ -58,9 +59,6 @@ pub fn setup_thegrid_rtc_livekit() {
 pub struct LivekitCall {
     room: OwnedRoomId,
     state: CallState,
-
-    cpal_output_device: Option<cpal::Device>,
-    cpal_input_device: Option<cpal::Device>,
 
     mic_track_sid: Option<TrackSid>,
 
@@ -199,9 +197,9 @@ impl LivekitCall {
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 let room_clone = room.clone();
-                
+
                 let service_url = match get_focus_url(room_clone, rtc_foci, cx).await {
-                    Ok(url) => {url}
+                    Ok(url) => url,
                     Err(FocusUrlError::RoomError) => {
                         let _ = weak_this.update(cx, |this, cx| {
                             this.state = CallState::Error(CallError::RoomError);
@@ -492,8 +490,6 @@ impl LivekitCall {
         LivekitCall {
             room: room_id,
             state: CallState::Connecting,
-            cpal_output_device: cpal_host.default_output_device(),
-            cpal_input_device: cpal_host.default_input_device(),
             cancellation_source: CancellationTokenSource::new(),
             started_at: Instant::now(),
             mic_track_sid: None,
@@ -675,39 +671,76 @@ impl LivekitCall {
             self.mic_track_sid = None;
         }
 
-        let Some(device) = &self.cpal_input_device else {
-            warn!("No input device available for audio track: ignoring");
+        let input_device = call_manager.active_input_device();
+        let local_participant_clone = local_participant.clone();
+        cx.observe(&input_device, move |this, input_device, cx| {
+            this.route_mic(local_participant_clone.clone(), input_device, cx);
+        })
+        .detach();
+        self.route_mic(local_participant, input_device, cx);
+    }
+
+    fn start_track(&mut self, track: &RemoteTrack, cx: &mut Context<Self>) {
+        let call_manager = cx.global::<LivekitCallManager>();
+        match track {
+            RemoteTrack::Audio(audio_track) => {
+                let audio_track_clone = audio_track.clone();
+                let output_device = call_manager.active_output_device();
+                cx.observe(&output_device, move |this, output_device, cx| {
+                    this.route_audio(audio_track_clone.clone(), output_device, cx);
+                })
+                .detach();
+                self.route_audio(audio_track.clone(), output_device, cx);
+            }
+            RemoteTrack::Video(_) => {
+                // TODO
+            }
+        }
+    }
+
+    fn route_mic(
+        &mut self,
+        local_participant: LocalParticipant,
+        device_entity: Entity<Option<cpal::Device>>,
+        cx: &mut Context<Self>,
+    ) {
+        let cancellation_token = self.cancellation_source.token();
+
+        let call_manager = cx.global::<LivekitCallManager>();
+        let device = device_entity.read(cx);
+        let (mut producer, mut consumer) = AsyncHeapRb::<Vec<i16>>::new(32).split();
+
+        let (sample_rate, channels, input_stream) = if let Some(device) = device {
+            let mut supported_device_configs = device.supported_input_configs().unwrap();
+            let supported_config = supported_device_configs
+                .next()
+                .unwrap()
+                .with_sample_rate(48000);
+
+            let input_stream = device
+                .build_input_stream(
+                    &supported_config.config(),
+                    move |data: &[i16], _: &cpal::InputCallbackInfo| {
+                        let _ = producer.try_push(data.to_vec());
+                    },
+                    move |err| {
+                        // Errors? What errors!?
+                        error!("cpal: error in input stream: {:?}", err)
+                    },
+                    None,
+                )
+                .unwrap();
+            (
+                supported_config.sample_rate(),
+                supported_config.channels() as u32,
+                input_stream,
+            )
+        } else {
+            // Just don't because we don't have a mic
             return;
         };
 
-        let (mut producer, mut consumer) = AsyncHeapRb::<Vec<i16>>::new(32).split();
-
-        let mut supported_device_configs = device.supported_input_configs().unwrap();
-        let supported_config = supported_device_configs
-            .next()
-            .unwrap()
-            .with_sample_rate(48000);
-
-        let input_stream = device
-            .build_input_stream(
-                &supported_config.config(),
-                move |data: &[i16], _: &cpal::InputCallbackInfo| {
-                    let _ = producer.try_push(data.to_vec());
-                },
-                move |err| {
-                    // Errors? What errors!?
-                    error!("cpal: error in input stream: {:?}", err)
-                },
-                None,
-            )
-            .unwrap();
-
-        let source = NativeAudioSource::new(
-            Default::default(),
-            supported_config.sample_rate(),
-            supported_config.channels() as u32,
-            1000,
-        );
+        let source = NativeAudioSource::new(Default::default(), sample_rate, channels, 1000);
         let track =
             LocalAudioTrack::create_audio_track("mic", RtcAudioSource::Native(source.clone()));
 
@@ -726,8 +759,10 @@ impl LivekitCall {
         })
         .detach();
 
-        let num_channels = supported_config.channels() as u32;
-        let sample_rate = supported_config.sample_rate();
+        let cancellation_source = CancellationTokenSource::new();
+        let cancellation_source_2 = cancellation_source.clone();
+        let cancellation_token_2 = cancellation_source.token();
+
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 let Ok(publication) = cx
@@ -757,98 +792,143 @@ impl LivekitCall {
                         // Receive the audio frames in a new task
                         while let Some(audio_frame_data) = consumer.next().await {
                             if cancellation_token.is_canceled() {
+                                cancellation_source.cancel();
                                 return Ok(());
                             }
 
                             let audio_frame = AudioFrame {
-                                num_channels,
+                                num_channels: channels,
                                 sample_rate,
-                                samples_per_channel: (audio_frame_data.len()
-                                    / num_channels as usize)
+                                samples_per_channel: (audio_frame_data.len() / channels as usize)
                                     as u32,
                                 data: audio_frame_data.into(),
                             };
 
                             if source.capture_frame(&audio_frame).await.is_err() {
+                                cancellation_source.cancel();
                                 return Ok(());
                             };
                         }
 
+                        cancellation_source.cancel();
                         Ok::<_, anyhow::Error>(())
                     })
                     .await;
-
-                let _ = input_stream.pause();
             },
         )
         .detach();
+
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                cancellation_token_2.wait().await;
+                drop(input_stream);
+            },
+        )
+        .detach();
+
+        cx.observe(&device_entity, move |this, device, cx| {
+            cancellation_source_2.cancel();
+        })
+        .detach();
     }
 
-    fn start_track(&mut self, track: &RemoteTrack, cx: &mut Context<Self>) {
+    fn route_audio(
+        &mut self,
+        audio_track: RemoteAudioTrack,
+        device_entity: Entity<Option<cpal::Device>>,
+        cx: &mut Context<Self>,
+    ) {
         let cancellation_token = self.cancellation_source.token();
-        match track {
-            RemoteTrack::Audio(audio_track) => {
-                let Some(device) = &self.cpal_output_device else {
-                    warn!("No output device available for audio track: ignoring");
-                    return;
-                };
 
-                let (mut producer, mut consumer) = AsyncHeapRb::<i16>::new(16384).split();
+        let (mut producer, mut consumer) = AsyncHeapRb::<i16>::new(16384).split();
 
-                let mut supported_device_configs = device.supported_output_configs().unwrap();
-                let supported_config = supported_device_configs
-                    .next()
-                    .unwrap()
-                    .with_sample_rate(48000);
+        let device = device_entity.read(cx);
+        let (sample_rate, channels, output_stream) = if let Some(device) = device {
+            let mut supported_device_configs = device.supported_output_configs().unwrap();
+            let supported_config = supported_device_configs
+                .next()
+                .unwrap()
+                .with_sample_rate(48000);
 
-                let output_stream = device
-                    .build_output_stream(
-                        &supported_config.config(),
-                        move |data: &mut [i16], _: &cpal::OutputCallbackInfo| {
-                            consumer.pop_slice(data);
-                        },
-                        move |err| {
-                            // Errors? What errors!?
-                            error!("cpal: error in output stream: {:?}", err)
-                        },
-                        None,
-                    )
-                    .unwrap();
-
-                let rtc_track = audio_track.rtc_track();
-                let mut audio_stream = NativeAudioStream::new(
-                    rtc_track,
-                    supported_config.sample_rate() as i32,
-                    supported_config.channels() as i32,
-                );
-                cx.spawn(
-                    async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                        let _ = cx
-                            .spawn_tokio(async move {
-                                // Receive the audio frames in a new task
-                                while let Some(audio_frame) = audio_stream.next().await {
-                                    if cancellation_token.is_canceled() {
-                                        return Ok(());
-                                    }
-
-                                    if producer.push_exact(&audio_frame.data).await.is_err() {
-                                        return Ok(());
-                                    };
-                                }
-
-                                Ok::<_, anyhow::Error>(())
-                            })
-                            .await;
-
-                        output_stream.pause()
+            let output_stream = device
+                .build_output_stream(
+                    &supported_config.config(),
+                    move |data: &mut [i16], _: &cpal::OutputCallbackInfo| {
+                        consumer.pop_slice(data);
                     },
+                    move |err| {
+                        // Errors? What errors!?
+                        error!("cpal: error in output stream: {:?}", err)
+                    },
+                    None,
                 )
-                .detach();
-            }
-            RemoteTrack::Video(_) => {
-                // TODO
-            }
-        }
+                .unwrap();
+
+            (
+                supported_config.sample_rate() as i32,
+                supported_config.channels() as i32,
+                Some(output_stream),
+            )
+        } else {
+            cx.spawn(
+                async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                    loop {
+                        loop {
+                            consumer.pop_until_end(&mut Default::default()).await;
+                            if consumer.is_closed() {
+                                return;
+                            }
+                        }
+                    }
+                },
+            )
+            .detach();
+            (44100, 2, None)
+        };
+
+        let cancellation_source = CancellationTokenSource::new();
+        let cancellation_source_2 = cancellation_source.clone();
+
+        let rtc_track = audio_track.rtc_track();
+        let mut audio_stream = NativeAudioStream::new(rtc_track, sample_rate, channels);
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                let _ = cx
+                    .spawn_tokio(async move {
+                        // Receive the audio frames in a new task
+                        while let Some(audio_frame) = audio_stream.next().await {
+                            if cancellation_token.is_canceled() {
+                                cancellation_source_2.cancel();
+                                return Ok(());
+                            }
+
+                            if producer.push_exact(&audio_frame.data).await.is_err() {
+                                cancellation_source_2.cancel();
+                                return Ok(());
+                            };
+                        }
+
+                        cancellation_source_2.cancel();
+                        Ok::<_, anyhow::Error>(())
+                    })
+                    .await;
+            },
+        )
+        .detach();
+
+        let cancellation_token_2 = cancellation_source.token();
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                cancellation_token_2.wait().await;
+                drop(output_stream);
+            },
+        )
+        .detach();
+
+        cx.observe(&device_entity, move |this, device, cx| {
+            cancellation_source.cancel();
+        })
+        .detach();
     }
 
     pub fn end_call(&mut self, cx: &mut Context<Self>) {
