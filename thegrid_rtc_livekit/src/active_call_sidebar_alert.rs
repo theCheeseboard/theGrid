@@ -108,13 +108,9 @@ impl RenderOnce for ActiveCallSidebarAlert {
                             .child(call_members.iter().fold(
                                 div().flex().flex_col(),
                                 |david, call_member| {
-                                    match call.get_cached_room_user(&call_member.user_id) {
-                                        None => david,
-                                        Some(room_member) => david.child(CallMemberState {
-                                            room_member,
-                                            call_member: call_member.clone(),
-                                        }),
-                                    }
+                                    david.child(CallMemberState {
+                                        call_member: call_member.clone(),
+                                    })
                                 },
                             ))
                             .when_some(call_error, |david, err| {
@@ -246,7 +242,6 @@ impl RenderOnce for ActiveCallSidebarAlert {
 
 #[derive(IntoElement)]
 struct CallMemberState {
-    room_member: RoomMember,
     call_member: CallMember,
 }
 
@@ -255,6 +250,7 @@ impl RenderOnce for CallMemberState {
         let theme = cx.theme();
 
         let member_is_connecting = self.call_member.mic_state == StreamState::Unavailable;
+        let room_member = self.call_member.room_member;
 
         div()
             .flex()
@@ -262,13 +258,13 @@ impl RenderOnce for CallMemberState {
             .gap(px(2.))
             .when(member_is_connecting, |david| david.opacity(0.5))
             .child(
-                mxc_image(self.room_member.avatar_url().map(|url| url.to_owned()))
+                mxc_image(room_member.avatar_url().map(|url| url.to_owned()))
                     .size(px(16.))
                     .size_policy(SizePolicy::Fit)
                     .rounded(theme.border_radius),
             )
             .child(
-                self.room_member
+                room_member
                     .display_name()
                     .unwrap_or_default()
                     .to_string(),

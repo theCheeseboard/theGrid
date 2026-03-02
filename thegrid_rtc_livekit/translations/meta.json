@@ -43,7 +43,7 @@
   },
   "CALLS_ON_HOLD": {
     "context": "active_call_sidebar_alert.rs",
-    "definedIn": "src/active_call_sidebar_alert.rs:203",
+    "definedIn": "src/active_call_sidebar_alert.rs:199",
     "plural": false,
     "description": null
   },
@@ -121,7 +121,7 @@
   },
   "CALL_RETURN": {
     "context": "active_call_sidebar_alert.rs",
-    "definedIn": "src/active_call_sidebar_alert.rs:132",
+    "definedIn": "src/active_call_sidebar_alert.rs:128",
     "plural": false,
     "description": null
   },

@@ -189,7 +189,7 @@ impl Render for ChatRoom {
         let room_id_2 = room.room_id().to_owned();
         let chat_bar = open_room.chat_bar.clone();
 
-        let call_members = open_room.active_call_users.clone();
+        let call_members = open_room.active_call_users.read(cx).clone();
 
         div()
             .size_full()

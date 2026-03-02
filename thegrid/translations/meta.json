@@ -175,7 +175,7 @@
   },
   "ATTACH_PROMPT": {
     "context": "open_room.rs",
-    "definedIn": "src/chat/chat_room/open_room.rs:261",
+    "definedIn": "src/chat/chat_room/open_room.rs:211",
     "plural": false,
     "description": null
   },

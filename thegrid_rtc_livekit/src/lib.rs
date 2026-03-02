@@ -49,6 +49,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::rc::Weak;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use thegrid_common::room::active_call_participants::track_active_call_participants;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 
@@ -63,8 +64,7 @@ pub struct LivekitCall {
     mic_track_sid: Option<TrackSid>,
 
     subscribed_streams: Vec<SubscribedStream>,
-    active_call_participants_state: Vec<OwnedUserId>,
-    cached_room_users: HashMap<OwnedUserId, Option<RoomMember>>,
+    active_call_participants_state: Entity<Vec<RoomMember>>,
     muted_streams: HashSet<TrackSid>,
     cached_call_members: Entity<Vec<CallMember>>,
 
@@ -76,7 +76,7 @@ pub struct LivekitCall {
 
 #[derive(Clone)]
 pub struct CallMember {
-    user_id: OwnedUserId,
+    room_member: RoomMember,
     device_id: Option<OwnedDeviceId>,
     mic_state: StreamState,
     camera_state: StreamState,
@@ -150,6 +150,8 @@ impl Display for CallError {
 impl LivekitCall {
     //noinspection RsRedundantElse
     pub fn new(room_id: OwnedRoomId, cx: &mut Context<Self>) -> Self {
+        let active_call_participants_state = track_active_call_participants(room_id.clone(), cx);
+
         let session_manager = cx.global::<SessionManager>();
         let client = session_manager.client().unwrap().read(cx).clone();
         let user_id = client.user_id().unwrap().to_owned();
@@ -161,38 +163,10 @@ impl LivekitCall {
             .read(cx)
             .inner
             .clone();
-        let active_call_participants_state = room.active_room_call_participants();
         let room_id_clone = room_id.clone();
         let device_id = client.device_id().unwrap().to_owned();
 
         let rtc_foci = session_manager.rtc_foci().clone();
-
-        let room_clone = room.clone();
-        cx.spawn(
-            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                loop {
-                    let room = room_clone.clone();
-                    let _ = cx
-                        .spawn_tokio(async move {
-                            room.sync_up().await;
-                            Ok::<_, anyhow::Error>(())
-                        })
-                        .await;
-
-                    let active_call_participants = room_clone.active_room_call_participants();
-                    if weak_this
-                        .update(cx, |this, cx| {
-                            this.active_call_participants_state = active_call_participants;
-                            cx.notify();
-                        })
-                        .is_err()
-                    {
-                        return;
-                    }
-                }
-            },
-        )
-        .detach();
 
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
@@ -321,8 +295,7 @@ impl LivekitCall {
                         let mut room_options = RoomOptions::default();
                         room_options.auto_subscribe = true;
                         room_options.adaptive_stream = true;
-                        livekit::Room::connect(&livekit_jwt.url, &livekit_jwt.jwt, room_options)
-                            .await
+                        Room::connect(&livekit_jwt.url, &livekit_jwt.jwt, room_options).await
                     })
                     .await
                 {
@@ -470,8 +443,6 @@ impl LivekitCall {
         })
         .detach();
 
-        let cpal_host = cpal::default_host();
-
         sfx::play_sound_effect(include_bytes!("../assets/call-join.ogg"));
 
         cx.observe_global::<LivekitCallManager>(|this, cx| {
@@ -495,7 +466,6 @@ impl LivekitCall {
             mic_track_sid: None,
             active_call_participants_state,
             subscribed_streams: Vec::new(),
-            cached_room_users: HashMap::new(),
             muted_streams: HashSet::new(),
             on_hold: false,
             cached_call_members,
@@ -539,11 +509,16 @@ impl LivekitCall {
             .collect::<HashSet<_>>();
 
         let mut call_members = Vec::new();
-        let active_call_participants = self.active_call_participants_state.clone();
+        let active_call_participants = self.active_call_participants_state.read(cx).clone();
         let mut this_device_processed = false;
         for participant in active_call_participants.iter() {
-            if let Some(tuple) = devices.iter().find(|(user_id, _)| user_id == participant) {
-                self.cache_room_user(tuple.0.clone(), cx);
+            if let Some((tuple, participant)) = devices.iter().find_map(|tuple| {
+                if tuple.0 == participant.user_id() {
+                    Some((tuple, participant))
+                } else {
+                    None
+                }
+            }) {
                 let subscribed_streams = self
                     .subscribed_streams
                     .iter()
@@ -551,7 +526,7 @@ impl LivekitCall {
                     .collect::<Vec<_>>();
 
                 let mut call_member = CallMember {
-                    user_id: tuple.0.clone(),
+                    room_member: participant.clone(),
                     device_id: Some(tuple.1.clone()),
                     mic_state: StreamState::Unavailable,
                     screenshare_state: StreamState::Unavailable,
@@ -585,9 +560,9 @@ impl LivekitCall {
                 devices.remove(&tuple);
             } else {
                 call_members.push(CallMember {
-                    user_id: participant.clone(),
+                    room_member: participant.clone(),
                     device_id: None,
-                    mic_state: if !this_device_processed && participant == &this_user_id {
+                    mic_state: if !this_device_processed && participant.user_id() == &this_user_id {
                         this_device_processed = true;
                         if muted {
                             StreamState::Off
@@ -603,45 +578,6 @@ impl LivekitCall {
             };
         }
         call_members
-    }
-
-    fn cache_room_user(&mut self, user: OwnedUserId, cx: &mut Context<Self>) {
-        if self.cached_room_users.contains_key(&user) {
-            return;
-        }
-
-        self.cached_room_users.insert(user.clone(), None);
-
-        let session_manager = cx.global::<SessionManager>();
-        let room = session_manager
-            .rooms()
-            .read(cx)
-            .room(&self.room)
-            .unwrap()
-            .read(cx)
-            .inner
-            .clone();
-        cx.spawn(
-            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let user_id = user.clone();
-                let Ok(room_member) = cx
-                    .spawn_tokio(async move { room.get_member(&user).await })
-                    .await
-                else {
-                    return;
-                };
-
-                let _ = weak_this.update(cx, |this, cx| {
-                    this.cached_room_users.insert(user_id, room_member);
-                    cx.notify();
-                });
-            },
-        )
-        .detach();
-    }
-
-    pub fn get_cached_room_user(&self, user: &OwnedUserId) -> Option<RoomMember> {
-        self.cached_room_users.get(user).cloned().flatten()
     }
 
     fn setup_local_mic(&mut self, cx: &mut Context<Self>) {
@@ -873,11 +809,9 @@ impl LivekitCall {
             cx.spawn(
                 async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                     loop {
-                        loop {
-                            consumer.pop_until_end(&mut Default::default()).await;
-                            if consumer.is_closed() {
-                                return;
-                            }
+                        consumer.pop_until_end(&mut Default::default()).await;
+                        if consumer.is_closed() {
+                            return;
                         }
                     }
                 },

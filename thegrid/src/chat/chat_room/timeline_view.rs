@@ -154,7 +154,10 @@ impl Render for TimelineView {
                     cx.processor(move |this, i, window, cx| {
                         let timeline = timeline_entity.read(cx);
                         let timeline_items = timeline.timeline_items();
-                        let item = timeline_items[i].clone();
+                        let Some(item) = timeline_items.get(i).cloned() else {
+                            return div().into_any_element()
+                        };
+
                         let previous_item = if i == 0 {
                             None
                         } else {
