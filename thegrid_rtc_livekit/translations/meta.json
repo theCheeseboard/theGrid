@@ -61,37 +61,37 @@
   },
   "CALL_ERROR_LIVEKIT_JWT_REQUEST_FAILED": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:135",
+    "definedIn": "src/lib.rs:138",
     "plural": false,
     "description": null
   },
   "CALL_ERROR_LIVEKIT_RTC_FAILED": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:139",
+    "definedIn": "src/lib.rs:142",
     "plural": false,
     "description": null
   },
   "CALL_ERROR_NO_RTC_FOCUS": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:129",
+    "definedIn": "src/lib.rs:132",
     "plural": false,
     "description": null
   },
   "CALL_ERROR_OPENID_TOKEN_REQUEST_FAILED": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:131",
+    "definedIn": "src/lib.rs:134",
     "plural": false,
     "description": null
   },
   "CALL_ERROR_ROOM_ERROR": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:128",
+    "definedIn": "src/lib.rs:131",
     "plural": false,
     "description": null
   },
   "CALL_ERROR_STATE_EVENT_FORBIDDEN": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:143",
+    "definedIn": "src/lib.rs:146",
     "plural": false,
     "description": null
   },

@@ -238,7 +238,13 @@ impl RenderOnce for CallMemberDisplay {
             && matches!(call_member.screenshare_state, StreamState::Unavailable);
         let is_muted = matches!(call_member.mic_state, StreamState::Off);
 
-        layer()
+        div()
+            .bg(if call_member.mic_active {
+                theme.info_accent_color
+            } else {
+                theme.layer_background
+            })
+            .rounded(theme.border_radius)
             .border(px(1.))
             .border_color(theme.border_color)
             .p(px(8.))

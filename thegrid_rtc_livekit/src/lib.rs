@@ -67,6 +67,7 @@ pub struct LivekitCall {
     subscribed_streams: Vec<SubscribedStream>,
     active_call_participants_state: Entity<Vec<RoomMember>>,
     muted_streams: HashSet<TrackSid>,
+    active_speakers: HashSet<TrackSid>,
     cached_call_members: Entity<Vec<CallMember>>,
 
     cancellation_source: CancellationTokenSource,
@@ -82,6 +83,8 @@ pub struct CallMember {
     mic_state: StreamState,
     camera_state: StreamState,
     screenshare_state: StreamState,
+
+    mic_active: bool,
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -406,6 +409,27 @@ impl LivekitCall {
                                     return;
                                 }
                             }
+                            RoomEvent::ActiveSpeakersChanged { speakers } => {
+                                if weak_this_clone
+                                    .update(cx, |this, cx| {
+                                        this.active_speakers = speakers
+                                            .iter()
+                                            .flat_map(|participant| {
+                                                participant
+                                                    .track_publications()
+                                                    .keys()
+                                                    .cloned()
+                                                    .collect::<Vec<_>>()
+                                            })
+                                            .collect();
+                                        cx.notify();
+                                    })
+                                    .is_err()
+                                {
+                                    // TODO: End call?
+                                    return;
+                                }
+                            }
                             _ => {}
                         }
 
@@ -468,6 +492,7 @@ impl LivekitCall {
             active_call_participants_state,
             subscribed_streams: Vec::new(),
             muted_streams: HashSet::new(),
+            active_speakers: HashSet::new(),
             on_hold: false,
             cached_call_members,
         }
@@ -532,6 +557,7 @@ impl LivekitCall {
                     mic_state: StreamState::Unavailable,
                     screenshare_state: StreamState::Unavailable,
                     camera_state: StreamState::Unavailable,
+                    mic_active: false,
                 };
 
                 for stream in subscribed_streams {
@@ -540,6 +566,10 @@ impl LivekitCall {
                     } else {
                         StreamState::On
                     };
+
+                    if self.active_speakers.contains(&stream.stream_sid) {
+                        call_member.mic_active = true;
+                    }
 
                     match stream.source {
                         TrackSource::Unknown => {}
@@ -575,6 +605,7 @@ impl LivekitCall {
                     },
                     camera_state: StreamState::Unavailable,
                     screenshare_state: StreamState::Unavailable,
+                    mic_active: false,
                 });
             };
         }
