@@ -53,6 +53,12 @@
     "plural": false,
     "description": null
   },
+  "CALL_CONNECTION_ERROR": {
+    "context": "call_page.rs",
+    "definedIn": "src/call_surface/call_page.rs:142",
+    "plural": false,
+    "description": null
+  },
   "CALL_ERROR_LIVEKIT_JWT_REQUEST_FAILED": {
     "context": "lib.rs",
     "definedIn": "src/lib.rs:135",

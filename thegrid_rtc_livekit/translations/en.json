@@ -8,6 +8,7 @@
   "AUDIO_SETUP_OUTPUT": "Audio Output",
   "CALLS_ON_HOLD": "Calls on hold",
   "CALL_CONNECTING": "Connecting...",
+  "CALL_CONNECTION_ERROR": "Unable to connect the call",
   "CALL_ERROR_LIVEKIT_JWT_REQUEST_FAILED": "Failed to request LiveKit JWT",
   "CALL_ERROR_LIVEKIT_RTC_FAILED": "Failed to join LiveKit room",
   "CALL_ERROR_NO_RTC_FOCUS": "No RTC focus available",
