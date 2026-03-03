@@ -2,9 +2,21 @@
   "name": "theGrid",
   "subprojects": [
     {
+      "name": "theGrid Core",
+      "type": "cntp-rs",
+      "path": "/thegrid_common/translations/{lang}.json",
+      "baseLang": "en"
+    },
+    {
       "name": "theGrid",
       "type": "cntp-rs",
       "path": "/thegrid/translations/{lang}.json",
+      "baseLang": "en"
+    },
+    {
+      "name": "theGrid Call Support",
+      "type": "cntp-rs",
+      "path": "/thegrid_rtc_livekit/translations/{lang}.json",
       "baseLang": "en"
     },
     {
