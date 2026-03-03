@@ -6,13 +6,14 @@ use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
+use contemporary::components::interstitial::interstitial;
 use contemporary::components::layer::layer;
 use contemporary::components::spinner::spinner;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, Context, Entity, IntoElement, ParentElement, Render, RenderOnce, Styled, Window, div, px,
-    rgb,
+    App, BorrowAppContext, Context, Entity, IntoElement, ParentElement, Render, RenderOnce, Styled,
+    Window, div, px, rgb,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use std::rc::Rc;
@@ -109,42 +110,86 @@ impl Render for CallPage {
                     .flex_grow()
                     .flex()
                     .flex_col()
-                    .child(match call.state {
-                        CallState::Connecting => div()
-                            .flex_grow()
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .child(spinner().size(px(32.))),
-                        CallState::Active { .. } => call_members.iter().fold(
-                            div()
-                                .flex_grow()
-                                .grid()
-                                .grid_rows(rows)
-                                .grid_cols(cols)
-                                .m(px(16.))
-                                .gap(px(16.)),
-                            |david, call_member| {
-                                david.child(CallMemberDisplay {
-                                    call_member: call_member.clone(),
-                                })
-                            },
-                        ),
-                        CallState::Ended => div().flex_grow(),
-                        CallState::Error(error) => div()
-                            .flex_grow()
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .child(
-                                admonition()
-                                    .title(tr!(
-                                        "CALL_CONNECTION_ERROR",
-                                        "Unable to connect the call"
-                                    ))
-                                    .child(error.to_string()),
-                            ),
-                    })
+                    .when_else(
+                        call.on_hold,
+                        |david| {
+                            david.child(
+                                interstitial()
+                                    .flex_grow()
+                                    .icon("media-playback-pause".into())
+                                    .title(tr!("CALL_ON_HOLD", "This call is on hold").into())
+                                    .message(
+                                        tr!(
+                                            "CALL_ON_HOLD_MESSAGE",
+                                            "Take the call off hold to continue talking"
+                                        )
+                                        .into(),
+                                    )
+                                    .child(
+                                        button("resume-call")
+                                            .child(icon_text(
+                                                "call-start".into(),
+                                                tr!("CALL_TAKE_OFF_HOLD", "Take off hold").into(),
+                                            ))
+                                            .on_click(cx.listener(|this, _, _, cx| {
+                                                let call = this.call.clone();
+                                                cx.update_global::<LivekitCallManager, _>(
+                                                    |call_manager, cx| {
+                                                        if call_manager.current_call()
+                                                            == Some(call.clone())
+                                                        {
+                                                            call.update(cx, |call, cx| {
+                                                                call.set_on_hold(false, cx);
+                                                            })
+                                                        } else {
+                                                            call_manager
+                                                                .switch_to_call(call.clone(), cx);
+                                                        }
+                                                    },
+                                                );
+                                            })),
+                                    ),
+                            )
+                        },
+                        |david| {
+                            david.child(match call.state {
+                                CallState::Connecting => div()
+                                    .flex_grow()
+                                    .flex()
+                                    .items_center()
+                                    .justify_center()
+                                    .child(spinner().size(px(32.)))
+                                    .into_any_element(),
+                                CallState::Active { .. } => call_members
+                                    .iter()
+                                    .fold(
+                                        div()
+                                            .flex_grow()
+                                            .grid()
+                                            .grid_rows(rows)
+                                            .grid_cols(cols)
+                                            .m(px(16.))
+                                            .gap(px(16.)),
+                                        |david, call_member| {
+                                            david.child(CallMemberDisplay {
+                                                call_member: call_member.clone(),
+                                            })
+                                        },
+                                    )
+                                    .into_any_element(),
+                                CallState::Ended => div().flex_grow().into_any_element(),
+                                CallState::Error(error) => interstitial()
+                                    .flex_grow()
+                                    .icon("call-start".into())
+                                    .title(
+                                        tr!("CALL_CONNECTION_ERROR", "Unable to connect the call")
+                                            .into(),
+                                    )
+                                    .message(error.to_string().into())
+                                    .into_any_element(),
+                            })
+                        },
+                    )
                     .child(
                         div().flex().justify_center().p(px(16.)).child(
                             layer()

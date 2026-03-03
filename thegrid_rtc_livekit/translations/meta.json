@@ -55,7 +55,7 @@
   },
   "CALL_CONNECTION_ERROR": {
     "context": "call_page.rs",
-    "definedIn": "src/call_surface/call_page.rs:142",
+    "definedIn": "src/call_surface/call_page.rs:185",
     "plural": false,
     "description": null
   },
@@ -125,9 +125,27 @@
     "plural": false,
     "description": null
   },
+  "CALL_ON_HOLD": {
+    "context": "call_page.rs",
+    "definedIn": "src/call_surface/call_page.rs:120",
+    "plural": false,
+    "description": null
+  },
+  "CALL_ON_HOLD_MESSAGE": {
+    "context": "call_page.rs",
+    "definedIn": "src/call_surface/call_page.rs:123",
+    "plural": false,
+    "description": null
+  },
   "CALL_RETURN": {
     "context": "active_call_sidebar_alert.rs",
     "definedIn": "src/active_call_sidebar_alert.rs:129",
+    "plural": false,
+    "description": null
+  },
+  "CALL_TAKE_OFF_HOLD": {
+    "context": "call_page.rs",
+    "definedIn": "src/call_surface/call_page.rs:132",
     "plural": false,
     "description": null
   },
