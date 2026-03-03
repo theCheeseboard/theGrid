@@ -8,6 +8,7 @@ pub struct LivekitCallManager {
     current_call: Option<Entity<LivekitCall>>,
     active_calls: Vec<Entity<LivekitCall>>,
     mute: Entity<bool>,
+    deaf: Entity<bool>,
 
     active_output_device: Entity<Option<cpal::Device>>,
     active_input_device: Entity<Option<cpal::Device>>,
@@ -64,6 +65,10 @@ impl LivekitCallManager {
 
     pub fn mute(&self) -> Entity<bool> {
         self.mute.clone()
+    }
+
+    pub fn deaf(&self) -> Entity<bool> {
+        self.deaf.clone()
     }
 
     pub fn calls(&self) -> &Vec<Entity<LivekitCall>> {
@@ -124,6 +129,7 @@ impl Global for LivekitCallManager {}
 
 pub fn setup_call_manager(cx: &mut App) {
     let mute = cx.new(|_| false);
+    let deaf = cx.new(|_| false);
 
     cx.observe(&mute, |mute, cx| {
         if *mute.read(cx) {
@@ -141,6 +147,7 @@ pub fn setup_call_manager(cx: &mut App) {
         current_call: None,
         active_calls: Vec::new(),
         mute,
+        deaf,
         active_input_device,
         active_output_device,
     });

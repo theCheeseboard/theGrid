@@ -1,7 +1,7 @@
 {
   "ACTIVE_CALL": {
     "context": "active_call_sidebar_alert.rs",
-    "definedIn": "src/active_call_sidebar_alert.rs:75",
+    "definedIn": "src/active_call_sidebar_alert.rs:76",
     "plural": false,
     "description": null
   },
@@ -43,49 +43,49 @@
   },
   "CALLS_ON_HOLD": {
     "context": "active_call_sidebar_alert.rs",
-    "definedIn": "src/active_call_sidebar_alert.rs:199",
+    "definedIn": "src/active_call_sidebar_alert.rs:212",
     "plural": false,
     "description": null
   },
   "CALL_CONNECTING": {
     "context": "active_call_sidebar_alert.rs",
-    "definedIn": "src/active_call_sidebar_alert.rs:90",
+    "definedIn": "src/active_call_sidebar_alert.rs:91",
     "plural": false,
     "description": null
   },
   "CALL_ERROR_LIVEKIT_JWT_REQUEST_FAILED": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:134",
+    "definedIn": "src/lib.rs:135",
     "plural": false,
     "description": null
   },
   "CALL_ERROR_LIVEKIT_RTC_FAILED": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:138",
+    "definedIn": "src/lib.rs:139",
     "plural": false,
     "description": null
   },
   "CALL_ERROR_NO_RTC_FOCUS": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:128",
+    "definedIn": "src/lib.rs:129",
     "plural": false,
     "description": null
   },
   "CALL_ERROR_OPENID_TOKEN_REQUEST_FAILED": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:130",
+    "definedIn": "src/lib.rs:131",
     "plural": false,
     "description": null
   },
   "CALL_ERROR_ROOM_ERROR": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:127",
+    "definedIn": "src/lib.rs:128",
     "plural": false,
     "description": null
   },
   "CALL_ERROR_STATE_EVENT_FORBIDDEN": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:142",
+    "definedIn": "src/lib.rs:143",
     "plural": false,
     "description": null
   },
@@ -121,7 +121,7 @@
   },
   "CALL_RETURN": {
     "context": "active_call_sidebar_alert.rs",
-    "definedIn": "src/active_call_sidebar_alert.rs:128",
+    "definedIn": "src/active_call_sidebar_alert.rs:129",
     "plural": false,
     "description": null
   },

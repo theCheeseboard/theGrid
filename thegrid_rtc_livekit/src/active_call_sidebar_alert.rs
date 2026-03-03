@@ -34,6 +34,7 @@ impl RenderOnce for ActiveCallSidebarAlert {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let call_manager = cx.global::<LivekitCallManager>();
         let mute = call_manager.mute();
+        let deaf = call_manager.deaf();
 
         let call_entity = call_manager.current_call().unwrap().clone();
         let call = call_entity.read(cx);
@@ -141,6 +142,18 @@ impl RenderOnce for ActiveCallSidebarAlert {
                                                 )
                                             })
                                             .flex_grow(),
+                                    )
+                                    .child(
+                                        button("deaf")
+                                            .child(icon(
+                                                if *deaf.read(cx) { "headphones" } else { "headphones" }
+                                                    .into(),
+                                            ))
+                                            .checked_when(*deaf.read(cx))
+                                            .on_click(move |_, _, cx| {
+                                                let deafened = *deaf.read(cx);
+                                                deaf.write(cx, !deafened);
+                                            }),
                                     )
                                     .child(
                                         button("mute")

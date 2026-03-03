@@ -48,6 +48,7 @@ use reqwest::header;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::rc::Weak;
+use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use thegrid_common::room::active_call_participants::track_active_call_participants;
 use thegrid_common::session::session_manager::SessionManager;
@@ -774,11 +775,13 @@ impl LivekitCall {
         device_entity: Entity<Option<cpal::Device>>,
         cx: &mut Context<Self>,
     ) {
+        let call_manager = cx.global::<LivekitCallManager>();
+        let call_manager_deaf = call_manager.deaf();
         let cancellation_token = self.cancellation_source.token();
 
         let (mut producer, mut consumer) = AsyncHeapRb::<i16>::new(16384).split();
 
-        let device = device_entity.read(cx);
+        let device = device_entity.read(cx).clone();
         let (sample_rate, channels, output_stream) = if let Some(device) = device {
             let mut supported_device_configs = device.supported_output_configs().unwrap();
             let supported_config = supported_device_configs
@@ -786,11 +789,26 @@ impl LivekitCall {
                 .unwrap()
                 .with_sample_rate(48000);
 
+            let deaf = Arc::new(RwLock::new(false));
+            let deaf_clone = deaf.clone();
+            cx.observe_self(move |this, cx| {
+                *deaf_clone.write().unwrap() = this.is_deaf(cx);
+            })
+            .detach();
+            let deaf_clone = deaf.clone();
+            cx.observe(&call_manager_deaf, move |this, _, cx| {
+                *deaf_clone.write().unwrap() = this.is_deaf(cx);
+            })
+            .detach();
+
             let output_stream = device
                 .build_output_stream(
                     &supported_config.config(),
                     move |data: &mut [i16], _: &cpal::OutputCallbackInfo| {
                         consumer.pop_slice(data);
+                        if *deaf.read().unwrap() {
+                            data.fill(0);
+                        }
                     },
                     move |err| {
                         // Errors? What errors!?
@@ -922,6 +940,15 @@ impl LivekitCall {
         } else {
             track.unmute();
         }
+    }
+
+    fn is_deaf(&self, cx: &mut Context<Self>) -> bool {
+        if self.on_hold {
+            return true;
+        }
+
+        let call_manager = cx.global::<LivekitCallManager>();
+        *call_manager.deaf().read(cx)
     }
 }
 
