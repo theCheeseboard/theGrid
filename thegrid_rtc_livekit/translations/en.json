@@ -1,5 +1,9 @@
 {
   "ACTIVE_CALL": "Active Call",
+  "ACTIVE_CALL_CONTENT": {
+    "one": "{{count}} user in this room",
+    "other": "{{count}} users in this room"
+  },
   "AUDIO_DEVICE_NONE": "Muted",
   "AUDIO_SETUP": "Audio Output",
   "AUDIO_SETUP_ENABLE_MIC": "Turn on mic",

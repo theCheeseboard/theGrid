@@ -1,5 +1,5 @@
 use crate::call_manager::{FocusUrl, LivekitCallManager};
-use cntp_i18n::tr;
+use cntp_i18n::{tr, trn};
 use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::context_menu::ContextMenuItem;
@@ -14,11 +14,14 @@ use cpal::traits::{DeviceTrait, HostTrait};
 use cpal::{Device, DeviceDescription};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, BorrowAppContext, Context, IntoElement, ParentElement, Render, RenderOnce,
-    Styled, WeakEntity, Window, div, px, rgb,
+    App, AsyncApp, BorrowAppContext, Context, Entity, IntoElement, ParentElement, Render,
+    RenderOnce, Styled, WeakEntity, Window, div, px, rgb,
 };
+use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::OwnedRoomId;
 use std::rc::Rc;
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::room::active_call_participants::track_active_call_participants;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::SurfaceChangeHandler;
 
@@ -30,6 +33,7 @@ pub struct CallStartPage {
     audio_input_devices: Vec<cpal::Device>,
     selected_output_device: Option<cpal::Device>,
     selected_input_device: Option<cpal::Device>,
+    active_call_users: Entity<Vec<RoomMember>>,
 }
 
 impl CallStartPage {
@@ -50,6 +54,8 @@ impl CallStartPage {
             .unwrap_or_default();
         let selected_output_device = host.default_output_device();
 
+        let active_call_users = track_active_call_participants(room_id.clone(), cx);
+
         Self {
             room_id,
             on_surface_change,
@@ -57,6 +63,7 @@ impl CallStartPage {
             audio_input_devices: input_devices,
             selected_output_device,
             selected_input_device: if muted { None } else { selected_input_device },
+            active_call_users,
         }
     }
 
@@ -298,16 +305,16 @@ impl CallStartPage {
             let _ = smol::block_on(tx.send(success));
         })
     }
-    
+
     fn start_call(&mut self, cx: &mut Context<Self>) {
         let room_id = self.room_id.clone();
         let output_device = self.selected_output_device.clone();
         let input_device = self.selected_input_device.clone();
-        
+
         cx.update_global::<LivekitCallManager, _>(|call_manager, cx| {
             call_manager.active_output_device().write(cx, output_device);
             call_manager.active_input_device().write(cx, input_device);
-            
+
             call_manager.start_call(room_id, cx);
         });
     }
@@ -331,6 +338,7 @@ impl Render for CallStartPage {
             })
         });
         let focus_url = focus_url.read(cx).clone();
+        let active_call_users = self.active_call_users.read(cx).clone();
 
         let theme = cx.theme().clone();
 
@@ -443,20 +451,51 @@ impl Render for CallStartPage {
                                     ),
                             )
                             .child(
-                                div().flex().gap(px(8.)).child(div().w(px(300.))).child(
-                                    button("join-call")
-                                        .child(icon_text(
-                                            "call-start".into(),
-                                            tr!("CALL_JOIN_BUTTON", "Join Call").into(),
-                                        ))
-                                        .when(!matches!(focus_url, FocusUrl::Url(_)), |button| {
-                                            button.disabled()
-                                        })
-                                        .on_click(cx.listener(move |this, _, _, cx| {
-                                            this.start_call(cx);
-                                        }))
-                                        .w(px(300.)),
-                                ),
+                                div()
+                                    .flex()
+                                    .gap(px(8.))
+                                    .child(div().flex().items_center().w(px(300.)).when(
+                                        active_call_users.len() > 0,
+                                        |david| {
+                                            david.child(
+                                                active_call_users
+                                                    .iter()
+                                                    .take(3)
+                                                    .fold(
+                                                        div().flex().gap(px(2.)).items_center(),
+                                                        |david, member| {
+                                                            david.child(
+                                                                mxc_image(member.avatar_url())
+                                                                    .rounded(theme.border_radius)
+                                                                    .size(px(16.))
+                                                                    .size_policy(SizePolicy::Fit),
+                                                            )
+                                                        },
+                                                    )
+                                                    .child(div().pl(px(4.)).child(trn!(
+                                                        "ACTIVE_CALL_CONTENT",
+                                                        "{{count}} user in this room",
+                                                        "{{count}} users in this room",
+                                                        count = active_call_users.len() as isize
+                                                    ))),
+                                            )
+                                        },
+                                    ))
+                                    .child(
+                                        button("join-call")
+                                            .child(icon_text(
+                                                "call-start".into(),
+                                                tr!("CALL_JOIN_BUTTON", "Join Call").into(),
+                                            ))
+                                            .when(
+                                                !matches!(focus_url, FocusUrl::Url(_)),
+                                                |button| button.disabled(),
+                                            )
+                                            .on_click(cx.listener(move |this, _, _, cx| {
+                                                this.start_call(cx);
+                                            }))
+                                            .w(px(300.)),
+                                    ),
                             ),
                     ),
             )
