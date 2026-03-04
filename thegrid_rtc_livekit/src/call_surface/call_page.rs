@@ -12,8 +12,8 @@ use contemporary::components::spinner::spinner;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, BorrowAppContext, Context, Entity, IntoElement, ParentElement, Render, RenderImage,
-    RenderOnce, Styled, Window, div, img, px, rgb,
+    App, BorrowAppContext, Context, Entity, IntoElement, ObjectFit, ParentElement, Render,
+    RenderImage, RenderOnce, Styled, StyledImage, Window, div, img, px, rgb,
 };
 use image::Frame;
 use matrix_sdk::ruma::OwnedRoomId;
@@ -303,9 +303,11 @@ impl RenderOnce for CallMemberDisplay {
             .p(px(8.))
             .child(
                 if let Some(camera_frame) = screenshare_sid.or(camera_sid) {
-                    div()
-                        .size_full()
-                        .child(img(camera_frame.clone()).size_full())
+                    div().flex().size_full().overflow_hidden().child(
+                        img(camera_frame.clone())
+                            .object_fit(ObjectFit::Contain)
+                            .size_full(),
+                    )
                 } else {
                     div()
                         .flex()
@@ -338,11 +340,16 @@ impl RenderOnce for CallMemberDisplay {
                                 .p(px(16.))
                                 .child(
                                     layer()
+                                        .flex()
                                         .border(px(1.))
                                         .border_color(theme.border_color)
                                         .w(px(width))
                                         .h(px(height))
-                                        .child(img(camera_frame.clone()).size_full()),
+                                        .child(
+                                            img(camera_frame.clone())
+                                                .object_fit(ObjectFit::Contain)
+                                                .size_full(),
+                                        ),
                                 ),
                         )
                     })
