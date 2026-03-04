@@ -284,13 +284,13 @@ impl RenderOnce for CallMemberState {
             )
             .child(div().flex_grow())
             .when(
-                self.call_member.screenshare_state == StreamState::On,
+                matches!(self.call_member.screenshare_state, StreamState::On(_)),
                 |david| david.child(icon("video-display".into())),
             )
-            .when(self.call_member.camera_state == StreamState::On, |david| {
+            .when(matches!(self.call_member.camera_state, StreamState::On(_)), |david| {
                 david.child(icon("camera-photo".into()))
             })
-            .when(self.call_member.mic_state == StreamState::Off, |david| {
+            .when(matches!(self.call_member.mic_state, StreamState::Off), |david| {
                 david.child(icon("mic-off".into()))
             })
     }

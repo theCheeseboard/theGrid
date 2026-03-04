@@ -12,11 +12,14 @@ use contemporary::components::spinner::spinner;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, BorrowAppContext, Context, Entity, IntoElement, ParentElement, Render, RenderOnce, Styled,
-    Window, div, px, rgb,
+    App, BorrowAppContext, Context, Entity, IntoElement, ParentElement, Render, RenderImage,
+    RenderOnce, Styled, Window, div, img, px, rgb,
 };
+use image::Frame;
 use matrix_sdk::ruma::OwnedRoomId;
+use smallvec::smallvec;
 use std::rc::Rc;
+use std::sync::Arc;
 use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
@@ -69,18 +72,12 @@ impl Render for CallPage {
         let (rows, cols) = match call_members.len() {
             1 => (1, 1),
             2 => (1, 2),
-            3 => (2, 2),
-            4 => (2, 2),
-            5 => (3, 2),
-            6 => (3, 2),
-            7 => (3, 3),
-            8 => (3, 3),
-            9 => (3, 3),
-            10 => (3, 4),
-            11 => (3, 4),
-            12 => (3, 4),
-            // TODO: What if there are more than 16 people?
-            _ => (4, 4),
+            3..=4 => (2, 2),
+            5..=6 => (3, 2),
+            7..=9 => (3, 3),
+            10..=12 => (3, 4),
+            // If there are more than 16 people, arrange in a grid of 4 columns
+            _ => ((call_members.len() / 4 + 1) as u16, 4),
         };
 
         let theme = cx.theme();
@@ -172,6 +169,7 @@ impl Render for CallPage {
                                             .gap(px(16.)),
                                         |david, call_member| {
                                             david.child(CallMemberDisplay {
+                                                call: self.call.clone(),
                                                 call_member: call_member.clone(),
                                             })
                                         },
@@ -270,6 +268,7 @@ impl Render for CallPage {
 
 #[derive(IntoElement)]
 struct CallMemberDisplay {
+    call: Entity<LivekitCall>,
     call_member: CallMember,
 }
 
@@ -283,6 +282,15 @@ impl RenderOnce for CallMemberDisplay {
             && matches!(call_member.screenshare_state, StreamState::Unavailable);
         let is_muted = matches!(call_member.mic_state, StreamState::Off);
 
+        let camera_sid = match call_member.camera_state {
+            StreamState::On(sid) => self.call.read(cx).video_stream_images.get(&sid),
+            _ => None,
+        };
+        let screenshare_sid = match call_member.screenshare_state {
+            StreamState::On(sid) => self.call.read(cx).video_stream_images.get(&sid),
+            _ => None,
+        };
+
         div()
             .bg(if call_member.mic_active {
                 theme.info_accent_color
@@ -294,41 +302,47 @@ impl RenderOnce for CallMemberDisplay {
             .border_color(theme.border_color)
             .p(px(8.))
             .child(
-                div()
-                    .flex()
-                    .size_full()
-                    .items_center()
-                    .justify_center()
-                    .child(
-                        mxc_image(call_member.room_member.avatar_url())
-                            .rounded(theme.border_radius)
-                            .size(px(96.))
-                            .size_policy(SizePolicy::Fit)
-                            .when(connecting, |david| david.opacity(0.5)),
-                    )
-                    .child(
-                        div()
-                            .absolute()
-                            .left_0()
-                            .top_0()
-                            .size_full()
-                            .flex()
-                            .items_end()
-                            .child(
-                                div()
-                                    .flex()
-                                    .flex_grow()
-                                    .child(
-                                        call_member
-                                            .room_member
-                                            .display_name()
-                                            .unwrap_or_default()
-                                            .to_string(),
-                                    )
-                                    .child(div().flex_grow())
-                                    .when(is_muted, |david| david.child(icon("mic-off".into()))),
-                            ),
-                    ),
+                if let Some(camera_frame) = screenshare_sid.or(camera_sid) {
+                    div()
+                        .size_full()
+                        .child(img(camera_frame.clone()).size_full())
+                } else {
+                    div()
+                        .flex()
+                        .size_full()
+                        .items_center()
+                        .justify_center()
+                        .child(
+                            mxc_image(call_member.room_member.avatar_url())
+                                .rounded(theme.border_radius)
+                                .size(px(96.))
+                                .size_policy(SizePolicy::Fit)
+                                .when(connecting, |david| david.opacity(0.5)),
+                        )
+                }
+                .child(
+                    div()
+                        .absolute()
+                        .left_0()
+                        .top_0()
+                        .size_full()
+                        .flex()
+                        .items_end()
+                        .child(
+                            div()
+                                .flex()
+                                .flex_grow()
+                                .child(
+                                    call_member
+                                        .room_member
+                                        .display_name()
+                                        .unwrap_or_default()
+                                        .to_string(),
+                                )
+                                .child(div().flex_grow())
+                                .when(is_muted, |david| david.child(icon("mic-off".into()))),
+                        ),
+                ),
             )
     }
 }

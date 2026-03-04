@@ -16,15 +16,21 @@ use cpal::Host;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use gpui::http_client::anyhow;
 use gpui::private::{anyhow, serde_json};
-use gpui::{AppContext, AsyncApp, BorrowAppContext, Context, Entity, WeakEntity};
+use gpui::{
+    AppContext, AsyncApp, BorrowAppContext, Context, Entity, Image, RenderImage, WeakEntity,
+};
+use image::{Frame, RgbaImage};
 use livekit::id::TrackSid;
 use livekit::options::TrackPublishOptions;
 use livekit::prelude::LocalParticipant;
-use livekit::track::{LocalAudioTrack, LocalTrack, RemoteAudioTrack, RemoteTrack, TrackSource};
+use livekit::track::{
+    LocalAudioTrack, LocalTrack, RemoteAudioTrack, RemoteTrack, RemoteVideoTrack, TrackSource,
+};
 use livekit::webrtc::audio_frame::AudioFrame;
 use livekit::webrtc::audio_source::native::NativeAudioSource;
 use livekit::webrtc::audio_stream::native::NativeAudioStream;
-use livekit::webrtc::prelude::RtcAudioSource;
+use livekit::webrtc::prelude::{RtcAudioSource, VideoBuffer, VideoBufferType};
+use livekit::webrtc::video_stream::native::NativeVideoStream;
 use livekit::{Room, RoomError, RoomEvent, RoomOptions};
 use log::{error, info, warn};
 use matrix_sdk::deserialized_responses::RawAnySyncOrStrippedState;
@@ -46,6 +52,7 @@ use matrix_sdk::stream::StreamExt;
 use matrix_sdk::{HttpError, reqwest};
 use reqwest::header;
 use serde::{Deserialize, Serialize};
+use smallvec::smallvec;
 use std::fmt::Display;
 use std::rc::Weak;
 use std::sync::{Arc, Mutex, RwLock};
@@ -53,6 +60,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use thegrid_common::room::active_call_participants::track_active_call_participants;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
+use yuv::{YuvPlanarImage, YuvRange, YuvStandardMatrix, yuv420_to_bgra, yuv420_to_rgba};
 
 pub fn setup_thegrid_rtc_livekit() {
     I18N_MANAGER.write().unwrap().load_source(tr_load!());
@@ -69,6 +77,7 @@ pub struct LivekitCall {
     muted_streams: HashSet<TrackSid>,
     active_speakers: HashSet<TrackSid>,
     cached_call_members: Entity<Vec<CallMember>>,
+    video_stream_images: HashMap<TrackSid, Arc<RenderImage>>,
 
     cancellation_source: CancellationTokenSource,
     started_at: Instant,
@@ -87,11 +96,11 @@ pub struct CallMember {
     mic_active: bool,
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum StreamState {
     Unavailable,
     Off,
-    On,
+    On(TrackSid),
 }
 
 pub struct SubscribedStream {
@@ -171,6 +180,9 @@ impl LivekitCall {
         let device_id = client.device_id().unwrap().to_owned();
 
         let rtc_foci = session_manager.rtc_foci().clone();
+
+        let cancellation_source = CancellationTokenSource::new();
+        let cancellation_token = cancellation_source.token();
 
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
@@ -316,10 +328,14 @@ impl LivekitCall {
 
                 let local_participant = livekit_room.local_participant();
 
+                cx.spawn(async move |cx: &mut AsyncApp| {
+                    cancellation_token.wait().await;
+                    let _ = livekit_room.close().await;
+                })
+                .detach();
+
                 let weak_this_clone = weak_this.clone();
                 cx.spawn(async move |cx: &mut AsyncApp| {
-                    let x = livekit_room;
-
                     loop {
                         let Some(event) = room_events.recv().await else {
                             // TODO: End call?
@@ -486,13 +502,14 @@ impl LivekitCall {
         LivekitCall {
             room: room_id,
             state: CallState::Connecting,
-            cancellation_source: CancellationTokenSource::new(),
+            cancellation_source,
             started_at: Instant::now(),
             mic_track_sid: None,
             active_call_participants_state,
             subscribed_streams: Vec::new(),
             muted_streams: HashSet::new(),
             active_speakers: HashSet::new(),
+            video_stream_images: HashMap::new(),
             on_hold: false,
             cached_call_members,
         }
@@ -513,6 +530,10 @@ impl LivekitCall {
 
     pub fn call_members(&self) -> Entity<Vec<CallMember>> {
         self.cached_call_members.clone()
+    }
+
+    pub fn image_for_track(&self, track_sid: TrackSid) -> Option<Arc<RenderImage>> {
+        self.video_stream_images.get(&track_sid).cloned()
     }
 
     fn calculate_call_members(&mut self, cx: &mut Context<Self>) -> Vec<CallMember> {
@@ -564,7 +585,7 @@ impl LivekitCall {
                     let stream_state = if self.muted_streams.contains(&stream.stream_sid) {
                         StreamState::Off
                     } else {
-                        StreamState::On
+                        StreamState::On(stream.stream_sid.clone())
                     };
 
                     if self.active_speakers.contains(&stream.stream_sid) {
@@ -598,7 +619,8 @@ impl LivekitCall {
                         if muted {
                             StreamState::Off
                         } else {
-                            StreamState::On
+                            // StreamState::On
+                            StreamState::Off
                         }
                     } else {
                         StreamState::Unavailable
@@ -660,8 +682,8 @@ impl LivekitCall {
                 .detach();
                 self.route_audio(audio_track.clone(), output_device, cx);
             }
-            RemoteTrack::Video(_) => {
-                // TODO
+            RemoteTrack::Video(video_track) => {
+                self.route_video(video_track.clone(), cx);
             }
         }
     }
@@ -911,6 +933,114 @@ impl LivekitCall {
         cx.observe(&device_entity, move |this, device, cx| {
             cancellation_source.cancel();
         })
+        .detach();
+    }
+
+    fn route_video(&mut self, video_track: RemoteVideoTrack, cx: &mut Context<Self>) {
+        let rtc_track = video_track.rtc_track();
+        let mut video_stream = NativeVideoStream::new(rtc_track);
+
+        let (tx, rx) = async_channel::bounded(1);
+
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                let _ = cx
+                    .spawn_tokio(async move {
+                        // Receive the audio frames in a new task
+                        while let Some(video_frame) = video_stream.next().await {
+                            let rgba_image = match video_frame.buffer.buffer_type() {
+                                VideoBufferType::I420 => {
+                                    let i420_frame = video_frame.buffer.to_i420();
+
+                                    let (y_plane, u_plane, v_plane) = i420_frame.data();
+                                    let (y_stride, u_stride, v_stride) = i420_frame.strides();
+
+                                    let mut rgba_data = vec![
+                                        0;
+                                        (i420_frame.width() * i420_frame.height() * 4)
+                                            as usize
+                                    ];
+
+                                    let yuv_image = YuvPlanarImage {
+                                        height: i420_frame.height(),
+                                        width: i420_frame.width(),
+                                        y_plane,
+                                        u_plane,
+                                        v_plane,
+                                        y_stride,
+                                        u_stride,
+                                        v_stride,
+                                    };
+                                    if let Err(e) = yuv420_to_bgra(
+                                        &yuv_image,
+                                        &mut rgba_data,
+                                        i420_frame.width() * 4,
+                                        YuvRange::Limited,
+                                        YuvStandardMatrix::Bt2020,
+                                    ) {
+                                        error!("Error converting YUV to RGBA: {}", e);
+                                        continue;
+                                    }
+
+                                    let Some(rgba_image) = RgbaImage::from_vec(
+                                        i420_frame.width(),
+                                        i420_frame.height(),
+                                        rgba_data,
+                                    ) else {
+                                        error!("Failed to create RGBA image from YUV data");
+                                        continue;
+                                    };
+
+                                    rgba_image
+                                }
+                                _ => {
+                                    continue;
+                                }
+                            };
+
+                            if tx.send(rgba_image).await.is_err() {
+                                return Ok::<_, anyhow::Error>(());
+                            }
+                        }
+
+                        Ok::<_, anyhow::Error>(())
+                    })
+                    .await;
+            },
+        )
+        .detach();
+
+        let track_sid = video_track.sid();
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                while let Ok(frame) = rx.recv().await {
+                    let track_sid = track_sid.clone();
+                    if weak_this
+                        .update(cx, |this, cx| {
+                            let render_image =
+                                Arc::new(RenderImage::new(smallvec![Frame::new(frame.clone())]));
+                            if let Some(old_image) =
+                                this.video_stream_images.insert(track_sid, render_image)
+                            {
+                                // Drop this image from all windows
+                                cx.defer(move |cx| {
+                                    for window in cx.windows() {
+                                        let image = old_image.clone();
+                                        let _ = window.update(cx, move |_, window, _| {
+                                            let _ = window.drop_image(image);
+                                        });
+                                    }
+                                });
+                            }
+                            cx.notify()
+                        })
+                        .is_err()
+                    {
+                        return;
+                    }
+                }
+            },
+        )
         .detach();
     }
 

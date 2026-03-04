@@ -39,3 +39,4 @@ livekit = { version = "0.7", features = ["native-tls"] }
 reqwest = "0.13"
 async-ringbuf = "0.3"
 cancellation-token = "0.1"
+yuv = "0.8"

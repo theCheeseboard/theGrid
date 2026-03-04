@@ -19,6 +19,9 @@ async-ringbuf = { workspace = true }
 cancellation-token = { workspace = true }
 async-channel = { workspace = true }
 smol = { workspace = true }
+yuv = { workspace = true }
+image = { workspace = true }
+smallvec = { workspace = true }
 
 [build-dependencies]
 cntp_i18n_gen = { workspace = true }
