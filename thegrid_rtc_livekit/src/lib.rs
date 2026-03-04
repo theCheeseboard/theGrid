@@ -614,13 +614,14 @@ impl LivekitCall {
                 call_members.push(CallMember {
                     room_member: participant.clone(),
                     device_id: None,
-                    mic_state: if !this_device_processed && participant.user_id() == &this_user_id {
+                    mic_state: if !this_device_processed && participant.user_id() == this_user_id {
                         this_device_processed = true;
                         if muted {
                             StreamState::Off
+                        } else if let Some(track_sid) = &self.mic_track_sid {
+                            StreamState::On(track_sid.clone())
                         } else {
-                            // StreamState::On
-                            StreamState::Off
+                            StreamState::Unavailable
                         }
                     } else {
                         StreamState::Unavailable
