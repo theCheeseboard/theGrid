@@ -320,6 +320,33 @@ impl RenderOnce for CallMemberDisplay {
                                 .when(connecting, |david| david.opacity(0.5)),
                         )
                 }
+                .when(screenshare_sid.is_some(), |david| {
+                    david.when_some(camera_sid, |david, camera_frame| {
+                        // TODO: Calculate aspect ratio and find out good size for the inside frame
+                        let width = 300.;
+                        let height = 200.;
+
+                        david.child(
+                            div()
+                                .absolute()
+                                .left_0()
+                                .top_0()
+                                .size_full()
+                                .flex()
+                                .items_start()
+                                .justify_end()
+                                .p(px(16.))
+                                .child(
+                                    layer()
+                                        .border(px(1.))
+                                        .border_color(theme.border_color)
+                                        .w(px(width))
+                                        .h(px(height))
+                                        .child(img(camera_frame.clone()).size_full()),
+                                ),
+                        )
+                    })
+                })
                 .child(
                     div()
                         .absolute()

@@ -994,6 +994,10 @@ impl LivekitCall {
                                     rgba_image
                                 }
                                 _ => {
+                                    warn!(
+                                        "Unsupported video format: {:?}",
+                                        video_frame.buffer.buffer_type()
+                                    );
                                     continue;
                                 }
                             };
