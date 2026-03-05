@@ -40,4 +40,4 @@ reqwest = "0.13"
 async-ringbuf = "0.3"
 cancellation-token = "0.1"
 yuv = "0.8"
-nokhwa = { version = "0.10", features = ["input-native", "output-threaded"] }
+nokhwa = { version = "0.10", features = ["input-native", "output-threaded"], default-features = false }
