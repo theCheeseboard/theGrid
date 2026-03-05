@@ -242,7 +242,10 @@ impl CallStartPage {
                                 })
                                 .when_none(&self.active_camera, |david| {
                                     david.when_else(
-                                        self.camera_info.is_some(),
+                                        self.camera_info
+                                            .as_ref()
+                                            .map(|camera_info| !camera_info.is_empty())
+                                            .unwrap_or(false),
                                         |david| {
                                             david.p(px(8.)).child(
                                                 button("camera-on")
