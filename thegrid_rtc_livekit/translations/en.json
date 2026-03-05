@@ -6,6 +6,7 @@
   },
   "AUDIO_DEVICE_NONE": "Muted",
   "AUDIO_SETUP": "Audio Output",
+  "AUDIO_SETUP_CAMERA_UNAVAILABLE": "Access to camera prohibited by your device",
   "AUDIO_SETUP_ENABLE_MIC": "Turn on mic",
   "AUDIO_SETUP_INPUT": "Audio Input",
   "AUDIO_SETUP_MIC_UNAVAILABLE": "Access to microphone prohibited by your device",
@@ -29,7 +30,8 @@
   "CALL_RETURN": "Return to call",
   "CALL_TAKE_OFF_HOLD": "Take off hold",
   "CAMERA_SETUP": "Camera",
-  "CAMERA_SETUP_NOT_SUPPORTED": "Coming Soon",
+  "CAMERA_SETUP_ENABLE": "Turn on camera",
+  "CAMERA_SETUP_NO_CAMERA": "No camera available on this device",
   "JOIN_CALL": "Join Call",
   "MIC_SETUP": "Microphone"
 }

@@ -22,6 +22,7 @@ smol = { workspace = true }
 yuv = { workspace = true }
 image = { workspace = true }
 smallvec = { workspace = true }
+nokhwa = { workspace = true }
 
 [build-dependencies]
 cntp_i18n_gen = { workspace = true }

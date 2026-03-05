@@ -1,7 +1,8 @@
 use crate::call_manager::{FocusUrl, LivekitCallManager};
+use crate::webcam::Webcam;
 use cntp_i18n::{tr, trn};
 use contemporary::components::admonition::{AdmonitionSeverity, admonition};
-use contemporary::components::button::button;
+use contemporary::components::button::{ButtonMenuOpenPolicy, button};
 use contemporary::components::context_menu::ContextMenuItem;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
@@ -14,16 +15,28 @@ use cpal::traits::{DeviceTrait, HostTrait};
 use cpal::{Device, DeviceDescription};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, BorrowAppContext, Context, Entity, IntoElement, ParentElement, Render,
-    RenderOnce, Styled, WeakEntity, Window, div, px, rgb,
+    App, AppContext, AsyncApp, BorrowAppContext, Context, Entity, IntoElement, ObjectFit,
+    ParentElement, Render, RenderImage, RenderOnce, Styled, StyledImage, WeakEntity, Window, div,
+    img, px, rgb,
 };
+use image::{Frame, RgbaImage};
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::OwnedRoomId;
+use nokhwa::pixel_format::RgbAFormat;
+use nokhwa::utils::{
+    CameraIndex, CameraInfo, FrameFormat, RequestedFormat, RequestedFormatType, mjpeg_to_rgb,
+    nv12_to_rgb, yuyv422_to_rgb,
+};
+use nokhwa::{CallbackCamera, Camera, native_api_backend, query};
+use smallvec::smallvec;
 use std::rc::Rc;
+use std::sync::Arc;
+use std::time::Duration;
 use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::room::active_call_participants::track_active_call_participants;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::SurfaceChangeHandler;
+use yuv::{YuvPackedImage, YuvRange, YuvStandardMatrix, yuyv422_to_bgra};
 
 pub struct CallStartPage {
     room_id: OwnedRoomId,
@@ -34,6 +47,9 @@ pub struct CallStartPage {
     selected_output_device: Option<cpal::Device>,
     selected_input_device: Option<cpal::Device>,
     active_call_users: Entity<Vec<RoomMember>>,
+
+    active_camera: Option<Entity<Webcam>>,
+    camera_info: Option<Vec<CameraInfo>>,
 }
 
 impl CallStartPage {
@@ -56,7 +72,7 @@ impl CallStartPage {
 
         let active_call_users = track_active_call_participants(room_id.clone(), cx);
 
-        Self {
+        let mut this = Self {
             room_id,
             on_surface_change,
             audio_output_devices: output_devices,
@@ -64,7 +80,11 @@ impl CallStartPage {
             selected_output_device,
             selected_input_device: if muted { None } else { selected_input_device },
             active_call_users,
-        }
+            active_camera: None,
+            camera_info: None,
+        };
+        this.fetch_camera_info(cx);
+        this
     }
 
     fn get_default_mic_settings() -> (Vec<Device>, Option<Device>) {
@@ -86,11 +106,26 @@ impl CallStartPage {
         }
     }
 
-    fn render_camera_area(
+    fn fetch_camera_info(&mut self, cx: &mut Context<Self>) {
+        match Permissions::grant_status(PermissionType::Camera) {
+            GrantStatus::Granted | GrantStatus::PlatformUnsupported => {
+                self.camera_info = native_api_backend().and_then(|backend| query(backend).ok());
+                cx.notify();
+            }
+            GrantStatus::Denied | GrantStatus::NotDetermined => {
+                self.camera_info = None;
+                cx.notify();
+            }
+        }
+    }
+
+    fn render_camera_setup(
         &mut self,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> impl IntoElement {
+        let camera_grant_status = Permissions::grant_status(PermissionType::Camera);
+
         div()
             .flex()
             .flex_col()
@@ -101,9 +136,135 @@ impl CallStartPage {
                 layer()
                     .size_full()
                     .flex()
+                    .flex_col()
                     .items_center()
                     .justify_center()
-                    .child(tr!("CAMERA_SETUP_NOT_SUPPORTED", "Coming Soon")),
+                    .overflow_hidden()
+                    .when(
+                        matches!(camera_grant_status, GrantStatus::NotDetermined),
+                        |david| {
+                            david.p(px(8.)).child(
+                                button("camera-on")
+                                    .child(icon_text(
+                                        "camera-photo".into(),
+                                        tr!("CAMERA_SETUP_ENABLE", "Turn on camera").into(),
+                                    ))
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.turn_on_camera(None, cx);
+                                    })),
+                            )
+                        },
+                    )
+                    .when(
+                        matches!(camera_grant_status, GrantStatus::Denied),
+                        |david| {
+                            david.p(px(8.)).child(tr!(
+                                "AUDIO_SETUP_CAMERA_UNAVAILABLE",
+                                "Access to camera prohibited by your device"
+                            ))
+                        },
+                    )
+                    .when(
+                        matches!(
+                            camera_grant_status,
+                            GrantStatus::Granted | GrantStatus::PlatformUnsupported
+                        ),
+                        |david| {
+                            david
+                                .when_some(self.active_camera.as_ref(), |david, webcam| {
+                                    let webcam = webcam.read(cx);
+
+                                    let camera_menu = self
+                                        .camera_info
+                                        .as_ref()
+                                        .map(|camera_info| {
+                                            camera_info
+                                                .iter()
+                                                .map(|camera| {
+                                                    let camera = camera.clone();
+                                                    ContextMenuItem::menu_item()
+                                                        .label(camera.human_name())
+                                                        .on_triggered(cx.listener(
+                                                            move |this, _, _, cx| {
+                                                                this.turn_on_camera(
+                                                                    Some(camera.clone()),
+                                                                    cx,
+                                                                )
+                                                            },
+                                                        ))
+                                                        .build()
+                                                })
+                                                .collect::<Vec<_>>()
+                                        })
+                                        .unwrap_or_default();
+
+                                    david.child(
+                                        div()
+                                            .flex()
+                                            .flex_col()
+                                            .flex_grow()
+                                            .child(div().flex().overflow_hidden().when_some(
+                                                webcam.latest_frame().clone(),
+                                                |david, frame| {
+                                                    david.child(
+                                                        img(frame.clone())
+                                                            .object_fit(ObjectFit::Contain)
+                                                            .size_full(),
+                                                    )
+                                                },
+                                            ))
+                                            .child(
+                                                layer()
+                                                    .flex()
+                                                    .child(
+                                                        button("camera-selection-button")
+                                                            .flex_grow()
+                                                            .child(
+                                                                webcam.camera_info().human_name(),
+                                                            )
+                                                            .with_menu_open_policy(
+                                                                ButtonMenuOpenPolicy::AnyClick,
+                                                            )
+                                                            .with_menu(camera_menu),
+                                                    )
+                                                    .child(
+                                                        button("camera-off-button")
+                                                            .child(icon("window-close".into()))
+                                                            .destructive()
+                                                            .on_click(cx.listener(
+                                                                |this, _, _, cx| {
+                                                                    this.turn_off_camera(cx)
+                                                                },
+                                                            )),
+                                                    ),
+                                            ),
+                                    )
+                                })
+                                .when_none(&self.active_camera, |david| {
+                                    david.when_else(
+                                        self.camera_info.is_some(),
+                                        |david| {
+                                            david.p(px(8.)).child(
+                                                button("camera-on")
+                                                    .child(icon_text(
+                                                        "camera-photo".into(),
+                                                        tr!("CAMERA_SETUP_ENABLE").into(),
+                                                    ))
+                                                    .on_click(cx.listener(|this, _, _, cx| {
+                                                        this.turn_on_camera(None, cx);
+                                                    })),
+                                            )
+                                        },
+                                        |david| {
+                                            david.p(px(8.)).child(tr!(
+                                                "CAMERA_SETUP_NO_CAMERA",
+                                                "No camera available on this device"
+                                            ))
+                                        },
+                                    )
+                                })
+                        },
+                    ),
             )
     }
 
@@ -283,18 +444,52 @@ impl CallStartPage {
             )
     }
 
+    fn turn_on_camera(&mut self, camera_info: Option<CameraInfo>, cx: &mut Context<Self>) {
+        match Permissions::grant_status(PermissionType::Camera) {
+            GrantStatus::Granted | GrantStatus::PlatformUnsupported => {
+                let Some(camera) = camera_info.or_else(|| {
+                    self.camera_info
+                        .as_ref()
+                        .and_then(|camera_info| camera_info.first().cloned())
+                }) else {
+                    return;
+                };
+
+                let webcam = cx.new(|cx| Webcam::new(camera.clone(), cx));
+                self.active_camera = Some(webcam);
+            }
+            GrantStatus::NotDetermined => {
+                self.request_permission(PermissionType::Camera, cx);
+            }
+            GrantStatus::Denied => {}
+        }
+    }
+
+    fn turn_off_camera(&mut self, cx: &mut Context<Self>) {
+        self.active_camera = None;
+        cx.notify()
+    }
+
     fn request_permission(&mut self, permission: PermissionType, cx: &mut Context<Self>) {
         let (tx, rx) = async_channel::bounded(1);
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let Ok(_) = rx.recv().await else {
+                let Ok(ok) = rx.recv().await else {
                     return;
                 };
 
                 let _ = weak_this.update(cx, |this, cx| {
-                    let (input_devices, selected_input_device) = Self::get_default_mic_settings();
-                    this.audio_input_devices = input_devices;
-                    this.selected_input_device = selected_input_device;
+                    if permission == PermissionType::Camera {
+                        if ok {
+                            this.fetch_camera_info(cx);
+                            this.turn_on_camera(None, cx);
+                        }
+                    } else {
+                        let (input_devices, selected_input_device) =
+                            Self::get_default_mic_settings();
+                        this.audio_input_devices = input_devices;
+                        this.selected_input_device = selected_input_device;
+                    }
                     cx.notify();
                 });
             },
@@ -355,6 +550,7 @@ impl Render for CallStartPage {
                     )
                     .pt(px(36.))
                     .on_back_click(cx.listener(move |this, _, window, cx| {
+                        this.turn_off_camera(cx);
                         (this.on_surface_change)(
                             &thegrid_common::surfaces::SurfaceChangeEvent {
                                 change: thegrid_common::surfaces::SurfaceChange::Pop,
@@ -424,7 +620,7 @@ impl Render for CallStartPage {
                                         layer()
                                             .border(px(1.))
                                             .border_color(theme.border_color)
-                                            .child(self.render_camera_area(window, cx))
+                                            .child(self.render_camera_setup(window, cx))
                                             .w(px(300.))
                                             .h(px(200.)),
                                     )

@@ -5,6 +5,7 @@ pub mod call_manager;
 pub mod call_surface;
 mod focus;
 pub(crate) mod sfx;
+mod webcam;
 
 use crate::call_manager::LivekitCallManager;
 use crate::focus::{FocusUrlError, get_focus_url};
