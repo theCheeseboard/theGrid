@@ -104,7 +104,7 @@ impl Webcam {
                     }
                 };
 
-                let Some(image) = RgbaImage::from_vec(
+                let Some(mut image) = RgbaImage::from_vec(
                     buffer.resolution().width(),
                     buffer.resolution().height(),
                     frame_data,
@@ -116,7 +116,7 @@ impl Webcam {
                 };
 
                 // Flip the RenderImage horizontally for display
-                imageops::flip_horizontal(&image);
+                imageops::flip_horizontal_in_place(&mut image);
                 let render_image = Arc::new(RenderImage::new(smallvec![Frame::new(image)]));
                 let _ = smol::block_on(tx.send(WebcamMessage::Frame {
                     render_image,
