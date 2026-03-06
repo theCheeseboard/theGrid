@@ -546,7 +546,7 @@ impl LivekitCall {
         self.on_hold = on_hold;
         cx.notify();
     }
-    
+
     pub fn active_camera(&self) -> Option<Entity<Webcam>> {
         self.active_camera.clone()
     }
@@ -759,10 +759,11 @@ impl LivekitCall {
             return;
         }
 
-        let cancellation_token = self.cancellation_source.token();
-
-        let call_manager = cx.global::<LivekitCallManager>();
         let device = device_entity.read(cx);
+        if device.error().is_some() {
+            // Don't bother setting up the camera because it's not working anyway
+            return;
+        }
 
         let source = NativeVideoSource::new(
             VideoResolution {
@@ -786,7 +787,6 @@ impl LivekitCall {
 
         let cancellation_source = CancellationTokenSource::new();
         let cancellation_source_2 = cancellation_source.clone();
-        let cancellation_token_2 = cancellation_source.token();
 
         let device_entity_clone = device_entity.clone();
         cx.spawn(
@@ -813,7 +813,7 @@ impl LivekitCall {
                 let _ = weak_this.update(cx, |call, cx| {
                     call.camera_track_sid = Some(sid);
 
-                    cx.observe(&device_entity_clone, move |call, device_entity, cx| {
+                    cx.observe(&device_entity_clone, move |_, device_entity, cx| {
                         let device = device_entity.read(cx);
                         let time_passed = timestamp.elapsed().as_millis();
 

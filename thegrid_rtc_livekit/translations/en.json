@@ -30,6 +30,7 @@
   "CALL_RETURN": "Return to call",
   "CALL_TAKE_OFF_HOLD": "Take off hold",
   "CAMERA_SETUP": "Camera",
+  "CAMERA_SETUP_CAMERA_ERROR": "Unable to access the camera",
   "CAMERA_SETUP_ENABLE": "Turn on camera",
   "CAMERA_SETUP_NO_CAMERA": "No camera available on this device",
   "JOIN_CALL": "Join Call",

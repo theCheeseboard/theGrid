@@ -134,18 +134,42 @@ impl Render for WebcamStartDialog {
                                                     let webcam = camera.read(cx);
 
                                                     david.flex().flex_col().flex_grow().child(
-                                                        div().flex().overflow_hidden().when_some(
-                                                            webcam.latest_frame().clone(),
-                                                            |david, frame| {
-                                                                david.child(
-                                                                    img(frame.clone())
-                                                                        .object_fit(
-                                                                            ObjectFit::Contain,
-                                                                        )
-                                                                        .size_full(),
-                                                                )
-                                                            },
-                                                        ),
+                                                        div()
+                                                            .flex()
+                                                            .overflow_hidden()
+                                                            .when_some(
+                                                                webcam.latest_frame().clone(),
+                                                                |david, frame| {
+                                                                    david.child(
+                                                                        img(frame.clone())
+                                                                            .object_fit(
+                                                                                ObjectFit::Contain,
+                                                                            )
+                                                                            .size_full(),
+                                                                    )
+                                                                },
+                                                            )
+                                                            .when_some(
+                                                                webcam.error(),
+                                                                |david, error| {
+                                                                    david.flex_grow().child(
+                                                                        div()
+                                                                            .flex()
+                                                                            .items_center()
+                                                                            .justify_center()
+                                                                            .flex_grow()
+                                                                            .size_full()
+                                                                            .child(icon_text(
+                                                                                "exception".into(),
+                                                                                tr!(
+                                                                                    "CAMERA_SETUP_\
+                                                                                    CAMERA_ERROR",
+                                                                                )
+                                                                                .into(),
+                                                                            )),
+                                                                    )
+                                                                },
+                                                            ),
                                                     )
                                                 },
                                             )
@@ -206,7 +230,12 @@ impl Render for WebcamStartDialog {
                         "camera-photo".into(),
                         tr!("WEBCAM_START_BUTTON", "Turn on Camera").into(),
                     ))
-                    .when_none(&self.active_camera, |david| david.disabled())
+                    .when(
+                        self.active_camera
+                            .as_ref()
+                            .is_none_or(|camera| camera.read(cx).error().is_some()),
+                        |david| david.disabled(),
+                    )
                     .on_click(cx.listener(|this, _, _, cx| {
                         let active_camera = this.active_camera.clone();
                         this.call.as_ref().unwrap().update(cx, |call, cx| {

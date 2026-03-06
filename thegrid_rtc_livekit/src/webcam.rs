@@ -37,7 +37,7 @@ impl Webcam {
         let cancellation_token = cancellation_source.token();
 
         let format =
-            RequestedFormat::new::<YuyvFormat>(RequestedFormatType::AbsoluteHighestFrameRate);
+            RequestedFormat::new::<YuyvFormat>(RequestedFormatType::AbsoluteHighestResolution);
 
         let (tx, rx) = async_channel::bounded(1);
 

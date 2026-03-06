@@ -206,16 +206,41 @@ impl CallStartPage {
                                             .flex()
                                             .flex_col()
                                             .flex_grow()
-                                            .child(div().flex().overflow_hidden().when_some(
-                                                webcam.latest_frame().clone(),
-                                                |david, frame| {
-                                                    david.child(
-                                                        img(frame.clone())
-                                                            .object_fit(ObjectFit::Contain)
-                                                            .size_full(),
+                                            .child(
+                                                div()
+                                                    .flex()
+                                                    .overflow_hidden()
+                                                    .when_some(
+                                                        webcam.latest_frame().clone(),
+                                                        |david, frame| {
+                                                            david.child(
+                                                                img(frame.clone())
+                                                                    .object_fit(ObjectFit::Contain)
+                                                                    .size_full(),
+                                                            )
+                                                        },
                                                     )
-                                                },
-                                            ))
+                                                    .when_some(webcam.error(), |david, error| {
+                                                        david.flex_grow().child(
+                                                            div()
+                                                                .flex()
+                                                                .items_center()
+                                                                .justify_center()
+                                                                .flex_grow()
+                                                                .size_full()
+                                                                .child(icon_text(
+                                                                    "exception".into(),
+                                                                    tr!(
+                                                                        "CAMERA_SETUP_\
+                                                                        CAMERA_ERROR",
+                                                                        "Unable to access \
+                                                                        the camera"
+                                                                    )
+                                                                    .into(),
+                                                                )),
+                                                        )
+                                                    }),
+                                            )
                                             .child(
                                                 layer()
                                                     .flex()
