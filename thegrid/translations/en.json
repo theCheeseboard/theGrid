@@ -44,6 +44,7 @@
   "AUTH_POPOVER_ADVANCED_LOGIN_TEXT": "If your homeserver doesn't support server discovery, you can enter its URL here to log in.",
   "AUTH_POPOVER_CONNECTION_ERROR": "Unable to connect to homeserver",
   "AUTH_POPOVER_CONNECTION_ERROR_TEXT": "Check your Matrix ID and try again.",
+  "AUTH_POPOVER_INITIAL_SYNC": "Initial Sync in progress. This can take a while.",
   "AUTH_REQUIRED": "Authentication Required",
   "AUTH_REQUIRED_BROWSER_GO": "Continue",
   "AUTH_REQUIRED_OAUTH_DESCRIPTION": "To continue, authenticate yourself with Single Sign-on",

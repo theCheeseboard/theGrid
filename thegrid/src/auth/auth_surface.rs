@@ -48,6 +48,7 @@ enum AuthState {
     Idle,
     Advanced,
     Connecting,
+    InitialSync,
     ConnectionError,
     AuthRequired,
     SsoTokenRequired(Option<IdentityProvider>),
@@ -413,36 +414,42 @@ impl AuthSurface {
 
         let mut database_secret = self.database_secret.clone();
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
-            let login_response = Tokio::spawn_result(cx, async move {
-                match login_method {
-                    LoginMethod::Password(password) => client_clone
-                        .matrix_auth()
-                        .login_username(username, password.as_str()),
-                    LoginMethod::SsoToken(sso_token) => {
-                        client_clone.matrix_auth().login_token(&sso_token)
+            let login_response = cx
+                .spawn_tokio(async move {
+                    match login_method {
+                        LoginMethod::Password(password) => client_clone
+                            .matrix_auth()
+                            .login_username(username, password.as_str()),
+                        LoginMethod::SsoToken(sso_token) => {
+                            client_clone.matrix_auth().login_token(&sso_token)
+                        }
                     }
-                }
-                .initial_device_display_name(default_device_name.as_str())
-                .send()
-                .await
-                .map_err(|e| anyhow!(e))
-            })
-            .unwrap()
-            .await;
-
-            // Start sync to ensure we have the latest state
-            let client_clone = client.clone();
-            let _ = Tokio::spawn_result(cx, async move {
-                client_clone
-                    .sync_once(SyncSettings::new().ignore_timeout_on_first_sync(true))
+                    .initial_device_display_name(default_device_name.as_str())
+                    .send()
                     .await
-                    .map_err(|e| anyhow!(e))
-            })
-            .unwrap()
-            .await;
+                })
+                .await;
 
             match login_response {
                 Ok(login_response) => {
+                    // Start sync to ensure we have the latest state
+                    this.update(cx, |this, cx| {
+                        if !matches!(this.state, AuthState::Connecting) {
+                            return;
+                        }
+
+                        this.state = AuthState::InitialSync;
+                        cx.notify();
+                    })
+                    .unwrap();
+
+                    let client_clone = client.clone();
+                    let _ = cx
+                        .spawn_tokio(async move {
+                            client_clone.sync_once(SyncSettings::default()).await
+                        })
+                        .await;
+
                     let matrix_session: MatrixSession = (&login_response.clone()).into();
 
                     database_secret.set_matrix_session(matrix_session);
@@ -459,7 +466,7 @@ impl AuthSurface {
                     .unwrap();
 
                     this.update(cx, |this, cx| {
-                        if !matches!(this.state, AuthState::Connecting) {
+                        if !matches!(this.state, AuthState::InitialSync) {
                             return;
                         }
 
@@ -500,9 +507,10 @@ impl AuthSurface {
                 AuthState::Idle => 0,
                 AuthState::Advanced => 1,
                 AuthState::Connecting => 2,
-                AuthState::ConnectionError => 3,
-                AuthState::AuthRequired => 4,
-                AuthState::SsoTokenRequired(_) => 5,
+                AuthState::InitialSync => 3,
+                AuthState::ConnectionError => 4,
+                AuthState::AuthRequired => 5,
+                AuthState::SsoTokenRequired(_) => 6,
             },
         )
         .animation(FadeAnimation::new())
@@ -553,6 +561,26 @@ impl AuthSurface {
                 .justify_center()
                 .size_full()
                 .child(spinner())
+                .into_any_element(),
+        )
+        .page(
+            div()
+                .flex()
+                .items_center()
+                .justify_center()
+                .size_full()
+                .child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .items_center()
+                        .gap(px(8.))
+                        .child(spinner())
+                        .child(tr!(
+                            "AUTH_POPOVER_INITIAL_SYNC",
+                            "Initial Sync in progress. This can take a while."
+                        )),
+                )
                 .into_any_element(),
         )
         .page(

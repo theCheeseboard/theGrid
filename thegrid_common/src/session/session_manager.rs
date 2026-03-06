@@ -103,7 +103,12 @@ impl SessionManager {
     }
 
     pub fn session_secrets(&self, session: &Uuid, cx: &App) -> keyring::Result<Box<Credential>> {
-        default_credential_builder().build(None, "com.vicr123.thegrid", &session.to_string())
+        let details = cx.global::<Details>();
+        default_credential_builder().build(
+            None,
+            details.generatable.desktop_entry,
+            &session.to_string(),
+        )
     }
 
     pub fn set_session(&mut self, uuid: Uuid, cx: &mut App) {
@@ -348,7 +353,7 @@ pub fn setup_session_manager(cx: &mut App) {
         current_session_client: None,
         current_caches: None,
         current_client_error: ClientError::None,
-        secrets_cache: RefCell::new(HashMap::new())
+        secrets_cache: RefCell::new(HashMap::new()),
     });
 }
 
