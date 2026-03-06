@@ -1,6 +1,7 @@
 use async_ringbuf::traits::{AsyncProducer, Consumer, Producer, Split};
 use std::collections::{HashMap, HashSet};
 pub mod active_call_sidebar_alert;
+pub mod call_disconnect_confirmation_dialog;
 pub mod call_manager;
 pub mod call_surface;
 mod focus;

@@ -10,8 +10,8 @@ use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled,
-    WeakEntity, Window, div, px, rgb,
+    App, AppContext, AsyncApp, BorrowAppContext, Context, Entity, IntoElement, ParentElement,
+    Render, Styled, WeakEntity, Window, div, px, rgb,
 };
 use std::rc::Rc;
 use thegrid_common::mxc_image::{SizePolicy, mxc_image};
@@ -20,12 +20,14 @@ use thegrid_common::surfaces::{
     MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
 };
 use thegrid_common::tokio_helper::TokioHelper;
+use thegrid_rtc_livekit::call_disconnect_confirmation_dialog::CallDisconnectConfirmationDialog;
 
 pub struct ProfileSettings {
     edit_display_name_open: bool,
     edit_profile_picture_open: bool,
     new_display_name_text_field: Entity<TextField>,
     on_surface_change: Rc<Box<SurfaceChangeHandler>>,
+    call_disconnect_confirmation_dialog: Entity<CallDisconnectConfirmationDialog>,
 }
 
 impl ProfileSettings {
@@ -33,6 +35,9 @@ impl ProfileSettings {
         cx: &mut App,
         on_surface_change: impl Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static,
     ) -> Entity<Self> {
+        let call_disconnect_confirmation_dialog =
+            cx.new(|cx| CallDisconnectConfirmationDialog::new(cx));
+
         cx.new(|cx| Self {
             edit_display_name_open: false,
             edit_profile_picture_open: false,
@@ -47,7 +52,32 @@ impl ProfileSettings {
                 text_field
             }),
             on_surface_change: Rc::new(Box::new(on_surface_change)),
+            call_disconnect_confirmation_dialog,
         })
+    }
+
+    fn open_deactivate_account_page(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let on_complete = cx.listener(|this, _, window, cx| {
+            (this.on_surface_change)(
+                &SurfaceChangeEvent {
+                    change: SurfaceChange::Push(MainWindowSurface::DeactivateAccount),
+                },
+                window,
+                cx,
+            );
+            cx.notify();
+        });
+
+        self.call_disconnect_confirmation_dialog.update(
+            cx,
+            |call_disconnect_confirmation_dialog, cx| {
+                call_disconnect_confirmation_dialog.ensure_calls_disconnected(
+                    window,
+                    cx,
+                    on_complete,
+                );
+            },
+        )
     }
 }
 
@@ -177,16 +207,7 @@ impl Render for ProfileSettings {
                                             ))
                                             .destructive()
                                             .on_click(cx.listener(move |this, _, window, cx| {
-                                                (this.on_surface_change)(
-                                                    &SurfaceChangeEvent {
-                                                        change: SurfaceChange::Push(
-                                                            MainWindowSurface::DeactivateAccount,
-                                                        ),
-                                                    },
-                                                    window,
-                                                    cx,
-                                                );
-                                                cx.notify();
+                                                this.open_deactivate_account_page(window, cx)
                                             })),
                                     ),
                             ),
@@ -253,5 +274,6 @@ impl Render for ProfileSettings {
                             })),
                     ),
             )
+            .child(self.call_disconnect_confirmation_dialog.clone())
     }
 }

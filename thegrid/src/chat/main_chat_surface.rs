@@ -19,6 +19,7 @@ use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{
     AccountSettingsDeepLink, MainWindowSurface, SurfaceChangeEvent, SurfaceChangeHandler,
 };
+use thegrid_rtc_livekit::call_disconnect_confirmation_dialog::CallDisconnectConfirmationDialog;
 
 pub struct MainChatSurface {
     sidebar: Entity<Sidebar>,
@@ -34,6 +35,7 @@ pub struct MainChatSurface {
     direct_join_room_popover: Entity<DirectJoinRoomPopover>,
 
     on_surface_change: Rc<Box<SurfaceChangeHandler>>,
+    call_disconnect_confirmation_dialog: Entity<CallDisconnectConfirmationDialog>,
 }
 
 impl MainChatSurface {
@@ -52,7 +54,12 @@ impl MainChatSurface {
                 &displayed_room,
                 |this, displayed_room, cx| match displayed_room.read(cx).clone() {
                     DisplayedRoom::Room(room_id) => {
-                        this.chat_room = Some(ChatRoom::new(room_id.clone(), displayed_room, this.on_surface_change.clone(), cx))
+                        this.chat_room = Some(ChatRoom::new(
+                            room_id.clone(),
+                            displayed_room,
+                            this.on_surface_change.clone(),
+                            cx,
+                        ))
                     }
                     DisplayedRoom::Directory(server_name) => {
                         this.room_directory =
@@ -67,6 +74,8 @@ impl MainChatSurface {
 
             let create_room_popover = cx.new(|cx| CreateRoomPopover::new(cx));
             let direct_join_room_popover = cx.new(|cx| DirectJoinRoomPopover::new(cx));
+            let call_disconnect_confirmation_dialog =
+                cx.new(|cx| CallDisconnectConfirmationDialog::new(cx));
 
             MainChatSurface {
                 sidebar: cx.new(|cx| {
@@ -90,13 +99,27 @@ impl MainChatSurface {
                 on_surface_change: Rc::new(Box::new(on_surface_change)),
                 create_room_popover,
                 direct_join_room_popover,
+                call_disconnect_confirmation_dialog,
             }
         })
     }
 
-    pub fn log_out(&mut self, _: &LogOut, _: &mut Window, cx: &mut Context<Self>) {
-        self.logout_popover_visible.write(cx, true);
-        cx.notify()
+    pub fn log_out(&mut self, _: &LogOut, window: &mut Window, cx: &mut Context<Self>) {
+        let on_complete = cx.listener(|this, _, _, cx| {
+            this.logout_popover_visible.write(cx, true);
+            cx.notify()
+        });
+
+        self.call_disconnect_confirmation_dialog.update(
+            cx,
+            |call_disconnect_confirmation_dialog, cx| {
+                call_disconnect_confirmation_dialog.ensure_calls_disconnected(
+                    window,
+                    cx,
+                    on_complete,
+                );
+            },
+        )
     }
 
     pub fn account_settings(
@@ -117,13 +140,24 @@ impl MainChatSurface {
     pub fn account_switcher(
         &mut self,
         _: &AccountSwitcher,
-        _: &mut Window,
+        window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        cx.update_global::<SessionManager, ()>(|session_manager, cx| {
-            session_manager.clear_session()
-        });
-        cx.notify()
+        self.call_disconnect_confirmation_dialog.update(
+            cx,
+            |call_disconnect_confirmation_dialog, cx| {
+                call_disconnect_confirmation_dialog.ensure_calls_disconnected(
+                    window,
+                    cx,
+                    cx.listener(|this, _, _, cx| {
+                        cx.update_global::<SessionManager, ()>(|session_manager, cx| {
+                            session_manager.clear_session()
+                        });
+                        cx.notify()
+                    }),
+                );
+            },
+        )
     }
 
     pub fn create_room(&mut self, _: &CreateRoom, _: &mut Window, cx: &mut Context<Self>) {
@@ -202,5 +236,6 @@ impl Render for MainChatSurface {
             .child(logout_popover(self.logout_popover_visible.clone()))
             .child(self.create_room_popover.clone())
             .child(self.direct_join_room_popover.clone())
+            .child(self.call_disconnect_confirmation_dialog.clone())
     }
 }
