@@ -35,6 +35,8 @@ mime2ext = { workspace = true }
 thegrid_text_rendering = { path = "../thegrid_text_rendering" }
 thegrid_common = { workspace = true }
 thegrid_rtc_livekit = { workspace = true }
+keyring = { workspace = true }
+getrandom = { workspace = true }
 
 [build-dependencies]
 cntp_i18n_gen = { workspace = true }

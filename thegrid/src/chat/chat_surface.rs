@@ -94,11 +94,19 @@ impl Render for ChatSurface {
                             .justify_center()
                             .gap(px(8.))
                             .child(spinner())
-                            .child(div().text_size(theme.heading_font_size).child(tr!(
-                                "MAIN_CHAT_WELCOME",
-                                "Welcome back, {{user}}!",
-                                user = current_session.matrix_session.meta.user_id.localpart()
-                            )))
+                            .child(
+                                div().text_size(theme.heading_font_size).child(tr!(
+                                    "MAIN_CHAT_WELCOME",
+                                    "Welcome back, {{user}}!",
+                                    user = current_session
+                                        .secrets
+                                        .matrix_session()
+                                        .unwrap()
+                                        .meta
+                                        .user_id
+                                        .localpart()
+                                )),
+                            )
                             .into_any_element(),
                     )
                     .page(self.main_chat_surface.clone().into_any_element())

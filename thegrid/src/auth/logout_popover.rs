@@ -17,7 +17,7 @@ use gpui::{
 };
 use gpui_tokio::Tokio;
 use std::fs::remove_dir_all;
-use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::session::session_manager::{SessionManager, SessionSecretPurpose};
 
 enum LogoutPopoverState {
     Idle,
@@ -42,20 +42,15 @@ impl LogoutPopover {
         cx: &mut App,
     ) {
         cx.update_global::<SessionManager, ()>(|session_manager, cx| {
+            let uuid = session_manager.current_session().as_ref().unwrap().uuid;
+            let session_secrets = session_manager.session_secrets(&uuid, cx);
             let client = session_manager.client().unwrap().read(cx).clone();
 
             let details = cx.global::<Details>();
             let directories = details.standard_dirs().unwrap();
             let data_dir = directories.data_dir();
             let session_dir = data_dir.join("sessions");
-            let this_session_dir = session_dir.join(
-                session_manager
-                    .current_session()
-                    .as_ref()
-                    .unwrap()
-                    .uuid
-                    .to_string(),
-            );
+            let this_session_dir = session_dir.join(uuid.to_string());
 
             state.write(cx, LogoutPopoverState::Processing);
 
@@ -72,8 +67,11 @@ impl LogoutPopover {
                     return;
                 };
 
-                // Delete the session
+                // Delete the session and secrets
                 remove_dir_all(this_session_dir).unwrap();
+                if let Ok(session_secrets) = session_secrets {
+                    let _ = session_secrets.delete_credential();
+                }
 
                 cx.update_global::<SessionManager, ()>(|session_manager, cx| {
                     session_manager.clear_session();

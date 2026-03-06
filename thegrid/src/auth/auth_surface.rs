@@ -22,6 +22,7 @@ use gpui::{
     IntoElement, ParentElement, Render, Styled, WeakEntity, Window, div, img, px,
 };
 use gpui_tokio::Tokio;
+use keyring::default::default_credential_builder;
 use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::config::SyncSettings;
 use matrix_sdk::encryption::CrossSigningStatus;
@@ -32,7 +33,8 @@ use smol::future::FutureExt;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
-use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::session::database_secret::DatabaseSecret;
+use thegrid_common::session::session_manager::{SessionManager, SessionSecretPurpose};
 use thegrid_common::surfaces::{
     MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
 };
@@ -67,6 +69,7 @@ pub struct AuthSurface {
     login_types: Vec<LoginType>,
     user_id: Option<OwnedUserId>,
     session_uuid: Uuid,
+    database_secret: DatabaseSecret,
 
     on_surface_change: Rc<Box<SurfaceChangeHandler>>,
 }
@@ -142,6 +145,7 @@ impl AuthSurface {
                 login_types: Vec::new(),
                 session_uuid: Uuid::new_v4(),
                 on_surface_change: Rc::new(Box::new(on_surface_change)),
+                database_secret: DatabaseSecret::new().unwrap(),
             };
             surface
         })
@@ -171,12 +175,13 @@ impl AuthSurface {
 
         std::fs::create_dir_all(&store_dir).unwrap();
 
+        let database_password = self.database_secret.database_password();
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
             let client = cx
                 .spawn_tokio(async move {
                     Client::builder()
                         .server_name(user_id.server_name())
-                        .sqlite_store(store_dir, None)
+                        .sqlite_store(store_dir, Some(&database_password))
                         .build()
                         .await
                 })
@@ -270,12 +275,13 @@ impl AuthSurface {
 
         std::fs::create_dir_all(&store_dir).unwrap();
 
+        let database_password = self.database_secret.database_password();
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
             let client = cx
                 .spawn_tokio(async move {
                     Client::builder()
                         .homeserver_url(&homeserver_url)
-                        .sqlite_store(store_dir, None)
+                        .sqlite_store(store_dir, Some(&database_password))
                         .build()
                         .await
                 })
@@ -389,6 +395,11 @@ impl AuthSurface {
     }
 
     fn perform_login(&mut self, login_method: LoginMethod, cx: &mut Context<Self>) {
+        let session_manager = cx.global::<SessionManager>();
+        let session_secrets = session_manager
+            .session_secrets(&self.session_uuid, cx)
+            .expect("Secrets should be able to be accessed");
+
         let session_dir = self.session_dir(cx);
         let default_device_name = default_device_name(cx);
         let client = self.client.clone().unwrap();
@@ -400,6 +411,7 @@ impl AuthSurface {
             .unwrap_or_else(|| self.username_field.read(cx).text().to_string());
         let session_uuid = self.session_uuid;
 
+        let mut database_secret = self.database_secret.clone();
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
             let login_response = Tokio::spawn_result(cx, async move {
                 match login_method {
@@ -420,7 +432,7 @@ impl AuthSurface {
 
             // Start sync to ensure we have the latest state
             let client_clone = client.clone();
-            let sync_handle = Tokio::spawn_result(cx, async move {
+            let _ = Tokio::spawn_result(cx, async move {
                 client_clone
                     .sync_once(SyncSettings::new().ignore_timeout_on_first_sync(true))
                     .await
@@ -433,12 +445,10 @@ impl AuthSurface {
                 Ok(login_response) => {
                     let matrix_session: MatrixSession = (&login_response.clone()).into();
 
-                    let session_file = session_dir.join("session.json");
-                    std::fs::write(
-                        session_file,
-                        serde_json::to_string(&matrix_session).unwrap(),
-                    )
-                    .unwrap();
+                    database_secret.set_matrix_session(matrix_session);
+                    session_secrets
+                        .set_secret(&serde_json::to_vec(&database_secret).unwrap())
+                        .expect("Unable to save Matrix secret in secret store");
 
                     let homeserver_file = session_dir.join("homeserver");
                     std::fs::write(homeserver_file, client.homeserver().to_string()).unwrap();
@@ -797,7 +807,15 @@ impl Render for AuthSurface {
                                         button(ElementId::Name(
                                             format!("session-{}", session.uuid).into(),
                                         ))
-                                        .child(session.matrix_session.meta.user_id.to_string())
+                                        .child(
+                                            session
+                                                .secrets
+                                                .matrix_session()
+                                                .unwrap()
+                                                .meta
+                                                .user_id
+                                                .to_string(),
+                                        )
                                         .on_click(
                                             cx.listener(move |this, _, _, cx| {
                                                 cx.update_global::<SessionManager, ()>(

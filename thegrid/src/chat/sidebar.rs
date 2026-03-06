@@ -221,9 +221,15 @@ impl Render for Sidebar {
                             .gap(px(4.))
                             .child(account.display_name().unwrap_or_default())
                             .child(
-                                div()
-                                    .text_color(theme.foreground.disabled())
-                                    .child(session.matrix_session.meta.user_id.to_string()),
+                                div().text_color(theme.foreground.disabled()).child(
+                                    session
+                                        .secrets
+                                        .matrix_session()
+                                        .unwrap()
+                                        .meta
+                                        .user_id
+                                        .to_string(),
+                                ),
                             ),
                     ),
             )

@@ -10,6 +10,7 @@
   "NOTIFICATION_MESSAGE_SUMMARY": "{{sender}} in {{room}}",
   "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE": "Disconnected from Homeserver",
   "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE_DESCRIPTION": "Trying to reconnect...",
+  "TERMINAL_ERROR_SECRET_FAILURE": "Failed to decrypt secrets.",
   "TERMINAL_ERROR_UNKNOWN_ERROR": "An unknown error occurred.",
   "TERMINAL_ERROR_UNKNOWN_TOKEN": "This session was logged out by another device.",
   "UNKNOWN_DEVICE": "Unknown Device"

@@ -1,5 +1,6 @@
 mod account_cache;
 mod caches;
+pub mod database_secret;
 pub mod devices_cache;
 pub mod error_handling;
 pub mod media_cache;

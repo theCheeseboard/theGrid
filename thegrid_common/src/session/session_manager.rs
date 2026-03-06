@@ -1,5 +1,6 @@
 use crate::session::account_cache::AccountCache;
 use crate::session::caches::Caches;
+use crate::session::database_secret::{DatabaseSecret, DatabaseSecretExt};
 use crate::session::devices_cache::DevicesCache;
 use crate::session::error_handling::{ClientError, TerminalClientError, handle_error};
 use crate::session::media_cache::MediaCache;
@@ -7,11 +8,18 @@ use crate::session::notifications::trigger_notification;
 use crate::session::room_cache::RoomCache;
 use crate::session::verification_requests_cache::VerificationRequestsCache;
 use crate::tokio_helper::TokioHelper;
+use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
 use contemporary::application::Details;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{App, AppContext, AsyncApp, Context, Entity, Global, Task, WeakEntity};
 use gpui_tokio::Tokio;
+use imbl::HashMap;
+use imbl::hashmap::Entry;
+use imbl::shared_ptr::DefaultSharedPtr;
+use keyring::Credential;
+use keyring::default::default_credential_builder;
 use log::{error, info};
 use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::config::SyncSettings;
@@ -23,7 +31,10 @@ use matrix_sdk::store::RoomLoadSettings;
 use matrix_sdk::sync::Notification;
 use matrix_sdk::{Client, Error, HttpError, LoopCtrl, Room, RumaApiError};
 use matrix_sdk_ui::sync_service::{State, SyncService};
+use std::cell::RefCell;
+use std::fmt::Display;
 use std::fs::{create_dir_all, read_dir, remove_dir_all};
+use std::hash::RandomState;
 use std::path::PathBuf;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -33,6 +44,22 @@ pub struct SessionManager {
     current_session_client: Option<Entity<Client>>,
     current_caches: Option<Caches>,
     current_client_error: ClientError,
+    secrets_cache: RefCell<HashMap<Uuid, DatabaseSecret>>,
+}
+
+pub enum SessionSecretPurpose {
+    Database,
+    Session,
+}
+
+impl Display for SessionSecretPurpose {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            SessionSecretPurpose::Database => "database",
+            SessionSecretPurpose::Session => "session",
+        };
+        write!(f, "{}", str)
+    }
 }
 
 impl SessionManager {
@@ -49,12 +76,23 @@ impl SessionManager {
             let entry = entry.ok()?;
             if entry.metadata().ok()?.is_dir() {
                 let uuid = Uuid::parse_str(entry.file_name().to_str()?).ok()?;
-                let session_file = entry.path().join("session.json");
-                let session_file = std::fs::read_to_string(session_file).ok()?;
-                let session_file = serde_json::from_str::<MatrixSession>(&session_file).ok()?;
+
+                let mut secrets_cache_borrow = self.secrets_cache.borrow_mut();
+                let cache_entry = secrets_cache_borrow.entry(uuid);
+                let secrets = match cache_entry {
+                    Entry::Occupied(secret) => secret.get().clone(),
+                    Entry::Vacant(vacant) => vacant
+                        .insert(
+                            self.session_secrets(&uuid, cx)
+                                .ok()
+                                .and_then(|secrets| secrets.get_database_secret().ok())?,
+                        )
+                        .clone(),
+                };
+
                 Some(Session {
                     uuid,
-                    matrix_session: session_file,
+                    secrets,
                     session_dir: entry.path(),
                 })
             } else {
@@ -62,6 +100,10 @@ impl SessionManager {
             }
         })
         .collect()
+    }
+
+    pub fn session_secrets(&self, session: &Uuid, cx: &App) -> keyring::Result<Box<Credential>> {
+        default_credential_builder().build(None, "com.vicr123.thegrid", &session.to_string())
     }
 
     pub fn set_session(&mut self, uuid: Uuid, cx: &mut App) {
@@ -72,16 +114,16 @@ impl SessionManager {
         if let Some(session) = session {
             self.current_session = Some(session.clone());
 
-            let user_id = session.matrix_session.meta.user_id.clone();
+            let matrix_session = session.secrets.matrix_session().unwrap();
+            let user_id = matrix_session.meta.user_id.clone();
             let store_dir = session.session_dir.join("store");
-            let matrix_session = session.matrix_session;
 
             let homeserver_file = session.session_dir.join("homeserver");
             let homeserver = std::fs::read_to_string(homeserver_file);
 
             cx.spawn(async move |cx: &mut AsyncApp| {
                 if let Err(error) =
-                    Self::setup_session(user_id, store_dir, matrix_session, homeserver.ok(), cx)
+                    Self::setup_session(user_id, store_dir, session.secrets, homeserver.ok(), cx)
                         .await
                 {
                     error!("Unable to create client: {error:?}");
@@ -98,10 +140,12 @@ impl SessionManager {
     async fn setup_session(
         user_id: OwnedUserId,
         store_dir: PathBuf,
-        matrix_session: MatrixSession,
+        secrets: DatabaseSecret,
         homeserver: Option<String>,
         cx: &mut AsyncApp,
     ) -> anyhow::Result<()> {
+        let database_password = secrets.database_password();
+        let matrix_session = secrets.matrix_session().unwrap().clone();
         let client = cx
             .spawn_tokio(async move {
                 {
@@ -111,7 +155,7 @@ impl SessionManager {
                         Client::builder().server_name(user_id.server_name())
                     }
                 }
-                .sqlite_store(store_dir, None)
+                .sqlite_store(store_dir, Some(&database_password))
                 .build()
                 .await
             })
@@ -304,12 +348,13 @@ pub fn setup_session_manager(cx: &mut App) {
         current_session_client: None,
         current_caches: None,
         current_client_error: ClientError::None,
+        secrets_cache: RefCell::new(HashMap::new())
     });
 }
 
 #[derive(Clone)]
 pub struct Session {
     pub uuid: Uuid,
-    pub matrix_session: MatrixSession,
+    pub secrets: DatabaseSecret,
     pub session_dir: PathBuf,
 }

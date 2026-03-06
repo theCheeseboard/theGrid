@@ -13,6 +13,7 @@ pub enum ClientError {
 #[derive(Clone, Copy)]
 pub enum TerminalClientError {
     UnknownToken,
+    SecretFailure,
     UnknownError,
 }
 
@@ -61,6 +62,11 @@ impl TerminalClientError {
                 "TERMINAL_ERROR_UNKNOWN_TOKEN",
                 "This session was logged out by another device."
             ),
+            TerminalClientError::SecretFailure => tr!(
+                "TERMINAL_ERROR_SECRET_FAILURE",
+                // TODO: Something better
+                "Failed to decrypt secrets."
+            ),
             TerminalClientError::UnknownError => {
                 tr!("TERMINAL_ERROR_UNKNOWN_ERROR", "An unknown error occurred.")
             }
@@ -70,6 +76,7 @@ impl TerminalClientError {
     pub fn should_logout(&self) -> bool {
         match self {
             TerminalClientError::UnknownToken => true,
+            TerminalClientError::SecretFailure => false,
             TerminalClientError::UnknownError => false,
         }
     }
