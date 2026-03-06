@@ -33,5 +33,8 @@
   "CAMERA_SETUP_ENABLE": "Turn on camera",
   "CAMERA_SETUP_NO_CAMERA": "No camera available on this device",
   "JOIN_CALL": "Join Call",
-  "MIC_SETUP": "Microphone"
+  "MIC_SETUP": "Microphone",
+  "WEBCAM_START_BUTTON": "Turn on Camera",
+  "WEBCAM_START_CAMERA_SELECTION": "Camera",
+  "WEBCAM_START_TITLE": "Turn on Camera"
 }

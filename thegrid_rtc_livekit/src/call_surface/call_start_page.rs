@@ -9,7 +9,9 @@ use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::subtitle::subtitle;
-use contemporary::permissions::{GrantStatus, PermissionType, Permissions};
+use contemporary::permissions::{
+    GrantStatus, PermissionRequestCompleteEvent, PermissionType, Permissions,
+};
 use contemporary::styling::theme::ThemeStorage;
 use cpal::traits::{DeviceTrait, HostTrait};
 use cpal::{Device, DeviceDescription};
@@ -149,8 +151,8 @@ impl CallStartPage {
                                         "camera-photo".into(),
                                         tr!("CAMERA_SETUP_ENABLE", "Turn on camera").into(),
                                     ))
-                                    .on_click(cx.listener(|this, _, _, cx| {
-                                        this.turn_on_camera(None, cx);
+                                    .on_click(cx.listener(|this, _, window, cx| {
+                                        this.turn_on_camera(None, window, cx);
                                     })),
                             )
                         },
@@ -185,9 +187,10 @@ impl CallStartPage {
                                                     ContextMenuItem::menu_item()
                                                         .label(camera.human_name())
                                                         .on_triggered(cx.listener(
-                                                            move |this, _, _, cx| {
+                                                            move |this, _, window, cx| {
                                                                 this.turn_on_camera(
                                                                     Some(camera.clone()),
+                                                                    window,
                                                                     cx,
                                                                 )
                                                             },
@@ -253,9 +256,11 @@ impl CallStartPage {
                                                         "camera-photo".into(),
                                                         tr!("CAMERA_SETUP_ENABLE").into(),
                                                     ))
-                                                    .on_click(cx.listener(|this, _, _, cx| {
-                                                        this.turn_on_camera(None, cx);
-                                                    })),
+                                                    .on_click(cx.listener(
+                                                        |this, _, window, cx| {
+                                                            this.turn_on_camera(None, window, cx);
+                                                        },
+                                                    )),
                                             )
                                         },
                                         |david| {
@@ -364,8 +369,12 @@ impl CallStartPage {
                                         "audio-input-microphone".into(),
                                         tr!("AUDIO_SETUP_ENABLE_MIC", "Turn on mic").into(),
                                     ))
-                                    .on_click(cx.listener(|this, _, _, cx| {
-                                        this.request_permission(PermissionType::Microphone, cx);
+                                    .on_click(cx.listener(|this, _, window, cx| {
+                                        this.request_permission(
+                                            PermissionType::Microphone,
+                                            window,
+                                            cx,
+                                        );
                                     })),
                             ),
                     )
@@ -447,7 +456,12 @@ impl CallStartPage {
             )
     }
 
-    fn turn_on_camera(&mut self, camera_info: Option<CameraInfo>, cx: &mut Context<Self>) {
+    fn turn_on_camera(
+        &mut self,
+        camera_info: Option<CameraInfo>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         match Permissions::grant_status(PermissionType::Camera) {
             GrantStatus::Granted | GrantStatus::PlatformUnsupported => {
                 let Some(camera) = camera_info.or_else(|| {
@@ -462,7 +476,7 @@ impl CallStartPage {
                 self.active_camera = Some(webcam);
             }
             GrantStatus::NotDetermined => {
-                self.request_permission(PermissionType::Camera, cx);
+                self.request_permission(PermissionType::Camera, window, cx);
             }
             GrantStatus::Denied => {}
         }
@@ -473,19 +487,20 @@ impl CallStartPage {
         cx.notify()
     }
 
-    fn request_permission(&mut self, permission: PermissionType, cx: &mut Context<Self>) {
-        let (tx, rx) = async_channel::bounded(1);
-        cx.spawn(
-            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let Ok(ok) = rx.recv().await else {
-                    return;
-                };
-
-                let _ = weak_this.update(cx, |this, cx| {
+    fn request_permission(
+        &mut self,
+        permission: PermissionType,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        Permissions::request_permission(
+            permission,
+            cx.listener(
+                move |this, event: &PermissionRequestCompleteEvent, window, cx| {
                     if permission == PermissionType::Camera {
-                        if ok {
+                        if event.grant_status == GrantStatus::Granted {
                             this.fetch_camera_info(cx);
-                            this.turn_on_camera(None, cx);
+                            this.turn_on_camera(None, window, cx);
                         }
                     } else {
                         let (input_devices, selected_input_device) =
@@ -494,14 +509,11 @@ impl CallStartPage {
                         this.selected_input_device = selected_input_device;
                     }
                     cx.notify();
-                });
-            },
-        )
-        .detach();
-
-        Permissions::request_permission(permission, move |success| {
-            let _ = smol::block_on(tx.send(success));
-        })
+                },
+            ),
+            window,
+            cx,
+        );
     }
 
     fn start_call(&mut self, cx: &mut Context<Self>) {
@@ -520,7 +532,7 @@ impl CallStartPage {
                         call.set_active_camera(active_camera, cx);
                     });
                 });
-                
+
                 self.turn_off_camera(cx);
             }
         });

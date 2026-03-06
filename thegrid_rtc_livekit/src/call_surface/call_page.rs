@@ -1,7 +1,7 @@
 use crate::call_manager::LivekitCallManager;
+use crate::call_surface::call_page::webcam_start_dialog::WebcamStartDialog;
 use crate::{CallMember, CallState, LivekitCall, StreamState};
 use cntp_i18n::tr;
-use contemporary::components::admonition::admonition;
 use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
@@ -12,22 +12,23 @@ use contemporary::components::spinner::spinner;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, BorrowAppContext, Context, Entity, IntoElement, ObjectFit, ParentElement, Render,
-    RenderImage, RenderOnce, Styled, StyledImage, Window, div, img, px, rgb,
+    App, AppContext, BorrowAppContext, Context, Entity, IntoElement, ObjectFit, ParentElement,
+    Render, RenderOnce, Styled, StyledImage, Window, div, img, px, rgb,
 };
-use image::Frame;
 use matrix_sdk::ruma::OwnedRoomId;
-use smallvec::smallvec;
 use std::rc::Rc;
-use std::sync::Arc;
 use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
+
+mod webcam_start_dialog;
 
 pub struct CallPage {
     call: Entity<LivekitCall>,
     room_id: OwnedRoomId,
     on_surface_change: Rc<Box<SurfaceChangeHandler>>,
+
+    webcam_start_dialog: Entity<WebcamStartDialog>,
 }
 
 impl CallPage {
@@ -44,10 +45,13 @@ impl CallPage {
             .unwrap()
             .clone();
 
+        let webcam_start_dialog = cx.new(|cx| WebcamStartDialog::new(cx));
+
         Self {
             call,
             room_id,
             on_surface_change,
+            webcam_start_dialog,
         }
     }
 }
@@ -206,15 +210,25 @@ impl Render for CallPage {
                                                 .p(px(16.))
                                                 .child(icon("camera-photo".into()).size(24.))
                                                 .checked_when(call.active_camera().is_some())
-                                                .on_click(cx.listener(move |this, _, _, cx| {
-                                                    this.call.update(cx, |call, cx| {
+                                                .on_click(cx.listener(
+                                                    move |this, _, window, cx| {
+                                                        let call = this.call.read(cx);
                                                         if call.active_camera().is_some() {
-                                                            call.set_active_camera(None, cx)
+                                                            this.call.update(cx, |call, cx| {
+                                                                call.set_active_camera(None, cx)
+                                                            });
                                                         } else {
-                                                            // Show a UI to preview the camera
+                                                            let call = this.call.clone();
+                                                            this.webcam_start_dialog.update(
+                                                                cx,
+                                                                |webcam_start_dialog, cx| {
+                                                                    webcam_start_dialog
+                                                                        .open(call, window, cx)
+                                                                },
+                                                            )
                                                         }
-                                                    });
-                                                })),
+                                                    },
+                                                )),
                                         )
                                         .child(
                                             button("deaf")
@@ -278,6 +292,7 @@ impl Render for CallPage {
                         ),
                     ),
             )
+            .child(self.webcam_start_dialog.clone())
     }
 }
 
