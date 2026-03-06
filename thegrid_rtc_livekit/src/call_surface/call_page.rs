@@ -312,12 +312,22 @@ impl RenderOnce for CallMemberDisplay {
             && matches!(call_member.screenshare_state, StreamState::Unavailable);
         let is_muted = matches!(call_member.mic_state, StreamState::Off);
 
-        let camera_sid = match call_member.camera_state {
-            StreamState::On(sid) => self.call.read(cx).video_stream_images.get(&sid),
+        let call = self.call.read(cx);
+        let camera_image = match call_member.camera_state {
+            StreamState::On(sid) => {
+                if call.camera_track_sid.as_ref() == Some(&sid)
+                    && let Some(camera) = call.active_camera()
+                {
+                    let camera = camera.read(cx);
+                    camera.latest_frame().clone()
+                } else {
+                    call.video_stream_images.get(&sid).cloned()
+                }
+            }
             _ => None,
         };
-        let screenshare_sid = match call_member.screenshare_state {
-            StreamState::On(sid) => self.call.read(cx).video_stream_images.get(&sid),
+        let screenshare_image = match call_member.screenshare_state {
+            StreamState::On(sid) => call.video_stream_images.get(&sid).cloned(),
             _ => None,
         };
 
@@ -332,7 +342,7 @@ impl RenderOnce for CallMemberDisplay {
             .border_color(theme.border_color)
             .p(px(8.))
             .child(
-                if let Some(camera_frame) = screenshare_sid.or(camera_sid) {
+                if let Some(camera_frame) = screenshare_image.clone().or(camera_image.clone()) {
                     div().flex().size_full().overflow_hidden().child(
                         img(camera_frame.clone())
                             .object_fit(ObjectFit::Contain)
@@ -352,8 +362,8 @@ impl RenderOnce for CallMemberDisplay {
                                 .when(connecting, |david| david.opacity(0.5)),
                         )
                 }
-                .when(screenshare_sid.is_some(), |david| {
-                    david.when_some(camera_sid, |david, camera_frame| {
+                .when(screenshare_image.is_some(), |david| {
+                    david.when_some(camera_image, |david, camera_frame| {
                         // TODO: Calculate aspect ratio and find out good size for the inside frame
                         let width = 300.;
                         let height = 200.;
@@ -376,7 +386,7 @@ impl RenderOnce for CallMemberDisplay {
                                         .w(px(width))
                                         .h(px(height))
                                         .child(
-                                            img(camera_frame.clone())
+                                            img(camera_frame)
                                                 .object_fit(ObjectFit::Contain)
                                                 .size_full(),
                                         ),

@@ -671,23 +671,38 @@ impl LivekitCall {
                 call_members.push(call_member);
                 devices.remove(&tuple);
             } else {
+                let (mic_state, camera_state, screenshare_state) =
+                    if !this_device_processed && participant.user_id() == this_user_id {
+                        this_device_processed = true;
+                        (
+                            if muted {
+                                StreamState::Off
+                            } else if let Some(track_sid) = &self.mic_track_sid {
+                                StreamState::On(track_sid.clone())
+                            } else {
+                                StreamState::Unavailable
+                            },
+                            if let Some(track_sid) = &self.camera_track_sid {
+                                StreamState::On(track_sid.clone())
+                            } else {
+                                StreamState::Unavailable
+                            },
+                            StreamState::Unavailable,
+                        )
+                    } else {
+                        (
+                            StreamState::Unavailable,
+                            StreamState::Unavailable,
+                            StreamState::Unavailable,
+                        )
+                    };
+
                 call_members.push(CallMember {
                     room_member: participant.clone(),
                     device_id: None,
-                    mic_state: if !this_device_processed && participant.user_id() == this_user_id {
-                        this_device_processed = true;
-                        if muted {
-                            StreamState::Off
-                        } else if let Some(track_sid) = &self.camera_track_sid {
-                            StreamState::On(track_sid.clone())
-                        } else {
-                            StreamState::Unavailable
-                        }
-                    } else {
-                        StreamState::Unavailable
-                    },
-                    camera_state: StreamState::Unavailable,
-                    screenshare_state: StreamState::Unavailable,
+                    mic_state,
+                    camera_state,
+                    screenshare_state,
                     mic_active: false,
                 });
             };
@@ -812,6 +827,7 @@ impl LivekitCall {
                 let timestamp = Instant::now();
                 let _ = weak_this.update(cx, |call, cx| {
                     call.camera_track_sid = Some(sid);
+                    cx.notify();
 
                     cx.observe(&device_entity_clone, move |_, device_entity, cx| {
                         let device = device_entity.read(cx);
@@ -963,7 +979,8 @@ impl LivekitCall {
 
                 let sid = publication.sid();
                 let _ = weak_this.update(cx, |call, cx| {
-                    call.camera_track_sid = Some(sid);
+                    call.mic_track_sid = Some(sid);
+                    cx.notify();
                 });
 
                 let _ = cx

@@ -2,7 +2,7 @@ use cancellation_token::CancellationTokenSource;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{AsyncApp, Context, RenderImage, WeakEntity};
-use image::{Frame, RgbaImage};
+use image::{Frame, RgbaImage, imageops};
 use log::error;
 use nokhwa::pixel_format::{RgbAFormat, YuyvFormat};
 use nokhwa::utils::{
@@ -114,6 +114,9 @@ impl Webcam {
                     ))));
                     return;
                 };
+
+                // Flip the RenderImage horizontally for display
+                imageops::flip_horizontal(&image);
                 let render_image = Arc::new(RenderImage::new(smallvec![Frame::new(image)]));
                 let _ = smol::block_on(tx.send(WebcamMessage::Frame {
                     render_image,
