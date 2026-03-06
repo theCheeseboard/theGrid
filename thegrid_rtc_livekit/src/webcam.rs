@@ -5,7 +5,9 @@ use gpui::{AsyncApp, Context, RenderImage, WeakEntity};
 use image::{Frame, RgbaImage};
 use log::error;
 use nokhwa::pixel_format::{RgbAFormat, YuyvFormat};
-use nokhwa::utils::{CameraIndex, CameraInfo, FrameFormat, RequestedFormat, RequestedFormatType};
+use nokhwa::utils::{
+    CameraIndex, CameraInfo, FrameFormat, RequestedFormat, RequestedFormatType, Resolution,
+};
 use nokhwa::{Buffer, CallbackCamera, Camera, NokhwaError};
 use smallvec::smallvec;
 use std::sync::Arc;
@@ -15,12 +17,17 @@ use yuv::{YuvPackedImage, YuvRange, YuvStandardMatrix, yuyv422_to_bgra};
 pub struct Webcam {
     camera_info: CameraInfo,
     latest_frame_render_image: Option<Arc<RenderImage>>,
+    latest_frame_buffer: Option<Buffer>,
     error: Option<anyhow::Error>,
     cancellation_source: CancellationTokenSource,
+    resolution: Resolution,
 }
 
 enum WebcamMessage {
-    Frame { render_image: Arc<RenderImage> },
+    Frame {
+        render_image: Arc<RenderImage>,
+        buffer: Buffer,
+    },
     Error(anyhow::Error),
 }
 
@@ -43,11 +50,15 @@ impl Webcam {
                 return Self {
                     camera_info,
                     latest_frame_render_image: None,
+                    latest_frame_buffer: None,
                     error: Some(anyhow!(e)),
                     cancellation_source,
+                    resolution: Default::default(),
                 };
             }
         };
+
+        let resolution = camera.resolution().clone();
 
         thread::spawn(move || {
             loop {
@@ -104,7 +115,10 @@ impl Webcam {
                     return;
                 };
                 let render_image = Arc::new(RenderImage::new(smallvec![Frame::new(image)]));
-                let _ = smol::block_on(tx.send(WebcamMessage::Frame { render_image }));
+                let _ = smol::block_on(tx.send(WebcamMessage::Frame {
+                    render_image,
+                    buffer,
+                }));
             }
         });
 
@@ -112,10 +126,14 @@ impl Webcam {
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 while let Ok(message) = rx.recv().await {
                     match message {
-                        WebcamMessage::Frame { render_image } => {
+                        WebcamMessage::Frame {
+                            render_image,
+                            buffer,
+                        } => {
                             if weak_this
                                 .update(cx, move |this, cx| {
                                     this.latest_frame_render_image = Some(render_image);
+                                    this.latest_frame_buffer = Some(buffer);
                                     cx.notify();
                                 })
                                 .is_err()
@@ -127,6 +145,7 @@ impl Webcam {
                             if weak_this
                                 .update(cx, move |this, cx| {
                                     this.latest_frame_render_image = None;
+                                    this.latest_frame_buffer = None;
                                     this.error = Some(e);
                                     cx.notify();
                                 })
@@ -142,8 +161,10 @@ impl Webcam {
         Self {
             camera_info,
             latest_frame_render_image: None,
+            latest_frame_buffer: None,
             error: None,
             cancellation_source,
+            resolution,
         }
     }
 
@@ -155,8 +176,16 @@ impl Webcam {
         self.latest_frame_render_image.clone()
     }
 
+    pub fn latest_frame_buffer(&self) -> Option<&Buffer> {
+        self.latest_frame_buffer.as_ref()
+    }
+
     pub fn error(&self) -> Option<&anyhow::Error> {
         self.error.as_ref()
+    }
+
+    pub fn resolution(&self) -> Resolution {
+        self.resolution
     }
 }
 

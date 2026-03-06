@@ -22,14 +22,14 @@ pub enum FocusUrl {
 }
 
 impl LivekitCallManager {
-    pub fn start_call(&mut self, room: OwnedRoomId, cx: &mut App) {
+    pub fn start_call(&mut self, room: OwnedRoomId, cx: &mut App) -> Option<Entity<LivekitCall>> {
         if self
             .active_calls
             .iter()
             .any(|call| call.read(cx).room() == room)
         {
             // This room is already in a call
-            return;
+            return None;
         }
 
         let call = cx.new(|cx| LivekitCall::new(room, cx));
@@ -56,7 +56,9 @@ impl LivekitCallManager {
         .detach();
 
         self.active_calls.push(call.clone());
-        self.current_call = Some(call)
+        self.current_call = Some(call.clone());
+
+        Some(call)
     }
 
     pub fn current_call(&self) -> Option<Entity<LivekitCall>> {

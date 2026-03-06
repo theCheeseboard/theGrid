@@ -9,6 +9,7 @@ mod webcam;
 
 use crate::call_manager::LivekitCallManager;
 use crate::focus::{FocusUrlError, get_focus_url};
+use crate::webcam::Webcam;
 use async_ringbuf::AsyncHeapRb;
 use async_ringbuf::consumer::AsyncConsumer;
 use cancellation_token::CancellationTokenSource;
@@ -25,12 +26,16 @@ use livekit::id::TrackSid;
 use livekit::options::TrackPublishOptions;
 use livekit::prelude::LocalParticipant;
 use livekit::track::{
-    LocalAudioTrack, LocalTrack, RemoteAudioTrack, RemoteTrack, RemoteVideoTrack, TrackSource,
+    LocalAudioTrack, LocalTrack, LocalVideoTrack, RemoteAudioTrack, RemoteTrack, RemoteVideoTrack,
+    TrackSource,
 };
 use livekit::webrtc::audio_frame::AudioFrame;
 use livekit::webrtc::audio_source::native::NativeAudioSource;
 use livekit::webrtc::audio_stream::native::NativeAudioStream;
 use livekit::webrtc::prelude::{RtcAudioSource, VideoBuffer, VideoBufferType};
+use livekit::webrtc::video_frame::{I422Buffer, VideoFrame, VideoRotation};
+use livekit::webrtc::video_source::native::NativeVideoSource;
+use livekit::webrtc::video_source::{RtcVideoSource, VideoResolution};
 use livekit::webrtc::video_stream::native::NativeVideoStream;
 use livekit::{Room, RoomError, RoomEvent, RoomOptions};
 use log::{error, info, warn};
@@ -51,17 +56,23 @@ use matrix_sdk::ruma::serde::Raw;
 use matrix_sdk::ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId, RoomId, UserId};
 use matrix_sdk::stream::StreamExt;
 use matrix_sdk::{HttpError, reqwest};
+use nokhwa::utils::FrameFormat;
 use reqwest::header;
 use serde::{Deserialize, Serialize};
 use smallvec::smallvec;
 use std::fmt::Display;
 use std::rc::Weak;
 use std::sync::{Arc, Mutex, RwLock};
+use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use thegrid_common::room::active_call_participants::track_active_call_participants;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
-use yuv::{YuvPlanarImage, YuvRange, YuvStandardMatrix, yuv420_to_bgra, yuv420_to_rgba};
+use yuv::{
+    BufferStoreMut, YuvChromaSubsampling, YuvPackedImage, YuvPackedImageMut, YuvPlanarImage,
+    YuvPlanarImageMut, YuvRange, YuvStandardMatrix, yuv420_to_bgra, yuv420_to_rgba,
+    yuv422_to_uyvy422, yuyv422_to_yuv422,
+};
 
 pub fn setup_thegrid_rtc_livekit() {
     I18N_MANAGER.write().unwrap().load_source(tr_load!());
@@ -72,6 +83,7 @@ pub struct LivekitCall {
     state: CallState,
 
     mic_track_sid: Option<TrackSid>,
+    camera_track_sid: Option<TrackSid>,
 
     subscribed_streams: Vec<SubscribedStream>,
     active_call_participants_state: Entity<Vec<RoomMember>>,
@@ -83,6 +95,7 @@ pub struct LivekitCall {
     cancellation_source: CancellationTokenSource,
     started_at: Instant,
 
+    active_camera: Option<Entity<Webcam>>,
     on_hold: bool,
 }
 
@@ -461,6 +474,9 @@ impl LivekitCall {
                     cx.notify();
 
                     this.setup_local_mic(cx);
+
+                    // Restart camera processing if one is available
+                    this.set_active_camera(this.active_camera.clone(), cx);
                 });
 
                 // TODO: Delay a disconnection message
@@ -506,6 +522,7 @@ impl LivekitCall {
             cancellation_source,
             started_at: Instant::now(),
             mic_track_sid: None,
+            camera_track_sid: None,
             active_call_participants_state,
             subscribed_streams: Vec::new(),
             muted_streams: HashSet::new(),
@@ -513,6 +530,7 @@ impl LivekitCall {
             video_stream_images: HashMap::new(),
             on_hold: false,
             cached_call_members,
+            active_camera: None,
         }
     }
 
@@ -527,6 +545,47 @@ impl LivekitCall {
     pub fn set_on_hold(&mut self, on_hold: bool, cx: &mut Context<Self>) {
         self.on_hold = on_hold;
         cx.notify();
+    }
+    
+    pub fn active_camera(&self) -> Option<Entity<Webcam>> {
+        self.active_camera.clone()
+    }
+
+    pub fn set_active_camera(
+        &mut self,
+        active_camera: Option<Entity<Webcam>>,
+        cx: &mut Context<Self>,
+    ) {
+        self.active_camera = active_camera.clone();
+        cx.notify();
+
+        let local_participant = match &self.state {
+            CallState::Active { local_participant } => local_participant.clone(),
+            _ => return,
+        };
+
+        if let Some(camera_track_sid) = &self.camera_track_sid {
+            let local_participant_clone = local_participant.clone();
+            let mic_track_sid = camera_track_sid.clone();
+            cx.spawn(
+                async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                    let _ = cx
+                        .spawn_tokio(async move {
+                            local_participant_clone
+                                .unpublish_track(&mic_track_sid)
+                                .await
+                        })
+                        .await;
+                },
+            )
+            .detach();
+
+            self.camera_track_sid = None;
+        }
+
+        if let Some(camera) = active_camera {
+            self.route_video_out(local_participant, camera, TrackSource::Camera, cx);
+        }
     }
 
     pub fn call_members(&self) -> Entity<Vec<CallMember>> {
@@ -619,7 +678,7 @@ impl LivekitCall {
                         this_device_processed = true;
                         if muted {
                             StreamState::Off
-                        } else if let Some(track_sid) = &self.mic_track_sid {
+                        } else if let Some(track_sid) = &self.camera_track_sid {
                             StreamState::On(track_sid.clone())
                         } else {
                             StreamState::Unavailable
@@ -638,7 +697,6 @@ impl LivekitCall {
 
     fn setup_local_mic(&mut self, cx: &mut Context<Self>) {
         let call_manager = cx.global::<LivekitCallManager>();
-        let cancellation_token = self.cancellation_source.token();
         let local_participant = match &self.state {
             CallState::Active { local_participant } => local_participant.clone(),
             _ => return,
@@ -688,6 +746,135 @@ impl LivekitCall {
                 self.route_video(video_track.clone(), cx);
             }
         }
+    }
+
+    fn route_video_out(
+        &mut self,
+        local_participant: LocalParticipant,
+        device_entity: Entity<Webcam>,
+        track_source: TrackSource,
+        cx: &mut Context<Self>,
+    ) {
+        if !matches!(track_source, TrackSource::Camera | TrackSource::Screenshare) {
+            return;
+        }
+
+        let cancellation_token = self.cancellation_source.token();
+
+        let call_manager = cx.global::<LivekitCallManager>();
+        let device = device_entity.read(cx);
+
+        let source = NativeVideoSource::new(
+            VideoResolution {
+                width: device.resolution().width(),
+                height: device.resolution().height(),
+            },
+            match track_source {
+                TrackSource::Camera => true,
+                TrackSource::Screenshare => false,
+                _ => unreachable!(),
+            },
+        );
+        let track = LocalVideoTrack::create_video_track(
+            match track_source {
+                TrackSource::Camera => "camera",
+                TrackSource::Screenshare => "screenshare",
+                _ => unreachable!(),
+            },
+            RtcVideoSource::Native(source.clone()),
+        );
+
+        let cancellation_source = CancellationTokenSource::new();
+        let cancellation_source_2 = cancellation_source.clone();
+        let cancellation_token_2 = cancellation_source.token();
+
+        let device_entity_clone = device_entity.clone();
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                let Ok(publication) = cx
+                    .spawn_tokio(async move {
+                        local_participant
+                            .publish_track(
+                                LocalTrack::Video(track),
+                                TrackPublishOptions {
+                                    source: TrackSource::Camera,
+                                    ..Default::default()
+                                },
+                            )
+                            .await
+                    })
+                    .await
+                else {
+                    return;
+                };
+
+                let sid = publication.sid();
+                let timestamp = Instant::now();
+                let _ = weak_this.update(cx, |call, cx| {
+                    call.camera_track_sid = Some(sid);
+
+                    cx.observe(&device_entity_clone, move |call, device_entity, cx| {
+                        let device = device_entity.read(cx);
+                        let time_passed = timestamp.elapsed().as_millis();
+
+                        let Some(latest_frame_buffer) = device.latest_frame_buffer() else {
+                            return;
+                        };
+
+                        let video_frame = match latest_frame_buffer.source_frame_format() {
+                            FrameFormat::YUYV => {
+                                let mut buffer = I422Buffer::new(
+                                    latest_frame_buffer.resolution().width(),
+                                    latest_frame_buffer.resolution().height(),
+                                );
+                                let (stride_y, stride_u, stride_v) = buffer.strides();
+                                let (buffer_y, buffer_u, buffer_v) = buffer.data_mut();
+
+                                let mut planar_image = YuvPlanarImageMut {
+                                    y_plane: BufferStoreMut::Borrowed(buffer_y),
+                                    y_stride: stride_y,
+                                    u_plane: BufferStoreMut::Borrowed(buffer_u),
+                                    u_stride: stride_u,
+                                    v_plane: BufferStoreMut::Borrowed(buffer_v),
+                                    v_stride: stride_v,
+                                    width: latest_frame_buffer.resolution().width(),
+                                    height: latest_frame_buffer.resolution().height(),
+                                };
+
+                                if let Err(e) = yuyv422_to_yuv422(
+                                    &mut planar_image,
+                                    &YuvPackedImage {
+                                        height: latest_frame_buffer.resolution().height(),
+                                        width: latest_frame_buffer.resolution().width(),
+                                        yuy: latest_frame_buffer.buffer(),
+                                        yuy_stride: latest_frame_buffer.resolution().width() * 2,
+                                    },
+                                ) {
+                                    error!("Failed to convert YUYV to YUV422: {:?}", e);
+                                    return;
+                                }
+
+                                VideoFrame::<I422Buffer> {
+                                    rotation: VideoRotation::VideoRotation0,
+                                    timestamp_us: time_passed as i64,
+                                    buffer,
+                                }
+                            }
+                            _ => return,
+                        };
+
+                        source.capture_frame(&video_frame);
+                    })
+                    .detach()
+                });
+            },
+        )
+        .detach();
+
+        cx.observe(&device_entity, move |this, device, cx| {
+            cancellation_source_2.cancel();
+        })
+        .detach();
     }
 
     fn route_mic(
@@ -776,7 +963,7 @@ impl LivekitCall {
 
                 let sid = publication.sid();
                 let _ = weak_this.update(cx, |call, cx| {
-                    call.mic_track_sid = Some(sid);
+                    call.camera_track_sid = Some(sid);
                 });
 
                 let _ = cx
@@ -1052,6 +1239,7 @@ impl LivekitCall {
 
     pub fn end_call(&mut self, cx: &mut Context<Self>) {
         self.cancellation_source.cancel();
+        self.active_camera = None;
 
         let session_manager = cx.global::<SessionManager>();
         let user_id = session_manager

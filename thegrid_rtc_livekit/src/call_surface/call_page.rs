@@ -202,6 +202,21 @@ impl Render for CallPage {
                                         .bg(theme.button_background)
                                         .rounded(theme.border_radius)
                                         .child(
+                                            button("camera")
+                                                .p(px(16.))
+                                                .child(icon("camera-photo".into()).size(24.))
+                                                .checked_when(call.active_camera().is_some())
+                                                .on_click(cx.listener(move |this, _, _, cx| {
+                                                    this.call.update(cx, |call, cx| {
+                                                        if call.active_camera().is_some() {
+                                                            call.set_active_camera(None, cx)
+                                                        } else {
+                                                            // Show a UI to preview the camera
+                                                        }
+                                                    });
+                                                })),
+                                        )
+                                        .child(
                                             button("deaf")
                                                 .p(px(16.))
                                                 .child(

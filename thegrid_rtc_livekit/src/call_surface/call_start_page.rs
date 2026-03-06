@@ -513,7 +513,16 @@ impl CallStartPage {
             call_manager.active_output_device().write(cx, output_device);
             call_manager.active_input_device().write(cx, input_device);
 
-            call_manager.start_call(room_id, cx);
+            if let Some(call) = call_manager.start_call(room_id, cx) {
+                let active_camera = self.active_camera.clone();
+                cx.defer(move |cx| {
+                    call.update(cx, |call, cx| {
+                        call.set_active_camera(active_camera, cx);
+                    });
+                });
+                
+                self.turn_off_camera(cx);
+            }
         });
     }
 }
