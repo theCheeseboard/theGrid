@@ -9,7 +9,8 @@ thegrid_common = { path = "thegrid_common" }
 thegrid_rtc_livekit = { path = "thegrid_rtc_livekit" }
 smol = "2"
 smol-macros = "0.1"
-contemporary = { git = "https://github.com/vicr123/contemporary-rs" }
+#contemporary = { git = "https://github.com/vicr123/contemporary-rs" }
+contemporary = { path = "/home/victor/Documents/Apps/contemporary-rs/contemporary" }
 cntp_i18n = { version = "*", features = ["gpui"] }
 cntp_icon_tool_macros = "*"
 cntp_i18n_gen = "*"
