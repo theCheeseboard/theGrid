@@ -34,7 +34,7 @@ use livekit::webrtc::audio_frame::AudioFrame;
 use livekit::webrtc::audio_source::native::NativeAudioSource;
 use livekit::webrtc::audio_stream::native::NativeAudioStream;
 use livekit::webrtc::prelude::{RtcAudioSource, VideoBuffer, VideoBufferType};
-use livekit::webrtc::video_frame::{I422Buffer, VideoFrame, VideoRotation};
+use livekit::webrtc::video_frame::{I422Buffer, VideoRotation};
 use livekit::webrtc::video_source::native::NativeVideoSource;
 use livekit::webrtc::video_source::{RtcVideoSource, VideoResolution};
 use livekit::webrtc::video_stream::native::NativeVideoStream;
@@ -74,6 +74,7 @@ use yuv::{
     YuvPlanarImageMut, YuvRange, YuvStandardMatrix, yuv420_to_bgra, yuv420_to_rgba,
     yuv422_to_uyvy422, yuyv422_to_yuv422,
 };
+use thegrid_common::video_frame::VideoFrame;
 
 pub fn setup_thegrid_rtc_livekit() {
     I18N_MANAGER.write().unwrap().load_source(tr_load!());
@@ -585,7 +586,13 @@ impl LivekitCall {
         }
 
         if let Some(camera) = active_camera {
-            self.route_video_out(local_participant, camera, TrackSource::Camera, cx);
+            let device = camera.read(cx);
+            if device.error().is_some() {
+                // Don't bother setting up the camera because it's not working anyway
+                return;
+            }
+            
+            self.route_video_out(local_participant, device.output_frame(), TrackSource::Camera, cx);
         }
     }
 
@@ -767,7 +774,7 @@ impl LivekitCall {
     fn route_video_out(
         &mut self,
         local_participant: LocalParticipant,
-        device_entity: Entity<Webcam>,
+        device_entity: Entity<VideoFrame>,
         track_source: TrackSource,
         cx: &mut Context<Self>,
     ) {
@@ -776,15 +783,12 @@ impl LivekitCall {
         }
 
         let device = device_entity.read(cx);
-        if device.error().is_some() {
-            // Don't bother setting up the camera because it's not working anyway
-            return;
-        }
-
+        let frame_width = device.width();
+        let frame_height = device.height();
         let source = NativeVideoSource::new(
             VideoResolution {
-                width: device.resolution().width(),
-                height: device.resolution().height(),
+                width: frame_width,
+                height: frame_height,
             },
             match track_source {
                 TrackSource::Camera => true,
@@ -834,50 +838,14 @@ impl LivekitCall {
                         let device = device_entity.read(cx);
                         let time_passed = timestamp.elapsed().as_millis();
 
-                        let Some(latest_frame_buffer) = device.latest_frame_buffer() else {
+                        let Some(i422_frame_buffer) = device.i422_frame_buffer() else {
                             return;
                         };
 
-                        let video_frame = match latest_frame_buffer.source_frame_format() {
-                            FrameFormat::YUYV => {
-                                let mut buffer = I422Buffer::new(
-                                    latest_frame_buffer.resolution().width(),
-                                    latest_frame_buffer.resolution().height(),
-                                );
-                                let (stride_y, stride_u, stride_v) = buffer.strides();
-                                let (buffer_y, buffer_u, buffer_v) = buffer.data_mut();
-
-                                let mut planar_image = YuvPlanarImageMut {
-                                    y_plane: BufferStoreMut::Borrowed(buffer_y),
-                                    y_stride: stride_y,
-                                    u_plane: BufferStoreMut::Borrowed(buffer_u),
-                                    u_stride: stride_u,
-                                    v_plane: BufferStoreMut::Borrowed(buffer_v),
-                                    v_stride: stride_v,
-                                    width: latest_frame_buffer.resolution().width(),
-                                    height: latest_frame_buffer.resolution().height(),
-                                };
-
-                                if let Err(e) = yuyv422_to_yuv422(
-                                    &mut planar_image,
-                                    &YuvPackedImage {
-                                        height: latest_frame_buffer.resolution().height(),
-                                        width: latest_frame_buffer.resolution().width(),
-                                        yuy: latest_frame_buffer.buffer(),
-                                        yuy_stride: latest_frame_buffer.resolution().width() * 2,
-                                    },
-                                ) {
-                                    error!("Failed to convert YUYV to YUV422: {:?}", e);
-                                    return;
-                                }
-
-                                VideoFrame::<I422Buffer> {
-                                    rotation: VideoRotation::VideoRotation0,
-                                    timestamp_us: time_passed as i64,
-                                    buffer,
-                                }
-                            }
-                            _ => return,
+                        let video_frame = livekit::webrtc::video_frame::VideoFrame::<I422Buffer> {
+                            rotation: VideoRotation::VideoRotation0,
+                            timestamp_us: time_passed as i64,
+                            buffer: i422_frame_buffer,
                         };
 
                         source.capture_frame(&video_frame);

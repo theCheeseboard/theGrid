@@ -1,12 +1,13 @@
 [workspace]
 resolver = "3"
-members = ["gpui_tokio", "thegrid", "thegrid_common", "thegrid_rtc_livekit", "thegrid_text_rendering"]
+members = ["gpui_tokio", "thegrid", "thegrid_common", "thegrid_rtc_livekit", "thegrid_screen_share", "thegrid_text_rendering"]
 
 [workspace.dependencies]
 gpui = "*"
 gpui_tokio = { path = "gpui_tokio" }
 thegrid_common = { path = "thegrid_common" }
 thegrid_rtc_livekit = { path = "thegrid_rtc_livekit" }
+thegrid_screen_share = { path = "thegrid_screen_share" }
 smol = "2"
 smol-macros = "0.1"
 contemporary = { git = "https://github.com/vicr123/contemporary-rs" }
@@ -35,7 +36,6 @@ mime2ext = "0.1"
 anyhow = "1"
 log = "0.4.28"
 livekit = { version = "0.7", features = ["native-tls"] }
-#isahc = { version = "1", features = ["static-ssl"] }
 reqwest = "0.13"
 async-ringbuf = "0.3"
 cancellation-token = "0.1"
@@ -44,3 +44,4 @@ nokhwa = { version = "0.10", features = ["input-native", "output-threaded"], def
 keyring = { version = "3", features = ["windows-native", "apple-native", "sync-secret-service", "tokio", "crypto-rust"] }
 getrandom = "0.4"
 base64 = "0.22"
+libwebrtc = "0.3"

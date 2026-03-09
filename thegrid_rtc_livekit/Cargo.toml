@@ -23,6 +23,7 @@ yuv = { workspace = true }
 image = { workspace = true }
 smallvec = { workspace = true }
 nokhwa = { workspace = true }
+thegrid_screen_share = { workspace = true }
 
 [build-dependencies]
 cntp_i18n_gen = { workspace = true }

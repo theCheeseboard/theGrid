@@ -6,6 +6,7 @@ pub mod session;
 pub mod surfaces;
 pub mod thegrid_error;
 pub mod tokio_helper;
+pub mod video_frame;
 
 pub fn setup_thegrid_common() {
     I18N_MANAGER.write().unwrap().load_source(tr_load!());

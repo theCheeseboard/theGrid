@@ -138,7 +138,11 @@ impl Render for WebcamStartDialog {
                                                             .flex()
                                                             .overflow_hidden()
                                                             .when_some(
-                                                                webcam.latest_frame().clone(),
+                                                                webcam
+                                                                    .output_frame()
+                                                                    .read(cx)
+                                                                    .latest_render_frame()
+                                                                    .clone(),
                                                                 |david, frame| {
                                                                     david.child(
                                                                         img(frame.clone())

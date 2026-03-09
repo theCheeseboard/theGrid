@@ -1,0 +1,27 @@
+[package]
+name = "thegrid_screen_share"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gpui = { workspace = true }
+contemporary = { workspace = true }
+cntp_i18n = { workspace = true }
+yuv = { workspace = true }
+image = { workspace = true }
+smallvec = { workspace = true }
+cancellation-token = { workspace = true }
+async-channel = { workspace = true }
+smol = { workspace = true }
+thegrid_common = { workspace = true }
+log = "0.4.29"
+
+[target.'cfg(target_os="macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = "0.3"
+objc2-app-kit = "0.3"
+objc2-av-foundation = "0.3"
+objc2-screen-capture-kit = "0.3"
+objc2-core-media = "0.3"
+objc2-core-video = "0.3"
+block2 = "0.6"

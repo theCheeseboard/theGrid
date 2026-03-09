@@ -1,7 +1,7 @@
 use cancellation_token::CancellationTokenSource;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
-use gpui::{AsyncApp, Context, RenderImage, WeakEntity};
+use gpui::{AppContext, AsyncApp, Context, Entity, RenderImage, WeakEntity};
 use image::{Frame, RgbaImage, imageops};
 use log::error;
 use nokhwa::pixel_format::{RgbAFormat, YuyvFormat};
@@ -12,15 +12,15 @@ use nokhwa::{Buffer, CallbackCamera, Camera, NokhwaError};
 use smallvec::smallvec;
 use std::sync::Arc;
 use std::thread;
+use thegrid_common::video_frame::{RawVideoFrame, VideoFrame};
 use yuv::{YuvPackedImage, YuvRange, YuvStandardMatrix, yuyv422_to_bgra};
 
 pub struct Webcam {
     camera_info: CameraInfo,
-    latest_frame_render_image: Option<Arc<RenderImage>>,
-    latest_frame_buffer: Option<Buffer>,
     error: Option<anyhow::Error>,
     cancellation_source: CancellationTokenSource,
     resolution: Resolution,
+    output_frame: Entity<VideoFrame>,
 }
 
 enum WebcamMessage {
@@ -49,8 +49,7 @@ impl Webcam {
             Err(e) => {
                 return Self {
                     camera_info,
-                    latest_frame_render_image: None,
-                    latest_frame_buffer: None,
+                    output_frame: cx.new(|cx| VideoFrame::new((0, 0), cx)),
                     error: Some(anyhow!(e)),
                     cancellation_source,
                     resolution: Default::default(),
@@ -59,6 +58,9 @@ impl Webcam {
         };
 
         let resolution = camera.resolution().clone();
+
+        let output_frame =
+            cx.new(|cx| VideoFrame::new((resolution.width(), resolution.height()), cx));
 
         thread::spawn(move || {
             loop {
@@ -125,6 +127,7 @@ impl Webcam {
             }
         });
 
+        let weak_output_frame = output_frame.downgrade();
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 while let Ok(message) = rx.recv().await {
@@ -133,27 +136,37 @@ impl Webcam {
                             render_image,
                             buffer,
                         } => {
+                            if weak_output_frame
+                                .update(cx, |frame, cx| {
+                                    frame.set_frame(render_image, match buffer.source_frame_format() {
+                                        FrameFormat::YUYV => RawVideoFrame::YUYV(buffer.buffer().to_vec()),
+                                        _ => todo!()
+                                    }, cx);
+                                })
+                                .is_err()
+                            {
+                                return;
+                            };
+                        }
+                        WebcamMessage::Error(e) => {
+                            if weak_output_frame
+                                .update(cx, |frame, cx| {
+                                    frame.clear(cx);
+                                })
+                                .is_err()
+                            {
+                                return;
+                            };
+
                             if weak_this
                                 .update(cx, move |this, cx| {
-                                    this.latest_frame_render_image = Some(render_image);
-                                    this.latest_frame_buffer = Some(buffer);
+                                    this.error = Some(e);
                                     cx.notify();
                                 })
                                 .is_err()
                             {
                                 return;
                             }
-                        }
-                        WebcamMessage::Error(e) => {
-                            if weak_this
-                                .update(cx, move |this, cx| {
-                                    this.latest_frame_render_image = None;
-                                    this.latest_frame_buffer = None;
-                                    this.error = Some(e);
-                                    cx.notify();
-                                })
-                                .is_err()
-                            {}
                         }
                     }
                 }
@@ -163,8 +176,7 @@ impl Webcam {
 
         Self {
             camera_info,
-            latest_frame_render_image: None,
-            latest_frame_buffer: None,
+            output_frame,
             error: None,
             cancellation_source,
             resolution,
@@ -175,12 +187,8 @@ impl Webcam {
         &self.camera_info
     }
 
-    pub fn latest_frame(&self) -> Option<Arc<RenderImage>> {
-        self.latest_frame_render_image.clone()
-    }
-
-    pub fn latest_frame_buffer(&self) -> Option<&Buffer> {
-        self.latest_frame_buffer.as_ref()
+    pub fn output_frame(&self) -> Entity<VideoFrame> {
+        self.output_frame.clone()
     }
 
     pub fn error(&self) -> Option<&anyhow::Error> {

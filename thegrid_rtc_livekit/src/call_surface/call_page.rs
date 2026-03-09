@@ -27,6 +27,7 @@ use std::time::Instant;
 use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
+use thegrid_screen_share::ScreenShareManager;
 
 mod webcam_start_dialog;
 
@@ -125,6 +126,13 @@ impl CallPage {
         }
         self.focus = Focus::Overview;
         cx.notify();
+    }
+
+    fn screenshare(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        cx.update_global::<ScreenShareManager, _>(|screen_share_manager, cx| {
+            let listener = cx.listener(|this, _, _, cx| {});
+            screen_share_manager.start_screen_share_session(listener, window, cx);
+        });
     }
 }
 
@@ -404,6 +412,17 @@ impl Render for CallPage {
                                             .bg(theme.button_background)
                                             .rounded(theme.border_radius)
                                             .child(
+                                                button("screenshare")
+                                                    .p(px(16.))
+                                                    .child(icon("display".into()).size(24.))
+                                                    .checked_when(call.active_camera().is_some())
+                                                    .on_click(cx.listener(
+                                                        move |this, _, window, cx| {
+                                                            this.screenshare(window, cx)
+                                                        },
+                                                    )),
+                                            )
+                                            .child(
                                                 button("camera")
                                                     .p(px(16.))
                                                     .child(icon("camera-photo".into()).size(24.))
@@ -584,7 +603,7 @@ impl RenderOnce for CallMemberDisplay {
                     && let Some(camera) = call.active_camera()
                 {
                     let camera = camera.read(cx);
-                    camera.latest_frame().clone()
+                    camera.output_frame().read(cx).latest_render_frame().clone()
                 } else {
                     call.video_stream_images.get(&sid).cloned()
                 }

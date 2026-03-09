@@ -3,6 +3,7 @@ use crate::{CallState, LivekitCall, sfx};
 use gpui::{App, AppContext, AsyncApp, BorrowAppContext, Context, Entity, Global, WeakEntity};
 use matrix_sdk::ruma::OwnedRoomId;
 use thegrid_common::session::session_manager::SessionManager;
+use thegrid_screen_share::setup_screenshare_manager;
 
 pub struct LivekitCallManager {
     current_call: Option<Entity<LivekitCall>>,
@@ -153,4 +154,6 @@ pub fn setup_call_manager(cx: &mut App) {
         active_input_device,
         active_output_device,
     });
+
+    setup_screenshare_manager(cx);
 }
