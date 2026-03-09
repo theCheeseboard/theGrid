@@ -243,7 +243,8 @@ impl Render for WebcamStartDialog {
                     .on_click(cx.listener(|this, _, _, cx| {
                         let active_camera = this.active_camera.clone();
                         this.call.as_ref().unwrap().update(cx, |call, cx| {
-                            call.set_active_camera(active_camera, cx);
+                            let output_frame = active_camera.unwrap().read(cx).output_frame();
+                            call.set_active_camera(Some(output_frame), cx);
                         });
                         this.close(cx);
                     })),

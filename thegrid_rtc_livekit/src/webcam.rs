@@ -49,7 +49,7 @@ impl Webcam {
             Err(e) => {
                 return Self {
                     camera_info,
-                    output_frame: cx.new(|cx| VideoFrame::new((0, 0), cx)),
+                    output_frame: cx.new(|cx| VideoFrame::new_error(anyhow!(e.clone()), cx)),
                     error: Some(anyhow!(e)),
                     cancellation_source,
                     resolution: Default::default(),
@@ -138,10 +138,16 @@ impl Webcam {
                         } => {
                             if weak_output_frame
                                 .update(cx, |frame, cx| {
-                                    frame.set_frame(render_image, match buffer.source_frame_format() {
-                                        FrameFormat::YUYV => RawVideoFrame::YUYV(buffer.buffer().to_vec()),
-                                        _ => todo!()
-                                    }, cx);
+                                    frame.set_frame(
+                                        render_image,
+                                        match buffer.source_frame_format() {
+                                            FrameFormat::YUYV => {
+                                                RawVideoFrame::YUYV422(buffer.buffer().to_vec())
+                                            }
+                                            _ => todo!(),
+                                        },
+                                        cx,
+                                    );
                                 })
                                 .is_err()
                             {
@@ -151,7 +157,7 @@ impl Webcam {
                         WebcamMessage::Error(e) => {
                             if weak_output_frame
                                 .update(cx, |frame, cx| {
-                                    frame.clear(cx);
+                                    frame.set_error(e, cx);
                                 })
                                 .is_err()
                             {
@@ -160,7 +166,7 @@ impl Webcam {
 
                             if weak_this
                                 .update(cx, move |this, cx| {
-                                    this.error = Some(e);
+                                    this.error = Some(anyhow!("Error"));
                                     cx.notify();
                                 })
                                 .is_err()

@@ -7,7 +7,7 @@
   },
   "ACTIVE_CALL_CONTENT": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:725",
+    "definedIn": "src/call_surface/call_start_page.rs:727",
     "plural": true,
     "description": null
   },
@@ -67,7 +67,7 @@
   },
   "CALL_CONNECTION_ERROR": {
     "context": "call_page.rs",
-    "definedIn": "src/call_surface/call_page.rs:389",
+    "definedIn": "src/call_surface/call_page.rs:405",
     "plural": false,
     "description": null
   },
@@ -85,85 +85,85 @@
   },
   "CALL_ERROR_LIVEKIT_JWT_REQUEST_FAILED": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:163",
+    "definedIn": "src/lib.rs:171",
     "plural": false,
     "description": null
   },
   "CALL_ERROR_LIVEKIT_RTC_FAILED": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:167",
+    "definedIn": "src/lib.rs:175",
     "plural": false,
     "description": null
   },
   "CALL_ERROR_NO_RTC_FOCUS": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:157",
+    "definedIn": "src/lib.rs:165",
     "plural": false,
     "description": null
   },
   "CALL_ERROR_OPENID_TOKEN_REQUEST_FAILED": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:159",
+    "definedIn": "src/lib.rs:167",
     "plural": false,
     "description": null
   },
   "CALL_ERROR_ROOM_ERROR": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:156",
+    "definedIn": "src/lib.rs:164",
     "plural": false,
     "description": null
   },
   "CALL_ERROR_STATE_EVENT_FORBIDDEN": {
     "context": "lib.rs",
-    "definedIn": "src/lib.rs:171",
+    "definedIn": "src/lib.rs:179",
     "plural": false,
     "description": null
   },
   "CALL_JOIN_BUTTON": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:737",
+    "definedIn": "src/call_surface/call_start_page.rs:739",
     "plural": false,
     "description": null
   },
   "CALL_JOIN_GRANDSTAND": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:602",
+    "definedIn": "src/call_surface/call_start_page.rs:604",
     "plural": false,
     "description": null
   },
   "CALL_JOIN_LIVEKIT_SERVER_ADVICE": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:647",
+    "definedIn": "src/call_surface/call_start_page.rs:649",
     "plural": false,
     "description": null
   },
   "CALL_JOIN_NO_FOCUS": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:661",
+    "definedIn": "src/call_surface/call_start_page.rs:663",
     "plural": false,
     "description": null
   },
   "CALL_JOIN_PROCESSING": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:654",
+    "definedIn": "src/call_surface/call_start_page.rs:656",
     "plural": false,
     "description": null
   },
   "CALL_ON_HOLD": {
     "context": "call_page.rs",
-    "definedIn": "src/call_surface/call_page.rs:201",
+    "definedIn": "src/call_surface/call_page.rs:217",
     "plural": false,
     "description": null
   },
   "CALL_ON_HOLD_MESSAGE": {
     "context": "call_page.rs",
-    "definedIn": "src/call_surface/call_page.rs:204",
+    "definedIn": "src/call_surface/call_page.rs:220",
     "plural": false,
     "description": null
   },
   "CALL_OVERVIEW": {
     "context": "call_page.rs",
-    "definedIn": "src/call_surface/call_page.rs:517",
+    "definedIn": "src/call_surface/call_page.rs:537",
     "plural": false,
     "description": null
   },
@@ -175,7 +175,7 @@
   },
   "CALL_TAKE_OFF_HOLD": {
     "context": "call_page.rs",
-    "definedIn": "src/call_surface/call_page.rs:213",
+    "definedIn": "src/call_surface/call_page.rs:229",
     "plural": false,
     "description": null
   },
@@ -205,7 +205,7 @@
   },
   "JOIN_CALL": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:627",
+    "definedIn": "src/call_surface/call_start_page.rs:629",
     "plural": false,
     "description": null
   },

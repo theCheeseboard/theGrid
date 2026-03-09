@@ -1,4 +1,5 @@
 use gpui::http_client::anyhow;
+use gpui::private::anyhow;
 use gpui::{Context, RenderImage};
 use image::{Frame, RgbaImage, imageops};
 use libwebrtc::prelude::{I422Buffer, VideoRotation};
@@ -6,17 +7,27 @@ use log::error;
 use smallvec::smallvec;
 use std::cell::RefCell;
 use std::sync::Arc;
-use yuv::{BufferStoreMut, YuvPackedImage, YuvPlanarImageMut, YuvRange, YuvStandardMatrix, yuyv422_to_bgra, yuyv422_to_yuv422, rgb_to_yuv422, YuvConversionMode};
+use yuv::{
+    BufferStoreMut, YuvConversionMode, YuvPackedImage, YuvPlanarImage, YuvPlanarImageMut, YuvRange,
+    YuvStandardMatrix, bgra_to_yuv422, rgb_to_yuv422, yuyv422_to_bgra, yuyv422_to_yuv422,
+};
 
 pub struct VideoFrame {
     latest_frame_render_image: Option<Arc<RenderImage>>,
     latest_frame_buffer: Option<RawVideoFrame>,
     resolution: (u32, u32),
+    status: VideoFrameStatus,
+}
+
+pub enum VideoFrameStatus {
+    Ready,
+    Error(anyhow::Error),
 }
 
 pub enum RawVideoFrame {
-    YUYV(Vec<u8>),
-    RGB(Vec<u8>)
+    YUYV422(Vec<u8>),
+    YUV422Planar(Vec<u8>, Vec<u8>, Vec<u8>),
+    BGRA(Vec<u8>),
 }
 
 pub enum OutputFormat {
@@ -29,7 +40,22 @@ impl VideoFrame {
             latest_frame_render_image: None,
             latest_frame_buffer: None,
             resolution,
+            status: VideoFrameStatus::Ready,
         }
+    }
+
+    pub fn new_error(e: anyhow::Error, cx: &mut Context<Self>) -> Self {
+        Self {
+            latest_frame_render_image: None,
+            latest_frame_buffer: None,
+            resolution: (0, 0),
+            status: VideoFrameStatus::Error(e),
+        }
+    }
+
+    pub fn set_error(&mut self, e: anyhow::Error, cx: &mut Context<Self>) {
+        self.status = VideoFrameStatus::Error(e);
+        self.clear(cx);
     }
 
     pub fn clear(&mut self, cx: &mut Context<Self>) {
@@ -42,7 +68,7 @@ impl VideoFrame {
         self.resolution = resolution;
         self.clear(cx);
     }
-    
+
     pub fn set_frame(
         &mut self,
         render_image: Arc<RenderImage>,
@@ -93,7 +119,7 @@ impl VideoFrame {
         };
 
         match frame_buffer {
-            RawVideoFrame::YUYV(yuyv_bytes) => {
+            RawVideoFrame::YUYV422(yuyv_bytes) => {
                 if let Err(e) = yuyv422_to_yuv422(
                     &mut planar_image,
                     &YuvPackedImage {
@@ -109,14 +135,21 @@ impl VideoFrame {
                     Some(buffer)
                 }
             }
-            RawVideoFrame::RGB(rgb_bytes) => {
-                if let Err(e) = rgb_to_yuv422(
+            RawVideoFrame::YUV422Planar(y_bytes, u_bytes, v_bytes) => {
+                drop(planar_image);
+                buffer_y.copy_from_slice(y_bytes);
+                buffer_u.copy_from_slice(u_bytes);
+                buffer_v.copy_from_slice(v_bytes);
+                Some(buffer)
+            }
+            RawVideoFrame::BGRA(rgb_bytes) => {
+                if let Err(e) = bgra_to_yuv422(
                     &mut planar_image,
                     rgb_bytes,
                     frame_width * 4,
                     YuvRange::Limited,
                     YuvStandardMatrix::Bt2020,
-                    YuvConversionMode::Balanced
+                    YuvConversionMode::Balanced,
                 ) {
                     error!("Failed to convert RGB to YUV422: {:?}", e);
                     None
@@ -137,5 +170,9 @@ impl VideoFrame {
 
     pub fn resolution(&self) -> (u32, u32) {
         self.resolution
+    }
+
+    pub fn status(&self) -> &VideoFrameStatus {
+        &self.status
     }
 }

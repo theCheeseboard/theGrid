@@ -1,6 +1,6 @@
 use crate::call_manager::LivekitCallManager;
 use crate::call_surface::call_page::webcam_start_dialog::WebcamStartDialog;
-use crate::{CallMember, CallState, LivekitCall, StreamState};
+use crate::{CallMember, CallState, LivekitCall, StreamState, TrackType};
 use cntp_i18n::tr;
 use contemporary::components::anchorer::WithAnchorer;
 use contemporary::components::button::button;
@@ -27,7 +27,7 @@ use std::time::Instant;
 use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
-use thegrid_screen_share::ScreenShareManager;
+use thegrid_screen_share::{PickerRequired, ScreenShareManager, ScreenShareStartEvent};
 
 mod webcam_start_dialog;
 
@@ -129,10 +129,20 @@ impl CallPage {
     }
 
     fn screenshare(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        cx.update_global::<ScreenShareManager, _>(|screen_share_manager, cx| {
-            let listener = cx.listener(|this, _, _, cx| {});
-            screen_share_manager.start_screen_share_session(listener, window, cx);
-        });
+        if self.call.read(cx).active_screenshare.is_some() {
+            self.call.update(cx, |call, cx| {
+                call.set_active_screenshare(None, cx);
+            });
+        } else {
+            cx.update_global::<ScreenShareManager, _>(|screen_share_manager, cx| {
+                let listener = cx.listener(|this, event: &ScreenShareStartEvent, _, cx| {
+                    this.call.update(cx, |call, cx| {
+                        call.set_active_screenshare(Some(event.frames.clone()), cx)
+                    });
+                });
+                screen_share_manager.start_screen_share_session(listener, window, cx);
+            });
+        }
     }
 }
 
@@ -163,6 +173,12 @@ impl Render for CallPage {
             // If there are more than 16 people, arrange in a grid of 4 columns
             _ => ((call_members.len() / 4 + 1) as u16, 4),
         };
+
+        let screenshare_manager = cx.global::<ScreenShareManager>();
+        let can_screenshare = matches!(
+            screenshare_manager.picker_required(),
+            PickerRequired::SystemPicker
+        );
 
         let theme = cx.theme();
 
@@ -411,17 +427,21 @@ impl Render for CallPage {
                                             .flex()
                                             .bg(theme.button_background)
                                             .rounded(theme.border_radius)
-                                            .child(
-                                                button("screenshare")
-                                                    .p(px(16.))
-                                                    .child(icon("display".into()).size(24.))
-                                                    .checked_when(call.active_camera().is_some())
-                                                    .on_click(cx.listener(
-                                                        move |this, _, window, cx| {
-                                                            this.screenshare(window, cx)
-                                                        },
-                                                    )),
-                                            )
+                                            .when(can_screenshare, |david| {
+                                                david.child(
+                                                    button("screenshare")
+                                                        .p(px(16.))
+                                                        .child(icon("display".into()).size(24.))
+                                                        .checked_when(
+                                                            call.active_screenshare().is_some(),
+                                                        )
+                                                        .on_click(cx.listener(
+                                                            move |this, _, window, cx| {
+                                                                this.screenshare(window, cx)
+                                                            },
+                                                        )),
+                                                )
+                                            })
                                             .child(
                                                 button("camera")
                                                     .p(px(16.))
@@ -599,11 +619,11 @@ impl RenderOnce for CallMemberDisplay {
         let call = self.call.read(cx);
         let camera_image = match call_member.camera_state {
             StreamState::On(sid) => {
-                if call.camera_track_sid.as_ref() == Some(&sid)
+                if call.our_track_sids.get(&TrackType::Camera).as_ref() == Some(&&sid)
                     && let Some(camera) = call.active_camera()
                 {
                     let camera = camera.read(cx);
-                    camera.output_frame().read(cx).latest_render_frame().clone()
+                    camera.latest_render_frame().clone()
                 } else {
                     call.video_stream_images.get(&sid).cloned()
                 }
@@ -611,7 +631,16 @@ impl RenderOnce for CallMemberDisplay {
             _ => None,
         };
         let screenshare_image = match call_member.screenshare_state {
-            StreamState::On(sid) => call.video_stream_images.get(&sid).cloned(),
+            StreamState::On(sid) => {
+                if call.our_track_sids.get(&TrackType::Screenshare).as_ref() == Some(&&sid)
+                    && let Some(screenshare) = call.active_screenshare()
+                {
+                    let screenshare = screenshare.read(cx);
+                    screenshare.latest_render_frame().clone()
+                } else {
+                    call.video_stream_images.get(&sid).cloned()
+                }
+            }
             _ => None,
         };
 

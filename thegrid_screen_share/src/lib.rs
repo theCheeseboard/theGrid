@@ -12,7 +12,7 @@ pub enum PickerRequired {
 }
 
 pub struct ScreenShareStartEvent {
-    frames: Entity<VideoFrame>,
+    pub frames: Entity<VideoFrame>,
 }
 
 pub struct ScreenShareManager {}

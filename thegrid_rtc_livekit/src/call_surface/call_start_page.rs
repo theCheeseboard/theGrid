@@ -558,7 +558,9 @@ impl CallStartPage {
                 let active_camera = self.active_camera.clone();
                 cx.defer(move |cx| {
                     call.update(cx, |call, cx| {
-                        call.set_active_camera(active_camera, cx);
+                        let output_frame = active_camera
+                            .map(|active_camera| active_camera.read(cx).output_frame());
+                        call.set_active_camera(output_frame, cx);
                     });
                 });
 

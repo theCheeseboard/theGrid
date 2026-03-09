@@ -9877,6 +9877,7 @@ dependencies = [
  "contemporary",
  "gpui",
  "image",
+ "libwebrtc",
  "log",
  "objc2",
  "objc2-app-kit",

@@ -69,12 +69,12 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use thegrid_common::room::active_call_participants::track_active_call_participants;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
+use thegrid_common::video_frame::{VideoFrame, VideoFrameStatus};
 use yuv::{
     BufferStoreMut, YuvChromaSubsampling, YuvPackedImage, YuvPackedImageMut, YuvPlanarImage,
     YuvPlanarImageMut, YuvRange, YuvStandardMatrix, yuv420_to_bgra, yuv420_to_rgba,
     yuv422_to_uyvy422, yuyv422_to_yuv422,
 };
-use thegrid_common::video_frame::VideoFrame;
 
 pub fn setup_thegrid_rtc_livekit() {
     I18N_MANAGER.write().unwrap().load_source(tr_load!());
@@ -84,8 +84,7 @@ pub struct LivekitCall {
     room: OwnedRoomId,
     state: CallState,
 
-    mic_track_sid: Option<TrackSid>,
-    camera_track_sid: Option<TrackSid>,
+    our_track_sids: HashMap<TrackType, TrackSid>,
 
     subscribed_streams: Vec<SubscribedStream>,
     active_call_participants_state: Entity<Vec<RoomMember>>,
@@ -97,7 +96,8 @@ pub struct LivekitCall {
     cancellation_source: CancellationTokenSource,
     started_at: Instant,
 
-    active_camera: Option<Entity<Webcam>>,
+    active_camera: Option<Entity<VideoFrame>>,
+    active_screenshare: Option<Entity<VideoFrame>>,
     on_hold: bool,
 }
 
@@ -110,6 +110,14 @@ pub struct CallMember {
     screenshare_state: StreamState,
 
     mic_active: bool,
+}
+
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+enum TrackType {
+    Mic,
+    Camera,
+    Screenshare,
+    ScreenshareAudio,
 }
 
 #[derive(Clone, PartialEq)]
@@ -523,8 +531,7 @@ impl LivekitCall {
             state: CallState::Connecting,
             cancellation_source,
             started_at: Instant::now(),
-            mic_track_sid: None,
-            camera_track_sid: None,
+            our_track_sids: HashMap::new(),
             active_call_participants_state,
             subscribed_streams: Vec::new(),
             muted_streams: HashSet::new(),
@@ -533,6 +540,7 @@ impl LivekitCall {
             on_hold: false,
             cached_call_members,
             active_camera: None,
+            active_screenshare: None,
         }
     }
 
@@ -549,13 +557,13 @@ impl LivekitCall {
         cx.notify();
     }
 
-    pub fn active_camera(&self) -> Option<Entity<Webcam>> {
+    pub fn active_camera(&self) -> Option<Entity<VideoFrame>> {
         self.active_camera.clone()
     }
 
     pub fn set_active_camera(
         &mut self,
-        active_camera: Option<Entity<Webcam>>,
+        active_camera: Option<Entity<VideoFrame>>,
         cx: &mut Context<Self>,
     ) {
         self.active_camera = active_camera.clone();
@@ -566,33 +574,61 @@ impl LivekitCall {
             _ => return,
         };
 
-        if let Some(camera_track_sid) = &self.camera_track_sid {
+        self.unpublish_track(TrackType::Camera, cx);
+
+        if let Some(camera) = active_camera {
+            let device = camera.read(cx);
+            if matches!(device.status(), VideoFrameStatus::Error(_)) {
+                // Don't bother setting up the camera because it's not working anyway
+                return;
+            }
+
+            self.route_video_out(local_participant, camera, TrackSource::Camera, cx);
+        }
+    }
+
+    pub fn active_screenshare(&self) -> Option<Entity<VideoFrame>> {
+        self.active_screenshare.clone()
+    }
+
+    pub fn set_active_screenshare(
+        &mut self,
+        active_screenshare: Option<Entity<VideoFrame>>,
+        cx: &mut Context<Self>,
+    ) {
+        self.active_screenshare = active_screenshare.clone();
+        cx.notify();
+
+        let local_participant = match &self.state {
+            CallState::Active { local_participant } => local_participant.clone(),
+            _ => return,
+        };
+
+        self.unpublish_track(TrackType::Screenshare, cx);
+
+        if let Some(screenshare) = active_screenshare {
+            self.route_video_out(local_participant, screenshare, TrackSource::Screenshare, cx);
+        }
+    }
+
+    fn unpublish_track(&mut self, track_type: TrackType, cx: &mut Context<Self>) {
+        let local_participant = match &self.state {
+            CallState::Active { local_participant } => local_participant.clone(),
+            _ => return,
+        };
+
+        if let Some(track_sid) = self.our_track_sids.remove(&track_type) {
             let local_participant_clone = local_participant.clone();
-            let mic_track_sid = camera_track_sid.clone();
             cx.spawn(
                 async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                     let _ = cx
                         .spawn_tokio(async move {
-                            local_participant_clone
-                                .unpublish_track(&mic_track_sid)
-                                .await
+                            local_participant_clone.unpublish_track(&track_sid).await
                         })
                         .await;
                 },
             )
             .detach();
-
-            self.camera_track_sid = None;
-        }
-
-        if let Some(camera) = active_camera {
-            let device = camera.read(cx);
-            if device.error().is_some() {
-                // Don't bother setting up the camera because it's not working anyway
-                return;
-            }
-            
-            self.route_video_out(local_participant, device.output_frame(), TrackSource::Camera, cx);
         }
     }
 
@@ -679,31 +715,36 @@ impl LivekitCall {
                 call_members.push(call_member);
                 devices.remove(&tuple);
             } else {
-                let (mic_state, camera_state, screenshare_state) =
-                    if !this_device_processed && participant.user_id() == this_user_id {
-                        this_device_processed = true;
-                        (
-                            if muted {
-                                StreamState::Off
-                            } else if let Some(track_sid) = &self.mic_track_sid {
-                                StreamState::On(track_sid.clone())
-                            } else {
-                                StreamState::Unavailable
-                            },
-                            if let Some(track_sid) = &self.camera_track_sid {
-                                StreamState::On(track_sid.clone())
-                            } else {
-                                StreamState::Unavailable
-                            },
-                            StreamState::Unavailable,
-                        )
-                    } else {
-                        (
-                            StreamState::Unavailable,
-                            StreamState::Unavailable,
-                            StreamState::Unavailable,
-                        )
-                    };
+                let (mic_state, camera_state, screenshare_state) = if !this_device_processed
+                    && participant.user_id() == this_user_id
+                {
+                    this_device_processed = true;
+                    (
+                        if muted {
+                            StreamState::Off
+                        } else if let Some(track_sid) = self.our_track_sids.get(&TrackType::Mic) {
+                            StreamState::On(track_sid.clone())
+                        } else {
+                            StreamState::Unavailable
+                        },
+                        if let Some(track_sid) = self.our_track_sids.get(&TrackType::Camera) {
+                            StreamState::On(track_sid.clone())
+                        } else {
+                            StreamState::Unavailable
+                        },
+                        if let Some(track_sid) = self.our_track_sids.get(&TrackType::Screenshare) {
+                            StreamState::On(track_sid.clone())
+                        } else {
+                            StreamState::Unavailable
+                        },
+                    )
+                } else {
+                    (
+                        StreamState::Unavailable,
+                        StreamState::Unavailable,
+                        StreamState::Unavailable,
+                    )
+                };
 
                 call_members.push(CallMember {
                     room_member: participant.clone(),
@@ -719,31 +760,14 @@ impl LivekitCall {
     }
 
     fn setup_local_mic(&mut self, cx: &mut Context<Self>) {
-        let call_manager = cx.global::<LivekitCallManager>();
         let local_participant = match &self.state {
             CallState::Active { local_participant } => local_participant.clone(),
             _ => return,
         };
 
-        if let Some(mic_track_sid) = &self.mic_track_sid {
-            let local_participant_clone = local_participant.clone();
-            let mic_track_sid = mic_track_sid.clone();
-            cx.spawn(
-                async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                    let _ = cx
-                        .spawn_tokio(async move {
-                            local_participant_clone
-                                .unpublish_track(&mic_track_sid)
-                                .await
-                        })
-                        .await;
-                },
-            )
-            .detach();
+        self.unpublish_track(TrackType::Mic, cx);
 
-            self.mic_track_sid = None;
-        }
-
+        let call_manager = cx.global::<LivekitCallManager>();
         let input_device = call_manager.active_input_device();
         let local_participant_clone = local_participant.clone();
         cx.observe(&input_device, move |this, input_device, cx| {
@@ -831,7 +855,16 @@ impl LivekitCall {
                 let sid = publication.sid();
                 let timestamp = Instant::now();
                 let _ = weak_this.update(cx, |call, cx| {
-                    call.camera_track_sid = Some(sid);
+                    call.our_track_sids.insert(
+                        match track_source {
+                            TrackSource::Camera => TrackType::Camera,
+                            TrackSource::Microphone => TrackType::Mic,
+                            TrackSource::Screenshare => TrackType::Screenshare,
+                            TrackSource::ScreenshareAudio => TrackType::ScreenshareAudio,
+                            _ => panic!("Invalid track source"),
+                        },
+                        sid,
+                    );
                     cx.notify();
 
                     cx.observe(&device_entity_clone, move |_, device_entity, cx| {
@@ -948,7 +981,7 @@ impl LivekitCall {
 
                 let sid = publication.sid();
                 let _ = weak_this.update(cx, |call, cx| {
-                    call.mic_track_sid = Some(sid);
+                    call.our_track_sids.insert(TrackType::Mic, sid);
                     cx.notify();
                 });
 
