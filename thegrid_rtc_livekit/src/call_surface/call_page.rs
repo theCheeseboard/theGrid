@@ -129,15 +129,15 @@ impl CallPage {
     }
 
     fn screenshare(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        if self.call.read(cx).active_screenshare.is_some() {
+        if self.call.read(cx).active_screenshare().is_some() {
             self.call.update(cx, |call, cx| {
-                call.set_active_screenshare(None, cx);
+                call.publish_track(TrackType::Screenshare, None, cx);
             });
         } else {
             cx.update_global::<ScreenShareManager, _>(|screen_share_manager, cx| {
                 let listener = cx.listener(|this, event: &ScreenShareStartEvent, _, cx| {
                     this.call.update(cx, |call, cx| {
-                        call.set_active_screenshare(Some(event.frames.clone()), cx)
+                        call.publish_track(TrackType::Screenshare, Some(event.frames.clone()), cx)
                     });
                 });
                 screen_share_manager.start_screen_share_session(listener, window, cx);
@@ -452,7 +452,11 @@ impl Render for CallPage {
                                                             let call = this.call.read(cx);
                                                             if call.active_camera().is_some() {
                                                                 this.call.update(cx, |call, cx| {
-                                                                    call.set_active_camera(None, cx)
+                                                                    call.publish_track(
+                                                                        TrackType::Camera,
+                                                                        None,
+                                                                        cx,
+                                                                    )
                                                                 });
                                                             } else {
                                                                 let call = this.call.clone();

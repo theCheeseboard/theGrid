@@ -66,10 +66,10 @@ use std::rc::Weak;
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use thegrid_common::outbound_track::{OutboundTrack, OutboundTrackStatus};
 use thegrid_common::room::active_call_participants::track_active_call_participants;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
-use thegrid_common::video_frame::{VideoFrame, VideoFrameStatus};
 use yuv::{
     BufferStoreMut, YuvChromaSubsampling, YuvPackedImage, YuvPackedImageMut, YuvPlanarImage,
     YuvPlanarImageMut, YuvRange, YuvStandardMatrix, yuv420_to_bgra, yuv420_to_rgba,
@@ -85,6 +85,7 @@ pub struct LivekitCall {
     state: CallState,
 
     our_track_sids: HashMap<TrackType, TrackSid>,
+    active_devices: HashMap<TrackSid, Entity<OutboundTrack>>,
 
     subscribed_streams: Vec<SubscribedStream>,
     active_call_participants_state: Entity<Vec<RoomMember>>,
@@ -96,8 +97,6 @@ pub struct LivekitCall {
     cancellation_source: CancellationTokenSource,
     started_at: Instant,
 
-    active_camera: Option<Entity<VideoFrame>>,
-    active_screenshare: Option<Entity<VideoFrame>>,
     on_hold: bool,
 }
 
@@ -113,7 +112,7 @@ pub struct CallMember {
 }
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
-enum TrackType {
+pub enum TrackType {
     Mic,
     Camera,
     Screenshare,
@@ -186,7 +185,11 @@ impl Display for CallError {
 
 impl LivekitCall {
     //noinspection RsRedundantElse
-    pub fn new(room_id: OwnedRoomId, cx: &mut Context<Self>) -> Self {
+    pub fn new(
+        room_id: OwnedRoomId,
+        initial_streams: HashMap<TrackType, Entity<OutboundTrack>>,
+        cx: &mut Context<Self>,
+    ) -> Self {
         let active_call_participants_state = track_active_call_participants(room_id.clone(), cx);
 
         let session_manager = cx.global::<SessionManager>();
@@ -485,8 +488,9 @@ impl LivekitCall {
 
                     this.setup_local_mic(cx);
 
-                    // Restart camera processing if one is available
-                    this.set_active_camera(this.active_camera.clone(), cx);
+                    for (track_type, track_device) in initial_streams {
+                        this.publish_track(track_type, Some(track_device), cx);
+                    }
                 });
 
                 // TODO: Delay a disconnection message
@@ -539,8 +543,7 @@ impl LivekitCall {
             video_stream_images: HashMap::new(),
             on_hold: false,
             cached_call_members,
-            active_camera: None,
-            active_screenshare: None,
+            active_devices: HashMap::new(),
         }
     }
 
@@ -557,67 +560,35 @@ impl LivekitCall {
         cx.notify();
     }
 
-    pub fn active_camera(&self) -> Option<Entity<VideoFrame>> {
-        self.active_camera.clone()
+    pub fn active_camera(&self) -> Option<Entity<OutboundTrack>> {
+        self.our_track_sids
+            .get(&TrackType::Camera)
+            .and_then(|sid| self.active_devices.get(sid))
+            .cloned()
     }
 
-    pub fn set_active_camera(
+    pub fn active_screenshare(&self) -> Option<Entity<OutboundTrack>> {
+        self.our_track_sids
+            .get(&TrackType::Screenshare)
+            .and_then(|sid| self.active_devices.get(sid))
+            .cloned()
+    }
+
+    fn publish_track(
         &mut self,
-        active_camera: Option<Entity<VideoFrame>>,
+        track_type: TrackType,
+        track_device: Option<Entity<OutboundTrack>>,
         cx: &mut Context<Self>,
     ) {
-        self.active_camera = active_camera.clone();
-        cx.notify();
-
-        let local_participant = match &self.state {
-            CallState::Active { local_participant } => local_participant.clone(),
-            _ => return,
-        };
-
-        self.unpublish_track(TrackType::Camera, cx);
-
-        if let Some(camera) = active_camera {
-            let device = camera.read(cx);
-            if matches!(device.status(), VideoFrameStatus::Error(_)) {
-                // Don't bother setting up the camera because it's not working anyway
-                return;
-            }
-
-            self.route_video_out(local_participant, camera, TrackSource::Camera, cx);
-        }
-    }
-
-    pub fn active_screenshare(&self) -> Option<Entity<VideoFrame>> {
-        self.active_screenshare.clone()
-    }
-
-    pub fn set_active_screenshare(
-        &mut self,
-        active_screenshare: Option<Entity<VideoFrame>>,
-        cx: &mut Context<Self>,
-    ) {
-        self.active_screenshare = active_screenshare.clone();
-        cx.notify();
-
-        let local_participant = match &self.state {
-            CallState::Active { local_participant } => local_participant.clone(),
-            _ => return,
-        };
-
-        self.unpublish_track(TrackType::Screenshare, cx);
-
-        if let Some(screenshare) = active_screenshare {
-            self.route_video_out(local_participant, screenshare, TrackSource::Screenshare, cx);
-        }
-    }
-
-    fn unpublish_track(&mut self, track_type: TrackType, cx: &mut Context<Self>) {
         let local_participant = match &self.state {
             CallState::Active { local_participant } => local_participant.clone(),
             _ => return,
         };
 
         if let Some(track_sid) = self.our_track_sids.remove(&track_type) {
+            self.active_devices.remove(&track_sid);
+            cx.notify();
+
             let local_participant_clone = local_participant.clone();
             cx.spawn(
                 async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
@@ -629,6 +600,111 @@ impl LivekitCall {
                 },
             )
             .detach();
+        }
+
+        let Some(track_device) = track_device else {
+            return;
+        };
+
+        match track_type {
+            TrackType::Camera | TrackType::Screenshare => {
+                let device = track_device.read(cx);
+                let frame_width = device.width();
+                let frame_height = device.height();
+                let source = NativeVideoSource::new(
+                    VideoResolution {
+                        width: frame_width,
+                        height: frame_height,
+                    },
+                    match track_type {
+                        TrackType::Screenshare => true,
+                        TrackType::Camera => false,
+                        _ => unreachable!(),
+                    },
+                );
+                let track = LocalVideoTrack::create_video_track(
+                    match track_type {
+                        TrackType::Screenshare => "screenshare",
+                        TrackType::Camera => "camera",
+                        _ => unreachable!(),
+                    },
+                    RtcVideoSource::Native(source.clone()),
+                );
+
+                let device_entity_clone = track_device.clone();
+                cx.spawn(
+                    async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                        let Ok(publication) = cx
+                            .spawn_tokio(async move {
+                                local_participant
+                                    .publish_track(
+                                        LocalTrack::Video(track),
+                                        TrackPublishOptions {
+                                            source: match track_type {
+                                                TrackType::Screenshare => TrackSource::Screenshare,
+                                                TrackType::Camera => TrackSource::Camera,
+                                                _ => unreachable!(),
+                                            },
+                                            ..Default::default()
+                                        },
+                                    )
+                                    .await
+                            })
+                            .await
+                        else {
+                            return;
+                        };
+
+                        let sid = publication.sid();
+                        let timestamp = Instant::now();
+                        let _ = weak_this.update(cx, |call, cx| {
+                            call.our_track_sids.insert(track_type, sid.clone());
+                            call.active_devices
+                                .insert(sid.clone(), device_entity_clone.clone());
+                            cx.notify();
+
+                            cx.observe(&device_entity_clone, move |call, device_entity, cx| {
+                                let device = device_entity.read(cx);
+
+                                if matches!(
+                                    device.status(),
+                                    OutboundTrackStatus::Error(_) | OutboundTrackStatus::Terminated
+                                ) {
+                                    // Unpublish the track
+                                    if call
+                                        .our_track_sids
+                                        .get(&track_type)
+                                        .is_some_and(|sid_option| sid_option == &sid)
+                                    {
+                                        call.publish_track(track_type, None, cx);
+                                    }
+                                    return;
+                                }
+
+                                let time_passed = timestamp.elapsed().as_millis();
+
+                                let Some(i422_frame_buffer) = device.i422_frame_buffer() else {
+                                    return;
+                                };
+
+                                let video_frame =
+                                    livekit::webrtc::video_frame::VideoFrame::<I422Buffer> {
+                                        rotation: VideoRotation::VideoRotation0,
+                                        timestamp_us: time_passed as i64,
+                                        buffer: i422_frame_buffer,
+                                    };
+
+                                source.capture_frame(&video_frame);
+                            })
+                            .detach()
+                        });
+                    },
+                )
+                .detach();
+            }
+            TrackType::ScreenshareAudio | TrackType::Mic => {
+                // TODO: Publish audio track
+            }
         }
     }
 
@@ -765,7 +841,7 @@ impl LivekitCall {
             _ => return,
         };
 
-        self.unpublish_track(TrackType::Mic, cx);
+        self.publish_track(TrackType::Mic, None, cx);
 
         let call_manager = cx.global::<LivekitCallManager>();
         let input_device = call_manager.active_input_device();
@@ -793,106 +869,6 @@ impl LivekitCall {
                 self.route_video(video_track.clone(), cx);
             }
         }
-    }
-
-    fn route_video_out(
-        &mut self,
-        local_participant: LocalParticipant,
-        device_entity: Entity<VideoFrame>,
-        track_source: TrackSource,
-        cx: &mut Context<Self>,
-    ) {
-        if !matches!(track_source, TrackSource::Camera | TrackSource::Screenshare) {
-            return;
-        }
-
-        let device = device_entity.read(cx);
-        let frame_width = device.width();
-        let frame_height = device.height();
-        let source = NativeVideoSource::new(
-            VideoResolution {
-                width: frame_width,
-                height: frame_height,
-            },
-            match track_source {
-                TrackSource::Camera => true,
-                TrackSource::Screenshare => false,
-                _ => unreachable!(),
-            },
-        );
-        let track = LocalVideoTrack::create_video_track(
-            match track_source {
-                TrackSource::Camera => "camera",
-                TrackSource::Screenshare => "screenshare",
-                _ => unreachable!(),
-            },
-            RtcVideoSource::Native(source.clone()),
-        );
-
-        let cancellation_source = CancellationTokenSource::new();
-        let cancellation_source_2 = cancellation_source.clone();
-
-        let device_entity_clone = device_entity.clone();
-        cx.spawn(
-            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let Ok(publication) = cx
-                    .spawn_tokio(async move {
-                        local_participant
-                            .publish_track(
-                                LocalTrack::Video(track),
-                                TrackPublishOptions {
-                                    source: TrackSource::Camera,
-                                    ..Default::default()
-                                },
-                            )
-                            .await
-                    })
-                    .await
-                else {
-                    return;
-                };
-
-                let sid = publication.sid();
-                let timestamp = Instant::now();
-                let _ = weak_this.update(cx, |call, cx| {
-                    call.our_track_sids.insert(
-                        match track_source {
-                            TrackSource::Camera => TrackType::Camera,
-                            TrackSource::Microphone => TrackType::Mic,
-                            TrackSource::Screenshare => TrackType::Screenshare,
-                            TrackSource::ScreenshareAudio => TrackType::ScreenshareAudio,
-                            _ => panic!("Invalid track source"),
-                        },
-                        sid,
-                    );
-                    cx.notify();
-
-                    cx.observe(&device_entity_clone, move |_, device_entity, cx| {
-                        let device = device_entity.read(cx);
-                        let time_passed = timestamp.elapsed().as_millis();
-
-                        let Some(i422_frame_buffer) = device.i422_frame_buffer() else {
-                            return;
-                        };
-
-                        let video_frame = livekit::webrtc::video_frame::VideoFrame::<I422Buffer> {
-                            rotation: VideoRotation::VideoRotation0,
-                            timestamp_us: time_passed as i64,
-                            buffer: i422_frame_buffer,
-                        };
-
-                        source.capture_frame(&video_frame);
-                    })
-                    .detach()
-                });
-            },
-        )
-        .detach();
-
-        cx.observe(&device_entity, move |this, device, cx| {
-            cancellation_source_2.cancel();
-        })
-        .detach();
     }
 
     fn route_mic(
@@ -1258,7 +1234,8 @@ impl LivekitCall {
 
     pub fn end_call(&mut self, cx: &mut Context<Self>) {
         self.cancellation_source.cancel();
-        self.active_camera = None;
+        self.our_track_sids.clear();
+        self.active_devices.clear();
 
         let session_manager = cx.global::<SessionManager>();
         let user_id = session_manager

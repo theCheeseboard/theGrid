@@ -30,7 +30,7 @@ use objc2_screen_capture_kit::{
 use smallvec::smallvec;
 use std::sync::{Arc, Mutex};
 use std::{slice, thread};
-use thegrid_common::video_frame::{RawVideoFrame, VideoFrame};
+use thegrid_common::outbound_track::{OutboundTrack, RawVideoFrame};
 use yuv::{
     BufferStoreMut, YuvConversionMode, YuvPlanarImageMut, YuvRange, YuvStandardMatrix,
     bgra_to_yuv422, rgb_to_yuv422,
@@ -198,8 +198,7 @@ define_class!(
         }
 
         #[unsafe(method(contentSharingPickerStartDidFailWithError:))]
-        unsafe fn content_sharing_picker_start_did_fail_with_error(&self, error: &NSError) {
-        }
+        unsafe fn content_sharing_picker_start_did_fail_with_error(&self, error: &NSError) {}
     }
 );
 
@@ -324,8 +323,9 @@ pub fn start_screen_share_session(
                     } => {
                         if weak_frames.is_none() {
                             let Ok(frames) = cx.update(|window, cx| {
-                                let frames =
-                                    cx.new(|cx| VideoFrame::new((width as u32, height as u32), cx));
+                                let frames = cx.new(|cx| {
+                                    OutboundTrack::new((width as u32, height as u32), cx)
+                                });
 
                                 callback(
                                     &ScreenShareStartEvent {
@@ -369,6 +369,11 @@ pub fn start_screen_share_session(
                         }
                     }
                     MacScreenShareMessage::Quit => {
+                        if let Some(weak_frames) = weak_frames.as_ref() {
+                            let _ = weak_frames.update(cx, |frames, cx| {
+                                frames.set_terminated(cx);
+                            });
+                        }
                         return;
                     }
                 }

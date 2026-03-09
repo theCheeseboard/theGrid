@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+use crate::TrackType;
 use crate::call_manager::{FocusUrl, LivekitCallManager};
 use crate::webcam::Webcam;
 use cntp_i18n::{tr, trn};
@@ -553,17 +555,14 @@ impl CallStartPage {
         cx.update_global::<LivekitCallManager, _>(|call_manager, cx| {
             call_manager.active_output_device().write(cx, output_device);
             call_manager.active_input_device().write(cx, input_device);
+            
+            let mut initial_streams = HashMap::new();
+            if let Some(active_camera) = &self.active_camera {
+                let output_frame = active_camera.read(cx).output_frame();
+                initial_streams.insert(TrackType::Camera, output_frame);           
+            }
 
-            if let Some(call) = call_manager.start_call(room_id, cx) {
-                let active_camera = self.active_camera.clone();
-                cx.defer(move |cx| {
-                    call.update(cx, |call, cx| {
-                        let output_frame = active_camera
-                            .map(|active_camera| active_camera.read(cx).output_frame());
-                        call.set_active_camera(output_frame, cx);
-                    });
-                });
-
+            if call_manager.start_call(room_id, initial_streams, cx).is_some() {
                 self.turn_off_camera(cx);
             }
         });

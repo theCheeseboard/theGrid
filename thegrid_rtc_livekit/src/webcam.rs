@@ -1,26 +1,21 @@
-use cancellation_token::CancellationTokenSource;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{AppContext, AsyncApp, Context, Entity, RenderImage, WeakEntity};
 use image::{Frame, RgbaImage, imageops};
 use log::error;
-use nokhwa::pixel_format::{RgbAFormat, YuyvFormat};
-use nokhwa::utils::{
-    CameraIndex, CameraInfo, FrameFormat, RequestedFormat, RequestedFormatType, Resolution,
-};
-use nokhwa::{Buffer, CallbackCamera, Camera, NokhwaError};
+use nokhwa::pixel_format::YuyvFormat;
+use nokhwa::utils::{CameraInfo, FrameFormat, RequestedFormat, RequestedFormatType, Resolution};
+use nokhwa::{Buffer, Camera, NokhwaError};
 use smallvec::smallvec;
 use std::sync::Arc;
 use std::thread;
-use thegrid_common::video_frame::{RawVideoFrame, VideoFrame};
+use thegrid_common::outbound_track::{OutboundTrack, RawVideoFrame};
 use yuv::{YuvPackedImage, YuvRange, YuvStandardMatrix, yuyv422_to_bgra};
 
 pub struct Webcam {
     camera_info: CameraInfo,
     error: Option<anyhow::Error>,
-    cancellation_source: CancellationTokenSource,
-    resolution: Resolution,
-    output_frame: Entity<VideoFrame>,
+    output_frame: Entity<OutboundTrack>,
 }
 
 enum WebcamMessage {
@@ -33,9 +28,6 @@ enum WebcamMessage {
 
 impl Webcam {
     pub fn new(camera_info: CameraInfo, cx: &mut Context<Self>) -> Self {
-        let cancellation_source = CancellationTokenSource::new();
-        let cancellation_token = cancellation_source.token();
-
         let format =
             RequestedFormat::new::<YuyvFormat>(RequestedFormatType::AbsoluteHighestResolution);
 
@@ -49,25 +41,19 @@ impl Webcam {
             Err(e) => {
                 return Self {
                     camera_info,
-                    output_frame: cx.new(|cx| VideoFrame::new_error(anyhow!(e.clone()), cx)),
+                    output_frame: cx.new(|cx| OutboundTrack::new_error(anyhow!(e.clone()), cx)),
                     error: Some(anyhow!(e)),
-                    cancellation_source,
-                    resolution: Default::default(),
                 };
             }
         };
 
-        let resolution = camera.resolution().clone();
+        let resolution = camera.resolution();
 
         let output_frame =
-            cx.new(|cx| VideoFrame::new((resolution.width(), resolution.height()), cx));
+            cx.new(|cx| OutboundTrack::new((resolution.width(), resolution.height()), cx));
 
         thread::spawn(move || {
             loop {
-                if cancellation_token.is_canceled() {
-                    return;
-                }
-
                 let buffer = match camera.frame() {
                     Ok(buffer) => buffer,
                     Err(e) => {
@@ -120,10 +106,14 @@ impl Webcam {
                 // Flip the RenderImage horizontally for display
                 imageops::flip_horizontal_in_place(&mut image);
                 let render_image = Arc::new(RenderImage::new(smallvec![Frame::new(image)]));
-                let _ = smol::block_on(tx.send(WebcamMessage::Frame {
+                if smol::block_on(tx.send(WebcamMessage::Frame {
                     render_image,
                     buffer,
-                }));
+                }))
+                .is_err()
+                {
+                    return;
+                };
             }
         });
 
@@ -184,8 +174,6 @@ impl Webcam {
             camera_info,
             output_frame,
             error: None,
-            cancellation_source,
-            resolution,
         }
     }
 
@@ -193,21 +181,11 @@ impl Webcam {
         &self.camera_info
     }
 
-    pub fn output_frame(&self) -> Entity<VideoFrame> {
+    pub fn output_frame(&self) -> Entity<OutboundTrack> {
         self.output_frame.clone()
     }
 
     pub fn error(&self) -> Option<&anyhow::Error> {
         self.error.as_ref()
-    }
-
-    pub fn resolution(&self) -> Resolution {
-        self.resolution
-    }
-}
-
-impl Drop for Webcam {
-    fn drop(&mut self) {
-        self.cancellation_source.cancel();
     }
 }

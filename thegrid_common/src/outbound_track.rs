@@ -12,16 +12,17 @@ use yuv::{
     YuvStandardMatrix, bgra_to_yuv422, rgb_to_yuv422, yuyv422_to_bgra, yuyv422_to_yuv422,
 };
 
-pub struct VideoFrame {
+pub struct OutboundTrack {
     latest_frame_render_image: Option<Arc<RenderImage>>,
     latest_frame_buffer: Option<RawVideoFrame>,
     resolution: (u32, u32),
-    status: VideoFrameStatus,
+    status: OutboundTrackStatus,
 }
 
-pub enum VideoFrameStatus {
+pub enum OutboundTrackStatus {
     Ready,
     Error(anyhow::Error),
+    Terminated,
 }
 
 pub enum RawVideoFrame {
@@ -34,13 +35,13 @@ pub enum OutputFormat {
     YUV422,
 }
 
-impl VideoFrame {
+impl OutboundTrack {
     pub fn new(resolution: (u32, u32), cx: &mut Context<Self>) -> Self {
         Self {
             latest_frame_render_image: None,
             latest_frame_buffer: None,
             resolution,
-            status: VideoFrameStatus::Ready,
+            status: OutboundTrackStatus::Ready,
         }
     }
 
@@ -49,12 +50,12 @@ impl VideoFrame {
             latest_frame_render_image: None,
             latest_frame_buffer: None,
             resolution: (0, 0),
-            status: VideoFrameStatus::Error(e),
+            status: OutboundTrackStatus::Error(e),
         }
     }
 
     pub fn set_error(&mut self, e: anyhow::Error, cx: &mut Context<Self>) {
-        self.status = VideoFrameStatus::Error(e);
+        self.status = OutboundTrackStatus::Error(e);
         self.clear(cx);
     }
 
@@ -90,6 +91,11 @@ impl VideoFrame {
         self.latest_frame_render_image = Some(render_image);
         self.latest_frame_buffer = Some(buffer);
         cx.notify()
+    }
+
+    pub fn set_terminated(&mut self, cx: &mut Context<Self>) {
+        self.status = OutboundTrackStatus::Terminated;
+        self.clear(cx);
     }
 
     pub fn latest_render_frame(&self) -> Option<Arc<RenderImage>> {
@@ -172,7 +178,7 @@ impl VideoFrame {
         self.resolution
     }
 
-    pub fn status(&self) -> &VideoFrameStatus {
+    pub fn status(&self) -> &OutboundTrackStatus {
         &self.status
     }
 }

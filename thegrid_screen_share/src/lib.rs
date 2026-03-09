@@ -1,6 +1,6 @@
 use crate::mac::MacScreenShareSetup;
 use gpui::{App, Entity, Global, Window};
-use thegrid_common::video_frame::VideoFrame;
+use thegrid_common::outbound_track::OutboundTrack;
 
 #[cfg(target_os = "macos")]
 mod mac;
@@ -12,7 +12,7 @@ pub enum PickerRequired {
 }
 
 pub struct ScreenShareStartEvent {
-    pub frames: Entity<VideoFrame>,
+    pub frames: Entity<OutboundTrack>,
 }
 
 pub struct ScreenShareManager {}

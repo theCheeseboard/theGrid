@@ -1,7 +1,9 @@
 use crate::focus::get_focus_url;
-use crate::{CallState, LivekitCall, sfx};
+use crate::{CallState, LivekitCall, TrackType, sfx};
 use gpui::{App, AppContext, AsyncApp, BorrowAppContext, Context, Entity, Global, WeakEntity};
 use matrix_sdk::ruma::OwnedRoomId;
+use std::collections::HashMap;
+use thegrid_common::outbound_track::OutboundTrack;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_screen_share::setup_screenshare_manager;
 
@@ -23,7 +25,12 @@ pub enum FocusUrl {
 }
 
 impl LivekitCallManager {
-    pub fn start_call(&mut self, room: OwnedRoomId, cx: &mut App) -> Option<Entity<LivekitCall>> {
+    pub fn start_call(
+        &mut self,
+        room: OwnedRoomId,
+        initial_streams: HashMap<TrackType, Entity<OutboundTrack>>,
+        cx: &mut App,
+    ) -> Option<Entity<LivekitCall>> {
         if self
             .active_calls
             .iter()
@@ -33,7 +40,7 @@ impl LivekitCallManager {
             return None;
         }
 
-        let call = cx.new(|cx| LivekitCall::new(room, cx));
+        let call = cx.new(|cx| LivekitCall::new(room, initial_streams, cx));
         cx.observe(&call, |call, cx| {
             cx.update_global::<LivekitCallManager, _>(|call_manager, cx| {
                 if matches!(call.read(cx).state, CallState::Ended) {
