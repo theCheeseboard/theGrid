@@ -8155,6 +8155,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "ringbuffer"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57b0b88a509053cbfd535726dcaaceee631313cef981266119527a1d110f6d2b"
+
+[[package]]
 name = "rmp"
 version = "0.8.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9831,6 +9837,7 @@ dependencies = [
  "log",
  "matrix-sdk",
  "matrix-sdk-ui",
+ "ringbuffer",
  "serde",
  "serde_json",
  "smallvec",
@@ -9857,6 +9864,7 @@ dependencies = [
  "matrix-sdk",
  "nokhwa",
  "reqwest 0.13.2",
+ "ringbuffer",
  "rodio",
  "serde",
  "smallvec",

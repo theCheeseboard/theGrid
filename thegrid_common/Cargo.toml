@@ -24,6 +24,7 @@ base64 = { workspace = true }
 getrandom = { workspace = true }
 libwebrtc = { workspace = true }
 yuv = { workspace = true }
+ringbuffer = { workspace = true }
 
 [build-dependencies]
 cntp_i18n_gen = { workspace = true }

@@ -45,3 +45,4 @@ keyring = { version = "3", features = ["windows-native", "apple-native", "sync-s
 getrandom = "0.4"
 base64 = "0.22"
 libwebrtc = "0.3"
+ringbuffer = "0.16"

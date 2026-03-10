@@ -2,23 +2,23 @@ use crate::{PickerRequired, ScreenShareStartEvent};
 use async_channel::Sender;
 use gpui::http_client::anyhow;
 use gpui::{App, AppContext, AsyncApp, AsyncWindowContext, Entity, RenderImage, Window};
-use image::{Frame, RgbaImage, imageops};
+use image::{imageops, Frame, RgbaImage};
 use libwebrtc::prelude::I422Buffer;
 use log::{error, info};
 use objc2::rc::Retained;
 use objc2::runtime::{NSObject, NSObjectProtocol, ProtocolObject};
 use objc2::{
-    AnyThread, ClassType, DeclaredClass, MainThreadMarker, MainThreadOnly, define_class, msg_send,
-    msg_send_id,
+    define_class, msg_send, msg_send_id, AnyThread, ClassType, DeclaredClass, MainThreadMarker,
+    MainThreadOnly,
 };
 use objc2_core_media::{CMSampleBuffer, CMSampleBufferGetSampleAttachmentsArray};
 use objc2_core_video::{
+    kCVPixelFormatType_32BGRA, kCVPixelFormatType_32RGBA, kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
     CVPixelBufferGetBaseAddress, CVPixelBufferGetBaseAddressOfPlane, CVPixelBufferGetBytesPerRow,
     CVPixelBufferGetBytesPerRowOfPlane, CVPixelBufferGetHeight, CVPixelBufferGetHeightOfPlane,
     CVPixelBufferGetPixelFormatType, CVPixelBufferGetTypeID, CVPixelBufferGetWidth,
     CVPixelBufferGetWidthOfPlane, CVPixelBufferLockBaseAddress, CVPixelBufferLockFlags,
-    CVPixelBufferUnlockBaseAddress, kCVPixelFormatType_32BGRA, kCVPixelFormatType_32RGBA,
-    kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
+    CVPixelBufferUnlockBaseAddress,
 };
 use objc2_foundation::NSError;
 use objc2_screen_capture_kit::{
@@ -32,8 +32,8 @@ use std::sync::{Arc, Mutex};
 use std::{slice, thread};
 use thegrid_common::outbound_track::{OutboundTrack, RawVideoFrame};
 use yuv::{
-    BufferStoreMut, YuvConversionMode, YuvPlanarImageMut, YuvRange, YuvStandardMatrix,
-    bgra_to_yuv422, rgb_to_yuv422,
+    bgra_to_yuv422, rgb_to_yuv422, BufferStoreMut, YuvConversionMode, YuvPlanarImageMut,
+    YuvRange, YuvStandardMatrix,
 };
 
 pub struct MacScreenShareSetup {}
@@ -324,7 +324,7 @@ pub fn start_screen_share_session(
                         if weak_frames.is_none() {
                             let Ok(frames) = cx.update(|window, cx| {
                                 let frames = cx.new(|cx| {
-                                    OutboundTrack::new((width as u32, height as u32), cx)
+                                    OutboundTrack::new_video((width as u32, height as u32), cx)
                                 });
 
                                 callback(

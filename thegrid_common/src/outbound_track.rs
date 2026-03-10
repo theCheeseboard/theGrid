@@ -1,22 +1,34 @@
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{Context, RenderImage};
-use image::{Frame, RgbaImage, imageops};
+use image::{imageops, Frame, RgbaImage};
 use libwebrtc::prelude::{I422Buffer, VideoRotation};
 use log::error;
+use ringbuffer::{AllocRingBuffer, RingBuffer};
 use smallvec::smallvec;
 use std::cell::RefCell;
 use std::sync::Arc;
 use yuv::{
-    BufferStoreMut, YuvConversionMode, YuvPackedImage, YuvPlanarImage, YuvPlanarImageMut, YuvRange,
-    YuvStandardMatrix, bgra_to_yuv422, rgb_to_yuv422, yuyv422_to_bgra, yuyv422_to_yuv422,
+    bgra_to_yuv422, rgb_to_yuv422, yuyv422_to_bgra, yuyv422_to_yuv422, BufferStoreMut, YuvConversionMode,
+    YuvPackedImage, YuvPlanarImage, YuvPlanarImageMut, YuvRange, YuvStandardMatrix,
 };
 
 pub struct OutboundTrack {
+    video: Option<OutboundTrackVideo>,
+    audio: Option<OutboundTrackAudio>,
+    status: OutboundTrackStatus,
+}
+
+struct OutboundTrackVideo {
     latest_frame_render_image: Option<Arc<RenderImage>>,
     latest_frame_buffer: Option<RawVideoFrame>,
     resolution: (u32, u32),
-    status: OutboundTrackStatus,
+}
+
+struct OutboundTrackAudio {
+    sample_rate: u32,
+    channels: u16,
+    audio_samples: AllocRingBuffer<i16>,
 }
 
 pub enum OutboundTrackStatus {
@@ -36,20 +48,55 @@ pub enum OutputFormat {
 }
 
 impl OutboundTrack {
-    pub fn new(resolution: (u32, u32), cx: &mut Context<Self>) -> Self {
+    pub fn new_video(resolution: (u32, u32), cx: &mut Context<Self>) -> Self {
         Self {
-            latest_frame_render_image: None,
-            latest_frame_buffer: None,
-            resolution,
+            video: Some(OutboundTrackVideo {
+                resolution,
+                latest_frame_buffer: None,
+                latest_frame_render_image: None,
+            }),
+            audio: None,
+            status: OutboundTrackStatus::Ready,
+        }
+    }
+
+    pub fn new_audio(sample_rate: u32, channels: u16, cx: &mut Context<Self>) -> Self {
+        Self {
+            video: None,
+            audio: Some(OutboundTrackAudio {
+                sample_rate,
+                channels,
+                audio_samples: AllocRingBuffer::new(16384),
+            }),
+            status: OutboundTrackStatus::Ready,
+        }
+    }
+
+    pub fn new_combined(
+        resolution: (u32, u32),
+        sample_rate: u32,
+        channels: u16,
+        cx: &mut Context<Self>,
+    ) -> Self {
+        Self {
+            video: Some(OutboundTrackVideo {
+                resolution,
+                latest_frame_buffer: None,
+                latest_frame_render_image: None,
+            }),
+            audio: Some(OutboundTrackAudio {
+                sample_rate,
+                channels,
+                audio_samples: AllocRingBuffer::new(16384),
+            }),
             status: OutboundTrackStatus::Ready,
         }
     }
 
     pub fn new_error(e: anyhow::Error, cx: &mut Context<Self>) -> Self {
         Self {
-            latest_frame_render_image: None,
-            latest_frame_buffer: None,
-            resolution: (0, 0),
+            video: None,
+            audio: None,
             status: OutboundTrackStatus::Error(e),
         }
     }
@@ -60,13 +107,19 @@ impl OutboundTrack {
     }
 
     pub fn clear(&mut self, cx: &mut Context<Self>) {
-        self.latest_frame_render_image = None;
-        self.latest_frame_buffer = None;
+        if let Some(video) = &mut self.video {
+            video.latest_frame_render_image = None;
+            video.latest_frame_buffer = None;
+        }
         cx.notify()
     }
 
     pub fn set_resolution(&mut self, resolution: (u32, u32), cx: &mut Context<Self>) {
-        self.resolution = resolution;
+        let video = self
+            .video
+            .as_mut()
+            .expect("Tried to set the resolution of a non-video outbound track");
+        video.resolution = resolution;
         self.clear(cx);
     }
 
@@ -76,7 +129,12 @@ impl OutboundTrack {
         buffer: RawVideoFrame,
         cx: &mut Context<Self>,
     ) {
-        if let Some(old_image) = self.latest_frame_render_image.clone() {
+        let video = self
+            .video
+            .as_mut()
+            .expect("Tried to set the video of a non-video outbound track");
+
+        if let Some(old_image) = video.latest_frame_render_image.clone() {
             // Drop this image from all windows
             cx.defer(move |cx| {
                 for window in cx.windows() {
@@ -88,8 +146,8 @@ impl OutboundTrack {
             });
         }
 
-        self.latest_frame_render_image = Some(render_image);
-        self.latest_frame_buffer = Some(buffer);
+        video.latest_frame_render_image = Some(render_image);
+        video.latest_frame_buffer = Some(buffer);
         cx.notify()
     }
 
@@ -98,16 +156,31 @@ impl OutboundTrack {
         self.clear(cx);
     }
 
+    pub fn audio_sample_buffer(&mut self) -> &mut AllocRingBuffer<i16> {
+        &mut self
+            .audio
+            .as_mut()
+            .expect("Tried to access audio samples of non-audio outbound track")
+            .audio_samples
+    }
+
     pub fn latest_render_frame(&self) -> Option<Arc<RenderImage>> {
-        self.latest_frame_render_image.clone()
+        self.video
+            .as_ref()
+            .and_then(|video| video.latest_frame_render_image.clone())
     }
 
     pub fn i422_frame_buffer(&self) -> Option<I422Buffer> {
-        let Some(frame_buffer) = &self.latest_frame_buffer else {
+        let video = self
+            .video
+            .as_ref()
+            .expect("Tried to set the video of a non-video outbound track");
+
+        let Some(frame_buffer) = &video.latest_frame_buffer else {
             return None;
         };
 
-        let (frame_width, frame_height) = self.resolution;
+        let (frame_width, frame_height) = video.resolution;
 
         let mut buffer = I422Buffer::new(frame_width, frame_height);
         let (stride_y, stride_u, stride_v) = buffer.strides();
@@ -167,15 +240,51 @@ impl OutboundTrack {
     }
 
     pub fn width(&self) -> u32 {
-        self.resolution.0
+        let video = self
+            .video
+            .as_ref()
+            .expect("Tried to get resolution of a non-video outbound track");
+        video.resolution.0
     }
 
     pub fn height(&self) -> u32 {
-        self.resolution.1
+        let video = self
+            .video
+            .as_ref()
+            .expect("Tried to get resolution of a non-video outbound track");
+        video.resolution.1
     }
 
     pub fn resolution(&self) -> (u32, u32) {
-        self.resolution
+        let video = self
+            .video
+            .as_ref()
+            .expect("Tried to get resolution of a non-video outbound track");
+        video.resolution
+    }
+
+    pub fn sample_rate(&self) -> u32 {
+        let audio = self
+            .audio
+            .as_ref()
+            .expect("Tried to get sample rate of a non-audio outbound track");
+        audio.sample_rate
+    }
+
+    pub fn channels(&self) -> u16 {
+        let audio = self
+            .audio
+            .as_ref()
+            .expect("Tried to get channels of a non-audio outbound track");
+        audio.channels
+    }
+
+    pub fn has_video(&self) -> bool {
+        self.video.is_some()
+    }
+
+    pub fn has_audio(&self) -> bool {
+        self.audio.is_some()
     }
 
     pub fn status(&self) -> &OutboundTrackStatus {
