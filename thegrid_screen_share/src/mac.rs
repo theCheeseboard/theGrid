@@ -5,13 +5,20 @@ use gpui::{App, AppContext, AsyncApp, AsyncWindowContext, Entity, RenderImage, W
 use image::{imageops, Frame, RgbaImage};
 use libwebrtc::prelude::I422Buffer;
 use log::{error, info};
+use objc2::__macro_helpers::NoneFamily;
 use objc2::rc::Retained;
 use objc2::runtime::{NSObject, NSObjectProtocol, ProtocolObject};
 use objc2::{
     define_class, msg_send, msg_send_id, AnyThread, ClassType, DeclaredClass, MainThreadMarker,
     MainThreadOnly,
 };
-use objc2_core_media::{CMSampleBuffer, CMSampleBufferGetSampleAttachmentsArray};
+use objc2_avf_audio::{AVAudioFormat, AVAudioPCMBuffer};
+use objc2_core_audio_types::AudioBufferList;
+use objc2_core_media::{
+    kCMSampleBufferError_ArrayTooSmall, kCMSampleBufferFlag_AudioBufferList_Assure16ByteAlignment, CMAudioFormatDescriptionGetStreamBasicDescription,
+    CMBlockBuffer, CMSampleBuffer,
+    CMSampleBufferGetSampleAttachmentsArray,
+};
 use objc2_core_video::{
     kCVPixelFormatType_32BGRA, kCVPixelFormatType_32RGBA, kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
     CVPixelBufferGetBaseAddress, CVPixelBufferGetBaseAddressOfPlane, CVPixelBufferGetBytesPerRow,
@@ -28,6 +35,7 @@ use objc2_screen_capture_kit::{
     SCStreamFrameInfo, SCStreamOutput, SCStreamOutputType,
 };
 use smallvec::smallvec;
+use std::ptr::{null, null_mut, NonNull};
 use std::sync::{Arc, Mutex};
 use std::{slice, thread};
 use thegrid_common::outbound_track::{OutboundTrack, RawVideoFrame};
@@ -35,20 +43,6 @@ use yuv::{
     bgra_to_yuv422, rgb_to_yuv422, BufferStoreMut, YuvConversionMode, YuvPlanarImageMut,
     YuvRange, YuvStandardMatrix,
 };
-
-pub struct MacScreenShareSetup {}
-
-impl MacScreenShareSetup {
-    fn picker_required(&self) -> PickerRequired {
-        PickerRequired::SystemPicker
-    }
-
-    fn start_screen_share_session(
-        &self,
-        callback: Box<dyn Fn(&ScreenShareStartEvent, &mut Window, &mut App)>,
-    ) {
-    }
-}
 
 pub enum MacScreenShareMessage {
     Start {
@@ -62,6 +56,9 @@ pub enum MacScreenShareMessage {
     RenderedFrame {
         frame: RawVideoFrame,
         render_image: Arc<RenderImage>,
+    },
+    AudioFrame {
+        samples: Vec<i16>,
     },
     Quit,
 }
@@ -138,6 +135,93 @@ define_class!(
                         height,
                     }));
                 }
+                SCStreamOutputType::Audio => {
+                    info!("Got audio frame");
+                    let samples = unsafe {
+                        let Some(format_description) = buffer.format_description() else {
+                            return;
+                        };
+
+                        let format_description =
+                            *CMAudioFormatDescriptionGetStreamBasicDescription(&format_description);
+                        let mut required_size: usize = 0;
+                        buffer.audio_buffer_list_with_retained_block_buffer(
+                            &mut required_size,
+                            null_mut(),
+                            0,
+                            None,
+                            None,
+                            0,
+                            &mut null_mut(),
+                        );
+
+                        let mut audio_buffer_list_slice =
+                            Box::<[u8]>::new_uninit_slice(required_size).assume_init();
+                        let mut block_buffer = null_mut();
+                        let status = buffer.audio_buffer_list_with_retained_block_buffer(
+                            null_mut(),
+                            audio_buffer_list_slice.as_mut_ptr() as *mut _,
+                            required_size,
+                            None,
+                            None,
+                            kCMSampleBufferFlag_AudioBufferList_Assure16ByteAlignment,
+                            &mut block_buffer,
+                        );
+
+                        if status != 0 {
+                            return;
+                        }
+
+                        let Some(format) = AVAudioFormat::initStandardFormatWithSampleRate_channels(
+                            AVAudioFormat::alloc(),
+                            format_description.mSampleRate,
+                            format_description.mChannelsPerFrame,
+                        ) else {
+                            return;
+                        };
+
+                        let Some(buffer) =
+                            AVAudioPCMBuffer::initWithPCMFormat_bufferListNoCopy_deallocator(
+                                AVAudioPCMBuffer::alloc(),
+                                &format,
+                                NonNull::new_unchecked(std::mem::transmute::<
+                                    *mut u8,
+                                    *mut AudioBufferList,
+                                >(
+                                    audio_buffer_list_slice.as_mut_ptr()
+                                )),
+                                None,
+                            )
+                        else {
+                            return;
+                        };
+
+                        if !buffer.floatChannelData().is_null() {
+                            let float_channels = slice::from_raw_parts(
+                                buffer.floatChannelData(),
+                                buffer.format().channelCount() as usize,
+                            );
+
+                            let stride = buffer.stride();
+                            (0_usize..buffer.frameLength() as usize)
+                                .flat_map(|sample_index| {
+                                    float_channels.iter().map(move |channel| {
+                                        *channel.as_ptr().add(sample_index * stride)
+                                    })
+                                })
+                                .map(|sample| (sample * i16::MAX as f32) as i16)
+                                .collect::<Vec<_>>()
+                        } else {
+                            return;
+                        }
+                    };
+
+                    let _ = smol::block_on(
+                        self.ivars()
+                            .tx
+                            .send(MacScreenShareMessage::AudioFrame { samples }),
+                    );
+                }
                 _ => {
                     // ???
                 }
@@ -172,6 +256,8 @@ define_class!(
                 stream_config.setCaptureMicrophone(false);
                 stream_config.setCaptureDynamicRange(SCCaptureDynamicRange::SDR);
                 stream_config.setPixelFormat(kCVPixelFormatType_32BGRA);
+                stream_config.setSampleRate(48000);
+                stream_config.setChannelCount(2);
 
                 let stream = SCStream::initWithFilter_configuration_delegate(
                     SCStream::alloc(),
@@ -182,6 +268,11 @@ define_class!(
                 stream.addStreamOutput_type_sampleHandlerQueue_error(
                     ProtocolObject::from_ref(&*self),
                     SCStreamOutputType::Screen,
+                    None,
+                );
+                stream.addStreamOutput_type_sampleHandlerQueue_error(
+                    ProtocolObject::from_ref(&*self),
+                    SCStreamOutputType::Audio,
                     None,
                 );
 
@@ -232,7 +323,7 @@ pub fn start_screen_share_session(
     window: &mut Window,
     cx: &mut App,
 ) {
-    let (tx, rx) = async_channel::bounded(1);
+    let (tx, rx) = async_channel::unbounded();
     let tx_clone = tx.clone();
 
     unsafe {
@@ -324,7 +415,12 @@ pub fn start_screen_share_session(
                         if weak_frames.is_none() {
                             let Ok(frames) = cx.update(|window, cx| {
                                 let frames = cx.new(|cx| {
-                                    OutboundTrack::new_video((width as u32, height as u32), cx)
+                                    OutboundTrack::new_combined(
+                                        (width as u32, height as u32),
+                                        48000,
+                                        2,
+                                        cx,
+                                    )
                                 });
 
                                 callback(
@@ -362,6 +458,21 @@ pub fn start_screen_share_session(
                             .unwrap()
                             .update(cx, |frames, cx| {
                                 frames.set_frame(render_image, frame, cx);
+                            })
+                            .is_err()
+                        {
+                            return;
+                        }
+                    }
+                    MacScreenShareMessage::AudioFrame { samples } => {
+                        if weak_frames
+                            .clone()
+                            .unwrap()
+                            .update(cx, |frames, cx| {
+                                let buffer = frames.audio_sample_buffer();
+                                buffer.extend(samples);
+
+                                cx.notify();
                             })
                             .is_err()
                         {

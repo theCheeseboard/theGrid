@@ -1,4 +1,3 @@
-use crate::mac::MacScreenShareSetup;
 use gpui::{App, Entity, Global, Window};
 use thegrid_common::outbound_track::OutboundTrack;
 

@@ -15,16 +15,16 @@ use contemporary::lerp::Lerpable;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    Along, App, AppContext, Axis, BorrowAppContext, Bounds, Context, Corner, ElementId, Entity,
-    InteractiveElement, IntoElement, ObjectFit, ParentElement, Pixels, Point, Render, RenderOnce,
-    StatefulInteractiveElement, Styled, StyledImage, Window, anchored, div, img, px, rgb,
+    anchored, div, img, px, rgb, Along, App, AppContext, Axis,
+    BorrowAppContext, Bounds, Context, ElementId, Entity, InteractiveElement, IntoElement, ObjectFit,
+    ParentElement, Pixels, Point, Render, RenderOnce, StatefulInteractiveElement, Styled, StyledImage, Window,
 };
-use matrix_sdk::ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId, user_id};
+use matrix_sdk::ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId};
 use std::collections::HashMap;
 use std::iter;
 use std::rc::Rc;
 use std::time::Instant;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use thegrid_screen_share::{PickerRequired, ScreenShareManager, ScreenShareStartEvent};
@@ -131,13 +131,19 @@ impl CallPage {
     fn screenshare(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         if self.call.read(cx).active_screenshare().is_some() {
             self.call.update(cx, |call, cx| {
+                call.publish_track(TrackType::ScreenshareAudio, None, cx);
                 call.publish_track(TrackType::Screenshare, None, cx);
             });
         } else {
             cx.update_global::<ScreenShareManager, _>(|screen_share_manager, cx| {
                 let listener = cx.listener(|this, event: &ScreenShareStartEvent, _, cx| {
                     this.call.update(cx, |call, cx| {
-                        call.publish_track(TrackType::Screenshare, Some(event.frames.clone()), cx)
+                        call.publish_track(TrackType::Screenshare, Some(event.frames.clone()), cx);
+                        call.publish_track(
+                            TrackType::ScreenshareAudio,
+                            Some(event.frames.clone()),
+                            cx,
+                        );
                     });
                 });
                 screen_share_manager.start_screen_share_session(listener, window, cx);
