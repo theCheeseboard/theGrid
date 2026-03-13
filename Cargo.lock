@@ -9923,7 +9923,6 @@ dependencies = [
  "matrix-sdk-crypto",
  "matrix-sdk-ui",
  "mime2ext",
- "pipewire",
  "serde",
  "serde_json",
  "smallvec",

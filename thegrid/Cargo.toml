@@ -37,7 +37,6 @@ thegrid_common = { workspace = true }
 thegrid_rtc_livekit = { workspace = true }
 keyring = { workspace = true }
 getrandom = { workspace = true }
-pipewire = "0.9"
 
 [build-dependencies]
 cntp_i18n_gen = { workspace = true }
