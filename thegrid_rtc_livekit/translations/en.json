@@ -22,6 +22,7 @@
   "CALL_ERROR_OPENID_TOKEN_REQUEST_FAILED": "Failed to request OpenID token",
   "CALL_ERROR_ROOM_ERROR": "Room error",
   "CALL_ERROR_STATE_EVENT_FORBIDDEN": "No permission to join call",
+  "CALL_HOLD_NOTIFICATION": "Your current call will be placed on hold",
   "CALL_JOIN_BUTTON": "Join Call",
   "CALL_JOIN_GRANDSTAND": "Join call in {{room}}",
   "CALL_JOIN_LIVEKIT_SERVER_ADVICE": "This call will be joined through {{url}}",

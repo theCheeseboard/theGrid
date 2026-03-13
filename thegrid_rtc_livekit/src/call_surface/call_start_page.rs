@@ -1,10 +1,9 @@
-use std::collections::HashMap;
-use crate::TrackType;
 use crate::call_manager::{FocusUrl, LivekitCallManager};
 use crate::webcam::Webcam;
+use crate::TrackType;
 use cntp_i18n::{tr, trn};
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
-use contemporary::components::button::{ButtonMenuOpenPolicy, button};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
+use contemporary::components::button::{button, ButtonMenuOpenPolicy};
 use contemporary::components::context_menu::ContextMenuItem;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
@@ -19,28 +18,29 @@ use cpal::traits::{DeviceTrait, HostTrait};
 use cpal::{Device, DeviceDescription};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, BorrowAppContext, Context, Entity, IntoElement, ObjectFit,
-    ParentElement, Render, RenderImage, RenderOnce, Styled, StyledImage, WeakEntity, Window, div,
-    img, px, rgb,
+    div, img, px, rgb, App, AppContext, AsyncApp, BorrowAppContext,
+    Context, Entity, IntoElement, ObjectFit, ParentElement, Render, RenderImage, RenderOnce, Styled,
+    StyledImage, WeakEntity, Window,
 };
 use image::{Frame, RgbaImage};
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::OwnedRoomId;
 use nokhwa::pixel_format::RgbAFormat;
 use nokhwa::utils::{
-    CameraIndex, CameraInfo, FrameFormat, RequestedFormat, RequestedFormatType, mjpeg_to_rgb,
-    nv12_to_rgb, yuyv422_to_rgb,
+    mjpeg_to_rgb, nv12_to_rgb, yuyv422_to_rgb, CameraIndex, CameraInfo, FrameFormat,
+    RequestedFormat, RequestedFormatType,
 };
-use nokhwa::{CallbackCamera, Camera, native_api_backend, query};
+use nokhwa::{native_api_backend, query, CallbackCamera, Camera};
 use smallvec::smallvec;
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::time::Duration;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::room::active_call_participants::track_active_call_participants;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::SurfaceChangeHandler;
-use yuv::{YuvPackedImage, YuvRange, YuvStandardMatrix, yuyv422_to_bgra};
+use yuv::{yuyv422_to_bgra, YuvPackedImage, YuvRange, YuvStandardMatrix};
 
 pub struct CallStartPage {
     room_id: OwnedRoomId,
@@ -555,14 +555,17 @@ impl CallStartPage {
         cx.update_global::<LivekitCallManager, _>(|call_manager, cx| {
             call_manager.active_output_device().write(cx, output_device);
             call_manager.active_input_device().write(cx, input_device);
-            
+
             let mut initial_streams = HashMap::new();
             if let Some(active_camera) = &self.active_camera {
                 let output_frame = active_camera.read(cx).output_frame();
-                initial_streams.insert(TrackType::Camera, output_frame);           
+                initial_streams.insert(TrackType::Camera, output_frame);
             }
 
-            if call_manager.start_call(room_id, initial_streams, cx).is_some() {
+            if call_manager
+                .start_call(room_id, initial_streams, cx)
+                .is_some()
+            {
                 self.turn_off_camera(cx);
             }
         });
@@ -588,6 +591,10 @@ impl Render for CallStartPage {
         });
         let focus_url = focus_url.read(cx).clone();
         let active_call_users = self.active_call_users.read(cx).clone();
+
+        let in_other_call = cx.global::<LivekitCallManager>().current_call().is_some_and(|call| {
+            call.read(cx).room() != self.room_id
+        });
 
         let theme = cx.theme().clone();
 
@@ -746,7 +753,19 @@ impl Render for CallStartPage {
                                             }))
                                             .w(px(300.)),
                                     ),
-                            ),
+                            )
+                            .when(in_other_call, |david| {
+                                david.child(
+                                    div().flex().justify_end().child(icon_text(
+                                        "media-playback-pause".into(),
+                                        tr!(
+                                            "CALL_HOLD_NOTIFICATION",
+                                            "Your current call will be placed on hold"
+                                        )
+                                        .into(),
+                                    )),
+                                )
+                            }),
                     ),
             )
     }
