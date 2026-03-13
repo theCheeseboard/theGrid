@@ -1,3 +1,4 @@
+use crate::background_rgb_yuv_thread::BackgroundRgbYuvThread;
 use crate::{PickerRequired, ScreenShareStartEvent};
 use async_channel::Sender;
 use gpui::http_client::anyhow;
@@ -342,59 +343,11 @@ pub fn start_screen_share_session(
         picker.addObserver(ProtocolObject::from_ref(&*delegate));
     };
 
-    let rgb_data = Arc::new(Mutex::new((
-        Vec::new(),
-        0,
-        0,
-        Arc::new(RenderImage::new(smallvec![])),
-    )));
-    let rgb_data_clone = rgb_data.clone();
-    let (tx_render_thread, rx_render_thread) = async_channel::bounded(1);
-    thread::spawn(move || {
-        while smol::block_on(rx_render_thread.recv()).is_ok() {
-            let rgb_data_lock = rgb_data.lock().unwrap();
-            let (rgb_data, width, height, render_image) = rgb_data_lock.clone();
-            drop(rgb_data_lock);
-
-            let mut buffer = I422Buffer::new(width, height);
-            let (stride_y, stride_u, stride_v) = buffer.strides();
-            let (buffer_y, buffer_u, buffer_v) = buffer.data_mut();
-
-            let mut planar_image = YuvPlanarImageMut {
-                y_plane: BufferStoreMut::Borrowed(buffer_y),
-                y_stride: stride_y,
-                u_plane: BufferStoreMut::Borrowed(buffer_u),
-                u_stride: stride_u,
-                v_plane: BufferStoreMut::Borrowed(buffer_v),
-                v_stride: stride_v,
-                width,
-                height,
-            };
-
-            if let Err(e) = bgra_to_yuv422(
-                &mut planar_image,
-                &rgb_data,
-                width * 4,
-                YuvRange::Limited,
-                YuvStandardMatrix::Bt2020,
-                YuvConversionMode::Balanced,
-            ) {
-                error!("Failed to convert RGB to YUV422: {:?}", e);
-            } else {
-                if smol::block_on(tx_clone.send(MacScreenShareMessage::RenderedFrame {
-                    frame: RawVideoFrame::YUV422Planar(
-                        buffer_y.to_vec(),
-                        buffer_u.to_vec(),
-                        buffer_v.to_vec(),
-                    ),
-                    render_image,
-                }))
-                .is_err()
-                {
-                    return;
-                }
-            }
-        }
+    let bg_thread = BackgroundRgbYuvThread::new(move |frame, render_image| {
+        let _ = smol::block_on(tx_clone.send(MacScreenShareMessage::RenderedFrame {
+            frame,
+            render_image,
+        }));
     });
 
     window
@@ -445,9 +398,7 @@ pub fn start_screen_share_session(
                         };
 
                         let render_image = Arc::new(RenderImage::new(smallvec![Frame::new(image)]));
-                        *rgb_data_clone.lock().unwrap() =
-                            (frame.clone(), width as u32, height as u32, render_image);
-                        let _ = tx_render_thread.try_send(());
+                        bg_thread.queue_render(frame, width as u32, height as u32, render_image);
                     }
                     MacScreenShareMessage::RenderedFrame {
                         frame,

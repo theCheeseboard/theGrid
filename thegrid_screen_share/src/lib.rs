@@ -1,10 +1,11 @@
-use crate::xdg_portal::XdgPortalScreenshareManager;
 use gpui::{App, AppContext, Entity, Global, Window};
 use thegrid_common::outbound_track::OutboundTrack;
 
 mod background_rgb_yuv_thread;
 #[cfg(target_os = "macos")]
 mod mac;
+
+#[cfg(target_os = "linux")]
 mod xdg_portal;
 
 pub enum PickerRequired {
@@ -19,7 +20,7 @@ pub struct ScreenShareStartEvent {
 
 pub struct ScreenShareManager {
     #[cfg(target_os = "linux")]
-    xdg_portal_screenshare_manager: Entity<XdgPortalScreenshareManager>,
+    xdg_portal_screenshare_manager: Entity<xdg_portal::XdgPortalScreenshareManager>,
 }
 
 impl ScreenShareManager {
