@@ -1,8 +1,11 @@
-use gpui::{App, Entity, Global, Window};
+use crate::xdg_portal::XdgPortalScreenshareManager;
+use gpui::{App, AppContext, Entity, Global, Window};
 use thegrid_common::outbound_track::OutboundTrack;
 
+mod background_rgb_yuv_thread;
 #[cfg(target_os = "macos")]
 mod mac;
+mod xdg_portal;
 
 pub enum PickerRequired {
     SystemPicker,
@@ -14,12 +17,30 @@ pub struct ScreenShareStartEvent {
     pub frames: Entity<OutboundTrack>,
 }
 
-pub struct ScreenShareManager {}
+pub struct ScreenShareManager {
+    #[cfg(target_os = "linux")]
+    xdg_portal_screenshare_manager: Entity<XdgPortalScreenshareManager>,
+}
 
 impl ScreenShareManager {
-    pub fn picker_required(&self) -> PickerRequired {
+    pub fn new(cx: &mut App) -> Self {
+        Self {
+            #[cfg(target_os = "linux")]
+            xdg_portal_screenshare_manager: cx.new(|cx| XdgPortalScreenshareManager::new(cx)),
+        }
+    }
+
+    pub fn picker_required(&self, cx: &App) -> PickerRequired {
         #[cfg(target_os = "macos")]
         return PickerRequired::SystemPicker;
+
+        #[cfg(target_os = "linux")]
+        {
+            let xdg_portal = self.xdg_portal_screenshare_manager.read(cx);
+            if xdg_portal.is_available() {
+                return PickerRequired::SystemPicker;
+            }
+        }
 
         PickerRequired::UnsupportedPlatform
     }
@@ -35,6 +56,22 @@ impl ScreenShareManager {
             return mac::start_screen_share_session(callback, window, cx);
         }
 
+        #[cfg(target_os = "linux")]
+        {
+            if self
+                .xdg_portal_screenshare_manager
+                .update(cx, |xdg_portal, cx| {
+                    if xdg_portal.is_available() {
+                        xdg_portal.start_screen_share_session(callback, window, cx);
+                        return true;
+                    }
+                    false
+                })
+            {
+                return;
+            }
+        }
+
         panic!("Unsupported platform")
     }
 }
@@ -42,5 +79,6 @@ impl ScreenShareManager {
 impl Global for ScreenShareManager {}
 
 pub fn setup_screenshare_manager(cx: &mut App) {
-    cx.set_global(ScreenShareManager {})
+    let screenshare_manager = ScreenShareManager::new(cx);
+    cx.set_global(screenshare_manager)
 }

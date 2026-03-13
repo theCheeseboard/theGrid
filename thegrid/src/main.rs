@@ -24,6 +24,7 @@ use contemporary::window::contemporary_window_options;
 use gpui::{App, Bounds, Menu, MenuItem, WindowBounds, WindowOptions, px, size};
 use smol_macros::main;
 use std::any::TypeId;
+use std::ptr;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::setup_session_manager;
 use thegrid_common::setup_thegrid_common;

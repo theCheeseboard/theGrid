@@ -15,16 +15,16 @@ use contemporary::lerp::Lerpable;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    anchored, div, img, px, rgb, Along, App, AppContext, Axis,
-    BorrowAppContext, Bounds, Context, ElementId, Entity, InteractiveElement, IntoElement, ObjectFit,
-    ParentElement, Pixels, Point, Render, RenderOnce, StatefulInteractiveElement, Styled, StyledImage, Window,
+    Along, App, AppContext, Axis, BorrowAppContext, Bounds, Context, ElementId, Entity,
+    InteractiveElement, IntoElement, ObjectFit, ParentElement, Pixels, Point, Render, RenderOnce,
+    StatefulInteractiveElement, Styled, StyledImage, Window, anchored, div, img, px, rgb,
 };
 use matrix_sdk::ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId};
 use std::collections::HashMap;
 use std::iter;
 use std::rc::Rc;
 use std::time::Instant;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use thegrid_screen_share::{PickerRequired, ScreenShareManager, ScreenShareStartEvent};
@@ -182,7 +182,7 @@ impl Render for CallPage {
 
         let screenshare_manager = cx.global::<ScreenShareManager>();
         let can_screenshare = matches!(
-            screenshare_manager.picker_required(),
+            screenshare_manager.picker_required(cx),
             PickerRequired::SystemPicker
         );
 

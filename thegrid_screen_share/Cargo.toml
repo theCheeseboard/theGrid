@@ -16,6 +16,7 @@ smol = { workspace = true }
 thegrid_common = { workspace = true }
 libwebrtc = { workspace = true }
 log = "0.4.29"
+libc = "0.2.182"
 
 [target.'cfg(target_os="macos")'.dependencies]
 objc2 = "0.6"
@@ -28,3 +29,7 @@ objc2-core-video = "0.3"
 objc2-core-audio-types = "0.3"
 objc2-avf-audio = "0.3"
 block2 = "0.6"
+
+[target.'cfg(target_os="linux")'.dependencies]
+ashpd = { version = "0.13", features = ["async-io", "pipewire", "screencast"], default-features = false }
+pipewire = "0.9"
