@@ -1,6 +1,6 @@
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::timeline_view::author_flyout::{
-    AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener, author_flyout,
+    author_flyout, AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener,
 };
 use crate::chat::chat_room::timeline_view::membership_change_item::membership_change_item;
 use crate::chat::chat_room::timeline_view::profile_change_item::profile_change_item;
@@ -15,18 +15,17 @@ use contemporary::components::anchorer::WithAnchorer;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, Entity, InteractiveElement, IntoElement, ParentElement, RenderOnce,
-    StatefulInteractiveElement, Styled, WeakEntity, Window, div, px,
+    div, px, App, AsyncApp, Entity, InteractiveElement, IntoElement,
+    ParentElement, RenderOnce, StatefulInteractiveElement, Styled, WeakEntity, Window,
 };
 use matrix_sdk::room::RoomMember;
-use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk_ui::timeline::{
-    EventTimelineItem, Profile, TimelineDetails, TimelineItem as MatrixUiTimelineItem,
-    TimelineItemContent, TimelineItemKind, VirtualTimelineItem,
+    EventTimelineItem, TimelineDetails, TimelineItem as MatrixUiTimelineItem, TimelineItemContent,
+    TimelineItemKind, VirtualTimelineItem,
 };
 use std::rc::Rc;
 use std::sync::Arc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::tokio_helper::TokioHelper;
 
 #[derive(IntoElement)]
@@ -173,7 +172,10 @@ impl TimelineItem {
                     .when(event.is_local_echo(), |david| david.opacity(0.7))
                     .flex()
                     .flex_grow()
+                    .w_full()
+                    .overflow_hidden()
                     .gap(px(8.))
+                    .pr(px(8.))
                     .child(
                         div().flex().flex_col().min_w(px(40.)).m(px(2.)).child(
                             div()
@@ -211,32 +213,50 @@ impl TimelineItem {
                         ),
                     )
                     .child(
-                        div().id("content").flex_grow().flex().flex_col().child(
-                            div()
-                                .child(
-                                    match sender_profile {
-                                        TimelineDetails::Ready(profile) => {
-                                            profile.display_name.clone()
+                        div()
+                            .id("content")
+                            .flex_grow()
+                            .flex()
+                            .flex_col()
+                            .overflow_hidden()
+                            .child(
+                                div()
+                                    .child(
+                                        match sender_profile {
+                                            TimelineDetails::Ready(profile) => {
+                                                profile.display_name.clone()
+                                            }
+                                            _ => None,
                                         }
-                                        _ => None,
-                                    }
-                                    .unwrap_or_default(),
-                                )
-                                .child(event_content),
-                        ),
+                                        .unwrap_or_default(),
+                                    )
+                                    .child(event_content),
+                            ),
                     )
                     .into_any_element()
             }
             TimelineRowType::MessageWithoutAuthor => div()
                 .when(event.is_local_echo(), |david| david.opacity(0.7))
                 .flex()
+                .overflow_hidden()
                 .w_full()
-                .max_w_full()
                 .gap(px(8.))
+                .pr(px(8.))
                 .child(div().min_w(px(40.)).mx(px(2.)))
-                .child(div().w_full().max_w_full().child(event_content))
+                .child(
+                    div()
+                        .w_full()
+                        .max_w_full()
+                        .overflow_hidden()
+                        .child(event_content),
+                )
                 .into_any_element(),
-            TimelineRowType::State => div().child(event_content).into_any_element(),
+            TimelineRowType::State => div()
+                .w_full()
+                .overflow_hidden()
+                .pr(px(8.))
+                .child(event_content)
+                .into_any_element(),
         }
     }
 }

@@ -433,7 +433,7 @@
   },
   "DATE_DIVIDER": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:266",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:286",
     "plural": false,
     "description": null
   },
@@ -529,7 +529,7 @@
   },
   "EDITED_MESSAGE_INDICATOR": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:134",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:133",
     "plural": false,
     "description": null
   },
@@ -1039,7 +1039,7 @@
   },
   "MESSAGE_UNSUPPORTED": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:123",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:122",
     "plural": false,
     "description": null
   },
