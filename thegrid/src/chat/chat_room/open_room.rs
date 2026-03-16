@@ -145,7 +145,7 @@ impl OpenRoom {
             self.pagination_pending = true;
 
             let weak_this = cx.weak_entity();
-            let _ = timeline.update(cx, |timeline, cx| {
+            timeline.update(cx, |timeline, cx| {
                 let timeline = timeline.inner.clone();
                 cx.spawn(
                     async move |weak_timeline: WeakEntity<Timeline>, cx: &mut AsyncApp| {

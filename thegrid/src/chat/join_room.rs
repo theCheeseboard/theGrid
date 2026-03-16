@@ -3,7 +3,9 @@ use crate::chat::join_room::create_room_popover::CreateRoomPopover;
 use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
 use cntp_i18n::tr;
 use contemporary::components::button::button;
+use contemporary::components::checkbox::{checkbox, CheckState};
 use contemporary::components::constrainer::constrainer;
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -11,12 +13,12 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, Context, Element, Entity, InteractiveElement, IntoElement, ListAlignment,
-    ListSizingBehavior, ListState, ParentElement, Render, RenderOnce, Styled, Subscription, Window,
-    div, list, px,
+    div, list, px, App, AsyncApp, Context, Element, Entity,
+    InteractiveElement, IntoElement, ListAlignment, ListSizingBehavior, ListState, ParentElement, Render, RenderOnce,
+    Styled, Subscription, Window,
 };
 use matrix_sdk::room::RoomMember;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::room_cache::CachedRoom;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
@@ -219,14 +221,33 @@ impl Invitation {
         .detach();
     }
 
-    fn reject_invite(room: Entity<CachedRoom>, processing: Entity<bool>, cx: &mut App) {
+    fn reject_invite(
+        room: Entity<CachedRoom>,
+        processing: Entity<bool>,
+        ignore_user: Option<RoomMember>,
+        cx: &mut App,
+    ) {
+        let session_manager = cx.global::<SessionManager>();
+        let client = session_manager.client().unwrap().read(cx).clone();
+
         processing.write(cx, true);
         let room = room.read(cx).inner.clone();
         cx.spawn(async move |cx: &mut AsyncApp| {
             if let Err(e) = cx.spawn_tokio(async move { room.leave().await }).await {
                 error!("Unable to reject invite: {e}");
                 processing.write(cx, false).unwrap();
+                return;
             };
+
+            if let Some(ignore_user) = ignore_user {
+                let _ = cx
+                    .spawn_tokio(async move {
+                        client.account().ignore_user(ignore_user.user_id()).await
+                    })
+                    .await;
+            }
+
+            processing.write(cx, false).unwrap();
         })
         .detach();
     }
@@ -235,6 +256,8 @@ impl Invitation {
 impl RenderOnce for Invitation {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let processing = window.use_state(cx, |_, _| false);
+        let decline_dialog_box_open = window.use_state(cx, |_, _| false);
+        let should_ignore_user_after_decline = window.use_state(cx, |_, _| false);
         let theme = cx.global::<Theme>();
         let room = self.room.read(cx);
         let invite_details = room.invite_details().unwrap();
@@ -247,6 +270,10 @@ impl RenderOnce for Invitation {
         let processing = processing.read(cx);
 
         let displayed_room = self.displayed_room;
+
+        let decline_dialog_box_open_2 = decline_dialog_box_open.clone();
+        let should_ignore_user_after_decline_2 = should_ignore_user_after_decline.clone();
+        let should_ignore_user_after_decline_3 = should_ignore_user_after_decline.clone();
 
         layer()
             .p(px(4.))
@@ -275,7 +302,7 @@ impl RenderOnce for Invitation {
                             |david| david.child(tr!("ROOM_TYPE_ROOM", "Room")),
                         ),
                     ))
-                    .when_some(inviter, |david, inviter| {
+                    .when_some(inviter.clone(), |david, inviter| {
                         david.child(div().text_color(theme.foreground.disabled()).child(tr!(
                             "INVITE_INVITED_BY",
                             "Invited by {{inviter}}",
@@ -298,11 +325,7 @@ impl RenderOnce for Invitation {
                             .destructive()
                             .when(*processing, |david| david.disabled())
                             .on_click(move |_, _, cx| {
-                                Self::reject_invite(
-                                    room_entity.clone(),
-                                    processing_clone.clone(),
-                                    cx,
-                                );
+                                decline_dialog_box_open_2.write(cx, true);
                             }),
                     )
                     .child(
@@ -317,6 +340,73 @@ impl RenderOnce for Invitation {
                                     room_entity_2.clone(),
                                     displayed_room.clone(),
                                     processing_clone_2.clone(),
+                                    cx,
+                                );
+                            }),
+                    ),
+            )
+            .child(
+                dialog_box("decline-dialog-box")
+                    .render_as_deferred(true)
+                    .visible(*decline_dialog_box_open.read(cx))
+                    .processing(*processing)
+                    .title(tr!("INVITE_DECLINE_TITLE", "Decline Pending Invitation").into())
+                    .when_none(&inviter, |david| {
+                        david.content(tr!("INVITE_DECLINE_CONFIRMATION", "Decline the invite?"))
+                    })
+                    .when_some(inviter.clone(), |david, inviter| {
+                        david.content(
+                            div()
+                                .flex()
+                                .flex_col()
+                                .child(tr!(
+                                    "INVITE_DECLINE_CONFIRMATION_WITH_INVITER",
+                                    "Decline the invite from {{inviter}}?",
+                                    inviter = inviter.user_id().to_string()
+                                ))
+                                .child(
+                                    checkbox("ignore-checkbox")
+                                        .label(tr!(
+                                            "INVITE_DECLINE_CONFIRMATION_IGNORE",
+                                            "Also ignore {{inviter}}",
+                                            inviter = inviter.user_id().to_string()
+                                        ))
+                                        .when(
+                                            *should_ignore_user_after_decline_2.read(cx),
+                                            |david| david.checked(),
+                                        )
+                                        .on_checked_changed(move |event, _, cx| {
+                                            should_ignore_user_after_decline.write(
+                                                cx,
+                                                match event.check_state {
+                                                    CheckState::Off => false,
+                                                    CheckState::On => true,
+                                                    CheckState::Indeterminate => unreachable!(),
+                                                },
+                                            )
+                                        }),
+                                ),
+                        )
+                    })
+                    .standard_button(StandardButton::Cancel, move |_, _, cx| {
+                        decline_dialog_box_open.write(cx, false)
+                    })
+                    .button(
+                        button("decline-button")
+                            .child(icon_text(
+                                "edit-delete".into(),
+                                tr!("INVITE_DECLINE", "Decline").into(),
+                            ))
+                            .destructive()
+                            .on_click(move |_, _, cx| {
+                                Self::reject_invite(
+                                    room_entity.clone(),
+                                    processing_clone.clone(),
+                                    if *should_ignore_user_after_decline_3.read(cx) {
+                                        inviter.clone()
+                                    } else {
+                                        None
+                                    },
                                     cx,
                                 );
                             }),
