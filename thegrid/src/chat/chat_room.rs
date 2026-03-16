@@ -20,20 +20,19 @@ use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::tr;
 use contemporary::components::admonition::admonition;
 use contemporary::components::button::button;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
-use contemporary::permissions::{GrantStatus, PermissionType, Permissions};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AnimationExt, App, AppContext, AsyncApp, AsyncWindowContext, BorrowAppContext, Context, Entity,
-    ExternalPaths, InteractiveElement, IntoElement, ParentElement, Render,
-    StatefulInteractiveElement, Styled, VisualContext, WeakEntity, Window, div, px,
+    div, px, AnimationExt, App, AppContext, BorrowAppContext,
+    Context, Entity, ExternalPaths, InteractiveElement, IntoElement,
+    ParentElement, Render, StatefulInteractiveElement, Styled, VisualContext, Window,
 };
-use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::ruma::events::tag::TagName;
+use matrix_sdk::ruma::OwnedRoomId;
 use smol::stream::StreamExt;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
@@ -41,7 +40,6 @@ use thegrid_common::surfaces::{
     MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
 };
 use thegrid_common::tokio_helper::TokioHelper;
-use thegrid_rtc_livekit::call_manager::LivekitCallManager;
 use timeline_view::author_flyout::{AuthorFlyoutUserActionEvent, UserAction};
 
 pub struct ChatRoom {
@@ -218,22 +216,13 @@ impl Render for ChatRoom {
                                         .unwrap_or_default(),
                                 )
                                 .pt(px(36.))
-                                .when(
-                                    room.room_type().is_some_and(|room_type| {
-                                        room_type.to_string() == "org.matrix.msc3417.call"
-                                    }),
-                                    |david| {
-                                        david.child(
-                                            button("call-start")
-                                                .flat()
-                                                .child(icon("call-start".into()))
-                                                .on_click(cx.listener(
-                                                    move |this, _, window, cx| {
-                                                        this.start_call(window, cx);
-                                                    },
-                                                )),
-                                        )
-                                    },
+                                .child(
+                                    button("call-start")
+                                        .flat()
+                                        .child(icon("call-start".into()))
+                                        .on_click(cx.listener(move |this, _, window, cx| {
+                                            this.start_call(window, cx);
+                                        })),
                                 )
                                 .child(
                                     button("room-settings-button")
