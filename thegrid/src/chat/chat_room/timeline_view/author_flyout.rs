@@ -491,7 +491,7 @@ impl RenderOnce for AuthorFlyout {
                                     .p(px(4.))
                                     .flex()
                                     .flex_col()
-                                    .child(subtitle(tr!("DIRECT_MESSAGE", "Direct Message")))
+                                    .child(subtitle(tr!("DIRECT_MESSAGE", "1:1 Message")))
                                     .child(direct_message_box)
                                     .child(
                                         button("send-button")
@@ -501,7 +501,7 @@ impl RenderOnce for AuthorFlyout {
                                                     None => {
                                                         tr!(
                                                             "DIRECT_MESSAGE_OPEN_SEND",
-                                                            "Invite to DM and Send"
+                                                            "Invite to 1:1 and Send"
                                                         )
                                                     }
                                                     Some(_) => {

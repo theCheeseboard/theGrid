@@ -11,13 +11,13 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AppContext, Context, ElementId, Entity, InteractiveElement, IntoElement, ListAlignment,
-    ListState, ParentElement, Render, StatefulInteractiveElement, Styled, Subscription, Window,
-    div, list, px,
+    div, list, px, AppContext, Context, ElementId, Entity,
+    InteractiveElement, IntoElement, ListAlignment, ListState, ParentElement, Render, StatefulInteractiveElement,
+    Styled, Subscription, Window,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::room_cache::{CachedRoom, RoomCategory};
 use thegrid_common::session::session_manager::SessionManager;
 
@@ -122,9 +122,16 @@ impl RootSidebarPage {
             .filter(|room| room.read(cx).inner.is_space())
             .map(|room| SidebarItem::Space(room.clone()))
             .collect::<Vec<_>>();
+        let mut direct_rooms = root_rooms
+            .iter()
+            .filter(|room| !room.read(cx).inner.is_space())
+            .filter(|room| room.read(cx).is_direct())
+            .map(|room| SidebarItem::Room(room.clone()))
+            .collect::<Vec<_>>();
         let mut rooms = root_rooms
             .iter()
             .filter(|room| !room.read(cx).inner.is_space())
+            .filter(|room| !room.read(cx).is_direct())
             .map(|room| SidebarItem::Room(room.clone()))
             .collect::<Vec<_>>();
 
@@ -136,6 +143,12 @@ impl RootSidebarPage {
                 tr!("ROOT_SIDEBAR_SPACES", "Spaces").into(),
             ));
             vec.append(&mut spaces);
+        }
+        if !direct_rooms.is_empty() {
+            vec.push(SidebarItem::Heading(
+                tr!("ROOT_DIRECT_ROOMS", "1:1 Conversations").into(),
+            ));
+            vec.append(&mut direct_rooms);
         }
         if !rooms.is_empty() {
             vec.push(SidebarItem::Heading(
@@ -233,9 +246,11 @@ impl Render for RootSidebarPage {
                                         this.open_directory(window, cx);
                                     }))
                                     .into_any_element(),
-                                SidebarItem::Heading(heading) => {
-                                    div().pt(px(4.)).child(subtitle(heading)).into_any_element()
-                                }
+                                SidebarItem::Heading(heading) => div()
+                                    .pt(px(8.))
+                                    .pl(px(4.))
+                                    .child(subtitle(heading))
+                                    .into_any_element(),
                                 SidebarItem::Room(room_entity) => {
                                     let room = room_entity.read(cx);
                                     let room_id = room.inner.room_id().to_owned();

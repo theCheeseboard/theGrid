@@ -131,6 +131,7 @@ pub struct CachedRoom {
     pub inner: Room,
     parent_spaces: Vec<OwnedRoomId>,
     invite_details: Option<Invite>,
+    is_direct: bool,
 }
 
 impl CachedRoom {
@@ -140,6 +141,7 @@ impl CachedRoom {
                 inner,
                 parent_spaces: Vec::new(),
                 invite_details: None,
+                is_direct: false,
             };
 
             room.sync_changes(cx);
@@ -230,6 +232,19 @@ impl CachedRoom {
             },
         )
         .detach();
+
+        let inner = self.inner.clone();
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                let is_direct = inner.is_direct().await.is_ok_and(|is_direct| is_direct);
+
+                let _ = weak_this.update(cx, |this, cx| {
+                    this.is_direct = is_direct;
+                    cx.notify();
+                });
+            },
+        )
+        .detach();
     }
 
     pub fn invite_details(&self) -> Option<Invite> {
@@ -242,5 +257,9 @@ impl CachedRoom {
             .map(|name| name.to_string())
             .or_else(|| self.inner.name())
             .unwrap_or_default()
+    }
+
+    pub fn is_direct(&self) -> bool {
+        self.is_direct
     }
 }
