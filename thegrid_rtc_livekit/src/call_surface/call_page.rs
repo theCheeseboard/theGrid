@@ -15,16 +15,16 @@ use contemporary::lerp::Lerpable;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    Along, App, AppContext, Axis, BorrowAppContext, Bounds, Context, ElementId, Entity,
-    InteractiveElement, IntoElement, ObjectFit, ParentElement, Pixels, Point, Render, RenderOnce,
-    StatefulInteractiveElement, Styled, StyledImage, Window, anchored, div, img, px, rgb,
+    anchored, div, img, px, rgb, Along, App, AppContext, Axis,
+    BorrowAppContext, Bounds, Context, ElementId, Entity, InteractiveElement, IntoElement, ObjectFit,
+    ParentElement, Pixels, Point, Render, RenderOnce, StatefulInteractiveElement, Styled, StyledImage, Window,
 };
 use matrix_sdk::ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId};
 use std::collections::HashMap;
 use std::iter;
 use std::rc::Rc;
 use std::time::Instant;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use thegrid_screen_share::{PickerRequired, ScreenShareManager, ScreenShareStartEvent};
@@ -437,7 +437,9 @@ impl Render for CallPage {
                                                 david.child(
                                                     button("screenshare")
                                                         .p(px(16.))
-                                                        .child(icon("display".into()).size(24.))
+                                                        .child(
+                                                            icon("video-display".into()).size(24.),
+                                                        )
                                                         .checked_when(
                                                             call.active_screenshare().is_some(),
                                                         )
