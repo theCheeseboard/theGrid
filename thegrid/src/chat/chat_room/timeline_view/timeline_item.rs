@@ -256,6 +256,7 @@ impl RenderOnce for TimelineItem {
 
                 div()
                     .flex()
+                    .w_full()
                     .gap(px(8.))
                     .items_center()
                     .child(div().h(px(1.)).bg(theme.border_color).flex_grow())

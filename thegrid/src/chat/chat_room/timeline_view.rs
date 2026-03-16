@@ -15,10 +15,12 @@ use crate::chat::chat_room::timeline_view::author_flyout::{
 };
 use crate::chat::chat_room::timeline_view::timeline_item::timeline_item;
 use crate::chat::displayed_room::DisplayedRoom;
+use contemporary::components::spinner::spinner;
+use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, Context, Element, ElementId, Entity, InteractiveElement, IntoElement,
-    ListAlignment, ListOffset, ListScrollEvent, ListSizingBehavior, ListState, ParentElement,
-    Render, Styled, Window, div, list, px, rgb,
+    div, list, px, rgb, App, AsyncApp, Context, Element,
+    ElementId, Entity, InteractiveElement, IntoElement, ListAlignment, ListOffset,
+    ListScrollEvent, ListSizingBehavior, ListState, ParentElement, Render, Styled, Window,
 };
 use image::open;
 use log::info;
@@ -30,7 +32,6 @@ pub struct TimelineView {
     open_room: Entity<OpenRoom>,
     displayed_room: Entity<DisplayedRoom>,
     list_state: ListState,
-    pagination_pending: bool,
     on_user_action: Box<AuthorFlyoutUserActionListener>,
 }
 
@@ -67,20 +68,7 @@ impl TimelineView {
                         })
                         .detach();
                     } else if event.visible_range.start < 5 {
-                        // Paginate
-                        this.pagination_pending = true;
-                        cx.spawn(async move |_, cx: &mut AsyncApp| {
-                            let _ = cx
-                                .spawn_tokio(
-                                    async move { timeline_inner.paginate_backwards(50).await },
-                                )
-                                .await;
-                            this_entity.update(cx, |this, cx| {
-                                this.pagination_pending = false;
-                                cx.notify();
-                            })
-                        })
-                        .detach();
+                        open_room.paginate_backwards(cx);
                     }
                 });
                 cx.notify();
@@ -91,7 +79,6 @@ impl TimelineView {
             open_room,
             displayed_room,
             list_state,
-            pagination_pending: false,
             on_user_action: Box::new(on_user_action),
         };
         this.connect_open_room(cx);
@@ -141,6 +128,8 @@ impl Render for TimelineView {
         let Some(timeline_entity) = open_room.timeline.as_ref() else {
             return div().flex_grow().into_any_element();
         };
+        let is_paginating = open_room.pagination_pending();
+
         let timeline_entity = timeline_entity.clone();
         let room_id = open_room.room_id.clone();
 
@@ -148,6 +137,10 @@ impl Render for TimelineView {
 
         div()
             .flex_grow()
+            .when(
+                self.list_state.item_count() == 0 && is_paginating,
+                |david| david.child(div().flex().justify_center().pb(px(2.)).child(spinner())),
+            )
             .child(
                 list(
                     self.list_state.clone(),
@@ -155,7 +148,7 @@ impl Render for TimelineView {
                         let timeline = timeline_entity.read(cx);
                         let timeline_items = timeline.timeline_items();
                         let Some(item) = timeline_items.get(i).cloned() else {
-                            return div().into_any_element()
+                            return div().into_any_element();
                         };
 
                         let previous_item = if i == 0 {
@@ -165,8 +158,17 @@ impl Render for TimelineView {
                         };
 
                         div()
+                            .flex()
+                            .flex_col()
+                            .w_full()
+                            .overflow_hidden()
                             .id(ElementId::Name(item.unique_id().0.clone().into()))
                             .py(px(2.))
+                            .when(i == 0 && is_paginating, |david| {
+                                david.child(
+                                    div().flex().justify_center().pb(px(2.)).child(spinner()),
+                                )
+                            })
                             .child(timeline_item(
                                 item,
                                 previous_item,

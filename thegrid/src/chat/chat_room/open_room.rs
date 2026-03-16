@@ -9,15 +9,10 @@ use gpui::{
     AppContext, AsyncApp, ClipboardEntry, Context, Entity, PathPromptOptions, WeakEntity, Window,
 };
 use matrix_sdk::room::RoomMember;
-use matrix_sdk::ruma::OwnedRoomId;
-use matrix_sdk::ruma::events::call::member::CallMemberEvent;
-use matrix_sdk::ruma::events::room::message::{RoomMessageEventContent, SyncRoomMessageEvent};
-use matrix_sdk::ruma::events::room::name::RoomNameEvent;
+use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::events::tag::Tags;
-use matrix_sdk::ruma::events::{
-    AnyFullStateEventContent, AnySyncStateEvent, StateEvent, SyncStateEvent,
-};
-use matrix_sdk::{Client, Room};
+use matrix_sdk::ruma::OwnedRoomId;
+use matrix_sdk::Room;
 use matrix_sdk_ui::timeline::{AttachmentConfig, AttachmentSource, RoomExt};
 use mime2ext::mime2ext;
 use std::fs::read;
@@ -39,6 +34,7 @@ pub struct OpenRoom {
     pub chat_bar: Entity<ChatBar>,
     pub timeline: Option<Entity<Timeline>>,
     pub tags: Tags,
+    pagination_pending: bool,
 }
 
 pub struct PendingAttachment {
@@ -89,6 +85,7 @@ impl OpenRoom {
             chat_input,
             timeline: None,
             tags: Default::default(),
+            pagination_pending: false,
         };
 
         let Some(room) = client.get_room(&room_id) else {
@@ -105,13 +102,19 @@ impl OpenRoom {
                     .spawn_tokio(async move { room_clone.timeline().await })
                     .await;
 
-                if let Ok(timeline) = timeline {
-                    let _ = weak_this.update(cx, |this, cx| {
+                let Ok(timeline) = timeline else {
+                    return;
+                };
+
+                let _ = weak_this
+                    .update(cx, |this, cx| {
                         let timeline_entity = cx.new(|cx| Timeline::new(timeline, cx));
                         this.timeline = Some(timeline_entity.clone());
-                        cx.notify()
-                    });
-                }
+                        cx.notify();
+
+                        this.paginate_backwards(cx);
+                    })
+                    .is_err();
             },
         )
         .detach();
@@ -130,6 +133,34 @@ impl OpenRoom {
         .detach();
 
         self_return
+    }
+
+    pub fn paginate_backwards(&mut self, cx: &mut Context<Self>) {
+        if self.pagination_pending {
+            return;
+        }
+
+        if let Some(timeline) = self.timeline.as_ref() {
+            // Paginate
+            self.pagination_pending = true;
+
+            let weak_this = cx.weak_entity();
+            let _ = timeline.update(cx, |timeline, cx| {
+                let timeline = timeline.inner.clone();
+                cx.spawn(
+                    async move |weak_timeline: WeakEntity<Timeline>, cx: &mut AsyncApp| {
+                        let _ = cx
+                            .spawn_tokio(async move { timeline.paginate_backwards(50).await })
+                            .await;
+                        weak_this.update(cx, |this, cx| {
+                            this.pagination_pending = false;
+                            cx.notify();
+                        })
+                    },
+                )
+                .detach();
+            });
+        }
     }
 
     fn setup_acquire_own_user(&mut self, cx: &mut Context<Self>) {
@@ -320,5 +351,9 @@ impl OpenRoom {
     pub fn remove_pending_attachment(&mut self, index: usize, cx: &mut Context<Self>) {
         self.pending_attachments.remove(index);
         cx.notify()
+    }
+
+    pub fn pagination_pending(&self) -> bool {
+        self.pagination_pending
     }
 }
