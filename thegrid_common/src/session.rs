@@ -3,6 +3,7 @@ mod caches;
 pub mod database_secret;
 pub mod devices_cache;
 pub mod error_handling;
+mod ignored_users_cache;
 pub mod media_cache;
 mod notifications;
 pub mod room_cache;

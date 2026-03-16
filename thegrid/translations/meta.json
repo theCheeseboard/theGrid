@@ -635,9 +635,45 @@
     "plural": false,
     "description": null
   },
-  "IGNORED_USERS_IGNORE": {
+  "IGNORED_USERS": {
     "context": "ignored_users_settings.rs",
-    "definedIn": "src/account_settings/ignored_users_settings.rs:47",
+    "definedIn": "src/account_settings/ignored_users_settings.rs:201",
+    "plural": false,
+    "description": null
+  },
+  "IGNORED_USERS_ADD_BUTTON": {
+    "context": "ignored_users_settings.rs",
+    "definedIn": "src/account_settings/ignored_users_settings.rs:215",
+    "plural": false,
+    "description": null
+  },
+  "IGNORED_USERS_DESCRIPTION": {
+    "context": "ignored_users_settings.rs",
+    "definedIn": "src/account_settings/ignored_users_settings.rs:203",
+    "plural": false,
+    "description": null
+  },
+  "IGNORED_USERS_IGNORED": {
+    "context": "ignored_users_settings.rs",
+    "definedIn": "src/account_settings/ignored_users_settings.rs:229",
+    "plural": false,
+    "description": null
+  },
+  "IGNORED_USERS_NO_USERS": {
+    "context": "ignored_users_settings.rs",
+    "definedIn": "src/account_settings/ignored_users_settings.rs:232",
+    "plural": false,
+    "description": null
+  },
+  "IGNORE_ERROR_TEXT": {
+    "context": "ignored_users_settings.rs",
+    "definedIn": "src/account_settings/ignored_users_settings.rs:92",
+    "plural": false,
+    "description": null
+  },
+  "IGNORE_ERROR_TITLE": {
+    "context": "ignored_users_settings.rs",
+    "definedIn": "src/account_settings/ignored_users_settings.rs:90",
     "plural": false,
     "description": null
   },
@@ -1916,6 +1952,18 @@
   "UNBAN_TITLE": {
     "context": "user_action_dialogs.rs",
     "definedIn": "src/chat/chat_room/user_action_dialogs.rs:515",
+    "plural": false,
+    "description": null
+  },
+  "UNGNORE_ERROR_TITLE": {
+    "context": "ignored_users_settings.rs",
+    "definedIn": "src/account_settings/ignored_users_settings.rs:141",
+    "plural": false,
+    "description": null
+  },
+  "UNIGNORE_ERROR_TEXT": {
+    "context": "ignored_users_settings.rs",
+    "definedIn": "src/account_settings/ignored_users_settings.rs:145",
     "plural": false,
     "description": null
   },

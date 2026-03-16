@@ -38,6 +38,7 @@ use std::hash::RandomState;
 use std::path::PathBuf;
 use std::sync::Arc;
 use uuid::Uuid;
+use crate::session::ignored_users_cache::IgnoredUsersCache;
 
 pub struct SessionManager {
     current_session: Option<Session>,
@@ -338,6 +339,10 @@ impl SessionManager {
 
     pub fn rooms(&self) -> Entity<RoomCache> {
         self.current_caches.as_ref().unwrap().room_cache.clone()
+    }
+    
+    pub fn ignored_users(&self) -> Entity<IgnoredUsersCache> {
+        self.current_caches.as_ref().unwrap().ignored_users_cache.clone()
     }
 
     pub fn rtc_foci(&self) -> &Vec<RtcFocusInfo> {
