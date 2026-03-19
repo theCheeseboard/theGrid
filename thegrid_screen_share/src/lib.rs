@@ -8,6 +8,9 @@ mod mac;
 #[cfg(target_os = "linux")]
 mod xdg_portal;
 
+#[cfg(target_os = "windows")]
+mod win;
+
 pub enum PickerRequired {
     SystemPicker,
     ApplicationPicker,
@@ -43,6 +46,9 @@ impl ScreenShareManager {
             }
         }
 
+        #[cfg(target_os = "windows")]
+        return PickerRequired::SystemPicker;
+
         PickerRequired::UnsupportedPlatform
     }
 
@@ -71,6 +77,11 @@ impl ScreenShareManager {
             {
                 return;
             }
+        }
+
+        #[cfg(target_os = "windows")]
+        {
+            return win::start_screen_share_session(callback, window, cx);
         }
 
         panic!("Unsupported platform")

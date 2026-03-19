@@ -10020,9 +10020,11 @@ dependencies = [
  "objc2-foundation",
  "objc2-screen-capture-kit",
  "pipewire",
+ "raw-window-handle",
  "smallvec",
  "smol",
  "thegrid_common",
+ "windows 0.62.2",
  "yuv",
 ]
 

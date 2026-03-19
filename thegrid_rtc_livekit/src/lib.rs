@@ -995,9 +995,12 @@ impl LivekitCall {
         let (sample_rate, channels, output_stream) = if let Some(device) = device {
             let mut supported_device_configs = device.supported_output_configs().unwrap();
             let supported_config = supported_device_configs
-                .next()
-                .unwrap()
-                .with_sample_rate(48000);
+                .find_map(|config| {
+                    config
+                        .try_with_sample_rate(48000)
+                        .or_else(|| config.try_with_sample_rate(44100))
+                })
+                .unwrap();
 
             let deaf = Arc::new(RwLock::new(false));
             let deaf_clone = deaf.clone();
