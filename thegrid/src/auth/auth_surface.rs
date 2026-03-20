@@ -766,60 +766,92 @@ impl AuthSurface {
                         None
                     },
                     |david, idp| {
-                        david.child(
-                            layer()
-                                .flex()
-                                .flex_col()
-                                .p(px(8.))
-                                .w_full()
-                                .gap(px(6.))
-                                .child(subtitle(match idp {
-                                    None => {
-                                        tr!("AUTH_SSO_NAME_GENERIC", "Login with Single Sign-on",)
-                                    }
-                                    Some(idp) => {
-                                        tr!(
-                                            "AUTH_SSO_NAME",
-                                            "Login with {{idp_name}}",
-                                            idp_name = idp.name
-                                        )
-                                    }
-                                }))
-                                .child(tr!(
-                                    "AUTH_SSO_MESSAGE",
-                                    "We've opened a browser. Go ahead and log in there, \
-                                    and come back when you're done."
-                                ))
-                                .child(self.token_field.clone().into_any_element())
-                                .child(
-                                    div().flex().child(div().flex_grow()).child(
-                                        button("log_in_button")
-                                            .child(icon_text(
-                                                "arrow-right".into(),
-                                                tr!("AUTH_LOG_IN").into(),
-                                            ))
-                                            .on_click(cx.listener(|this, _, window, cx| {
-                                                let base64_encoded_token =
-                                                    this.token_field.read(cx).text().to_string();
-                                                if this
-                                                    .trigger_sso_token_login(
-                                                        base64_encoded_token,
-                                                        cx,
-                                                    )
-                                                    .is_err()
-                                                {
-                                                    this.token_field.update(
-                                                        cx,
-                                                        |token_field, cx| {
-                                                            token_field.flash_error(window, cx);
-                                                        },
-                                                    );
-                                                };
-                                            })),
+                        david
+                            .child(
+                                layer()
+                                    .flex()
+                                    .flex_col()
+                                    .p(px(8.))
+                                    .w_full()
+                                    .gap(px(6.))
+                                    .child(subtitle(match idp {
+                                        None => {
+                                            tr!(
+                                                "AUTH_SSO_NAME_GENERIC",
+                                                "Login with Single Sign-on",
+                                            )
+                                        }
+                                        Some(idp) => {
+                                            tr!(
+                                                "AUTH_SSO_NAME",
+                                                "Login with {{idp_name}}",
+                                                idp_name = idp.name
+                                            )
+                                        }
+                                    }))
+                                    .child(tr!(
+                                        "AUTH_SSO_MESSAGE",
+                                        "We've opened a browser. Go ahead and log in there, \
+                                        and come back when you're done."
+                                    ))
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .gap(px(8.))
+                                            .items_center()
+                                            .child(spinner().size(px(16.)))
+                                            .child(tr!(
+                                                "AUTH_SSO_WAITING_FOR_TOKEN",
+                                                "Waiting for authentication to be completed..."
+                                            )),
                                     ),
-                                )
-                                .into_any_element(),
-                        )
+                            )
+                            .child(
+                                layer()
+                                    .flex()
+                                    .flex_col()
+                                    .p(px(8.))
+                                    .w_full()
+                                    .gap(px(6.))
+                                    .child(subtitle(tr!("AUTH_MANUAL_LOGIN", "Manual Login")))
+                                    .child(tr!(
+                                        "AUTH_MANUAL_LOGIN_MESSAGE",
+                                        "If you need it, once you have completed login in the \
+                                        browser, you can paste the manual login token here to \
+                                        log in."
+                                    ))
+                                    .child(self.token_field.clone().into_any_element())
+                                    .child(
+                                        div().flex().child(div().flex_grow()).child(
+                                            button("log_in_button")
+                                                .child(icon_text(
+                                                    "arrow-right".into(),
+                                                    tr!("AUTH_LOG_IN").into(),
+                                                ))
+                                                .on_click(cx.listener(|this, _, window, cx| {
+                                                    let base64_encoded_token = this
+                                                        .token_field
+                                                        .read(cx)
+                                                        .text()
+                                                        .to_string();
+                                                    if this
+                                                        .trigger_sso_token_login(
+                                                            base64_encoded_token,
+                                                            cx,
+                                                        )
+                                                        .is_err()
+                                                    {
+                                                        this.token_field.update(
+                                                            cx,
+                                                            |token_field, cx| {
+                                                                token_field.flash_error(window, cx);
+                                                            },
+                                                        );
+                                                    };
+                                                })),
+                                        ),
+                                    ),
+                            )
                     },
                 ))
                 .into_any_element(),
