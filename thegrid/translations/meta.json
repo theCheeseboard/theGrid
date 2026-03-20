@@ -1,13 +1,13 @@
 {
   "ACCOUNT_ACCOUNT_SETTINGS": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:89",
+    "definedIn": "src/main.rs:126",
     "plural": false,
     "description": null
   },
   "ACCOUNT_ACCOUNT_SWITCHER": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:94",
+    "definedIn": "src/main.rs:131",
     "plural": false,
     "description": null
   },
@@ -97,7 +97,7 @@
   },
   "ACCOUNT_LOG_OUT": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:97",
+    "definedIn": "src/main.rs:134",
     "plural": false,
     "description": null
   },
@@ -187,73 +187,73 @@
   },
   "AUTH_ADVANCED_LOG_IN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:884",
+    "definedIn": "src/auth/auth_surface.rs:927",
     "plural": false,
     "description": null
   },
   "AUTH_HOMESERVER_PLACEHOLDER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:137",
+    "definedIn": "src/auth/auth_surface.rs:142",
     "plural": false,
     "description": null
   },
   "AUTH_LOG_IN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:894",
+    "definedIn": "src/auth/auth_surface.rs:937",
     "plural": false,
     "description": null
   },
   "AUTH_LOG_IN_TO_MATRIX": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:868",
+    "definedIn": "src/auth/auth_surface.rs:911",
     "plural": false,
     "description": null
   },
   "AUTH_MATRIX_ID_EXAMPLE": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:101",
+    "definedIn": "src/auth/auth_surface.rs:106",
     "plural": false,
     "description": null
   },
   "AUTH_PASSWORD": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:641",
+    "definedIn": "src/auth/auth_surface.rs:669",
     "plural": false,
     "description": null
   },
   "AUTH_PASSWORD_PLACEHOLDER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:111",
+    "definedIn": "src/auth/auth_surface.rs:116",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_ADVANCED_LOGIN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:528",
+    "definedIn": "src/auth/auth_surface.rs:556",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_ADVANCED_LOGIN_TEXT": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:537",
+    "definedIn": "src/auth/auth_surface.rs:565",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_CONNECTION_ERROR": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:595",
+    "definedIn": "src/auth/auth_surface.rs:623",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_CONNECTION_ERROR_TEXT": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:604",
+    "definedIn": "src/auth/auth_surface.rs:632",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_INITIAL_SYNC": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:580",
+    "definedIn": "src/auth/auth_surface.rs:608",
     "plural": false,
     "description": null
   },
@@ -283,55 +283,55 @@
   },
   "AUTH_SESSION_RESTORE": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:829",
+    "definedIn": "src/auth/auth_surface.rs:872",
     "plural": false,
     "description": null
   },
   "AUTH_SSO": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:688",
+    "definedIn": "src/auth/auth_surface.rs:716",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_BUTTON": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:705",
+    "definedIn": "src/auth/auth_surface.rs:733",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_BUTTON_GENERIC": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:710",
+    "definedIn": "src/auth/auth_surface.rs:738",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_MESSAGE": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:761",
+    "definedIn": "src/auth/auth_surface.rs:789",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_NAME": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:754",
+    "definedIn": "src/auth/auth_surface.rs:782",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_NAME_GENERIC": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:750",
+    "definedIn": "src/auth/auth_surface.rs:778",
     "plural": false,
     "description": null
   },
   "AUTH_TOKEN_PLACEHOLDER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:121",
+    "definedIn": "src/auth/auth_surface.rs:126",
     "plural": false,
     "description": null
   },
   "AUTH_USERNAME_PLACEHOLDER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:128",
+    "definedIn": "src/auth/auth_surface.rs:133",
     "plural": false,
     "description": null
   },
@@ -1087,13 +1087,13 @@
   },
   "MENU_ACCOUNT": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:86",
+    "definedIn": "src/main.rs:123",
     "plural": false,
     "description": null
   },
   "MENU_ROOMS": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:101",
+    "definedIn": "src/main.rs:138",
     "plural": false,
     "description": null
   },
@@ -1201,13 +1201,13 @@
   },
   "POPOVER_LOGIN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:923",
+    "definedIn": "src/auth/auth_surface.rs:966",
     "plural": false,
     "description": null
   },
   "POPOVER_LOGIN_HOMESERVER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:917",
+    "definedIn": "src/auth/auth_surface.rs:960",
     "plural": false,
     "description": null
   },
@@ -1417,13 +1417,13 @@
   },
   "ROOMS_CREATE": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:104",
+    "definedIn": "src/main.rs:141",
     "plural": false,
     "description": null
   },
   "ROOMS_DIRECT_JOIN": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:108",
+    "definedIn": "src/main.rs:145",
     "plural": false,
     "description": null
   },
@@ -1897,7 +1897,7 @@
   },
   "SORRY": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:611",
+    "definedIn": "src/auth/auth_surface.rs:639",
     "plural": false,
     "description": null
   },

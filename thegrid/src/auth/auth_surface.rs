@@ -1,4 +1,7 @@
 use crate::utilities::default_device_name;
+use base64::alphabet::URL_SAFE;
+use base64::prelude::{BASE64_URL_SAFE, BASE64_URL_SAFE_NO_PAD};
+use base64::{DecodeError, Engine};
 use cntp_i18n::{i18n_manager, tr};
 use contemporary::application::Details;
 use contemporary::components::button::button;
@@ -14,12 +17,13 @@ use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::{MaskMode, TextField};
 use contemporary::surface::surface;
-use gpui::LineFragment::Text;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
+use gpui::private::anyhow;
+use gpui::LineFragment::Text;
 use gpui::{
-    App, AppContext, AsyncApp, BorrowAppContext, Context, ElementId, Entity, InteractiveElement,
-    IntoElement, ParentElement, Render, Styled, WeakEntity, Window, div, img, px,
+    div, img, px, App, AppContext, AsyncApp, BorrowAppContext, Context,
+    ElementId, Entity, InteractiveElement, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
 };
 use gpui_tokio::Tokio;
 use keyring::default::default_credential_builder;
@@ -27,7 +31,7 @@ use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::config::SyncSettings;
 use matrix_sdk::encryption::CrossSigningStatus;
 use matrix_sdk::ruma::api::client::session::get_login_types::v3::{IdentityProvider, LoginType};
-use matrix_sdk::ruma::{DeviceId, OwnedUserId, user_id};
+use matrix_sdk::ruma::{user_id, DeviceId, OwnedUserId};
 use matrix_sdk::{Client, ClientBuildError};
 use smol::future::FutureExt;
 use std::path::PathBuf;
@@ -35,6 +39,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 use thegrid_common::session::database_secret::DatabaseSecret;
 use thegrid_common::session::session_manager::{SessionManager, SessionSecretPurpose};
+use thegrid_common::session::sso_login::SsoLogin;
 use thegrid_common::surfaces::{
     MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
 };
@@ -51,7 +56,7 @@ enum AuthState {
     InitialSync,
     ConnectionError,
     AuthRequired,
-    SsoTokenRequired(Option<IdentityProvider>),
+    SsoTokenRequired(Option<IdentityProvider>, Entity<Option<SsoLogin>>),
 }
 
 enum LoginMethod {
@@ -356,6 +361,12 @@ impl AuthSurface {
 
         let idp_clone = idp.clone();
 
+        let sso_login_entity = cx.new(|cx| None);
+        let weak_sso_login_entity = sso_login_entity.downgrade();
+        cx.update_global::<SessionManager, _>(|session_manager, cx| {
+            session_manager.set_sso_login_entity(weak_sso_login_entity);
+        });
+
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
             let requested_url = match idp {
                 None => {
@@ -386,13 +397,30 @@ impl AuthSurface {
         })
         .detach();
 
-        self.state = AuthState::SsoTokenRequired(idp_clone);
+        cx.observe(&sso_login_entity, |this, sso_login_entity, cx| {
+            let Some(sso_login) =
+                sso_login_entity.update(cx, |sso_login_entity, _| sso_login_entity.take())
+            else {
+                return;
+            };
+
+            let _ = this.trigger_sso_token_login(sso_login.token, cx);
+        })
+        .detach();
+
+        self.state = AuthState::SsoTokenRequired(idp_clone, sso_login_entity);
         cx.notify();
     }
 
-    fn trigger_sso_token_login(&mut self, cx: &mut Context<Self>) {
-        let sso_token = self.token_field.read(cx).text().to_string();
-        self.perform_login(LoginMethod::SsoToken(sso_token), cx);
+    fn trigger_sso_token_login(
+        &mut self,
+        base64_encoded_token: String,
+        cx: &mut Context<Self>,
+    ) -> Result<(), anyhow::Error> {
+        let token =
+            String::from_utf8(BASE64_URL_SAFE_NO_PAD.decode(base64_encoded_token.as_bytes())?)?;
+        self.perform_login(LoginMethod::SsoToken(token), cx);
+        Ok(())
     }
 
     fn perform_login(&mut self, login_method: LoginMethod, cx: &mut Context<Self>) {
@@ -510,7 +538,7 @@ impl AuthSurface {
                 AuthState::InitialSync => 3,
                 AuthState::ConnectionError => 4,
                 AuthState::AuthRequired => 5,
-                AuthState::SsoTokenRequired(_) => 6,
+                AuthState::SsoTokenRequired(_, _) => 6,
             },
         )
         .animation(FadeAnimation::new())
@@ -732,7 +760,7 @@ impl AuthSurface {
         .page(
             constrainer("sso-token-required-constrainer")
                 .child(div().flex().flex_col().gap(px(8.)).when_some(
-                    if let AuthState::SsoTokenRequired(idp) = &self.state {
+                    if let AuthState::SsoTokenRequired(idp, _) = &self.state {
                         Some(idp)
                     } else {
                         None
@@ -770,8 +798,23 @@ impl AuthSurface {
                                                 "arrow-right".into(),
                                                 tr!("AUTH_LOG_IN").into(),
                                             ))
-                                            .on_click(cx.listener(|this, _, _, cx| {
-                                                this.trigger_sso_token_login(cx);
+                                            .on_click(cx.listener(|this, _, window, cx| {
+                                                let base64_encoded_token =
+                                                    this.token_field.read(cx).text().to_string();
+                                                if this
+                                                    .trigger_sso_token_login(
+                                                        base64_encoded_token,
+                                                        cx,
+                                                    )
+                                                    .is_err()
+                                                {
+                                                    this.token_field.update(
+                                                        cx,
+                                                        |token_field, cx| {
+                                                            token_field.flash_error(window, cx);
+                                                        },
+                                                    );
+                                                };
                                             })),
                                     ),
                                 )

@@ -8,4 +8,5 @@ pub mod media_cache;
 mod notifications;
 pub mod room_cache;
 pub mod session_manager;
+pub mod sso_login;
 pub mod verification_requests_cache;

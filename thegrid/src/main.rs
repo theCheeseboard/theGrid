@@ -12,29 +12,41 @@ mod utilities;
 mod account_settings;
 mod uiaa_client;
 
-use crate::actions::{AccountSettings, AccountSwitcher, CreateRoom, LogOut, register_actions};
+use crate::actions::{register_actions, AccountSettings, AccountSwitcher, CreateRoom, LogOut};
 use crate::chat::chat_input::bind_chat_input_keys;
 use crate::main_window::MainWindow;
-use cntp_i18n::{I18N_MANAGER, tr, tr_load};
+use cntp_i18n::{tr, tr_load, I18N_MANAGER};
 use cntp_icon_tool_macros::application_icon;
-use contemporary::application::{ApplicationLink, Details, License, new_contemporary_application};
+use contemporary::application::{new_contemporary_application, ApplicationLink, Details, License};
 use contemporary::macros::application_details;
-use contemporary::setup::{Contemporary, ContemporaryMenus, setup_contemporary};
+use contemporary::setup::{setup_contemporary, Contemporary, ContemporaryMenus};
 use contemporary::window::contemporary_window_options;
-use gpui::{App, Bounds, Menu, MenuItem, WindowBounds, WindowOptions, px, size};
+use gpui::{px, size, App, AsyncApp, Bounds, Menu, MenuItem, WindowBounds, WindowOptions};
 use smol_macros::main;
 use std::any::TypeId;
 use std::ptr;
 use std::rc::Rc;
-use thegrid_common::session::session_manager::setup_session_manager;
+use thegrid_common::session::session_manager::{setup_session_manager, SessionManager};
+use thegrid_common::session::sso_login::SsoLogin;
 use thegrid_common::setup_thegrid_common;
 use thegrid_rtc_livekit::call_manager::setup_call_manager;
 use thegrid_rtc_livekit::setup_thegrid_rtc_livekit;
+use url::Url;
 
 fn mane() {
     application_icon!("../dist/baseicon.svg");
 
-    new_contemporary_application().run(|cx: &mut App| {
+    let (open_urls_tx, open_urls_rx) = async_channel::bounded(1);
+
+    let application = new_contemporary_application();
+    application.on_open_urls(move |urls| {
+        let open_urls_tx = open_urls_tx.clone();
+        smol::spawn(async move {
+            open_urls_tx.send(urls).await.unwrap();
+        })
+        .detach();
+    });
+    application.run(|cx: &mut App| {
         gpui_tokio::init(cx);
         thegrid_text_rendering::init(cx);
         I18N_MANAGER.write().unwrap().load_source(tr_load!());
@@ -46,6 +58,31 @@ fn mane() {
         setup_call_manager(cx);
         bind_chat_input_keys(cx);
 
+        cx.spawn(async move |cx: &mut AsyncApp| {
+            while let Ok(urls) = open_urls_rx.recv().await {
+                for url in urls {
+                    let Ok(url) = Url::parse(&url) else {
+                        continue;
+                    };
+
+                    if url.scheme() == "thegrid"
+                        && url.path() == "/token-callback"
+                        && let Some((_, token)) = url.query_pairs().find(|(key, _)| key == "token")
+                    {
+                        let _ = cx.update_global::<SessionManager, _>(|session_manager, cx| {
+                            session_manager.insert_sso_login(
+                                SsoLogin {
+                                    token: token.to_string(),
+                                },
+                                cx,
+                            );
+                        });
+                    }
+                }
+            }
+        })
+        .detach();
+
         let default_window_options = contemporary_window_options(cx, "theGrid".into());
         register_actions(cx);
         cx.open_window(
@@ -53,7 +90,7 @@ fn mane() {
                 window_bounds: Some(WindowBounds::Windowed(bounds)),
                 ..default_window_options
             },
-            |_, cx| {
+            |window, cx| {
                 let window = MainWindow::new(cx);
                 let weak_window = window.downgrade();
                 let weak_windew = window.downgrade();

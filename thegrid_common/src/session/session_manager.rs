@@ -2,31 +2,33 @@ use crate::session::account_cache::AccountCache;
 use crate::session::caches::Caches;
 use crate::session::database_secret::{DatabaseSecret, DatabaseSecretExt};
 use crate::session::devices_cache::DevicesCache;
-use crate::session::error_handling::{ClientError, TerminalClientError, handle_error};
+use crate::session::error_handling::{handle_error, ClientError, TerminalClientError};
+use crate::session::ignored_users_cache::IgnoredUsersCache;
 use crate::session::media_cache::MediaCache;
 use crate::session::notifications::trigger_notification;
 use crate::session::room_cache::RoomCache;
+use crate::session::sso_login::SsoLogin;
 use crate::session::verification_requests_cache::VerificationRequestsCache;
 use crate::tokio_helper::TokioHelper;
-use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use contemporary::application::Details;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{App, AppContext, AsyncApp, Context, Entity, Global, Task, WeakEntity};
 use gpui_tokio::Tokio;
-use imbl::HashMap;
 use imbl::hashmap::Entry;
 use imbl::shared_ptr::DefaultSharedPtr;
-use keyring::Credential;
+use imbl::HashMap;
 use keyring::default::default_credential_builder;
+use keyring::Credential;
 use log::{error, info};
 use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::config::SyncSettings;
-use matrix_sdk::ruma::OwnedUserId;
 use matrix_sdk::ruma::api::client::discovery::discover_homeserver::RtcFocusInfo;
 use matrix_sdk::ruma::api::error::FromHttpResponseError;
 use matrix_sdk::ruma::events::key::verification::request::ToDeviceKeyVerificationRequestEvent;
+use matrix_sdk::ruma::OwnedUserId;
 use matrix_sdk::store::RoomLoadSettings;
 use matrix_sdk::sync::Notification;
 use matrix_sdk::{Client, Error, HttpError, LoopCtrl, Room, RumaApiError};
@@ -38,7 +40,6 @@ use std::hash::RandomState;
 use std::path::PathBuf;
 use std::sync::Arc;
 use uuid::Uuid;
-use crate::session::ignored_users_cache::IgnoredUsersCache;
 
 pub struct SessionManager {
     current_session: Option<Session>,
@@ -46,6 +47,7 @@ pub struct SessionManager {
     current_caches: Option<Caches>,
     current_client_error: ClientError,
     secrets_cache: RefCell<HashMap<Uuid, DatabaseSecret>>,
+    sso_login_entity: WeakEntity<Option<SsoLogin>>,
 }
 
 pub enum SessionSecretPurpose {
@@ -340,13 +342,29 @@ impl SessionManager {
     pub fn rooms(&self) -> Entity<RoomCache> {
         self.current_caches.as_ref().unwrap().room_cache.clone()
     }
-    
+
     pub fn ignored_users(&self) -> Entity<IgnoredUsersCache> {
-        self.current_caches.as_ref().unwrap().ignored_users_cache.clone()
+        self.current_caches
+            .as_ref()
+            .unwrap()
+            .ignored_users_cache
+            .clone()
     }
 
     pub fn rtc_foci(&self) -> &Vec<RtcFocusInfo> {
         &self.current_caches.as_ref().unwrap().rtc_foci
+    }
+
+    pub fn set_sso_login_entity(&mut self, entity: WeakEntity<Option<SsoLogin>>) {
+        self.sso_login_entity = entity;
+    }
+
+    pub fn insert_sso_login(&mut self, sso_login_value: SsoLogin, cx: &mut App) {
+        let _ = self.sso_login_entity.update(cx, |sso_login, cx| {
+            let _ = sso_login.insert(sso_login_value);
+            cx.notify();
+        });
+        self.sso_login_entity = WeakEntity::new_invalid();
     }
 }
 
@@ -359,6 +377,7 @@ pub fn setup_session_manager(cx: &mut App) {
         current_caches: None,
         current_client_error: ClientError::None,
         secrets_cache: RefCell::new(HashMap::new()),
+        sso_login_entity: WeakEntity::new_invalid(),
     });
 }
 
