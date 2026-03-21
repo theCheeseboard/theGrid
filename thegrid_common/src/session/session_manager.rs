@@ -7,6 +7,7 @@ use crate::session::ignored_users_cache::IgnoredUsersCache;
 use crate::session::media_cache::MediaCache;
 use crate::session::notifications::trigger_notification;
 use crate::session::room_cache::RoomCache;
+use crate::session::spaces_cache::SpacesCache;
 use crate::session::sso_login::SsoLogin;
 use crate::session::verification_requests_cache::VerificationRequestsCache;
 use crate::tokio_helper::TokioHelper;
@@ -32,6 +33,7 @@ use matrix_sdk::ruma::OwnedUserId;
 use matrix_sdk::store::RoomLoadSettings;
 use matrix_sdk::sync::Notification;
 use matrix_sdk::{Client, Error, HttpError, LoopCtrl, Room, RumaApiError};
+use matrix_sdk_ui::spaces::{SpaceRoomList, SpaceService};
 use matrix_sdk_ui::sync_service::{State, SyncService};
 use std::cell::RefCell;
 use std::fmt::Display;
@@ -365,6 +367,10 @@ impl SessionManager {
             cx.notify();
         });
         self.sso_login_entity = WeakEntity::new_invalid();
+    }
+
+    pub fn spaces(&self) -> Entity<SpacesCache> {
+        self.current_caches.as_ref().unwrap().spaces_cache.clone()
     }
 }
 

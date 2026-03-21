@@ -5,33 +5,33 @@ pub mod invite_popover;
 pub mod open_room;
 mod room_members;
 mod room_settings;
+mod room_timeline_content;
+mod space_lobby_content;
 mod timeline;
 mod timeline_view;
 mod user_action_dialogs;
 
-use crate::chat::chat_room::attachments_view::AttachmentsView;
-use crate::chat::chat_room::call_members_view::CallMembersView;
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::room_members::RoomMembers;
 use crate::chat::chat_room::room_settings::RoomSettings;
-use crate::chat::chat_room::timeline_view::TimelineView;
+use crate::chat::chat_room::room_timeline_content::RoomTimelineContent;
+use crate::chat::chat_room::space_lobby_content::SpaceLobbyContent;
 use crate::chat::chat_room::user_action_dialogs::UserActionDialogs;
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::tr;
-use contemporary::components::admonition::admonition;
 use contemporary::components::button::button;
 use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
+use contemporary::components::spinner::spinner;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, AnimationExt, App, AppContext, BorrowAppContext,
-    Context, Entity, ExternalPaths, InteractiveElement, IntoElement,
-    ParentElement, Render, StatefulInteractiveElement, Styled, VisualContext, Window,
+    div, px, AnimationExt, App, AppContext, BorrowAppContext, Context,
+    Entity, InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled,
+    VisualContext, Window,
 };
-use matrix_sdk::ruma::events::tag::TagName;
 use matrix_sdk::ruma::OwnedRoomId;
 use smol::stream::StreamExt;
 use std::rc::Rc;
@@ -47,8 +47,8 @@ pub struct ChatRoom {
     room_settings: Entity<RoomSettings>,
     room_members: Entity<RoomMembers>,
     user_action_dialogs: Entity<UserActionDialogs>,
-    timeline_view: Entity<TimelineView>,
     current_page: ChatRoomPage,
+    view: ChatRoomView,
 
     on_surface_change: Rc<Box<SurfaceChangeHandler>>,
 
@@ -59,6 +59,13 @@ enum ChatRoomPage {
     Chat,
     Settings,
     Members,
+}
+
+#[derive(Clone)]
+enum ChatRoomView {
+    Loading,
+    Timeline(Entity<RoomTimelineContent>),
+    SpaceLobby(Entity<SpaceLobbyContent>),
 }
 
 impl ChatRoom {
@@ -89,6 +96,7 @@ impl ChatRoom {
                 cx.notify();
             });
             let trigger_user_action_listener = cx.listener(Self::trigger_user_action);
+
             let room_members = cx.new(|cx| {
                 RoomMembers::new(
                     open_room.clone(),
@@ -99,15 +107,44 @@ impl ChatRoom {
                 )
             });
 
-            let trigger_user_action_listener = cx.listener(Self::trigger_user_action);
-            let timeline_view = cx.new(|cx| {
-                TimelineView::new(
-                    open_room.clone(),
-                    displayed_room.clone(),
-                    trigger_user_action_listener,
-                    cx,
-                )
-            });
+            cx.observe(&open_room, {
+                let displayed_room = displayed_room.clone();
+                let on_surface_change = on_surface_change.clone();
+                move |this, open_room, cx| {
+                    if !matches!(this.view, ChatRoomView::Loading) {
+                        return;
+                    }
+
+                    let Some(room) = &open_room.read(cx).room else {
+                        return;
+                    };
+
+                    if room.is_space() {
+                        this.view = ChatRoomView::SpaceLobby(cx.new({
+                            let open_room = open_room.clone();
+                            move |cx| SpaceLobbyContent::new(open_room, cx)
+                        }))
+                    } else {
+                        let trigger_user_action_listener = cx.listener(Self::trigger_user_action);
+                        this.view = ChatRoomView::Timeline(cx.new({
+                            let displayed_room = displayed_room.clone();
+                            let on_surface_change = on_surface_change.clone();
+                            let open_room = open_room.clone();
+                            move |cx| {
+                                RoomTimelineContent::new(
+                                    displayed_room,
+                                    open_room,
+                                    on_surface_change,
+                                    trigger_user_action_listener,
+                                    cx,
+                                )
+                            }
+                        }))
+                    }
+                    cx.notify();
+                }
+            })
+            .detach();
 
             Self {
                 open_room,
@@ -115,8 +152,8 @@ impl ChatRoom {
                 room_settings,
                 room_members,
                 current_page: ChatRoomPage::Chat,
-                timeline_view,
                 on_surface_change,
+                view: ChatRoomView::Loading,
 
                 microphone_access_dialog: false,
             }
@@ -185,7 +222,6 @@ impl Render for ChatRoom {
 
         let room_id = room.room_id().to_owned();
         let room_id_2 = room.room_id().to_owned();
-        let chat_bar = open_room.chat_bar.clone();
 
         let call_members = open_room.active_call_users.read(cx).clone();
 
@@ -234,57 +270,19 @@ impl Render for ChatRoom {
                                         })),
                                 ),
                         )
-                        .child(
-                            div()
-                                .flex()
-                                .flex_col()
+                        .child(match self.view.clone() {
+                            ChatRoomView::Loading => div()
                                 .flex_grow()
-                                .child(self.timeline_view.clone())
-                                .when(!call_members.is_empty(), |david| {
-                                    david.child(CallMembersView {
-                                        members: call_members,
-                                        start_call: Box::new(cx.listener(|this, _, window, cx| {
-                                            this.start_call(window, cx);
-                                        })),
-                                    })
-                                })
-                                .when(!pending_attachments.is_empty(), |david| {
-                                    david.child(AttachmentsView {
-                                        open_room: self.open_room.clone(),
-                                    })
-                                }),
-                        )
-                        .when(
-                            open_room.tags.contains_key(&TagName::ServerNotice),
-                            |david| {
-                                david.child(
-                                    div().px(px(2.)).pb(px(2.)).child(
-                                        admonition()
-                                            .title(tr!("SERVER_NOTICE_ROOM_TITLE", "Official Room"))
-                                            .child(tr!(
-                                                "SERVER_NOTICE_ROOM_CONTENT",
-                                                "Notices from your homeserver will appear \
-                                                    in this room."
-                                            )),
-                                    ),
-                                )
-                            },
-                        )
-                        .child(chat_bar)
-                        .child(
-                            div()
-                                .absolute()
-                                .left_0()
-                                .top_0()
-                                .size_full()
-                                .on_drop(cx.listener(|this, event: &ExternalPaths, _, cx| {
-                                    this.open_room.update(cx, |open_room, cx| {
-                                        for path in event.paths() {
-                                            open_room.attach_from_disk(path.clone(), cx);
-                                        }
-                                    });
-                                })),
-                        )
+                                .flex()
+                                .items_center()
+                                .justify_center()
+                                .child(spinner())
+                                .into_any_element(),
+                            ChatRoomView::Timeline(timeline_view) => {
+                                timeline_view.into_any_element()
+                            }
+                            ChatRoomView::SpaceLobby(space_lobby) => space_lobby.into_any_element(),
+                        })
                         .into_any_element(),
                 )
                 .page(self.room_settings.clone().into_any_element())

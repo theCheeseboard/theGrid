@@ -77,6 +77,7 @@
   "CREATE_ROOM_TITLE": "Create Room",
   "CREATE_ROOM_VISIBILITY_PRIVATE": "Create Private Room",
   "CREATE_ROOM_VISIBILITY_PUBLIC": "Create Public Room",
+  "CREATE_SUBSPACE": "Create Subordinate Space",
   "DATE_DIVIDER": "{{date}}",
   "DEVICES_LOG_OUT_ACTION": "Forcibly log out",
   "DEVICES_LOG_OUT_INFORMATION": "The device won't be able to receive or send any messages, and if it was verified, it will no longer be verified.",
@@ -328,6 +329,7 @@
     "other": "{{count}} invites"
   },
   "SORRY": "Sorry",
+  "SPACE_LOBBY_INTRO": "Welcome to the lobby",
   "TYPING_NOTIFICATION": {
     "one": "{{count}} user is typing...",
     "other": "{{count}} users are typing..."

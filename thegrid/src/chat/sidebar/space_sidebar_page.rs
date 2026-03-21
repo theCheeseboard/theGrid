@@ -2,15 +2,11 @@ use crate::chat::chat_room::invite_popover::InvitePopover;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::standard_room_element::{InviteEvent, StandardRoomElement};
 use crate::chat::sidebar::{Sidebar, SidebarPage};
-use cntp_i18n::tr;
-use contemporary::components::context_menu::ContextMenuItem;
 use contemporary::components::grandstand::grandstand;
-use contemporary::styling::theme::Theme;
-use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, Context, ElementId, Entity, FontWeight, InteractiveElement, IntoElement,
-    ListAlignment, ListState, ParentElement, Render, StatefulInteractiveElement, Styled, Window,
-    div, list, px,
+    div, list, px, App, AppContext, Context, ElementId,
+    Entity, InteractiveElement, IntoElement, ListAlignment, ListState, ParentElement,
+    Render, Styled, Window,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use std::rc::Rc;
@@ -43,12 +39,12 @@ impl SpaceSidebarPage {
         }
     }
 
-    fn change_room(&mut self, room_id: OwnedRoomId, window: &mut Window, cx: &mut Context<Self>) {
+    fn change_room(&mut self, room_id: OwnedRoomId, _: &mut Window, cx: &mut Context<Self>) {
         let session_manager = cx.global::<SessionManager>();
         let room_cache = session_manager.rooms().read(cx);
 
         let room = room_cache.room(&room_id).unwrap().read(cx);
-        if room.inner.is_space() {
+        if room.inner.is_space() && room_id != self.room_id {
             let sidebar = self.sidebar.clone();
             let sidebar_page = cx.new(|cx| {
                 let page = SpaceSidebarPage::new(
@@ -68,7 +64,7 @@ impl SpaceSidebarPage {
         }
     }
 
-    fn invite_to_room(&mut self, event: &InviteEvent, window: &mut Window, cx: &mut Context<Self>) {
+    fn invite_to_room(&mut self, event: &InviteEvent, _: &mut Window, cx: &mut Context<Self>) {
         self.invite_popover.update(cx, |invite_popover, cx| {
             invite_popover.open_invite_popover(event.room_id.clone(), cx)
         })
@@ -82,9 +78,11 @@ impl Render for SpaceSidebarPage {
 
         let this_room = room_cache.room(&self.room_id).unwrap().read(cx);
 
-        let root_rooms = room_cache
+        let mut root_rooms = room_cache
             .rooms_in_category(RoomCategory::Space(self.room_id.clone()), cx)
             .clone();
+
+        root_rooms.insert(0, room_cache.room(&self.room_id).unwrap());
 
         if root_rooms.len() != self.list_state.item_count() {
             self.list_state.reset(root_rooms.len());

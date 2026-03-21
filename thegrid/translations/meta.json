@@ -449,6 +449,12 @@
     "plural": false,
     "description": null
   },
+  "CREATE_SUBSPACE": {
+    "context": "space_lobby_content.rs",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:295",
+    "plural": false,
+    "description": null
+  },
   "DATE_DIVIDER": {
     "context": "timeline_item.rs",
     "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:286",
@@ -1207,13 +1213,13 @@
   },
   "PERMISSION_MICROPHONE_DENIED_CONTENT": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:305",
+    "definedIn": "src/chat/chat_room.rs:303",
     "plural": false,
     "description": null
   },
   "PERMISSION_MICROPHONE_DENIED_TITLE": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:299",
+    "definedIn": "src/chat/chat_room.rs:297",
     "plural": false,
     "description": null
   },
@@ -1548,8 +1554,8 @@
     "description": null
   },
   "ROOM_DIRECTORY_MEMBER_COUNT": {
-    "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:434",
+    "context": "space_lobby_content.rs",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:186",
     "plural": true,
     "description": null
   },
@@ -1866,14 +1872,14 @@
     "description": null
   },
   "SERVER_NOTICE_ROOM_CONTENT": {
-    "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:265",
+    "context": "room_timeline_content.rs",
+    "definedIn": "src/chat/chat_room/room_timeline_content.rs:102",
     "plural": false,
     "description": null
   },
   "SERVER_NOTICE_ROOM_TITLE": {
-    "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:263",
+    "context": "room_timeline_content.rs",
+    "definedIn": "src/chat/chat_room/room_timeline_content.rs:100",
     "plural": false,
     "description": null
   },
@@ -1916,6 +1922,12 @@
   "SORRY": {
     "context": "auth_surface.rs",
     "definedIn": "src/auth/auth_surface.rs:639",
+    "plural": false,
+    "description": null
+  },
+  "SPACE_LOBBY_INTRO": {
+    "context": "space_lobby_content.rs",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:274",
     "plural": false,
     "description": null
   },
@@ -2017,7 +2029,7 @@
   },
   "UNKNOWN_ROOM": {
     "context": "chat_room.rs",
-    "definedIn": "src/chat/chat_room.rs:178",
+    "definedIn": "src/chat/chat_room.rs:215",
     "plural": false,
     "description": null
   },
