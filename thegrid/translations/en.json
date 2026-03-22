@@ -191,6 +191,7 @@
   "MEMBER_LIST_FILTER_JOINED": "Joined",
   "MENU_ACCOUNT": "Account",
   "MENU_ROOMS": "Rooms",
+  "MESSAGE_UNABLE_TO_DECRYPT": "Unable to decrypt",
   "MESSAGE_UNSUPPORTED": "Unsupported Message",
   "MODERATION_ACTION_REASON_PLACEHOLDER": "Reason (optional)",
   "NEW_DISPLAY_NAME_PLACEHOLDER": "New Display Name",

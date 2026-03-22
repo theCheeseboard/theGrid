@@ -1,21 +1,22 @@
-use cntp_i18n::{Quote, tr};
+use cntp_i18n::{tr, Quote};
 use contemporary::components::button::button;
 use contemporary::components::context_menu::ContextMenuItem;
 use contemporary::components::icon::icon;
+use contemporary::components::icon_text::icon_text;
 use contemporary::components::spinner::spinner;
 use contemporary::styling::theme::{Theme, VariableColor};
 use directories::UserDirs;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, BorrowAppContext, Entity, IntoElement, ParentElement, RenderOnce, Styled,
-    Window, div, px, rgba,
+    div, px, rgba, App, AsyncApp, BorrowAppContext, Entity, IntoElement,
+    ParentElement, RenderOnce, Styled, Window,
 };
 use matrix_sdk::ruma::events::room::message::{FileMessageEventContent, MessageType};
 use matrix_sdk_ui::timeline::{
     EmbeddedEvent, MsgLikeContent, MsgLikeKind, TimelineDetails, TimelineItemContent,
 };
 use std::fs::copy;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::media_cache::{MediaCacheEntry, MediaFile, MediaState};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_text_rendering::TextView;
@@ -79,6 +80,17 @@ impl RenderOnce for TimelineMessageItem {
                     window,
                     cx,
                 )),
+                MsgLikeKind::UnableToDecrypt(_) => div()
+                    .text_color(theme.foreground.disabled())
+                    .italic()
+                    .child(
+                        div()
+                            .flex()
+                            .items_center()
+                            .gap(px(6.))
+                            .child(icon("exception".into()).foreground(theme.foreground.disabled()))
+                            .child(tr!("MESSAGE_UNABLE_TO_DECRYPT", "Unable to decrypt")),
+                    ),
                 _ => div(),
             })
     }
