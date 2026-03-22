@@ -1,23 +1,22 @@
-use cntp_i18n::{Quote, tr};
+use cntp_i18n::{tr, Quote};
 use contemporary::components::button::button;
 use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::icon_text::icon_text;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, ClickEvent, ClipboardItem, ElementId, Entity, FontWeight, InteractiveElement,
-    IntoElement, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window, div, px,
+    div, px, App, AsyncApp, ClickEvent, ClipboardItem, Entity, FontWeight,
+    InteractiveElement, IntoElement, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window,
 };
-use matrix_sdk::RoomMemberships;
 use matrix_sdk::ruma::OwnedRoomId;
+use matrix_sdk::RoomMemberships;
 use std::collections::HashMap;
 use std::rc::Rc;
 use thegrid_common::session::room_cache::CachedRoom;
-use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
-use url::Url;
 
+#[derive(Clone)]
 pub struct InviteEvent {
     pub room_id: OwnedRoomId,
 }
@@ -25,9 +24,16 @@ pub struct InviteEvent {
 #[derive(IntoElement)]
 pub struct StandardRoomElement {
     pub room: Entity<CachedRoom>,
+    pub render_as: StandardRoomElementType,
     pub current_room: Option<OwnedRoomId>,
     pub on_click: Rc<Box<dyn Fn(&ClickEvent, &mut Window, &mut App)>>,
     pub on_invite: Rc<Box<dyn Fn(&InviteEvent, &mut Window, &mut App)>>,
+}
+
+#[derive(Clone, Copy)]
+pub enum StandardRoomElementType {
+    Room,
+    Space,
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -172,7 +178,19 @@ impl RenderOnce for StandardRoomElement {
                     .is_some_and(|current_room| current_room == room_id),
                 |david| david.bg(theme.button_background),
             )
-            .child(display_name.clone())
+            .child(match self.render_as {
+                StandardRoomElementType::Room => display_name.clone().into_any_element(),
+                StandardRoomElementType::Space => icon_text(
+                    "map-globe".into(),
+                    tr!(
+                        "SPACE_LOBBY",
+                        "{{space}} Lobby",
+                        space = display_name.clone()
+                    )
+                    .into(),
+                )
+                .into_any_element(),
+            })
             .child(div().flex_grow())
             .when_else(
                 room.inner.unread_notification_counts().notification_count > 0,

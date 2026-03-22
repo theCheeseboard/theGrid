@@ -1,23 +1,17 @@
 use crate::chat::chat_room::invite_popover::InvitePopover;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::directory_sidebar_page::DirectorySidebarPage;
+use crate::chat::sidebar::sidebar_list::{sidebar_list, SidebarItem, SidebarListEvent};
 use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
-use crate::chat::sidebar::standard_room_element::{InviteEvent, StandardRoomElement};
+use crate::chat::sidebar::standard_room_element::InviteEvent;
 use crate::chat::sidebar::{Sidebar, SidebarPage};
-use cntp_i18n::{tr, trn};
+use cntp_i18n::tr;
 use contemporary::components::grandstand::grandstand;
-use contemporary::components::icon::icon;
-use contemporary::components::subtitle::subtitle;
-use contemporary::styling::theme::Theme;
-use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, list, px, AppContext, Context, ElementId, Entity,
-    InteractiveElement, IntoElement, ListAlignment, ListState, ParentElement, Render, StatefulInteractiveElement,
-    Styled, Subscription, Window,
+    div, px, AppContext, Context, Entity, IntoElement, ListAlignment, ListState,
+    ParentElement, Render, Styled, Subscription, Window,
 };
 use matrix_sdk::ruma::OwnedRoomId;
-use std::rc::Rc;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::room_cache::{CachedRoom, RoomCategory};
 use thegrid_common::session::session_manager::SessionManager;
 
@@ -28,14 +22,6 @@ pub struct RootSidebarPage {
     items: Vec<SidebarItem>,
     room_cache_subscription: Option<Subscription>,
     invite_popover: Entity<InvitePopover>,
-}
-
-pub enum SidebarItem {
-    Heading(String),
-    Room(Entity<CachedRoom>),
-    Space(Entity<CachedRoom>),
-    Create,
-    Directory,
 }
 
 impl RootSidebarPage {
@@ -79,7 +65,7 @@ impl RootSidebarPage {
         if room.inner.is_space() {
             let sidebar = self.sidebar.clone();
             let sidebar_page = cx.new(|cx| {
-                SpaceSidebarPage::new(cx, room_id.clone(), sidebar, self.displayed_room.clone())
+                SpaceSidebarPage::new(room_id.clone(), sidebar, self.displayed_room.clone(), cx)
             });
             self.sidebar.update(cx, |sidebar, cx| {
                 sidebar.push_page(SidebarPage::Space(sidebar_page))
@@ -175,142 +161,20 @@ impl Render for RootSidebarPage {
                     .text(tr!("ROOMS_SPACES", "Rooms and Spaces"))
                     .pt(px(36.)),
             )
-            .child(
-                div().flex_grow().child(
-                    list(
-                        self.list_state.clone(),
-                        cx.processor(move |this, i, _, cx| {
-                            let theme = cx.global::<Theme>();
-                            let item = &this.items[i];
-
-                            let displayed_room = this.displayed_room.read(cx);
-
-                            let current_room = match displayed_room {
-                                DisplayedRoom::Room(room_id) => Some(room_id.clone()),
-                                _ => None,
-                            };
-
-                            match item {
-                                SidebarItem::Create => {
-                                    let session_manager = cx.global::<SessionManager>();
-                                    let room_cache = session_manager.rooms().read(cx);
-                                    let invited_rooms = room_cache.invited_rooms(cx);
-
-                                    div()
-                                        .id("create-join")
-                                        .m(px(2.))
-                                        .p(px(2.))
-                                        .gap(px(4.))
-                                        .rounded(theme.border_radius)
-                                        .flex()
-                                        .w_full()
-                                        .items_center()
-                                        .child(icon("list-add".into()))
-                                        .child(tr!("SIDEBAR_CREATE_JOIN", "Create or Join"))
-                                        .when(!invited_rooms.is_empty(), |david| {
-                                            david.child(
-                                                div()
-                                                    .rounded(theme.border_radius)
-                                                    .bg(theme.info_accent_color)
-                                                    .p(px(2.))
-                                                    .child(trn!(
-                                                        "SIDEBAR_PENDING_INVITES",
-                                                        "{{count}} invite",
-                                                        "{{count}} invites",
-                                                        count = invited_rooms.len() as isize
-                                                    )),
-                                            )
-                                        })
-                                        .when(
-                                            matches!(displayed_room, DisplayedRoom::CreateRoom),
-                                            |david| david.bg(theme.button_background),
-                                        )
-                                        .on_click(cx.listener(move |this, _, window, cx| {
-                                            this.displayed_room
-                                                .write(cx, DisplayedRoom::CreateRoom);
-                                        }))
-                                        .into_any_element()
-                                }
-                                SidebarItem::Directory => div()
-                                    .id("directory")
-                                    .m(px(2.))
-                                    .p(px(2.))
-                                    .gap(px(4.))
-                                    .rounded(theme.border_radius)
-                                    .flex()
-                                    .w_full()
-                                    .items_center()
-                                    .child(icon("map-globe".into()))
-                                    .child(tr!("SIDEBAR_DIRECTORY", "Room Directory"))
-                                    .on_click(cx.listener(move |this, _, window, cx| {
-                                        this.open_directory(window, cx);
-                                    }))
-                                    .into_any_element(),
-                                SidebarItem::Heading(heading) => div()
-                                    .pt(px(8.))
-                                    .pl(px(4.))
-                                    .child(subtitle(heading))
-                                    .into_any_element(),
-                                SidebarItem::Room(room_entity) => {
-                                    let room = room_entity.read(cx);
-                                    let room_id = room.inner.room_id().to_owned();
-
-                                    div()
-                                        .id(ElementId::Name(
-                                            room.inner.room_id().to_string().into(),
-                                        ))
-                                        .child(StandardRoomElement {
-                                            room: room_entity.clone(),
-                                            current_room,
-                                            on_click: Rc::new(Box::new(cx.listener(
-                                                move |this, _, window, cx| {
-                                                    this.change_room(room_id.clone(), window, cx);
-                                                },
-                                            ))),
-                                            on_invite: Rc::new(Box::new(
-                                                cx.listener(Self::invite_to_room),
-                                            )),
-                                        })
-                                        .into_any_element()
-                                }
-                                SidebarItem::Space(room) => {
-                                    let room = room.read(cx);
-                                    let room_id = room.inner.room_id().to_owned();
-                                    div()
-                                        .flex()
-                                        .items_center()
-                                        .id(ElementId::Name(
-                                            room.inner.room_id().to_string().into(),
-                                        ))
-                                        .m(px(2.))
-                                        .p(px(2.))
-                                        .gap(px(2.))
-                                        .child(
-                                            mxc_image(room.inner.avatar_url())
-                                                .size(px(32.))
-                                                .size_policy(SizePolicy::Fit)
-                                                .rounded(theme.border_radius),
-                                        )
-                                        .child(
-                                            room.inner
-                                                .cached_display_name()
-                                                .map(|name| name.to_string())
-                                                .or_else(|| room.inner.name())
-                                                .unwrap_or_default(),
-                                        )
-                                        .on_click(cx.listener(move |this, _, window, cx| {
-                                            this.change_room(room_id.clone(), window, cx);
-                                        }))
-                                        .into_any_element()
-                                }
-                            }
-                        }),
-                    )
-                    .flex()
-                    .flex_col()
-                    .h_full(),
-                ),
-            )
+            .child(div().flex_grow().child(sidebar_list(
+                self.list_state.clone(),
+                self.items.clone(),
+                self.displayed_room.clone(),
+                cx.listener(move |this, event, window, cx| match event {
+                    SidebarListEvent::OpenDirectory => this.open_directory(window, cx),
+                    SidebarListEvent::ChangeRoom(room_id) => {
+                        this.change_room(room_id.clone(), window, cx)
+                    }
+                    SidebarListEvent::InviteToRoom(invite_event) => {
+                        this.invite_to_room(invite_event, window, cx)
+                    }
+                }),
+            )))
             .child(self.invite_popover.clone())
     }
 }

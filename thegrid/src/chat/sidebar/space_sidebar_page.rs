@@ -1,16 +1,20 @@
 use crate::chat::chat_room::invite_popover::InvitePopover;
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::sidebar::standard_room_element::{InviteEvent, StandardRoomElement};
+use crate::chat::sidebar::sidebar_list::{sidebar_list, SidebarItem, SidebarListEvent};
+use crate::chat::sidebar::standard_room_element::InviteEvent;
 use crate::chat::sidebar::{Sidebar, SidebarPage};
+use cntp_i18n::tr;
+use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
+use contemporary::components::icon_text::icon_text;
+use contemporary::components::interstitial::interstitial;
+use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, list, px, App, AppContext, Context, ElementId,
-    Entity, InteractiveElement, IntoElement, ListAlignment, ListState, ParentElement,
-    Render, Styled, Window,
+    div, px, AppContext, Context, Entity, IntoElement, ListAlignment, ListState,
+    ParentElement, Render, Styled, Window,
 };
 use matrix_sdk::ruma::OwnedRoomId;
-use std::rc::Rc;
-use thegrid_common::session::room_cache::{CachedRoom, RoomCategory};
+use thegrid_common::session::room_cache::RoomCategory;
 use thegrid_common::session::session_manager::SessionManager;
 
 pub struct SpaceSidebarPage {
@@ -19,24 +23,84 @@ pub struct SpaceSidebarPage {
     sidebar: Entity<Sidebar>,
     displayed_room: Entity<DisplayedRoom>,
     invite_popover: Entity<InvitePopover>,
+    items: Vec<SidebarItem>,
+    have_rooms: bool,
 }
 
 impl SpaceSidebarPage {
     pub fn new(
-        cx: &mut App,
         room_id: OwnedRoomId,
         sidebar: Entity<Sidebar>,
         displayed_room: Entity<DisplayedRoom>,
+        cx: &mut Context<Self>,
     ) -> Self {
         let invite_popover = cx.new(|cx| InvitePopover::new(cx));
 
-        Self {
+        let session_manager = cx.global::<SessionManager>();
+        let room_cache = session_manager.rooms();
+        cx.observe(&room_cache, |this, _, cx| this.update_sidebar_rooms(cx))
+            .detach();
+
+        let mut this = Self {
             list_state: ListState::new(0, ListAlignment::Top, px(200.)),
             room_id,
             sidebar,
             displayed_room,
             invite_popover,
+            items: Vec::new(),
+            have_rooms: false,
+        };
+        this.update_sidebar_rooms(cx);
+        this
+    }
+
+    fn update_sidebar_rooms(&mut self, cx: &mut Context<Self>) {
+        let session_manager = cx.global::<SessionManager>();
+        let room_cache = session_manager.rooms();
+        let room_cache = room_cache.read(cx);
+
+        let mut items = Vec::new();
+        items.push(SidebarItem::SpaceLobby(
+            room_cache.room(&self.room_id).unwrap(),
+        ));
+
+        let space_rooms = room_cache
+            .rooms_in_category(RoomCategory::Space(self.room_id.clone()), cx)
+            .clone();
+
+        let mut rooms = Vec::new();
+        let mut subordinate_spaces = Vec::new();
+
+        for room_entity in space_rooms {
+            if room_entity.read(cx).inner.is_space() {
+                subordinate_spaces.push(SidebarItem::Space(room_entity.clone()));
+            } else {
+                rooms.push(SidebarItem::Room(room_entity.clone()));
+            }
         }
+
+        self.have_rooms = false;
+        if !subordinate_spaces.is_empty() {
+            items.push(SidebarItem::Heading(
+                tr!("SPACE_SIDEBAR_SUBORDINATE_SPACES", "Subordinate Spaces").into(),
+            ));
+            items.extend(subordinate_spaces);
+            self.have_rooms = true;
+        }
+
+        if !rooms.is_empty() {
+            items.push(SidebarItem::Heading(tr!("ROOT_SIDEBAR_ROOMS").into()));
+            items.extend(rooms);
+            self.have_rooms = true;
+        }
+
+        self.items = items;
+
+        if self.items.len() != self.list_state.item_count() {
+            self.list_state.reset(self.items.len());
+        }
+
+        cx.notify();
     }
 
     fn change_room(&mut self, room_id: OwnedRoomId, _: &mut Window, cx: &mut Context<Self>) {
@@ -47,13 +111,7 @@ impl SpaceSidebarPage {
         if room.inner.is_space() && room_id != self.room_id {
             let sidebar = self.sidebar.clone();
             let sidebar_page = cx.new(|cx| {
-                let page = SpaceSidebarPage::new(
-                    cx,
-                    room_id.clone(),
-                    sidebar,
-                    self.displayed_room.clone(),
-                );
-                page
+                SpaceSidebarPage::new(room_id.clone(), sidebar, self.displayed_room.clone(), cx)
             });
             self.sidebar.update(cx, |sidebar, cx| {
                 sidebar.push_page(SidebarPage::Space(sidebar_page))
@@ -78,16 +136,6 @@ impl Render for SpaceSidebarPage {
 
         let this_room = room_cache.room(&self.room_id).unwrap().read(cx);
 
-        let mut root_rooms = room_cache
-            .rooms_in_category(RoomCategory::Space(self.room_id.clone()), cx)
-            .clone();
-
-        root_rooms.insert(0, room_cache.room(&self.room_id).unwrap());
-
-        if root_rooms.len() != self.list_state.item_count() {
-            self.list_state.reset(root_rooms.len());
-        }
-
         div()
             .flex()
             .flex_col()
@@ -103,38 +151,46 @@ impl Render for SpaceSidebarPage {
                         })
                     })),
             )
-            .child(
-                div().flex_grow().child(
-                    list(
+            .when_else(
+                self.have_rooms,
+                |david| {
+                    david.child(div().flex_grow().child(sidebar_list(
                         self.list_state.clone(),
-                        cx.processor(move |this, i, _, cx| {
-                            let room_entity: &Entity<CachedRoom> = &root_rooms[i];
-                            let room = room_entity.read(cx);
-                            let room_id = room.inner.room_id().to_owned();
-
-                            let current_room = match this.displayed_room.read(cx) {
-                                DisplayedRoom::Room(room_id) => Some(room_id.clone()),
-                                _ => None,
-                            };
-                            div()
-                                .id(ElementId::Name(room.inner.room_id().to_string().into()))
-                                .child(StandardRoomElement {
-                                    room: room_entity.clone(),
-                                    current_room,
-                                    on_click: Rc::new(Box::new(cx.listener(
-                                        move |this, _, window, cx| {
-                                            this.change_room(room_id.clone(), window, cx);
-                                        },
-                                    ))),
-                                    on_invite: Rc::new(Box::new(cx.listener(Self::invite_to_room))),
-                                })
-                                .into_any_element()
+                        self.items.clone(),
+                        self.displayed_room.clone(),
+                        cx.listener(|this, event, window, cx| match event {
+                            SidebarListEvent::ChangeRoom(room_id) => {
+                                this.change_room(room_id.clone(), window, cx)
+                            }
+                            SidebarListEvent::InviteToRoom(invite_event) => {
+                                this.invite_to_room(invite_event, window, cx)
+                            }
+                            _ => {}
                         }),
+                    )))
+                },
+                |david| {
+                    david.child(
+                        interstitial()
+                            .icon("im-room".into())
+                            .title(tr!("SPACE_SIDEBAR_NO_ROOMS", "No joined rooms").into())
+                            .message(tr!(
+                                "SPACE_SIDEBAR_NO_ROOMS_MESSAGE",
+                                "You haven't joined any rooms in this space. Check out the lobby \
+                                to find rooms to join!"
+                            ).into())
+                            .child(
+                                button("open-lobby")
+                                    .child(icon_text(
+                                        "map-globe".into(),
+                                        tr!("SPACE_SIDEBAR_OPEN_LOBBY", "Open Lobby").into(),
+                                    ))
+                                    .on_click(cx.listener(|this, _, window, cx| {
+                                        this.change_room(this.room_id.clone(), window, cx);
+                                    })),
+                            ).flex_grow(),
                     )
-                    .flex()
-                    .flex_col()
-                    .h_full(),
-                ),
+                },
             )
             .child(self.invite_popover.clone())
     }

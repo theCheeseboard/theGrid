@@ -1,5 +1,6 @@
 mod directory_sidebar_page;
 mod root_sidebar_page;
+mod sidebar_list;
 mod space_sidebar_page;
 mod standard_room_element;
 
@@ -11,7 +12,7 @@ use crate::chat::sidebar::directory_sidebar_page::DirectorySidebarPage;
 use crate::chat::sidebar::root_sidebar_page::RootSidebarPage;
 use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
 use cntp_i18n::{tr, trn};
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -21,16 +22,16 @@ use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, BorrowAppContext, Context, Entity, InteractiveElement, IntoElement,
-    ListAlignment, ListState, ParentElement, Render, RenderOnce, StatefulInteractiveElement,
-    Styled, Window, div, px,
+    div, px, App, AppContext, AsyncApp, BorrowAppContext, Context, Entity,
+    InteractiveElement, IntoElement, ListAlignment, ListState, ParentElement, Render,
+    RenderOnce, StatefulInteractiveElement, Styled, Window,
 };
 use gpui_tokio::Tokio;
 use matrix_sdk::encryption::recovery::RecoveryState;
 use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use matrix_sdk::ruma::room_id;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::error_handling::{ClientError, RecoverableClientError};
 use thegrid_common::session::room_cache::RoomCategory;
 use thegrid_common::session::session_manager::SessionManager;

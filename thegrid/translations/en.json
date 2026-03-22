@@ -329,7 +329,12 @@
     "other": "{{count}} invites"
   },
   "SORRY": "Sorry",
+  "SPACE_LOBBY": "{{space}} Lobby",
   "SPACE_LOBBY_INTRO": "Welcome to the lobby",
+  "SPACE_SIDEBAR_NO_ROOMS": "No joined rooms",
+  "SPACE_SIDEBAR_NO_ROOMS_MESSAGE": "You haven't joined any rooms in this space. Check out the lobby to find rooms to join!",
+  "SPACE_SIDEBAR_OPEN_LOBBY": "Open Lobby",
+  "SPACE_SIDEBAR_SUBORDINATE_SPACES": "Subordinate Spaces",
   "TYPING_NOTIFICATION": {
     "one": "{{count}} user is typing...",
     "other": "{{count}} users are typing..."
