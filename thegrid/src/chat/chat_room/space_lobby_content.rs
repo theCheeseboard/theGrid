@@ -1,30 +1,52 @@
 use crate::chat::chat_room::open_room::OpenRoom;
+use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::{tr, trn};
+use contemporary::components::admonition::AdmonitionSeverity;
 use contemporary::components::button::button;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::skeleton::skeleton;
 use contemporary::components::subtitle::subtitle;
+use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{ThemeStorage, VariableColor};
+use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, list, px, AnyElement, Context, Entity, InteractiveElement,
-    IntoElement, ListAlignment, ListScrollEvent, ListState, ParentElement, Render, Styled, Window,
+    div, list, px, AnyElement, AsyncWindowContext, Context,
+    Entity, InteractiveElement, IntoElement, ListAlignment, ListScrollEvent, ListState, ParentElement, Render,
+    Styled, WeakEntity, Window,
 };
-use matrix_sdk::RoomState;
+use matrix_sdk::ruma::room::JoinRuleSummary;
+use matrix_sdk::ruma::{OwnedRoomId, OwnedRoomOrAliasId};
+use matrix_sdk::{Room, RoomState};
 use matrix_sdk_ui::spaces::room_list::SpaceRoomListPaginationState;
+use std::collections::HashSet;
 use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::session::spaces_cache::SpaceRoomListEntity;
+use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct SpaceLobbyContent {
+    displayed_room: Entity<DisplayedRoom>,
     open_room: Entity<OpenRoom>,
     space_rooms: Entity<SpaceRoomListEntity>,
+
+    joining_rooms: HashSet<OwnedRoomId>,
 
     list_state: ListState,
 }
 
+enum JoinButtonType {
+    View(Room),
+    Knock,
+    Join,
+}
+
 impl SpaceLobbyContent {
-    pub fn new(open_room: Entity<OpenRoom>, cx: &mut Context<Self>) -> Self {
+    pub fn new(
+        displayed_room: Entity<DisplayedRoom>,
+        open_room: Entity<OpenRoom>,
+        cx: &mut Context<Self>,
+    ) -> Self {
         let room_id = open_room.read(cx).room_id.clone();
         let session_manager = cx.global::<SessionManager>();
         let space_rooms = session_manager
@@ -57,7 +79,7 @@ impl SpaceLobbyContent {
                 list_state.reset(
                     space_rooms.rooms().len()
                         + match space_rooms.pagination_state() {
-                            SpaceRoomListPaginationState::Idle { end_reached: true } => 0,
+                            SpaceRoomListPaginationState::Idle { end_reached } if *end_reached => 0,
                             _ => 3,
                         },
                 );
@@ -67,10 +89,66 @@ impl SpaceLobbyContent {
         .detach();
 
         Self {
+            displayed_room,
             open_room,
             space_rooms,
+            joining_rooms: HashSet::new(),
             list_state,
         }
+    }
+
+    fn change_room(&mut self, room_id: OwnedRoomId, cx: &mut Context<Self>) {
+        self.displayed_room
+            .write(cx, DisplayedRoom::Room(room_id.clone()));
+    }
+
+    fn join_room(
+        &mut self,
+        room_id: OwnedRoomId,
+        knock: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let session_manager = cx.global::<SessionManager>();
+        let client = session_manager.client().unwrap().read(cx).clone();
+        let via = [];
+
+        self.joining_rooms.insert(room_id.clone());
+        cx.notify();
+
+        cx.spawn_in(
+            window,
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncWindowContext| {
+                let room_id_clone = room_id.clone();
+                let result = cx
+                    .spawn_tokio(async move {
+                        if knock {
+                            client
+                                .knock(room_id_clone.into(), None, Vec::from(via))
+                                .await
+                        } else {
+                            client.join_room_by_id(&room_id_clone).await
+                        }
+                    })
+                    .await;
+
+                let _ = weak_this.update_in(cx, |this, window, cx| {
+                    this.joining_rooms.remove(&room_id);
+                    if let Err(e) = result {
+                        Toast::new()
+                            .title(tr!("JOIN_ERROR_TITLE").as_ref())
+                            .body(tr!("JOIN_ERROR_TEXT", room = room_id.to_string()).as_ref())
+                            .severity(AdmonitionSeverity::Error)
+                            .post(window, cx);
+                        cx.notify();
+                        return;
+                    }
+
+                    cx.notify();
+                });
+            },
+        )
+        .detach();
     }
 
     fn render_list_item(
@@ -137,13 +215,20 @@ impl SpaceLobbyContent {
                 }
             });
 
-        // let view_button_type = if let Some(joined_room) = joined_room {
-        //     crate::chat::room_directory::JoinButtonType::View(joined_room.clone())
-        // } else if room_description.join_rule == JoinRuleKind::Knock {
-        //     crate::chat::room_directory::JoinButtonType::Knock
-        // } else {
-        //     crate::chat::room_directory::JoinButtonType::Join
-        // };
+        let view_button_type = if let Some(joined_room) = joined_room {
+            JoinButtonType::View(joined_room.clone())
+        } else if space_room
+            .join_rule
+            .as_ref()
+            .is_some_and(|join_rule| join_rule == &JoinRuleSummary::Knock)
+        {
+            JoinButtonType::Knock
+        } else {
+            JoinButtonType::Join
+        };
+
+        let room_id = space_room.room_id.clone();
+        let joining_room = self.joining_rooms.contains(&room_id);
 
         div()
             .id(i)
@@ -188,57 +273,40 @@ impl SpaceLobbyContent {
                                             "{{count}} members",
                                             count = space_room.num_joined_members as isize
                                         ),
-                                    )), // .child(match view_button_type {
-                                        //     crate::chat::room_directory::JoinButtonType::View(room) => {
-                                        //         let room_id = room.room_id().to_owned();
-                                        //         button("view-button")
-                                        //             .child(icon_text(
-                                        //                 "go-next".into(),
-                                        //                 tr!("VIEW_ROOM", "View Room").into(),
-                                        //             ))
-                                        //             .on_click(cx.listener(
-                                        //                 move |this, _, window, cx| {
-                                        //                     this.change_room(room_id.clone(), cx);
-                                        //                 },
-                                        //             ))
-                                        //     }
-                                        //     crate::chat::room_directory::JoinButtonType::Knock => {
-                                        //         button("join-button")
-                                        //             .when(joining_room, |button| button.disabled())
-                                        //             .child(icon_text(
-                                        //                 "list-add".into(),
-                                        //                 tr!("KNOCK_ON_ROOM", "Knock").into(),
-                                        //             ))
-                                        //             .on_click(cx.listener(
-                                        //                 move |this, _, window, cx| {
-                                        //                     this.join_room(
-                                        //                         room_id.clone(),
-                                        //                         true,
-                                        //                         window,
-                                        //                         cx,
-                                        //                     );
-                                        //                 },
-                                        //             ))
-                                        //     }
-                                        //     crate::chat::room_directory::JoinButtonType::Join => {
-                                        //         button("join-button")
-                                        //             .when(joining_room, |button| button.disabled())
-                                        //             .child(icon_text(
-                                        //                 "list-add".into(),
-                                        //                 tr!("JOIN_ROOM").into(),
-                                        //             ))
-                                        //             .on_click(cx.listener(
-                                        //                 move |this, _, window, cx| {
-                                        //                     this.join_room(
-                                        //                         room_id.clone(),
-                                        //                         false,
-                                        //                         window,
-                                        //                         cx,
-                                        //                     );
-                                        //                 },
-                                        //             ))
-                                        //     }
-                                        // }),
+                                    ))
+                                    .child(match view_button_type {
+                                        JoinButtonType::View(room) => {
+                                            let room_id = room.room_id().to_owned();
+                                            button("view-button")
+                                                .child(icon_text(
+                                                    "go-next".into(),
+                                                    tr!("VIEW_ROOM").into(),
+                                                ))
+                                                .on_click(cx.listener(
+                                                    move |this, _, window, cx| {
+                                                        this.change_room(room_id.clone(), cx);
+                                                    },
+                                                ))
+                                        }
+                                        JoinButtonType::Knock => button("join-button")
+                                            .when(joining_room, |button| button.disabled())
+                                            .child(icon_text(
+                                                "list-add".into(),
+                                                tr!("KNOCK_ON_ROOM").into(),
+                                            ))
+                                            .on_click(cx.listener(move |this, _, window, cx| {
+                                                this.join_room(room_id.clone(), true, window, cx);
+                                            })),
+                                        JoinButtonType::Join => button("join-button")
+                                            .when(joining_room, |button| button.disabled())
+                                            .child(icon_text(
+                                                "list-add".into(),
+                                                tr!("JOIN_ROOM").into(),
+                                            ))
+                                            .on_click(cx.listener(move |this, _, window, cx| {
+                                                this.join_room(room_id.clone(), false, window, cx);
+                                            })),
+                                    }),
                             ),
                     ),
             )

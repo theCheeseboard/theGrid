@@ -122,7 +122,8 @@ impl ChatRoom {
                     if room.is_space() {
                         this.view = ChatRoomView::SpaceLobby(cx.new({
                             let open_room = open_room.clone();
-                            move |cx| SpaceLobbyContent::new(open_room, cx)
+                            let displayed_room = displayed_room.clone();
+                            move |cx| SpaceLobbyContent::new(displayed_room, open_room, cx)
                         }))
                     } else {
                         let trigger_user_action_listener = cx.listener(Self::trigger_user_action);
