@@ -2,6 +2,7 @@ use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::join_room::create_room_popover::CreateRoomPopover;
 use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
 use cntp_i18n::tr;
+use contemporary::components::admonition::AdmonitionSeverity;
 use contemporary::components::button::button;
 use contemporary::components::checkbox::{checkbox, CheckState};
 use contemporary::components::constrainer::constrainer;
@@ -10,6 +11,7 @@ use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::subtitle::subtitle;
+use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
@@ -19,7 +21,7 @@ use gpui::{
 };
 use matrix_sdk::room::RoomMember;
 use thegrid_common::mxc_image::{mxc_image, SizePolicy};
-use thegrid_common::session::room_cache::CachedRoom;
+use thegrid_common::session::room_cache::{CachedRoom, RoomJoinEvent};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 use tracing::error;
@@ -203,22 +205,48 @@ impl Invitation {
         room: Entity<CachedRoom>,
         displayed_room: Entity<DisplayedRoom>,
         processing: Entity<bool>,
+        window: &mut Window,
         cx: &mut App,
     ) {
         processing.write(cx, true);
+
         let room = room.read(cx).inner.clone();
         let room_id = room.room_id().to_owned();
-        cx.spawn(async move |cx: &mut AsyncApp| {
-            if let Err(e) = cx.spawn_tokio(async move { room.join().await }).await {
-                error!("Unable to accept invite: {e}");
-                processing.write(cx, false).unwrap();
-            } else {
-                displayed_room
-                    .write(cx, DisplayedRoom::Room(room_id))
-                    .unwrap();
-            };
-        })
-        .detach();
+
+        let session_manager = cx.global::<SessionManager>();
+        session_manager.rooms().update(cx, move |rooms, cx| {
+            rooms.join_room(
+                room_id.clone(),
+                false,
+                vec![],
+                move |event: &RoomJoinEvent, window, cx| {
+                    processing.write(cx, false);
+
+                    if let Err(e) = &event.result {
+                        Toast::new()
+                            .title(
+                                tr!(
+                                    "INVITE_ACCEPT_ERROR_TITLE",
+                                    "Unable to accept the invitation"
+                                )
+                                .as_ref(),
+                            )
+                            .body(
+                                tr!(
+                                    "INVITE_ACCEPT_ERROR_TEXT",
+                                    "Unable to accept the invitation to {{room}}",
+                                    room = room_id.to_string()
+                                )
+                                .as_ref(),
+                            )
+                            .severity(AdmonitionSeverity::Error)
+                            .post(window, cx);
+                    }
+                },
+                window,
+                cx,
+            );
+        });
     }
 
     fn reject_invite(
@@ -263,11 +291,15 @@ impl RenderOnce for Invitation {
         let invite_details = room.invite_details().unwrap();
         let inviter = invite_details.inviter;
 
+        let session_manager = cx.global::<SessionManager>();
+        let room_manager = session_manager.rooms().read(cx);
+
         let room_entity = self.room.clone();
         let room_entity_2 = self.room.clone();
         let processing_clone = processing.clone();
         let processing_clone_2 = processing.clone();
-        let processing = processing.read(cx);
+        let processing =
+            *processing.read(cx) || room_manager.joining_room(room.inner.room_id().to_owned());
 
         let displayed_room = self.displayed_room;
 
@@ -323,7 +355,7 @@ impl RenderOnce for Invitation {
                                 tr!("INVITE_DECLINE", "Decline").into(),
                             ))
                             .destructive()
-                            .when(*processing, |david| david.disabled())
+                            .when(processing, |david| david.disabled())
                             .on_click(move |_, _, cx| {
                                 decline_dialog_box_open_2.write(cx, true);
                             }),
@@ -334,12 +366,13 @@ impl RenderOnce for Invitation {
                                 "dialog-ok".into(),
                                 tr!("INVITE_ACCEPT", "Accept").into(),
                             ))
-                            .when(*processing, |david| david.disabled())
-                            .on_click(move |_, _, cx| {
+                            .when(processing, |david| david.disabled())
+                            .on_click(move |_, window, cx| {
                                 Self::accept_invite(
                                     room_entity_2.clone(),
                                     displayed_room.clone(),
                                     processing_clone_2.clone(),
+                                    window,
                                     cx,
                                 );
                             }),
@@ -349,7 +382,7 @@ impl RenderOnce for Invitation {
                 dialog_box("decline-dialog-box")
                     .render_as_deferred(true)
                     .visible(*decline_dialog_box_open.read(cx))
-                    .processing(*processing)
+                    .processing(processing)
                     .title(tr!("INVITE_DECLINE_TITLE", "Decline Pending Invitation").into())
                     .when_none(&inviter, |david| {
                         david.content(tr!("INVITE_DECLINE_CONFIRMATION", "Decline the invite?"))

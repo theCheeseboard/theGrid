@@ -2,7 +2,7 @@ use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::SidebarPage;
 use async_channel::Sender;
 use cntp_i18n::{tr, trn};
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
@@ -16,9 +16,9 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AnyElement, AppContext, AsyncApp, AsyncWindowContext, Context, Element, Entity,
-    InteractiveElement, IntoElement, ListAlignment, ListOffset, ListScrollEvent, ListState,
-    ParentElement, Render, Styled, WeakEntity, Window, div, list, px, rgb,
+    div, list, px, rgb, AnyElement, AppContext, AsyncApp,
+    AsyncWindowContext, Context, Element, Entity, InteractiveElement, IntoElement,
+    ListAlignment, ListOffset, ListScrollEvent, ListState, ParentElement, Render, Styled, WeakEntity, Window,
 };
 use imbl::Vector;
 use matrix_sdk::room_directory_search::{RoomDescription, RoomDirectorySearch};
@@ -27,7 +27,8 @@ use matrix_sdk::ruma::{OwnedRoomId, OwnedRoomOrAliasId};
 use matrix_sdk::stream::StreamExt;
 use matrix_sdk::{Error, OwnedServerName, Room, RoomState};
 use std::collections::HashSet;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::session::room_cache::RoomJoinEvent;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 
@@ -42,8 +43,6 @@ pub struct RoomDirectory {
     list_state: ListState,
     next_page_channel: Sender<()>,
     finished: bool,
-
-    joining_rooms: HashSet<OwnedRoomOrAliasId>,
 
     search_query: Entity<TextField>,
 }
@@ -113,8 +112,6 @@ impl RoomDirectory {
             list_state,
             next_page_channel: tx,
             finished: false,
-
-            joining_rooms: HashSet::new(),
 
             search_query,
         };
@@ -270,50 +267,36 @@ impl RoomDirectory {
         cx: &mut Context<Self>,
     ) {
         let session_manager = cx.global::<SessionManager>();
-        let client = session_manager.client().unwrap().read(cx).clone();
-        let via = [self.server_name.clone()];
-
-        self.joining_rooms.insert(room_id.clone());
-        cx.notify();
-
-        cx.spawn_in(
-            window,
-            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncWindowContext| {
-                let room_id_clone = room_id.clone();
-                let result = cx
-                    .spawn_tokio(async move {
-                        if knock {
-                            client.knock(room_id_clone, None, Vec::from(via)).await
-                        } else {
-                            client.join_room_by_id_or_alias(&room_id_clone, &via).await
-                        }
-                    })
-                    .await;
-
-                let _ = weak_this.update_in(cx, |this, window, cx| {
-                    this.joining_rooms.remove(&room_id);
-                    if let Err(e) = result {
-                        Toast::new()
-                            .title(tr!("JOIN_ERROR_TITLE", "Unable to join room").as_ref())
-                            .body(
-                                tr!(
-                                    "JOIN_ERROR_TEXT",
-                                    "Unable to join the room {{room}}",
-                                    room = room_id.to_string()
-                                )
-                                .as_ref(),
+        let callback = cx.listener({
+            let room_id = room_id.clone();
+            move |this, event: &RoomJoinEvent, window, cx| {
+                if let Err(e) = &event.result {
+                    Toast::new()
+                        .title(tr!("JOIN_ERROR_TITLE", "Unable to join room").as_ref())
+                        .body(
+                            tr!(
+                                "JOIN_ERROR_TEXT",
+                                "Unable to join the room {{room}}",
+                                room = room_id.to_string()
                             )
-                            .severity(AdmonitionSeverity::Error)
-                            .post(window, cx);
-                        cx.notify();
-                        return;
-                    }
-
-                    cx.notify();
-                });
-            },
-        )
-        .detach();
+                            .as_ref(),
+                        )
+                        .severity(AdmonitionSeverity::Error)
+                        .post(window, cx);
+                }
+                cx.notify();
+            }
+        });
+        session_manager.rooms().update(cx, |rooms, cx| {
+            rooms.join_room(
+                room_id,
+                knock,
+                vec![self.server_name.clone()],
+                callback,
+                window,
+                cx,
+            );
+        });
     }
 
     fn render_list_item(
@@ -366,9 +349,8 @@ impl RoomDirectory {
         };
 
         let session_manager = cx.global::<SessionManager>();
-        let joined_room = session_manager
-            .rooms()
-            .read(cx)
+        let room_manager = session_manager.rooms().read(cx);
+        let joined_room = room_manager
             .room(&room_description.room_id)
             .and_then(|room| {
                 let room = &room.read(cx).inner;
@@ -383,7 +365,7 @@ impl RoomDirectory {
             .clone()
             .map(OwnedRoomOrAliasId::from)
             .unwrap_or_else(|| room_description.room_id.clone().into());
-        let joining_room = self.joining_rooms.contains(&room_id);
+        let joining_room = room_manager.joining_room(room_id.clone());
 
         let view_button_type = if let Some(joined_room) = joined_room {
             JoinButtonType::View(joined_room.clone())

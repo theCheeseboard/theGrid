@@ -21,6 +21,7 @@ use matrix_sdk::{Room, RoomState};
 use matrix_sdk_ui::spaces::room_list::SpaceRoomListPaginationState;
 use std::collections::HashSet;
 use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::session::room_cache::RoomJoinEvent;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::session::spaces_cache::SpaceRoomListEntity;
 use thegrid_common::tokio_helper::TokioHelper;
@@ -29,8 +30,6 @@ pub struct SpaceLobbyContent {
     displayed_room: Entity<DisplayedRoom>,
     open_room: Entity<OpenRoom>,
     space_rooms: Entity<SpaceRoomListEntity>,
-
-    joining_rooms: HashSet<OwnedRoomId>,
 
     list_state: ListState,
 }
@@ -92,7 +91,6 @@ impl SpaceLobbyContent {
             displayed_room,
             open_room,
             space_rooms,
-            joining_rooms: HashSet::new(),
             list_state,
         }
     }
@@ -110,45 +108,29 @@ impl SpaceLobbyContent {
         cx: &mut Context<Self>,
     ) {
         let session_manager = cx.global::<SessionManager>();
-        let client = session_manager.client().unwrap().read(cx).clone();
-        let via = [];
-
-        self.joining_rooms.insert(room_id.clone());
-        cx.notify();
-
-        cx.spawn_in(
-            window,
-            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncWindowContext| {
-                let room_id_clone = room_id.clone();
-                let result = cx
-                    .spawn_tokio(async move {
-                        if knock {
-                            client
-                                .knock(room_id_clone.into(), None, Vec::from(via))
-                                .await
-                        } else {
-                            client.join_room_by_id(&room_id_clone).await
-                        }
-                    })
-                    .await;
-
-                let _ = weak_this.update_in(cx, |this, window, cx| {
-                    this.joining_rooms.remove(&room_id);
-                    if let Err(e) = result {
-                        Toast::new()
-                            .title(tr!("JOIN_ERROR_TITLE").as_ref())
-                            .body(tr!("JOIN_ERROR_TEXT", room = room_id.to_string()).as_ref())
-                            .severity(AdmonitionSeverity::Error)
-                            .post(window, cx);
-                        cx.notify();
-                        return;
-                    }
-
-                    cx.notify();
-                });
-            },
-        )
-        .detach();
+        let callback = cx.listener({
+            let room_id = room_id.clone();
+            move |this, event: &RoomJoinEvent, window, cx| {
+                if let Err(e) = &event.result {
+                    Toast::new()
+                        .title(tr!("JOIN_ERROR_TITLE", "Unable to join room").as_ref())
+                        .body(
+                            tr!(
+                                "JOIN_ERROR_TEXT",
+                                "Unable to join the room {{room}}",
+                                room = room_id.to_string()
+                            )
+                            .as_ref(),
+                        )
+                        .severity(AdmonitionSeverity::Error)
+                        .post(window, cx);
+                }
+                cx.notify();
+            }
+        });
+        session_manager.rooms().update(cx, |rooms, cx| {
+            rooms.join_room(room_id, knock, vec![], callback, window, cx);
+        });
     }
 
     fn render_list_item(
@@ -202,18 +184,15 @@ impl SpaceLobbyContent {
         };
 
         let session_manager = cx.global::<SessionManager>();
-        let joined_room = session_manager
-            .rooms()
-            .read(cx)
-            .room(&space_room.room_id)
-            .and_then(|room| {
-                let room = &room.read(cx).inner;
-                if room.state() == RoomState::Joined {
-                    Some(room)
-                } else {
-                    None
-                }
-            });
+        let room_manager = session_manager.rooms().read(cx);
+        let joined_room = room_manager.room(&space_room.room_id).and_then(|room| {
+            let room = &room.read(cx).inner;
+            if room.state() == RoomState::Joined {
+                Some(room)
+            } else {
+                None
+            }
+        });
 
         let view_button_type = if let Some(joined_room) = joined_room {
             JoinButtonType::View(joined_room.clone())
@@ -228,7 +207,7 @@ impl SpaceLobbyContent {
         };
 
         let room_id = space_room.room_id.clone();
-        let joining_room = self.joining_rooms.contains(&room_id);
+        let joining_room = room_manager.joining_room(room_id.clone());
 
         div()
             .id(i)

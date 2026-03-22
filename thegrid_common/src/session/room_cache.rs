@@ -1,23 +1,30 @@
+use crate::session::session_manager::SessionManager;
 use crate::tokio_helper::TokioHelper;
 use gpui::private::anyhow;
-use gpui::{App, AppContext, AsyncApp, Context, Entity, WeakEntity};
+use gpui::{App, AppContext, AsyncApp, AsyncWindowContext, Context, Entity, WeakEntity, Window};
 use imbl::Vector;
 use matrix_sdk::room::{Invite, ParentSpace};
-use matrix_sdk::ruma::{OwnedRoomId, RoomId};
-use matrix_sdk::{Client, Room, RoomState};
+use matrix_sdk::ruma::{OwnedRoomId, OwnedRoomOrAliasId, RoomId};
+use matrix_sdk::Error;
+use matrix_sdk::{Client, OwnedServerName, Room, RoomState};
 use smol::stream::StreamExt;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub struct RoomCache {
     pub rooms: Entity<Vector<Room>>,
     cached_rooms: HashMap<OwnedRoomId, Entity<CachedRoom>>,
     joined_rooms: Vec<Room>,
     space_rooms: Vec<Room>,
+    joining_rooms: HashSet<OwnedRoomOrAliasId>,
 }
 
 pub enum RoomCategory {
     Root,
     Space(OwnedRoomId),
+}
+
+pub struct RoomJoinEvent {
+    pub result: Result<Room, Error>,
 }
 
 impl RoomCache {
@@ -80,6 +87,7 @@ impl RoomCache {
                 cached_rooms: HashMap::new(),
                 joined_rooms: Vec::new(),
                 space_rooms: Vec::new(),
+                joining_rooms: HashSet::new(),
             }
         })
     }
@@ -90,6 +98,10 @@ impl RoomCache {
 
     pub fn joined_rooms(&self) -> &Vec<Room> {
         &self.joined_rooms
+    }
+
+    pub fn joining_room(&self, room: impl Into<OwnedRoomOrAliasId>) -> bool {
+        self.joining_rooms.contains(&room.into())
     }
 
     pub fn invited_rooms(&self, cx: &App) -> Vec<Entity<CachedRoom>> {
@@ -124,6 +136,48 @@ impl RoomCache {
                 .cloned()
                 .collect(),
         }
+    }
+
+    pub fn join_room(
+        &mut self,
+        room_id: impl Into<OwnedRoomOrAliasId>,
+        knock: bool,
+        vias: Vec<OwnedServerName>,
+        callback: impl Fn(&RoomJoinEvent, &mut Window, &mut App) + 'static,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let session_manager = cx.global::<SessionManager>();
+        let client = session_manager.client().unwrap().read(cx).clone();
+        
+        let room_id = room_id.into();
+
+        self.joining_rooms.insert(room_id.clone());
+        cx.notify();
+
+        cx.spawn_in(
+            window,
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncWindowContext| {
+                let room_id_clone = room_id.clone();
+                let result = cx
+                    .spawn_tokio(async move {
+                        if knock {
+                            client.knock(room_id_clone, None, vias).await
+                        } else {
+                            client.join_room_by_id_or_alias(&room_id_clone, &vias).await
+                        }
+                    })
+                    .await;
+
+                let _ = weak_this.update_in(cx, |this, window, cx| {
+                    this.joining_rooms.remove(&room_id);
+
+                    callback(&RoomJoinEvent { result }, window, cx);
+                    cx.notify();
+                });
+            },
+        )
+        .detach();
     }
 }
 

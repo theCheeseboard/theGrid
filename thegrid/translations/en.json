@@ -125,6 +125,8 @@
   "INCOMING_VERIFICATION_DECLINE": "Don't Verify",
   "INCOMING_VERIFICATION_DESCRIPTION": "Respond to the verification request",
   "INVITE_ACCEPT": "Accept",
+  "INVITE_ACCEPT_ERROR_TEXT": "Unable to accept the invitation to {{room}}",
+  "INVITE_ACCEPT_ERROR_TITLE": "Unable to accept the invitation",
   "INVITE_ACTION": "Invite to room",
   "INVITE_DECLINE": "Decline",
   "INVITE_DECLINE_CONFIRMATION": "Decline the invite?",
@@ -335,6 +337,8 @@
   "SPACE_SIDEBAR_NO_ROOMS_MESSAGE": "You haven't joined any rooms in this space. Check out the lobby to find rooms to join!",
   "SPACE_SIDEBAR_OPEN_LOBBY": "Open Lobby",
   "SPACE_SIDEBAR_SUBORDINATE_SPACES": "Subordinate Spaces",
+  "TOMBSTONE_JOIN_ERROR_TEXT": "Unable to join {{room}}",
+  "TOMBSTONE_JOIN_ERROR_TITLE": "Unable to join the replacement room",
   "TYPING_NOTIFICATION": {
     "one": "{{count}} user is typing...",
     "other": "{{count}} users are typing..."
