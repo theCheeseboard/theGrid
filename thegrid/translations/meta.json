@@ -846,14 +846,14 @@
     "description": null
   },
   "JOIN_ERROR_TEXT": {
-    "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:119",
+    "context": "room_directory.rs",
+    "definedIn": "src/chat/room_directory.rs:278",
     "plural": false,
     "description": null
   },
   "JOIN_ERROR_TITLE": {
-    "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:116",
+    "context": "room_directory.rs",
+    "definedIn": "src/chat/room_directory.rs:275",
     "plural": false,
     "description": null
   },
@@ -1572,8 +1572,8 @@
     "description": null
   },
   "ROOM_DIRECTORY_MEMBER_COUNT": {
-    "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:250",
+    "context": "room_directory.rs",
+    "definedIn": "src/chat/room_directory.rs:417",
     "plural": true,
     "description": null
   },

@@ -158,6 +158,8 @@ impl XdgPortalScreenshareManager {
                                     continue;
                                 };
 
+                                // TODO: Listen for session closed and use that to determine if the screenshare was stopped by the system
+
                                 let _ = response_tx
                                     .send(XdgPortalScreenshareResponse::ScreenshareStarted {
                                         pw_fd,
