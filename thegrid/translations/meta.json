@@ -577,19 +577,19 @@
   },
   "FILE_OPEN": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:162",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:190",
     "plural": false,
     "description": null
   },
   "FILE_OPEN_MENU_HEADER": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:156",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:184",
     "plural": false,
     "description": null
   },
   "FILE_SAVE_AS": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:177",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:205",
     "plural": false,
     "description": null
   },
@@ -1147,7 +1147,7 @@
   },
   "MESSAGE_UNABLE_TO_DECRYPT": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:59",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:64",
     "plural": false,
     "description": null
   },

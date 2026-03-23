@@ -1,5 +1,5 @@
 use crate::chat::chat_room::timeline_view::reply_fragment::reply_fragment_in_reply_to;
-use cntp_i18n::{tr, Quote};
+use cntp_i18n::{i18n_manager, tr, Quote, I18N_MANAGER};
 use contemporary::components::button::button;
 use contemporary::components::context_menu::ContextMenuItem;
 use contemporary::components::icon::icon;
@@ -34,6 +34,11 @@ pub fn timeline_message_item(content: MsgLikeContent) -> TimelineMessageItem {
 impl RenderOnce for TimelineMessageItem {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let theme = cx.global::<Theme>().clone();
+
+        let session_manager = cx.global::<SessionManager>();
+        let client = session_manager.client().unwrap().read(cx).clone();
+
+        let reactions = self.content.reactions;
         div()
             .flex()
             .flex_col()
@@ -59,6 +64,29 @@ impl RenderOnce for TimelineMessageItem {
                             .child(tr!("MESSAGE_UNABLE_TO_DECRYPT", "Unable to decrypt")),
                     ),
                 _ => div(),
+            })
+            .when(!reactions.is_empty(), |david| {
+                david.child(reactions.iter().fold(
+                    div().flex().mt(px(4.)).gap(px(4.)),
+                    |david, (reaction, reactees)| {
+                        david.child(
+                            div()
+                                .flex()
+                                .p(px(2.))
+                                .gap(px(2.))
+                                .border(px(1.))
+                                .border_color(theme.border_color)
+                                .when_else(
+                                    reactees.contains_key(&client.user_id().unwrap().to_owned()),
+                                    |david| david.bg(theme.info_accent_color),
+                                    |david| david.bg(theme.layer_background),
+                                )
+                                .rounded(theme.border_radius)
+                                .child(reaction.clone())
+                                .child(i18n_manager!().locale.format_decimal(reactees.len())),
+                        )
+                    },
+                ))
             })
     }
 }
