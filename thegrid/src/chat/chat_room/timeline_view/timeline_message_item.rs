@@ -1,3 +1,4 @@
+use crate::chat::chat_room::timeline_view::reply_fragment::reply_fragment_in_reply_to;
 use cntp_i18n::{tr, Quote};
 use contemporary::components::button::button;
 use contemporary::components::context_menu::ContextMenuItem;
@@ -37,41 +38,7 @@ impl RenderOnce for TimelineMessageItem {
             .flex()
             .flex_col()
             .when_some(self.content.in_reply_to, |david, reply_details| {
-                david.child(
-                    div()
-                        .flex()
-                        .text_color(theme.foreground.disabled())
-                        .text_size(theme.system_font_size * 0.8)
-                        // TODO: RTL?
-                        .child("⬐ ")
-                        .child({
-                            let reply_details = match reply_details.event {
-                                TimelineDetails::Ready(reply) => match reply.content {
-                                    TimelineItemContent::MsgLike(msg_like) => match msg_like.kind {
-                                        MsgLikeKind::Message(message) => Some(
-                                            div()
-                                                .flex()
-                                                .child(msgtype_to_message_line(
-                                                    message.msgtype(),
-                                                    true,
-                                                    window,
-                                                    cx,
-                                                ))
-                                                .into_any_element(),
-                                        ),
-                                        _ => None,
-                                    },
-                                    _ => None,
-                                },
-                                _ => None,
-                            };
-
-                            reply_details.unwrap_or_else(|| {
-                                tr!("REPLY_UNAVAILABLE", "Reply message could not be loaded")
-                                    .into_any_element()
-                            })
-                        }),
-                )
+                david.child(reply_fragment_in_reply_to(reply_details))
             })
             .child(match self.content.kind {
                 MsgLikeKind::Message(message) => div().child(msgtype_to_message_line(

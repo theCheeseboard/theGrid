@@ -285,9 +285,9 @@ dependencies = [
 
 [[package]]
 name = "ashpd"
-version = "0.13.8"
+version = "0.13.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51b9019bd7f3beac5fbef5b756f5ef67777ab068035ec15683c1e635ad476f54"
+checksum = "13bdf0fd848239dcd5e64eeeee35dbc00378ebcc6f3aa4ead0a305eec83d0cfb"
 dependencies = [
  "enumflags2",
  "futures-channel",
@@ -1366,7 +1366,7 @@ dependencies = [
 [[package]]
 name = "cntp_config"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#26e83bd7f720c30e4ad9c099a418b7816672f7c9"
+source = "git+https://github.com/vicr123/contemporary-rs#00fb570d25f4e1419d0d9c2cdf7dd70fec1d070e"
 dependencies = [
  "serde",
  "serde_json",
@@ -1392,7 +1392,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#26e83bd7f720c30e4ad9c099a418b7816672f7c9"
+source = "git+https://github.com/vicr123/contemporary-rs#00fb570d25f4e1419d0d9c2cdf7dd70fec1d070e"
 dependencies = [
  "cntp_i18n_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
  "cntp_i18n_macros 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
@@ -1417,7 +1417,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_build_core"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#26e83bd7f720c30e4ad9c099a418b7816672f7c9"
+source = "git+https://github.com/vicr123/contemporary-rs#00fb570d25f4e1419d0d9c2cdf7dd70fec1d070e"
 dependencies = [
  "serde",
  "serde_json",
@@ -1439,7 +1439,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_core"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#26e83bd7f720c30e4ad9c099a418b7816672f7c9"
+source = "git+https://github.com/vicr123/contemporary-rs#00fb570d25f4e1419d0d9c2cdf7dd70fec1d070e"
 dependencies = [
  "anyhow",
  "cntp_localesupport 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
@@ -1468,7 +1468,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_gen"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#26e83bd7f720c30e4ad9c099a418b7816672f7c9"
+source = "git+https://github.com/vicr123/contemporary-rs#00fb570d25f4e1419d0d9c2cdf7dd70fec1d070e"
 dependencies = [
  "cntp_i18n_build_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
  "cntp_i18n_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
@@ -1501,7 +1501,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#26e83bd7f720c30e4ad9c099a418b7816672f7c9"
+source = "git+https://github.com/vicr123/contemporary-rs#00fb570d25f4e1419d0d9c2cdf7dd70fec1d070e"
 dependencies = [
  "cntp_i18n_build_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
  "cntp_i18n_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
@@ -1525,7 +1525,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_parse"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#26e83bd7f720c30e4ad9c099a418b7816672f7c9"
+source = "git+https://github.com/vicr123/contemporary-rs#00fb570d25f4e1419d0d9c2cdf7dd70fec1d070e"
 dependencies = [
  "syn 2.0.117",
 ]
@@ -1533,7 +1533,7 @@ dependencies = [
 [[package]]
 name = "cntp_icon_tool_core"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#26e83bd7f720c30e4ad9c099a418b7816672f7c9"
+source = "git+https://github.com/vicr123/contemporary-rs#00fb570d25f4e1419d0d9c2cdf7dd70fec1d070e"
 dependencies = [
  "regex",
 ]
@@ -1541,7 +1541,7 @@ dependencies = [
 [[package]]
 name = "cntp_icon_tool_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#26e83bd7f720c30e4ad9c099a418b7816672f7c9"
+source = "git+https://github.com/vicr123/contemporary-rs#00fb570d25f4e1419d0d9c2cdf7dd70fec1d070e"
 dependencies = [
  "cntp_config",
  "cntp_icon_tool_core",
@@ -1567,7 +1567,7 @@ dependencies = [
 [[package]]
 name = "cntp_localesupport"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#26e83bd7f720c30e4ad9c099a418b7816672f7c9"
+source = "git+https://github.com/vicr123/contemporary-rs#00fb570d25f4e1419d0d9c2cdf7dd70fec1d070e"
 dependencies = [
  "chrono",
  "icu",
@@ -1581,7 +1581,7 @@ dependencies = [
 [[package]]
 name = "cntp_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#26e83bd7f720c30e4ad9c099a418b7816672f7c9"
+source = "git+https://github.com/vicr123/contemporary-rs#00fb570d25f4e1419d0d9c2cdf7dd70fec1d070e"
 dependencies = [
  "cntp_config",
  "quote",
@@ -1795,7 +1795,7 @@ checksum = "3d52eff69cd5e647efe296129160853a42795992097e8af39800e1060caeea9b"
 [[package]]
 name = "contemporary"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#26e83bd7f720c30e4ad9c099a418b7816672f7c9"
+source = "git+https://github.com/vicr123/contemporary-rs#00fb570d25f4e1419d0d9c2cdf7dd70fec1d070e"
 dependencies = [
  "ashpd 0.11.1",
  "async-channel 2.5.0",
@@ -2412,9 +2412,9 @@ dependencies = [
 
 [[package]]
 name = "deflate64"
-version = "0.1.11"
+version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "807800ff3288b621186fe0a8f3392c4652068257302709c24efd918c3dffcdc2"
+checksum = "ac6b926516df9c60bfa16e107b21086399f8285a44ca9711344b9e553c5146e2"
 
 [[package]]
 name = "delegate-display"
@@ -4959,9 +4959,9 @@ checksum = "d98f6fed1fde3f8c21bc40a1abb88dd75e67924f9cffc3ef95607bad8017f8e2"
 
 [[package]]
 name = "iri-string"
-version = "0.7.10"
+version = "0.7.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c91338f0783edbd6195decb37bae672fd3b165faffb89bf7b9e6942f8b1a731a"
+checksum = "d8e7418f59cc01c88316161279a7f665217ae316b388e58a0d10e29f54f1e5eb"
 dependencies = [
  "memchr",
  "serde",
@@ -5052,7 +5052,7 @@ dependencies = [
  "cesu8",
  "cfg-if 1.0.4",
  "combine",
- "jni-sys",
+ "jni-sys 0.3.1",
  "log",
  "thiserror 1.0.69",
  "walkdir",
@@ -5061,9 +5061,31 @@ dependencies = [
 
 [[package]]
 name = "jni-sys"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8eaf4bc02d17cbdd7ff4c7438cafcdf7fb9a4613313ad11b4f8fefe7d3fa0130"
+checksum = "41a652e1f9b6e0275df1f15b32661cf0d4b78d4d87ddec5e0c3c20f097433258"
+dependencies = [
+ "jni-sys 0.4.1",
+]
+
+[[package]]
+name = "jni-sys"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6377a88cb3910bee9b0fa88d4f42e1d2da8e79915598f65fb0c7ee14c878af2"
+dependencies = [
+ "jni-sys-macros",
+]
+
+[[package]]
+name = "jni-sys-macros"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38c0b942f458fe50cdac086d2f946512305e5631e720728f2a61aabcd47a6264"
+dependencies = [
+ "quote",
+ "syn 2.0.117",
+]
 
 [[package]]
 name = "jobserver"
@@ -5582,9 +5604,9 @@ dependencies = [
 
 [[package]]
 name = "lyon_tessellation"
-version = "1.0.19"
+version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05a35a7dd71b845ff317ce1834c4185506b79790294bde397df8d5c23031e357"
+checksum = "8e43b7e44161571868f5c931d12583592c223c5583eef86b08aa02b7048a3552"
 dependencies = [
  "float_next_after",
  "lyon_path",
@@ -6294,7 +6316,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3f42e7bbe13d351b6bead8286a43aac9534b82bd3cc43e47037f012ebfd62d4"
 dependencies = [
  "bitflags 2.11.0",
- "jni-sys",
+ "jni-sys 0.3.1",
  "log",
  "ndk-sys",
  "num_enum",
@@ -6313,7 +6335,7 @@ version = "0.6.0+11769913"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee6cda3051665f1fb8d9e08fc35c96d5a244fb1be711a03b71118828afc9a873"
 dependencies = [
- "jni-sys",
+ "jni-sys 0.3.1",
 ]
 
 [[package]]
@@ -7805,9 +7827,9 @@ dependencies = [
 
 [[package]]
 name = "pulldown-cmark"
-version = "0.13.1"
+version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83c41efbf8f90ac44de7f3a868f0867851d261b56291732d0cbf7cceaaeb55a6"
+checksum = "7c3a14896dfa883796f1cb410461aef38810ea05f2b2c33c5aded3649095fdad"
 dependencies = [
  "bitflags 2.11.0",
  "memchr",
@@ -8839,9 +8861,9 @@ checksum = "f87165f0995f63a9fbeea62b64d10b4d9d8e78ec6d7d51fb2125fda7bb36788f"
 
 [[package]]
 name = "rustls-webpki"
-version = "0.103.9"
+version = "0.103.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7df23109aa6c1567d1c575b9952556388da57401e4ace1d15f79eedad0d8f53"
+checksum = "df33b2b81ac578cabaf06b89b0631153a3f416b0a886e8a7a1707fb51abbd1ef"
 dependencies = [
  "aws-lc-rs",
  "ring",
@@ -10170,7 +10192,7 @@ dependencies = [
 name = "thegrid_screen_share"
 version = "0.1.0"
 dependencies = [
- "ashpd 0.13.8",
+ "ashpd 0.13.9",
  "async-channel 2.5.0",
  "block2",
  "cancellation-token",
@@ -12844,9 +12866,9 @@ dependencies = [
 
 [[package]]
 name = "yuv"
-version = "0.8.11"
+version = "0.8.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59a0036e8395a36727d814d90c490872c580e29d69edccf6f00d956d9bca985c"
+checksum = "1d2b217e333a9afc47bc8cd1b17e93fefd52073d480c623aa82c05e507d828d7"
 dependencies = [
  "num-traits",
 ]
@@ -13285,9 +13307,9 @@ dependencies = [
 
 [[package]]
 name = "zune-jpeg"
-version = "0.5.13"
+version = "0.5.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec5f41c76397b7da451efd19915684f727d7e1d516384ca6bd0ec43ec94de23c"
+checksum = "0b7a1c0af6e5d8d1363f4994b7a091ccf963d8b694f7da5b0b9cceb82da2c0a6"
 dependencies = [
  "zune-core",
 ]

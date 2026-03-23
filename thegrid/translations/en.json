@@ -191,6 +191,8 @@
   "MEMBER_LIST_FILTER_JOINED": "Joined",
   "MENU_ACCOUNT": "Account",
   "MENU_ROOMS": "Rooms",
+  "MESSAGE_CONTEXT_MENU_TITLE": "For message from {{user}}",
+  "MESSAGE_REPLY": "Reply",
   "MESSAGE_UNABLE_TO_DECRYPT": "Unable to decrypt",
   "MESSAGE_UNSUPPORTED": "Unsupported Message",
   "MODERATION_ACTION_REASON_PLACEHOLDER": "Reason (optional)",

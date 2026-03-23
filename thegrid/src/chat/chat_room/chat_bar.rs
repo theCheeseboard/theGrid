@@ -1,8 +1,9 @@
 use crate::auth::emoji_flyout::EmojiFlyout;
 use crate::chat::chat_room::open_room::OpenRoom;
+use crate::chat::chat_room::timeline_view::reply_fragment::reply_fragment;
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::{tr, trn};
-use contemporary::components::admonition::{admonition, AdmonitionSeverity};
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
@@ -10,11 +11,12 @@ use contemporary::components::layer::layer;
 use contemporary::components::toast::Toast;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    anchored, deferred, div, px, AppContext, AsyncApp, AsyncWindowContext,
-    Context, Entity, InteractiveElement, IntoElement, ParentElement, Point, Render, Styled, WeakEntity, Window,
+    AppContext, AsyncApp, AsyncWindowContext, Context, Entity, InteractiveElement, IntoElement,
+    ParentElement, Point, Render, Styled, WeakEntity, Window, anchored, deferred, div, px,
 };
-use matrix_sdk::ruma::events::room::tombstone::RoomTombstoneEventContent;
 use matrix_sdk::RoomState;
+use matrix_sdk::ruma::events::room::tombstone::RoomTombstoneEventContent;
+use matrix_sdk_ui::timeline::TimelineItemContent;
 use thegrid_common::session::room_cache::RoomJoinEvent;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
@@ -208,6 +210,18 @@ impl Render for ChatBar {
         let typing_users = &open_room.typing_users;
 
         div()
+            .when_some(open_room.pending_reply.as_ref(), |david, pending_reply| {
+                let TimelineItemContent::MsgLike(content) = pending_reply.content() else {
+                    return david;
+                };
+
+                david.child(
+                    div()
+                        .flex()
+                        .child(div().w(px(32.)))
+                        .child(reply_fragment(pending_reply.content().clone())),
+                )
+            })
             .child(
                 layer()
                     .m(px(2.))

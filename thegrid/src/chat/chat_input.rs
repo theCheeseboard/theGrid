@@ -1,22 +1,22 @@
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::{
-    App, AppContext, Bounds, ClipboardItem, Context, Element, ElementId, ElementInputHandler,
-    Entity, EntityInputHandler, FocusHandle, GlobalElementId, Hsla, InspectorElementId,
-    InteractiveElement, IntoElement, KeyBinding, LayoutId, MouseButton, MouseDownEvent,
-    MouseMoveEvent, MouseUpEvent, PaintQuad, ParentElement, Pixels, Point, Render, Rgba,
-    ShapedLine, Style, Styled, TextRun, UTF16Selection, UnderlineStyle, Window, actions, div, fill,
-    point, px, relative, size,
+    actions, div, fill, point, px, relative, size, App,
+    AppContext, Bounds, ClipboardItem, Context, Element, ElementId,
+    ElementInputHandler, Entity, EntityInputHandler, FocusHandle, GlobalElementId, Hsla,
+    InspectorElementId, InteractiveElement, IntoElement, KeyBinding, LayoutId, MouseButton, MouseDownEvent, MouseMoveEvent,
+    MouseUpEvent, PaintQuad, ParentElement, Pixels, Point, Render, Rgba, ShapedLine, Style, Styled,
+    TextRun, UTF16Selection, UnderlineStyle, Window,
 };
 use std::ops::Range;
 use std::panic::Location;
 use std::rc::Rc;
-use thegrid_common::surfaces::SurfaceChange;
 use unicode_segmentation::UnicodeSegmentation;
 
 actions!(
     chat_input,
     [
         Enter,
+        Escape,
         NewLine,
         Backspace,
         Delete,
@@ -38,6 +38,7 @@ actions!(
 pub fn bind_chat_input_keys(cx: &mut App) {
     cx.bind_keys([
         KeyBinding::new("enter", Enter, None),
+        KeyBinding::new("escape", Escape, None),
         KeyBinding::new("shift-enter", NewLine, None),
         KeyBinding::new("backspace", Backspace, None),
         KeyBinding::new("delete", Delete, None),
@@ -56,11 +57,14 @@ pub fn bind_chat_input_keys(cx: &mut App) {
 }
 
 pub type EnterPressListener = dyn Fn(&EnterPressEvent, &mut Window, &mut App) + 'static;
+pub type EscapePressListener = dyn Fn(&EscapePressEvent, &mut Window, &mut App) + 'static;
 pub type TextChangedListener = dyn Fn(&TextChangedEvent, &mut Window, &mut App) + 'static;
 pub type PasteRichListener = dyn Fn(&PasteRichEvent, &mut Window, &mut App) + 'static;
 
 #[derive(Clone)]
 pub struct EnterPressEvent;
+#[derive(Clone)]
+pub struct EscapePressEvent;
 #[derive(Clone)]
 pub struct TextChangedEvent;
 #[derive(Clone)]
@@ -79,6 +83,7 @@ pub struct ChatInput {
     last_bounds: Option<Bounds<Pixels>>,
     is_selecting: bool,
 
+    escape_press_listener: Option<Rc<Box<EscapePressListener>>>,
     enter_press_listener: Option<Rc<Box<EnterPressListener>>>,
     text_changed_listener: Option<Rc<Box<TextChangedListener>>>,
     paste_rich_listener: Option<Rc<Box<PasteRichListener>>>,
@@ -96,6 +101,7 @@ impl ChatInput {
             last_layout: None,
             last_bounds: None,
             is_selecting: false,
+            escape_press_listener: None,
             enter_press_listener: None,
             text_changed_listener: None,
             paste_rich_listener: None,
@@ -134,6 +140,13 @@ impl ChatInput {
         listener: impl Fn(&EnterPressEvent, &mut Window, &mut App) + 'static,
     ) {
         self.enter_press_listener = Some(Rc::new(Box::new(listener)));
+    }
+
+    pub fn on_escape_press(
+        &mut self,
+        listener: impl Fn(&EscapePressEvent, &mut Window, &mut App) + 'static,
+    ) {
+        self.escape_press_listener = Some(Rc::new(Box::new(listener)));
     }
 
     pub fn on_text_changed(
@@ -292,6 +305,12 @@ impl ChatInput {
         }
     }
 
+    pub fn escape(&mut self, _: &Escape, window: &mut Window, cx: &mut Context<Self>) {
+        if let Some(escape_press_listener) = &self.escape_press_listener {
+            escape_press_listener(&EscapePressEvent, window, cx);
+        }
+    }
+
     pub fn new_line(&mut self, _: &NewLine, window: &mut Window, cx: &mut Context<Self>) {
         self.replace_text_in_range(None, "\n", window, cx);
     }
@@ -384,6 +403,7 @@ impl Render for ChatInput {
             .cursor_text()
             .key_context("ChatInput")
             .on_action(cx.listener(Self::enter))
+            .on_action(cx.listener(Self::escape))
             .on_action(cx.listener(Self::new_line))
             .on_action(cx.listener(Self::backspace))
             .on_action(cx.listener(Self::delete))

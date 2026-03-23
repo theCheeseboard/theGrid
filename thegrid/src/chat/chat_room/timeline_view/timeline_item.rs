@@ -12,6 +12,7 @@ use crate::chat::displayed_room::DisplayedRoom;
 use chrono::{DateTime, Local};
 use cntp_i18n::tr;
 use contemporary::components::anchorer::WithAnchorer;
+use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
@@ -69,6 +70,8 @@ impl TimelineItem {
         let author_flyout_open_entity = window.use_state(cx, |_, _| false);
         let author_flyout_open_entity_2 = author_flyout_open_entity.clone();
 
+        let open_room = &self.open_room;
+
         let author = event.sender();
         let previous_event_author =
             self.previous_timeline_item
@@ -96,11 +99,39 @@ impl TimelineItem {
 
         let theme = cx.global::<Theme>().clone();
 
+        let mut context_menu = vec![];
+
         let event_content = div()
             .flex()
             .flex_col()
             .child(match event.content() {
                 TimelineItemContent::MsgLike(msg) => {
+                    let sender = event.sender().to_string();
+                    context_menu.push(
+                        ContextMenuItem::separator()
+                            .label(tr!(
+                                "MESSAGE_CONTEXT_MENU_TITLE",
+                                "For message from {{user}}",
+                                user:quote = sender
+                            ))
+                            .build(),
+                    );
+                    context_menu.push(
+                        ContextMenuItem::menu_item()
+                            .label(tr!("MESSAGE_REPLY", "Reply"))
+                            .icon("mail-reply-sender")
+                            .when(!event.can_be_replied_to(), |david| david.disabled())
+                            .on_triggered({
+                                let open_room = open_room.clone();
+                                let event = event.clone();
+                                move |_, window, cx| {
+                                    open_room.update(cx, |open_room, cx| {
+                                        open_room.set_pending_reply(Some(event.clone()), cx);
+                                    });
+                                }
+                            })
+                            .build(),
+                    );
                     timeline_message_item(msg.clone()).into_any_element()
                 }
                 TimelineItemContent::MembershipChange(membership_change) => {
@@ -170,7 +201,9 @@ impl TimelineItem {
                 div()
                     .id("container")
                     .when(event.is_local_echo(), |david| david.opacity(0.7))
-                    .when(event.is_highlighted(), |david| david.bg(theme.warning_accent_color))
+                    .when(event.is_highlighted(), |david| {
+                        david.bg(theme.warning_accent_color)
+                    })
                     .flex()
                     .flex_grow()
                     .w_full()
@@ -225,9 +258,10 @@ impl TimelineItem {
                                 div()
                                     .child(
                                         match sender_profile {
-                                            TimelineDetails::Ready(profile) => {
-                                                profile.display_name.clone()
-                                            }
+                                            TimelineDetails::Ready(profile) => profile
+                                                .display_name
+                                                .clone()
+                                                .or(Some(event.sender().to_string())),
                                             _ => None,
                                         }
                                         .unwrap_or_default(),
@@ -235,11 +269,16 @@ impl TimelineItem {
                                     .child(event_content),
                             ),
                     )
+                    .when(!context_menu.is_empty(), |david| {
+                        david.with_context_menu(context_menu)
+                    })
                     .into_any_element()
             }
             TimelineRowType::MessageWithoutAuthor => div()
                 .when(event.is_local_echo(), |david| david.opacity(0.7))
-                .when(event.is_highlighted(), |david| david.bg(theme.warning_accent_color))
+                .when(event.is_highlighted(), |david| {
+                    david.bg(theme.warning_accent_color)
+                })
                 .flex()
                 .overflow_hidden()
                 .w_full()
@@ -253,6 +292,9 @@ impl TimelineItem {
                         .overflow_hidden()
                         .child(event_content),
                 )
+                .when(!context_menu.is_empty(), |david| {
+                    david.with_context_menu(context_menu)
+                })
                 .into_any_element(),
             TimelineRowType::State => div()
                 .w_full()

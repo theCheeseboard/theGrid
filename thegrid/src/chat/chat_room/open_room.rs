@@ -13,7 +13,7 @@ use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::events::tag::Tags;
 use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::Room;
-use matrix_sdk_ui::timeline::{AttachmentConfig, AttachmentSource, RoomExt};
+use matrix_sdk_ui::timeline::{AttachmentConfig, AttachmentSource, EventTimelineItem, RoomExt};
 use mime2ext::mime2ext;
 use std::fs::read;
 use std::mem;
@@ -34,6 +34,7 @@ pub struct OpenRoom {
     pub chat_bar: Entity<ChatBar>,
     pub timeline: Option<Entity<Timeline>>,
     pub tags: Tags,
+    pub pending_reply: Option<EventTimelineItem>,
     pagination_pending: bool,
 }
 
@@ -55,6 +56,9 @@ impl OpenRoom {
         let enter_press_listener = cx.listener(|this: &mut Self, _, window, cx| {
             this.send_pending_message(window, cx);
         });
+        let escape_press_listener = cx.listener(|this, _, window, cx| {
+            this.escape_press(window, cx);
+        });
         let text_changed_listener = cx.listener(|this: &mut Self, _, window, cx| {
             this.text_changed(window, cx);
         });
@@ -62,6 +66,7 @@ impl OpenRoom {
         let chat_input = cx.new(|cx| {
             let mut chat_input = ChatInput::new(cx);
             chat_input.on_enter_press(enter_press_listener);
+            chat_input.on_escape_press(escape_press_listener);
             chat_input.on_text_changed(text_changed_listener);
             chat_input.on_paste_rich(paste_rich_listener);
             chat_input
@@ -86,6 +91,7 @@ impl OpenRoom {
             timeline: None,
             tags: Default::default(),
             pagination_pending: false,
+            pending_reply: None
         };
 
         let Some(room) = client.get_room(&room_id) else {
@@ -300,6 +306,7 @@ impl OpenRoom {
         let attachments = mem::take(&mut self.pending_attachments);
 
         let timeline = self.timeline.clone().unwrap().read(cx).inner.clone();
+        let pending_reply = self.pending_reply.take();
 
         cx.on_next_frame(window, move |_, _, cx| {
             let message = chat_input.read(cx).text();
@@ -335,9 +342,18 @@ impl OpenRoom {
                 }
 
                 if let Some(content) = content {
-                    let _ = cx
-                        .spawn_tokio(async move { timeline.send(content.into()).await })
-                        .await;
+                    if let Some(pending_reply) = pending_reply {
+                        let _ = cx.spawn_tokio(async move {
+                            timeline.send_reply(
+                                content.into(),
+                                pending_reply.event_id().unwrap().to_owned(),
+                            ).await
+                        }).await;
+                    } else {
+                        let _ = cx.spawn_tokio(async move {
+                            timeline.send(content.into()).await
+                        }).await;
+                    }
                 }
             })
             .detach();
@@ -346,6 +362,20 @@ impl OpenRoom {
         });
 
         cx.notify();
+    }
+
+    pub fn escape_press(&mut self, _: &mut Window, cx: &mut Context<Self>) {
+        self.set_pending_reply(None, cx);
+    }
+
+    pub fn set_pending_reply(&mut self, event: Option<EventTimelineItem>, cx: &mut Context<Self>) {
+        if event
+            .as_ref()
+            .is_none_or(|event| event.event_id().is_some())
+        {
+            self.pending_reply = event;
+            cx.notify();
+        }
     }
 
     pub fn remove_pending_attachment(&mut self, index: usize, cx: &mut Context<Self>) {

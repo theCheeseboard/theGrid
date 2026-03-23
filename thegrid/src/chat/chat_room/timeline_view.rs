@@ -7,6 +7,7 @@ mod state_change_element;
 mod state_event_item;
 mod timeline_item;
 mod timeline_message_item;
+pub(crate) mod reply_fragment;
 
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::timeline::Timeline;
@@ -20,9 +21,9 @@ use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
 use contemporary::components::spinner::spinner;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, Context, Element, ElementId, Entity, InteractiveElement, IntoElement,
-    ListAlignment, ListOffset, ListScrollEvent, ListSizingBehavior, ListState, ParentElement,
-    Render, Styled, Window, div, list, px, rgb,
+    div, list, px, rgb, App, AsyncApp, Context, Element,
+    ElementId, Entity, InteractiveElement, IntoElement, ListAlignment, ListOffset,
+    ListScrollEvent, ListSizingBehavior, ListState, ParentElement, Render, Styled, Window,
 };
 use image::open;
 use log::info;
