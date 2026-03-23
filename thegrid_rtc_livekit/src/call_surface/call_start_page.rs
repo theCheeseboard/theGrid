@@ -2,7 +2,6 @@ use crate::call_manager::{FocusUrl, LivekitCallManager};
 use crate::webcam::Webcam;
 use crate::TrackType;
 use cntp_i18n::{tr, trn};
-use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::{button, ButtonMenuOpenPolicy};
 use contemporary::components::context_menu::ContextMenuItem;
 use contemporary::components::grandstand::grandstand;
@@ -15,32 +14,23 @@ use contemporary::permissions::{
 };
 use contemporary::styling::theme::ThemeStorage;
 use cpal::traits::{DeviceTrait, HostTrait};
-use cpal::{Device, DeviceDescription};
+use cpal::Device;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, img, px, rgb, App, AppContext, AsyncApp, BorrowAppContext,
-    Context, Entity, IntoElement, ObjectFit, ParentElement, Render, RenderImage, RenderOnce, Styled,
-    StyledImage, WeakEntity, Window,
+    div, img, px, rgb, AppContext, BorrowAppContext,
+    Context, Entity, IntoElement, ObjectFit, ParentElement, Render,
+    Styled, StyledImage, Window,
 };
-use image::{Frame, RgbaImage};
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::OwnedRoomId;
-use nokhwa::pixel_format::RgbAFormat;
-use nokhwa::utils::{
-    mjpeg_to_rgb, nv12_to_rgb, yuyv422_to_rgb, CameraIndex, CameraInfo, FrameFormat,
-    RequestedFormat, RequestedFormatType,
-};
-use nokhwa::{native_api_backend, query, CallbackCamera, Camera};
-use smallvec::smallvec;
+use nokhwa::utils::CameraInfo;
+use nokhwa::{native_api_backend, query};
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::sync::Arc;
-use std::time::Duration;
 use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::room::active_call_participants::track_active_call_participants;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::SurfaceChangeHandler;
-use yuv::{yuyv422_to_bgra, YuvPackedImage, YuvRange, YuvStandardMatrix};
 
 pub struct CallStartPage {
     room_id: OwnedRoomId,
@@ -592,9 +582,10 @@ impl Render for CallStartPage {
         let focus_url = focus_url.read(cx).clone();
         let active_call_users = self.active_call_users.read(cx).clone();
 
-        let in_other_call = cx.global::<LivekitCallManager>().current_call().is_some_and(|call| {
-            call.read(cx).room() != self.room_id
-        });
+        let in_other_call = cx
+            .global::<LivekitCallManager>()
+            .current_call()
+            .is_some_and(|call| call.read(cx).room() != self.room_id);
 
         let theme = cx.theme().clone();
 
@@ -723,6 +714,9 @@ impl Render for CallStartPage {
                                                         |david, member| {
                                                             david.child(
                                                                 mxc_image(member.avatar_url())
+                                                                    .fallback_image(
+                                                                        member.user_id(),
+                                                                    )
                                                                     .rounded(theme.border_radius)
                                                                     .size(px(16.))
                                                                     .size_policy(SizePolicy::Fit),

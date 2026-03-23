@@ -176,6 +176,7 @@ impl Render for Sidebar {
             root_list_state.reset(root_rooms.len());
         }
 
+        let client = session_manager.client().unwrap().read(cx);
         let account = session_manager.current_account().read(cx);
 
         let theme = cx.global::<Theme>();
@@ -210,6 +211,7 @@ impl Render for Sidebar {
                     .gap(px(4.))
                     .child(
                         mxc_image(account.avatar_url())
+                            .fallback_image(client.user_id().unwrap())
                             .rounded(theme.border_radius)
                             .size(px(48.))
                             .size_policy(SizePolicy::Fit),

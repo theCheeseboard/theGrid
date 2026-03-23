@@ -387,6 +387,7 @@ impl RoomDirectory {
                     .p(px(4.))
                     .child(
                         mxc_image(room_description.avatar_url.clone())
+                            .fallback_image(&room_description.room_id)
                             .rounded(theme.border_radius)
                             .size(px(40.))
                             .size_policy(SizePolicy::Fit),

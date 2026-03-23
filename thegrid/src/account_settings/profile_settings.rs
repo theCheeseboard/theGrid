@@ -1,7 +1,7 @@
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -10,11 +10,11 @@ use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, BorrowAppContext, Context, Entity, IntoElement, ParentElement,
-    Render, Styled, WeakEntity, Window, div, px, rgb,
+    div, px, rgb, App, AppContext, AsyncApp, BorrowAppContext, Context,
+    Entity, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
 };
 use std::rc::Rc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{
     MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
@@ -86,6 +86,7 @@ impl Render for ProfileSettings {
         let theme = cx.global::<Theme>();
         let session_manager = cx.global::<SessionManager>();
 
+        let client = session_manager.client().unwrap().read(cx);
         let account = session_manager.current_account().read(cx);
         let session = session_manager.current_session().unwrap();
 
@@ -115,6 +116,7 @@ impl Render for ProfileSettings {
                             .gap(px(4.))
                             .child(
                                 mxc_image(account.avatar_url())
+                                    .fallback_image(client.user_id().unwrap())
                                     .rounded(theme.border_radius)
                                     .size(px(48.))
                                     .size_policy(SizePolicy::Fit),

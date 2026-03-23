@@ -10129,6 +10129,7 @@ dependencies = [
  "matrix-sdk",
  "matrix-sdk-ui",
  "ringbuffer",
+ "rustc-hash 2.1.1",
  "serde",
  "serde_json",
  "smallvec",

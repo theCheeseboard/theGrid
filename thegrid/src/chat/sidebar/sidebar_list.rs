@@ -187,6 +187,7 @@ impl RenderOnce for SidebarList {
                         .gap(px(2.))
                         .child(
                             mxc_image(room.inner.avatar_url())
+                                .fallback_image(room.inner.room_id())
                                 .size(px(32.))
                                 .size_policy(SizePolicy::Fit)
                                 .rounded(theme.border_radius),

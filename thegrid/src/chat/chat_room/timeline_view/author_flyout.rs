@@ -1,6 +1,6 @@
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::displayed_room::DisplayedRoom;
-use cntp_i18n::{Quote, tr};
+use cntp_i18n::{tr, Quote};
 use contemporary::components::button::button;
 use contemporary::components::flyout::flyout;
 use contemporary::components::icon_text::icon_text;
@@ -11,21 +11,20 @@ use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, Bounds, Entity, InteractiveElement, IntoElement, ParentElement, Pixels,
-    RenderOnce, Styled, Window, div, px,
+    div, px, App, AsyncApp, Bounds, Entity, InteractiveElement, IntoElement,
+    ParentElement, Pixels, RenderOnce, Styled, Window,
 };
-use matrix_sdk::Room;
 use matrix_sdk::room::{RoomMember, RoomMemberRole};
-use matrix_sdk::ruma::OwnedUserId;
 use matrix_sdk::ruma::events::room::member::MembershipState;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::events::room::power_levels::UserPowerLevel;
+use matrix_sdk::ruma::OwnedUserId;
+use matrix_sdk::Room;
 use matrix_sdk_ui::timeline::RoomExt;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
-use thegrid_text_rendering::Text;
 
 pub type AuthorFlyoutCloseListener =
     dyn Fn(&AuthorFlyoutCloseEvent, &mut Window, &mut App) + 'static;
@@ -236,6 +235,7 @@ impl RenderOnce for AuthorFlyout {
                         .gap(px(4.))
                         .child(
                             mxc_image(room_member.avatar_url().map(|url| url.to_owned()))
+                                .fallback_image(room_member.user_id())
                                 .size(px(128.))
                                 .size_policy(SizePolicy::Fit)
                                 .rounded(theme.border_radius),

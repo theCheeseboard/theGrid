@@ -1,8 +1,8 @@
 use cntp_i18n::tr;
 use contemporary::styling::theme::Theme;
-use gpui::{App, IntoElement, ParentElement, RenderOnce, Styled, Window, div, px};
+use gpui::{div, px, App, IntoElement, ParentElement, RenderOnce, Styled, Window};
 use matrix_sdk::ruma::OwnedRoomId;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
 
 #[derive(IntoElement)]
@@ -33,6 +33,7 @@ impl RenderOnce for RoomHead {
                     .child(div().h(px(200.)))
                     .child(
                         mxc_image(room.inner.avatar_url())
+                            .fallback_image(room.inner.room_id())
                             .size(px(128.))
                             .size_policy(SizePolicy::Fit),
                     )

@@ -1,12 +1,15 @@
+pub mod fallback_image;
+
+use crate::mxc_image::fallback_image::{FallbackImage, IntoFallbackImage};
 use crate::session::media_cache::{MediaCacheEntry, MediaState};
 use crate::session::session_manager::SessionManager;
 use contemporary::components::icon::icon;
-use contemporary::styling::theme::Theme;
+use contemporary::components::skeleton::{skeleton, SkeletonExt};
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, BorrowAppContext, ElementId, IntoElement, ParentElement, Refineable, RenderOnce,
-    StyleRefinement, Styled, Window, div, img, px, rgb, rgba,
+    div, img, px, rgba, App, BorrowAppContext, ElementId,
+    IntoElement, ParentElement, Refineable, RenderOnce, StyleRefinement, Styled, Window,
 };
 
 #[derive(IntoElement)]
@@ -14,6 +17,7 @@ pub struct MxcImage {
     style: StyleRefinement,
     mxc: MediaCacheEntry,
     size_policy: SizePolicy,
+    fallback_image: Option<FallbackImage>,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -28,6 +32,7 @@ pub fn mxc_image(mxc: impl Into<MediaCacheEntry>) -> MxcImage {
         style: StyleRefinement::default(),
         mxc: mxc.into(),
         size_policy: SizePolicy::Auto,
+        fallback_image: None,
     }
 }
 
@@ -36,16 +41,15 @@ impl MxcImage {
         self.size_policy = size_policy;
         self
     }
+
+    pub fn fallback_image(mut self, fallback_image: impl IntoFallbackImage) -> Self {
+        self.fallback_image = Some(fallback_image.fallback_image());
+        self
+    }
 }
 
 impl RenderOnce for MxcImage {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
-        let MediaCacheEntry::MediaSource(_) = &self.mxc else {
-            let mut david = div().bg(rgba(0x00000064));
-            david.style().refine(&self.style);
-            return david;
-        };
-
         // To avoid dropping the Arc<RenderImage> while the image is still on the screen,
         // we store it in state. Once a frame passes without this element being rendered,
         // its refcount will decrement and the image will be dropped if there are no other
@@ -56,75 +60,85 @@ impl RenderOnce for MxcImage {
                 Err(anyhow!("No image"))
             });
 
-        let image = cx.update_global::<SessionManager, _>(|session_manager, cx| {
-            session_manager.media().media_file(self.mxc, cx)
-        });
+        let (image, is_loading) = match &self.mxc {
+            MediaCacheEntry::MediaSource(_) => {
+                let image = cx.update_global::<SessionManager, _>(|session_manager, cx| {
+                    session_manager.media().media_file(self.mxc.clone(), cx)
+                });
 
-        let image_file = image.read(cx);
-        let is_failed = matches!(image_file.media_state, MediaState::Failed);
-        let is_loading = matches!(image_file.media_state, MediaState::Loading);
-        let is_loaded = matches!(image_file.media_state, MediaState::Loaded(_));
-        let read_image_to_store = image_file.read_image();
-        let read_image = image_file.read_image();
-        read_image_store.write(cx, read_image_to_store);
+                let image_file = image.read(cx);
+                let is_failed = matches!(image_file.media_state, MediaState::Failed);
+                let is_loading = matches!(image_file.media_state, MediaState::Loading);
+                let is_loaded = matches!(image_file.media_state, MediaState::Loaded(_));
+                let read_image_to_store = image_file.read_image();
+                let read_image = image_file.read_image();
+                read_image_store.write(cx, read_image_to_store);
+
+                if is_failed || is_loading {
+                    (None, is_loading)
+                } else if is_loaded {
+                    (read_image.ok(), false)
+                } else {
+                    (None, false)
+                }
+            }
+            MediaCacheEntry::None => (None, false),
+        };
 
         let mut david = div()
-            .when(is_failed, |david| {
-                david
-                    .bg(rgba(0x00000064))
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .child(icon("exception".into()))
-            })
-            .when(is_loading, |david| david.bg(rgba(0x00000064)))
-            .when(is_loaded, |david| {
-                if let Ok(image) = read_image {
-                    david.child(
-                        img(image.clone())
-                            .when_some(self.style.corner_radii.top_left, |david, radius| {
-                                david.rounded_tl(radius)
-                            })
-                            .when_some(self.style.corner_radii.top_right, |david, radius| {
-                                david.rounded_tr(radius)
-                            })
-                            .when_some(self.style.corner_radii.bottom_left, |david, radius| {
-                                david.rounded_bl(radius)
-                            })
-                            .when_some(self.style.corner_radii.bottom_right, |david, radius| {
-                                david.rounded_br(radius)
-                            })
-                            .when(self.size_policy == SizePolicy::Fit, |img| img.size_full())
-                            .when_some(
-                                match self.size_policy {
-                                    SizePolicy::Constrain(width, height) => Some((width, height)),
-                                    _ => None,
-                                },
-                                |img, dimensions| {
-                                    let image_dimensions = image.size(0);
-
-                                    let mut width = image_dimensions.width.0 as f32;
-                                    let mut height = image_dimensions.height.0 as f32;
-                                    if width > dimensions.0 {
-                                        height = height * dimensions.0 / width;
-                                        width = dimensions.0;
-                                    }
-                                    if height > dimensions.1 {
-                                        width = width * dimensions.1 / height;
-                                        height = dimensions.1;
-                                    }
-                                    img.w(px(width)).h(px(height))
-                                },
-                            ),
-                    )
-                } else {
+            .when_none(&image, |david| {
+                if is_loading {
                     david
                         .bg(rgba(0x00000064))
-                        .flex()
-                        .items_center()
-                        .justify_center()
-                        .child(icon("exception".into()))
+                        .child(skeleton("image-loading").absolute().size_full())
+                } else if let Some(fallback_image) = self.fallback_image {
+                    let fallback_image = fallback_image.fallback_image();
+                    david.bg(fallback_image.color).child(fallback_image.content)
+                } else {
+                    david.bg(rgba(0x00000064)).child(icon("exception".into()))
                 }
+                .flex()
+                .items_center()
+                .justify_center()
+            })
+            .when_some(image, |david, image| {
+                david.child(
+                    img(image.clone())
+                        .when_some(self.style.corner_radii.top_left, |david, radius| {
+                            david.rounded_tl(radius)
+                        })
+                        .when_some(self.style.corner_radii.top_right, |david, radius| {
+                            david.rounded_tr(radius)
+                        })
+                        .when_some(self.style.corner_radii.bottom_left, |david, radius| {
+                            david.rounded_bl(radius)
+                        })
+                        .when_some(self.style.corner_radii.bottom_right, |david, radius| {
+                            david.rounded_br(radius)
+                        })
+                        .when(self.size_policy == SizePolicy::Fit, |img| img.size_full())
+                        .when_some(
+                            match self.size_policy {
+                                SizePolicy::Constrain(width, height) => Some((width, height)),
+                                _ => None,
+                            },
+                            |img, dimensions| {
+                                let image_dimensions = image.size(0);
+
+                                let mut width = image_dimensions.width.0 as f32;
+                                let mut height = image_dimensions.height.0 as f32;
+                                if width > dimensions.0 {
+                                    height = height * dimensions.0 / width;
+                                    width = dimensions.0;
+                                }
+                                if height > dimensions.1 {
+                                    width = width * dimensions.1 / height;
+                                    height = dimensions.1;
+                                }
+                                img.w(px(width)).h(px(height))
+                            },
+                        ),
+                )
             });
         david.style().refine(&self.style);
         david

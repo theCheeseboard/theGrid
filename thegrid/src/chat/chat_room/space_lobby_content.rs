@@ -315,6 +315,7 @@ impl Render for SpaceLobbyContent {
                     .w(px(250.))
                     .child(
                         mxc_image(room.avatar_url())
+                            .fallback_image(room.room_id())
                             .rounded(theme.border_radius)
                             .size(px(150.))
                             .size_policy(SizePolicy::Fit),

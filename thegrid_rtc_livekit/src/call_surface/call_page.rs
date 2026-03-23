@@ -698,6 +698,7 @@ impl RenderOnce for CallMemberDisplay {
                                 .justify_center()
                                 .child(
                                     mxc_image(call_member.room_member.avatar_url())
+                                        .fallback_image(call_member.room_member.user_id())
                                         .rounded(theme.border_radius)
                                         .size(profile_picture_size)
                                         .size_policy(SizePolicy::Fit)

@@ -1,9 +1,9 @@
 use crate::chat::chat_room::open_room::OpenRoom;
-use cntp_i18n::{tr, trn};
+use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::context_menu::ContextMenuItem;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
@@ -11,18 +11,16 @@ use contemporary::components::layer::layer;
 use contemporary::components::subtitle::subtitle;
 use contemporary::components::switch::switch;
 use contemporary::components::text_field::TextField;
-use contemporary::styling::theme::{Theme, VariableColor};
+use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, ClickEvent, Context, Entity, IntoElement, ParentElement, Render,
-    Styled, WeakEntity, Window, div, px,
+    div, px, App, AppContext, AsyncApp, ClickEvent, Context, Entity, IntoElement,
+    ParentElement, Render, Styled, WeakEntity, Window,
 };
 use matrix_sdk::ruma::api::client::room::Visibility;
 use matrix_sdk::ruma::room::JoinRule;
-use matrix_sdk::{EncryptionState, RoomInfo};
 use std::rc::Rc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
-use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct RoomSettings {
@@ -187,6 +185,7 @@ impl Render for RoomSettings {
                             .gap(px(4.))
                             .child(
                                 mxc_image(room.avatar_url())
+                                    .fallback_image(room.room_id())
                                     .rounded(theme.border_radius)
                                     .size(px(48.))
                                     .size_policy(SizePolicy::Fit),

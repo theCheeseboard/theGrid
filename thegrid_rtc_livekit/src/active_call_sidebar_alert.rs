@@ -1,19 +1,19 @@
 use crate::call_manager::LivekitCallManager;
 use crate::{CallMember, CallState, StreamState};
 use cntp_i18n::tr;
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, BorrowAppContext, ElementId, InteractiveElement, IntoElement, ParentElement, Render,
-    RenderOnce, Styled, Window, div, px,
+    div, px, App, BorrowAppContext, ElementId, InteractiveElement, IntoElement,
+    ParentElement, Render, RenderOnce, Styled, Window,
 };
 use matrix_sdk::room::RoomMember;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{
     MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
@@ -146,8 +146,12 @@ impl RenderOnce for ActiveCallSidebarAlert {
                                     .child(
                                         button("deaf")
                                             .child(icon(
-                                                if *deaf.read(cx) { "headphones" } else { "headphones" }
-                                                    .into(),
+                                                if *deaf.read(cx) {
+                                                    "headphones"
+                                                } else {
+                                                    "headphones"
+                                                }
+                                                .into(),
                                             ))
                                             .checked_when(*deaf.read(cx))
                                             .on_click(move |_, _, cx| {
@@ -272,26 +276,24 @@ impl RenderOnce for CallMemberState {
             .when(member_is_connecting, |david| david.opacity(0.5))
             .child(
                 mxc_image(room_member.avatar_url().map(|url| url.to_owned()))
+                    .fallback_image(room_member.user_id())
                     .size(px(16.))
                     .size_policy(SizePolicy::Fit)
                     .rounded(theme.border_radius),
             )
-            .child(
-                room_member
-                    .display_name()
-                    .unwrap_or_default()
-                    .to_string(),
-            )
+            .child(room_member.display_name().unwrap_or_default().to_string())
             .child(div().flex_grow())
             .when(
                 matches!(self.call_member.screenshare_state, StreamState::On(_)),
                 |david| david.child(icon("video-display".into())),
             )
-            .when(matches!(self.call_member.camera_state, StreamState::On(_)), |david| {
-                david.child(icon("camera-photo".into()))
-            })
-            .when(matches!(self.call_member.mic_state, StreamState::Off), |david| {
-                david.child(icon("mic-off".into()))
-            })
+            .when(
+                matches!(self.call_member.camera_state, StreamState::On(_)),
+                |david| david.child(icon("camera-photo".into())),
+            )
+            .when(
+                matches!(self.call_member.mic_state, StreamState::Off),
+                |david| david.child(icon("mic-off".into())),
+            )
     }
 }
