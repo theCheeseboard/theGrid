@@ -338,6 +338,8 @@
   "SPACE_SIDEBAR_NO_ROOMS_MESSAGE": "You haven't joined any rooms in this space. Check out the lobby to find rooms to join!",
   "SPACE_SIDEBAR_OPEN_LOBBY": "Open Lobby",
   "SPACE_SIDEBAR_SUBORDINATE_SPACES": "Subordinate Spaces",
+  "TIMELINE_CONTEXT_MENU_REPLY": "Reply",
+  "TIMELINE_CONTEXT_MENU_TITLE": "For this message",
   "TOMBSTONE_JOIN_ERROR_TEXT": "Unable to join {{room}}",
   "TOMBSTONE_JOIN_ERROR_TITLE": "Unable to join the replacement room",
   "TYPING_NOTIFICATION": {

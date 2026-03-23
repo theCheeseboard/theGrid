@@ -96,6 +96,9 @@ As at the time of writing :)
 ![Screenshot](readme/screenshot-4.png)
 ![Screenshot](readme/screenshot-5.png)
 ![Screenshot](readme/screenshot-6.png)
+![Screenshot](readme/screenshot-7.png)
+![Screenshot](readme/screenshot-8.png)
+![Screenshot](readme/screenshot-9.png)
 
 ---
 
