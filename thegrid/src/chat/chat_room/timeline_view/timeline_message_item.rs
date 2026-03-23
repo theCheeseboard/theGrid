@@ -5,14 +5,16 @@ use contemporary::components::context_menu::ContextMenuItem;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::spinner::spinner;
-use contemporary::styling::theme::{Theme, VariableColor};
+use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use directories::UserDirs;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, rgba, App, AsyncApp, BorrowAppContext, Entity, IntoElement,
-    ParentElement, RenderOnce, Styled, Window,
+    div, px, rgba, AnyElement, App, AsyncApp, BorrowAppContext, Entity,
+    IntoElement, ParentElement, RenderOnce, Styled, Window,
 };
-use matrix_sdk::ruma::events::room::message::{FileMessageEventContent, MessageType};
+use matrix_sdk::ruma::events::room::message::{
+    FileMessageEventContent, FormattedBody, MessageType,
+};
 use matrix_sdk_ui::timeline::{
     EmbeddedEvent, MsgLikeContent, MsgLikeKind, TimelineDetails, TimelineItemContent,
 };
@@ -107,30 +109,27 @@ pub fn msgtype_to_message_line<'a>(
                     .size_policy(SizePolicy::Constrain(500., 500.)),
             )
             .into_any_element(),
-        MessageType::Text(text) => {
-            let body = match &text.formatted {
-                None => text.body.clone().into_any_element(),
-                Some(formatted) => TextView::html("html-text", formatted.body.clone(), window, cx)
-                    .into_any_element(),
-            };
+        MessageType::Text(text) => div()
+            .child(text_message(
+                as_reply,
+                &text.body,
+                &text.formatted,
+                window,
+                cx,
+            ))
+            .into_any_element(),
+        MessageType::Notice(notice) => {
+            let theme = cx.theme();
 
-            let theme = cx.global::<Theme>();
             div()
-                .flex()
-                .w_full()
-                .max_w_full()
-                .child(
-                    div()
-                        .max_w_full()
-                        .p(px(6.))
-                        .when_else(
-                            as_reply,
-                            |david| david.bg(rgba(0x00C8FF05)),
-                            |david| david.bg(rgba(0x00C8FF10)),
-                        )
-                        .rounded(theme.border_radius)
-                        .child(body),
-                )
+                .font_family(theme.monospaced_font_family.clone())
+                .child(text_message(
+                    as_reply,
+                    &notice.body,
+                    &notice.formatted,
+                    window,
+                    cx,
+                ))
                 .into_any_element()
         }
         MessageType::File(file) => {
@@ -221,8 +220,59 @@ pub fn msgtype_to_message_line<'a>(
         MessageType::VerificationRequest(verification_request) => {
             "Key Verification Request".into_any_element()
         }
-        _ => "Unknown Message".into_any_element(),
+        _ => {
+            let theme = cx.theme();
+
+            div()
+                .text_color(theme.foreground.disabled())
+                .italic()
+                .child(
+                    div()
+                        .flex()
+                        .items_center()
+                        .gap(px(6.))
+                        .child(
+                            icon("dialog-warning".into()).foreground(theme.foreground.disabled()),
+                        )
+                        .child(tr!("MESSAGE_UNSUPPORTED", "Unsupported Message")),
+                )
+                .into_any_element()
+        }
     }
+}
+
+fn text_message(
+    as_reply: bool,
+    body: &String,
+    formatted: &Option<FormattedBody>,
+    window: &mut Window,
+    cx: &mut App,
+) -> AnyElement {
+    let body = match &formatted {
+        None => body.clone().into_any_element(),
+        Some(formatted) => {
+            TextView::html("html-text", formatted.body.clone(), window, cx).into_any_element()
+        }
+    };
+
+    let theme = cx.global::<Theme>();
+    div()
+        .flex()
+        .w_full()
+        .max_w_full()
+        .child(
+            div()
+                .max_w_full()
+                .p(px(6.))
+                .when_else(
+                    as_reply,
+                    |david| david.bg(rgba(0x00C8FF05)),
+                    |david| david.bg(rgba(0x00C8FF10)),
+                )
+                .rounded(theme.border_radius)
+                .child(body),
+        )
+        .into_any_element()
 }
 
 fn download_file(file: FileMessageEventContent, media_file: Entity<MediaFile>, cx: &mut App) {
