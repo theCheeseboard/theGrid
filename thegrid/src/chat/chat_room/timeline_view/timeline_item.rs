@@ -170,6 +170,7 @@ impl TimelineItem {
                 div()
                     .id("container")
                     .when(event.is_local_echo(), |david| david.opacity(0.7))
+                    .when(event.is_highlighted(), |david| david.bg(theme.warning_accent_color))
                     .flex()
                     .flex_grow()
                     .w_full()
@@ -238,6 +239,7 @@ impl TimelineItem {
             }
             TimelineRowType::MessageWithoutAuthor => div()
                 .when(event.is_local_echo(), |david| david.opacity(0.7))
+                .when(event.is_highlighted(), |david| david.bg(theme.warning_accent_color))
                 .flex()
                 .overflow_hidden()
                 .w_full()

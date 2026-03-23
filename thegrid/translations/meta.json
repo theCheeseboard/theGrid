@@ -457,7 +457,7 @@
   },
   "DATE_DIVIDER": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:287",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:289",
     "plural": false,
     "description": null
   },
@@ -1976,18 +1976,6 @@
   "SPACE_SIDEBAR_SUBORDINATE_SPACES": {
     "context": "space_sidebar_page.rs",
     "definedIn": "src/chat/sidebar/space_sidebar_page.rs:85",
-    "plural": false,
-    "description": null
-  },
-  "TIMELINE_CONTEXT_MENU_REPLY": {
-    "context": "timeline_view.rs",
-    "definedIn": "src/chat/chat_room/timeline_view.rs:167",
-    "plural": false,
-    "description": null
-  },
-  "TIMELINE_CONTEXT_MENU_TITLE": {
-    "context": "timeline_view.rs",
-    "definedIn": "src/chat/chat_room/timeline_view.rs:164",
     "plural": false,
     "description": null
   },
