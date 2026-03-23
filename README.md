@@ -8,8 +8,8 @@
 <img src="https://img.shields.io/github/actions/workflow/status/theCheeseboard/theGrid/macos.yml?label=macOS&style=for-the-badge" />
 <img src="https://img.shields.io/github/actions/workflow/status/theCheeseboard/theGrid/linux.yml?label=Linux&style=for-the-badge" />
 <img src="https://img.shields.io/github/license/theCheeseboard/thegrid?style=for-the-badge" />
-<img src="https://parlance.vicr123.com/api/projects/thegrid/badge?style=for-the-badge" />
-<img src="https://parlance.vicr123.com/api/projects/thegrid/badge/languages?style=for-the-badge" />
+<a href="https://parlance.vicr123.com/projects/thegrid"><img src="https://parlance.vicr123.com/api/projects/thegrid/badge?style=for-the-badge" /></a>
+<a href="https://parlance.vicr123.com/projects/thegrid"><img src="https://parlance.vicr123.com/api/projects/thegrid/badge/languages?style=for-the-badge" /></a>
 </p>
 
 A cross-platform [Matrix](matrix.org) client written in Rust, with the [GPUI](https://www.gpui.rs/) rendering library.
