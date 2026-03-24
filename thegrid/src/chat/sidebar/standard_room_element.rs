@@ -53,7 +53,6 @@ impl RenderOnce for StandardRoomElement {
         let on_click = self.on_click;
         let on_invite = self.on_invite;
         let matrix_room = room.inner.clone();
-        let matrix_room_2 = room.inner.clone();
 
         let current_dialog_box_2 = current_dialog_box.clone();
         let current_dialog_box_3 = current_dialog_box.clone();
@@ -96,58 +95,110 @@ impl RenderOnce for StandardRoomElement {
             ContextMenuItem::menu_item()
                 .label(tr!("ROOM_COPY_LINK", "Copy link to room"))
                 .icon("edit-copy")
-                .on_triggered(move |_, _, cx| {
-                    let matrix_room = matrix_room_2.clone();
-                    let room_id = matrix_room.room_id().to_owned();
-                    cx.spawn(async move |cx: &mut AsyncApp| {
-                        let mut vias = Vec::new();
-                        // TODO: Pick the server of the highest power level user
+                .on_triggered({
+                    let matrix_room = matrix_room.clone();
+                    move |_, _, cx| {
+                        let room_id = matrix_room.room_id().to_owned();
+                        let matrix_room = matrix_room.clone();
+                        cx.spawn(async move |cx: &mut AsyncApp| {
+                            let mut vias = Vec::new();
+                            // TODO: Pick the server of the highest power level user
 
-                        // Pick the three most popular servers
-                        let Ok(members) = cx
-                            .spawn_tokio(async move {
-                                matrix_room.members_no_sync(RoomMemberships::ACTIVE).await
-                            })
-                            .await
-                        else {
-                            // TODO: What to do?
-                            return;
-                        };
+                            // Pick the three most popular servers
+                            let Ok(members) = cx
+                                .spawn_tokio(async move {
+                                    matrix_room.members_no_sync(RoomMemberships::ACTIVE).await
+                                })
+                                .await
+                            else {
+                                // TODO: What to do?
+                                return;
+                            };
 
-                        let mut popular_servers = HashMap::new();
-                        for member in members {
-                            let server = member.user_id().server_name().to_owned();
-                            let count = popular_servers.entry(server).or_insert(0);
-                            *count += 1;
-                        }
-
-                        while vias.len() < 3 && !popular_servers.is_empty() {
-                            let popular_server = popular_servers
-                                .iter()
-                                .max_by_key(|(_, count)| *count)
-                                .map(|(server, _)| server)
-                                .unwrap()
-                                .clone();
-                            popular_servers.remove(&popular_server);
-
-                            // Ban IP literals
-                            if popular_server.is_ip_literal() {
-                                continue;
+                            let mut popular_servers = HashMap::new();
+                            for member in members {
+                                let server = member.user_id().server_name().to_owned();
+                                let count = popular_servers.entry(server).or_insert(0);
+                                *count += 1;
                             }
-                            vias.push(popular_server);
-                        }
 
-                        // Return at most 3 vias
-                        vias.truncate(3);
+                            while vias.len() < 3 && !popular_servers.is_empty() {
+                                let popular_server = popular_servers
+                                    .iter()
+                                    .max_by_key(|(_, count)| *count)
+                                    .map(|(server, _)| server)
+                                    .unwrap()
+                                    .clone();
+                                popular_servers.remove(&popular_server);
 
-                        cx.update(|cx| {
-                            cx.write_to_clipboard(ClipboardItem::new_string(
-                                room_id.matrix_to_uri_via(vias).to_string(),
-                            ))
+                                // Ban IP literals
+                                if popular_server.is_ip_literal() {
+                                    continue;
+                                }
+                                vias.push(popular_server);
+                            }
+
+                            // Return at most 3 vias
+                            vias.truncate(3);
+
+                            cx.update(|cx| {
+                                cx.write_to_clipboard(ClipboardItem::new_string(
+                                    room_id.matrix_to_uri_via(vias).to_string(),
+                                ))
+                            })
+                            .unwrap();
                         })
-                        .unwrap();
-                    })
-                    .detach();
+                        .detach();
+                    }
+                })
+                .build(),
+            ContextMenuItem::separator().build(),
+            ContextMenuItem::menu_item()
+                .label(if room.inner.is_favourite() {
+                    tr!("ROOM_MARK_NOT_FAVOURITE", "Remove from Favourites")
+                } else {
+                    tr!("ROOM_MARK_FAVOURITE", "Add to Favourites")
+                })
+                .icon("star-shape")
+                .on_triggered({
+                    let matrix_room = matrix_room.clone();
+                    move |_, window, cx| {
+                        let matrix_room = matrix_room.clone();
+                        cx.spawn(async move |cx: &mut AsyncApp| {
+                            let _ = cx
+                                .spawn_tokio(async move {
+                                    matrix_room
+                                        .set_is_favourite(!matrix_room.is_favourite(), None)
+                                        .await
+                                })
+                                .await;
+                        })
+                        .detach();
+                    }
+                })
+                .build(),
+            ContextMenuItem::menu_item()
+                .label(if room.inner.is_low_priority() {
+                    tr!("ROOM_MARK_NOT_LOW_PRIORITY", "Remove from Low Priority")
+                } else {
+                    tr!("ROOM_MARK_LOW_PRIORITY", "Add to Low Priority")
+                })
+                .icon("system-suspend")
+                .on_triggered({
+                    let matrix_room = matrix_room.clone();
+                    move |_, window, cx| {
+                        let matrix_room = matrix_room.clone();
+                        cx.spawn(async move |cx: &mut AsyncApp| {
+                            let _ = cx
+                                .spawn_tokio(async move {
+                                    matrix_room
+                                        .set_is_low_priority(!matrix_room.is_low_priority(), None)
+                                        .await
+                                })
+                                .await;
+                        })
+                        .detach();
+                    }
                 })
                 .build(),
             ContextMenuItem::separator().build(),

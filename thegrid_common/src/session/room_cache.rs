@@ -100,6 +100,10 @@ impl RoomCache {
         &self.joined_rooms
     }
 
+    pub fn cached_rooms(&self) -> Vec<Entity<CachedRoom>> {
+        self.cached_rooms.values().cloned().collect()
+    }
+
     pub fn joining_room(&self, room: impl Into<OwnedRoomOrAliasId>) -> bool {
         self.joining_rooms.contains(&room.into())
     }
@@ -149,7 +153,7 @@ impl RoomCache {
     ) {
         let session_manager = cx.global::<SessionManager>();
         let client = session_manager.client().unwrap().read(cx).clone();
-        
+
         let room_id = room_id.into();
 
         self.joining_rooms.insert(room_id.clone());

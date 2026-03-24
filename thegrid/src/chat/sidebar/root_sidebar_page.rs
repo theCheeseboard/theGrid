@@ -1,15 +1,15 @@
 use crate::chat::chat_room::invite_popover::InvitePopover;
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::directory_sidebar_page::DirectorySidebarPage;
-use crate::chat::sidebar::sidebar_list::{sidebar_list, SidebarItem, SidebarListEvent};
+use crate::chat::sidebar::sidebar_list::{SidebarItem, SidebarListEvent, sidebar_list};
 use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
 use crate::chat::sidebar::standard_room_element::InviteEvent;
 use crate::chat::sidebar::{Sidebar, SidebarPage};
 use cntp_i18n::tr;
 use contemporary::components::grandstand::grandstand;
 use gpui::{
-    div, px, AppContext, Context, Entity, IntoElement, ListAlignment, ListState,
-    ParentElement, Render, Styled, Subscription, Window,
+    AppContext, Context, Entity, IntoElement, ListAlignment, ListState, ParentElement, Render,
+    Styled, Subscription, Window, div, px,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use thegrid_common::session::room_cache::{CachedRoom, RoomCategory};
@@ -100,9 +100,15 @@ impl RootSidebarPage {
         }
 
         let room_cache = session_manager.rooms().read(cx);
-        let root_rooms: Vec<Entity<CachedRoom>> =
-            room_cache.rooms_in_category(RoomCategory::Root, cx).clone();
+        let all_rooms = room_cache.cached_rooms().clone();
+        let root_rooms = room_cache.rooms_in_category(RoomCategory::Root, cx).clone();
 
+        let mut faves = all_rooms
+            .iter()
+            .filter(|room| !room.read(cx).inner.is_space())
+            .filter(|room| room.read(cx).inner.is_favourite())
+            .map(|room| SidebarItem::Room(room.clone()))
+            .collect::<Vec<_>>();
         let mut spaces = root_rooms
             .iter()
             .filter(|room| room.read(cx).inner.is_space())
@@ -111,19 +117,33 @@ impl RootSidebarPage {
         let mut direct_rooms = root_rooms
             .iter()
             .filter(|room| !room.read(cx).inner.is_space())
+            .filter(|room| !room.read(cx).inner.is_low_priority())
             .filter(|room| room.read(cx).is_direct())
             .map(|room| SidebarItem::Room(room.clone()))
             .collect::<Vec<_>>();
         let mut rooms = root_rooms
             .iter()
             .filter(|room| !room.read(cx).inner.is_space())
+            .filter(|room| !room.read(cx).inner.is_low_priority())
             .filter(|room| !room.read(cx).is_direct())
+            .map(|room| SidebarItem::Room(room.clone()))
+            .collect::<Vec<_>>();
+        let mut low_priority = root_rooms
+            .iter()
+            .filter(|room| !room.read(cx).inner.is_space())
+            .filter(|room| room.read(cx).inner.is_low_priority())
             .map(|room| SidebarItem::Room(room.clone()))
             .collect::<Vec<_>>();
 
         let mut vec = Vec::new();
         vec.push(SidebarItem::Create);
         vec.push(SidebarItem::Directory);
+        if !faves.is_empty() {
+            vec.push(SidebarItem::Heading(
+                tr!("ROOT_SIDEBAR_FAVES", "Favourites").into(),
+            ));
+            vec.append(&mut faves);
+        }
         if !spaces.is_empty() {
             vec.push(SidebarItem::Heading(
                 tr!("ROOT_SIDEBAR_SPACES", "Spaces").into(),
@@ -141,6 +161,12 @@ impl RootSidebarPage {
                 tr!("ROOT_SIDEBAR_ROOMS", "Rooms").into(),
             ));
             vec.append(&mut rooms);
+        }
+        if !low_priority.is_empty() {
+            vec.push(SidebarItem::Heading(
+                tr!("ROOT_SIDEBAR_LOW_PRIORITY", "Low Priority").into(),
+            ));
+            vec.append(&mut low_priority);
         }
 
         if self.list_state.item_count() != vec.len() {

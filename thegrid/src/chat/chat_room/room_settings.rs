@@ -274,9 +274,13 @@ impl Render for RoomSettings {
                                     .when(!room.encryption_state().is_encrypted(), |david| {
                                         david.child(
                                             button("room-encryption-enable")
-                                                .child(tr!(
-                                                    "ROOM_ENCRYPTION_ENABLE",
-                                                    "Enable Encryption"
+                                                .child(icon_text(
+                                                    "padlock".into(),
+                                                    tr!(
+                                                        "ROOM_ENCRYPTION_ENABLE",
+                                                        "Enable Encryption"
+                                                    )
+                                                    .into(),
                                                 ))
                                                 .on_click(cx.listener(|this, _, _, cx| {
                                                     this.enable_encryption_open = true;
