@@ -1,6 +1,6 @@
-use crate::account_settings::AccountSettingsSurface;
 use crate::account_settings::deactivate_account::DeactivateSurface;
 use crate::account_settings::security_settings::identity_reset::IdentityResetSurface;
+use crate::account_settings::AccountSettingsSurface;
 use crate::auth::auth_surface::AuthSurface;
 use crate::chat::chat_surface::ChatSurface;
 use crate::register::register_surface::RegisterSurface;
@@ -9,10 +9,12 @@ use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
 use contemporary::window::contemporary_window;
 use gpui::{
-    App, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window, div,
+    div, App, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window,
 };
 use thegrid_common::session::session_manager::SessionManager;
-use thegrid_common::surfaces::{MainWindowSurface, SurfaceChange, SurfaceChangeEvent};
+use thegrid_common::surfaces::{
+    AccountSettingsDeepLink, MainWindowSurface, SurfaceChange, SurfaceChangeEvent,
+};
 use thegrid_rtc_livekit::call_surface::CallSurface;
 
 pub struct MainWindow {
@@ -56,6 +58,17 @@ impl MainWindow {
             self.pop_surface();
         }
         self
+    }
+
+    pub fn open_settings(&mut self) {
+        if matches!(
+            self.current_surface.last().unwrap(),
+            MainWindowSurface::Main
+        ) {
+            self.push_surface(MainWindowSurface::AccountSettings(
+                AccountSettingsDeepLink::Profile,
+            ));
+        }
     }
 
     fn handle_surface_change(

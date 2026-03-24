@@ -51,7 +51,7 @@ impl ChatSurface {
                         MenuItem::action(tr!("ROOMS_CREATE_SPACE"), CreateSpace),
                         MenuItem::action(tr!("ROOMS_DIRECT_JOIN"), DirectJoinRoom),
                         MenuItem::separator(),
-                        MenuItem::action(tr!("ACCOUNT_ACCOUNT_SETTINGS"), AccountSettings),
+                        MenuItem::action(tr!("ACCOUNT_ACCOUNT_SETTINGS", "Account Settings"), AccountSettings),
                         MenuItem::separator(),
                         MenuItem::action(tr!("ACCOUNT_ACCOUNT_SWITCHER"), AccountSwitcher),
                         MenuItem::action(tr!("ACCOUNT_LOG_OUT"), LogOut),

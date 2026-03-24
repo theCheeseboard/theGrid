@@ -1,13 +1,13 @@
 {
   "ACCOUNT_ACCOUNT_SETTINGS": {
-    "context": "main.rs",
-    "definedIn": "src/main.rs:128",
+    "context": "chat_surface.rs",
+    "definedIn": "src/chat/chat_surface.rs:54",
     "plural": false,
     "description": null
   },
   "ACCOUNT_ACCOUNT_SWITCHER": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:133",
+    "definedIn": "src/main.rs:129",
     "plural": false,
     "description": null
   },
@@ -97,7 +97,7 @@
   },
   "ACCOUNT_LOG_OUT": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:136",
+    "definedIn": "src/main.rs:132",
     "plural": false,
     "description": null
   },
@@ -1177,13 +1177,13 @@
   },
   "MENU_ACCOUNT": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:125",
+    "definedIn": "src/main.rs:126",
     "plural": false,
     "description": null
   },
   "MENU_ROOMS": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:140",
+    "definedIn": "src/main.rs:136",
     "plural": false,
     "description": null
   },
@@ -1531,19 +1531,19 @@
   },
   "ROOMS_CREATE": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:143",
+    "definedIn": "src/main.rs:139",
     "plural": false,
     "description": null
   },
   "ROOMS_CREATE_SPACE": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:147",
+    "definedIn": "src/main.rs:143",
     "plural": false,
     "description": null
   },
   "ROOMS_DIRECT_JOIN": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:151",
+    "definedIn": "src/main.rs:147",
     "plural": false,
     "description": null
   },

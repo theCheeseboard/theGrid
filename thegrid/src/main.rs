@@ -13,22 +13,23 @@ mod account_settings;
 mod uiaa_client;
 
 use crate::actions::{
-    AccountSettings, AccountSwitcher, CreateRoom, CreateSpace, LogOut, register_actions,
+    register_actions, AccountSettings, AccountSwitcher, CreateRoom, CreateSpace, DirectJoinRoom,
+    LogOut,
 };
 use crate::chat::chat_input::bind_chat_input_keys;
 use crate::main_window::MainWindow;
-use cntp_i18n::{I18N_MANAGER, tr, tr_load};
+use cntp_i18n::{tr, tr_load, I18N_MANAGER};
 use cntp_icon_tool_macros::application_icon;
-use contemporary::application::{ApplicationLink, Details, License, new_contemporary_application};
+use contemporary::application::{new_contemporary_application, ApplicationLink, Details, License};
 use contemporary::macros::application_details;
-use contemporary::setup::{Contemporary, ContemporaryMenus, setup_contemporary};
+use contemporary::setup::{setup_contemporary, Contemporary, ContemporaryMenus};
 use contemporary::window::contemporary_window_options;
-use gpui::{App, AsyncApp, Bounds, Menu, MenuItem, WindowBounds, WindowOptions, px, size};
+use gpui::{px, size, App, AsyncApp, Bounds, Menu, MenuItem, WindowBounds, WindowOptions};
 use smol_macros::main;
 use std::any::TypeId;
 use std::ptr;
 use std::rc::Rc;
-use thegrid_common::session::session_manager::{SessionManager, setup_session_manager};
+use thegrid_common::session::session_manager::{setup_session_manager, SessionManager};
 use thegrid_common::session::sso_login::SsoLogin;
 use thegrid_common::setup_thegrid_common;
 use thegrid_rtc_livekit::call_manager::setup_call_manager;
@@ -125,11 +126,6 @@ fn mane() {
                                     name: tr!("MENU_ACCOUNT", "Account").into(),
                                     items: vec![
                                         MenuItem::action(
-                                            tr!("ACCOUNT_ACCOUNT_SETTINGS", "Account Settings..."),
-                                            AccountSettings,
-                                        ),
-                                        MenuItem::separator(),
-                                        MenuItem::action(
                                             tr!("ACCOUNT_ACCOUNT_SWITCHER", "Switch Accounts..."),
                                             AccountSwitcher,
                                         ),
@@ -149,7 +145,7 @@ fn mane() {
                                         ),
                                         MenuItem::action(
                                             tr!("ROOMS_DIRECT_JOIN", "Join a room..."),
-                                            CreateRoom,
+                                            DirectJoinRoom,
                                         ),
                                     ],
                                 },
@@ -160,7 +156,12 @@ fn mane() {
                                     cx.notify()
                                 })
                             }),
-                            on_settings: None,
+                            on_settings: Some(Rc::new(move |cx| {
+                                weak_windew.upgrade().unwrap().update(cx, |window, cx| {
+                                    window.open_settings();
+                                    cx.notify()
+                                })
+                            })),
                         },
                     },
                 );
