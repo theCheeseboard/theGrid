@@ -285,6 +285,7 @@
   "ROOM_ADDRESS": "#community:server",
   "ROOM_ALIASES": "Aliases",
   "ROOM_ALIASES_DESCRIPTION": "Aliases can be used to join this room directly, if the access policy is set to Public. Public aliases can be used by anyone, whilst non-public aliases can only be used by users on your homeserver.",
+  "ROOM_ALIASES_DESCRIPTION_SPACE": "Aliases can be used to join this space directly, if the access policy is set to Public. Public aliases can be used by anyone, whilst non-public aliases can only be used by users on your homeserver.",
   "ROOM_ALIAS_ADD": "Add Alias",
   "ROOM_ALIAS_CANONICAL": "Main",
   "ROOM_ALIAS_DESCRIPTION": "What alias do you want to set for this room?",

@@ -1697,6 +1697,12 @@
     "plural": false,
     "description": null
   },
+  "ROOM_ALIASES_DESCRIPTION_SPACE": {
+    "context": "room_settings.rs",
+    "definedIn": "src/chat/chat_room/room_settings.rs:201",
+    "plural": false,
+    "description": null
+  },
   "ROOM_ALIAS_ADD": {
     "context": "room_settings.rs",
     "definedIn": "src/chat/chat_room/room_settings.rs:497",
