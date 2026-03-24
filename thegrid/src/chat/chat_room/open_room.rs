@@ -1,6 +1,7 @@
 use crate::chat::chat_input::{ChatInput, PasteRichEvent};
 use crate::chat::chat_room::chat_bar::ChatBar;
 use crate::chat::chat_room::timeline::Timeline;
+use crate::chat::chat_room::timeline_view::event_filter::event_filter;
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::tr;
 use gpui::http_client::anyhow;
@@ -91,7 +92,7 @@ impl OpenRoom {
             timeline: None,
             tags: Default::default(),
             pagination_pending: false,
-            pending_reply: None
+            pending_reply: None,
         };
 
         let Some(room) = client.get_room(&room_id) else {
@@ -105,7 +106,13 @@ impl OpenRoom {
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 let timeline = cx
-                    .spawn_tokio(async move { room_clone.timeline().await })
+                    .spawn_tokio(async move {
+                        room_clone
+                            .timeline_builder()
+                            .event_filter(event_filter)
+                            .build()
+                            .await
+                    })
                     .await;
 
                 let Ok(timeline) = timeline else {
@@ -343,16 +350,20 @@ impl OpenRoom {
 
                 if let Some(content) = content {
                     if let Some(pending_reply) = pending_reply {
-                        let _ = cx.spawn_tokio(async move {
-                            timeline.send_reply(
-                                content.into(),
-                                pending_reply.event_id().unwrap().to_owned(),
-                            ).await
-                        }).await;
+                        let _ = cx
+                            .spawn_tokio(async move {
+                                timeline
+                                    .send_reply(
+                                        content.into(),
+                                        pending_reply.event_id().unwrap().to_owned(),
+                                    )
+                                    .await
+                            })
+                            .await;
                     } else {
-                        let _ = cx.spawn_tokio(async move {
-                            timeline.send(content.into()).await
-                        }).await;
+                        let _ = cx
+                            .spawn_tokio(async move { timeline.send(content.into()).await })
+                            .await;
                     }
                 }
             })

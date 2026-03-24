@@ -1,3 +1,4 @@
+use crate::chat::chat_room::timeline_view::message_error_item::message_error_item;
 use crate::chat::chat_room::timeline_view::reply_fragment::reply_fragment_in_reply_to;
 use cntp_i18n::{i18n_manager, tr, Quote, I18N_MANAGER};
 use contemporary::components::button::button;
@@ -54,17 +55,11 @@ impl RenderOnce for TimelineMessageItem {
                     window,
                     cx,
                 )),
-                MsgLikeKind::UnableToDecrypt(_) => div()
-                    .text_color(theme.foreground.disabled())
-                    .italic()
-                    .child(
-                        div()
-                            .flex()
-                            .items_center()
-                            .gap(px(6.))
-                            .child(icon("exception".into()).foreground(theme.foreground.disabled()))
-                            .child(tr!("MESSAGE_UNABLE_TO_DECRYPT", "Unable to decrypt")),
-                    ),
+                MsgLikeKind::UnableToDecrypt(_) => div().child(message_error_item(
+                    "exception",
+                    tr!("MESSAGE_UNABLE_TO_DECRYPT", "Unable to decrypt"),
+                    cx,
+                )),
                 _ => div(),
             })
             .when(!reactions.is_empty(), |david| {
@@ -220,24 +215,12 @@ pub fn msgtype_to_message_line<'a>(
         MessageType::VerificationRequest(verification_request) => {
             "Key Verification Request".into_any_element()
         }
-        _ => {
-            let theme = cx.theme();
-
-            div()
-                .text_color(theme.foreground.disabled())
-                .italic()
-                .child(
-                    div()
-                        .flex()
-                        .items_center()
-                        .gap(px(6.))
-                        .child(
-                            icon("dialog-warning".into()).foreground(theme.foreground.disabled()),
-                        )
-                        .child(tr!("MESSAGE_UNSUPPORTED", "Unsupported Message")),
-                )
-                .into_any_element()
-        }
+        _ => message_error_item(
+            "dialog-warning",
+            tr!("MESSAGE_UNSUPPORTED", "Unsupported Message"),
+            cx,
+        )
+        .into_any_element(),
     }
 }
 

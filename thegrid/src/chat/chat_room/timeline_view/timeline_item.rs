@@ -3,6 +3,7 @@ use crate::chat::chat_room::timeline_view::author_flyout::{
     author_flyout, AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener,
 };
 use crate::chat::chat_room::timeline_view::membership_change_item::membership_change_item;
+use crate::chat::chat_room::timeline_view::message_error_item::message_error_item;
 use crate::chat::chat_room::timeline_view::profile_change_item::profile_change_item;
 use crate::chat::chat_room::timeline_view::room_head::room_head;
 use crate::chat::chat_room::timeline_view::rtc_notification_item::rtc_notification_item;
@@ -149,8 +150,12 @@ impl TimelineItem {
                     event.sender().to_owned(),
                 )
                 .into_any_element(),
-                _ => div()
-                    .child(tr!("MESSAGE_UNSUPPORTED", "Unsupported Message"))
+                TimelineItemContent::FailedToParseMessageLike { .. }
+                | TimelineItemContent::FailedToParseState { .. } => {
+                    message_error_item("exception", tr!("MESSAGE_CORRUPT", "Corrupt Message"), cx)
+                        .into_any_element()
+                }
+                _ => message_error_item("dialog-warning", tr!("MESSAGE_UNSUPPORTED"), cx)
                     .into_any_element(),
             })
             .when(event.latest_edit_json().is_some(), |david| {
