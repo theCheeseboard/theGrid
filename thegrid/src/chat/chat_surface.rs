@@ -1,4 +1,4 @@
-use crate::actions::{AccountSettings, AccountSwitcher, LogOut};
+use crate::actions::{AccountSettings, AccountSwitcher, CreateRoom, CreateSpace, DirectJoinRoom, LogOut};
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::main_chat_surface::MainChatSurface;
 use cntp_i18n::tr;
@@ -47,6 +47,10 @@ impl ChatSurface {
                 Menu {
                     name: "Application Menu".into(),
                     items: vec![
+                        MenuItem::action(tr!("ROOMS_CREATE"), CreateRoom),
+                        MenuItem::action(tr!("ROOMS_CREATE_SPACE"), CreateSpace),
+                        MenuItem::action(tr!("ROOMS_DIRECT_JOIN"), DirectJoinRoom),
+                        MenuItem::separator(),
                         MenuItem::action(tr!("ACCOUNT_ACCOUNT_SETTINGS"), AccountSettings),
                         MenuItem::separator(),
                         MenuItem::action(tr!("ACCOUNT_ACCOUNT_SWITCHER"), AccountSwitcher),

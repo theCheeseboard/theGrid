@@ -1,5 +1,7 @@
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::displayed_room::DisplayedRoom;
+use crate::chat::join_room::create_room_popover::CreateRoomPopover;
+use crate::chat::join_room::create_space_popover::CreateSpacePopover;
 use cntp_i18n::{tr, trn};
 use contemporary::components::admonition::AdmonitionSeverity;
 use contemporary::components::button::button;
@@ -11,16 +13,17 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, list, px, AnyElement, AsyncWindowContext, Context,
-    Entity, InteractiveElement, IntoElement, ListAlignment, ListScrollEvent, ListState, ParentElement, Render,
-    Styled, WeakEntity, Window,
+    AnyElement, AsyncWindowContext, Context, Entity, InteractiveElement, IntoElement,
+    ListAlignment, ListScrollEvent, ListState, ParentElement, Render, Styled, WeakEntity, Window,
+    div, list, px,
 };
 use matrix_sdk::ruma::room::JoinRuleSummary;
 use matrix_sdk::ruma::{OwnedRoomId, OwnedRoomOrAliasId};
 use matrix_sdk::{Room, RoomState};
+use matrix_sdk_ui::spaces::SpaceRoom;
 use matrix_sdk_ui::spaces::room_list::SpaceRoomListPaginationState;
 use std::collections::HashSet;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::room_cache::RoomJoinEvent;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::session::spaces_cache::SpaceRoomListEntity;
@@ -30,6 +33,9 @@ pub struct SpaceLobbyContent {
     displayed_room: Entity<DisplayedRoom>,
     open_room: Entity<OpenRoom>,
     space_rooms: Entity<SpaceRoomListEntity>,
+
+    create_room_popover: Entity<CreateRoomPopover>,
+    create_space_popover: Entity<CreateSpacePopover>,
 
     list_state: ListState,
 }
@@ -44,6 +50,8 @@ impl SpaceLobbyContent {
     pub fn new(
         displayed_room: Entity<DisplayedRoom>,
         open_room: Entity<OpenRoom>,
+        create_room_popover: Entity<CreateRoomPopover>,
+        create_space_popover: Entity<CreateSpacePopover>,
         cx: &mut Context<Self>,
     ) -> Self {
         let room_id = open_room.read(cx).room_id.clone();
@@ -92,6 +100,8 @@ impl SpaceLobbyContent {
             open_room,
             space_rooms,
             list_state,
+            create_room_popover,
+            create_space_popover,
         }
     }
 
@@ -298,6 +308,31 @@ impl Render for SpaceLobbyContent {
         let open_room = self.open_room.read(cx);
         let room = open_room.room.as_ref().unwrap();
 
+        // We don't need to fill out all these fields - only the ones that are used by
+        // the space selection logic.
+        let space_room = SpaceRoom {
+            room_id: room.room_id().to_owned(),
+            canonical_alias: None,
+            name: room.name(),
+            display_name: room
+                .cached_display_name()
+                .map(|name| name.to_string())
+                .or_else(|| room.name())
+                .unwrap_or_default(),
+            topic: None,
+            avatar_url: None,
+            room_type: None,
+            num_joined_members: 0,
+            join_rule: None,
+            world_readable: None,
+            guest_can_join: false,
+            is_direct: None,
+            children_count: 0,
+            state: None,
+            heroes: None,
+            via: vec![],
+        };
+
         let theme = cx.theme();
 
         div()
@@ -336,13 +371,53 @@ impl Render for SpaceLobbyContent {
                             .gap(px(8.))
                             .child(subtitle(tr!("ACTIONS")))
                             .child(
-                                button("create-room")
-                                    .child(icon_text("list-add".into(), tr!("CREATE_ROOM").into())),
-                            )
-                            .child(button("create-space").child(icon_text(
-                                "list-add".into(),
-                                tr!("CREATE_SUBSPACE", "Create Subordinate Space").into(),
-                            ))),
+                                div()
+                                    .bg(theme.button_background)
+                                    .rounded(theme.border_radius)
+                                    .flex()
+                                    .flex_col()
+                                    .child(
+                                        button("create-room")
+                                            .child(icon_text(
+                                                "list-add".into(),
+                                                tr!("CREATE_ROOM").into(),
+                                            ))
+                                            .on_click(cx.listener({
+                                                let space_room = space_room.clone();
+                                                move |this, _, _, cx| {
+                                                    let space_room = space_room.clone();
+                                                    this.create_room_popover.update(
+                                                        cx,
+                                                        move |create_room_popover, cx| {
+                                                            create_room_popover
+                                                                .open(Some(space_room.clone()), cx);
+                                                        },
+                                                    );
+                                                }
+                                            })),
+                                    )
+                                    .child(
+                                        button("create-space")
+                                            .child(icon_text(
+                                                "list-add".into(),
+                                                tr!("CREATE_SUBSPACE", "Create Subordinate Space")
+                                                    .into(),
+                                            ))
+                                            .on_click(cx.listener({
+                                                let space_room = space_room.clone();
+                                                move |this, _, _, cx| {
+                                                    let space_room = space_room.clone();
+                                                    this.create_space_popover.update(
+                                                        cx,
+                                                        move |create_space_popover, cx| {
+                                                            create_space_popover
+                                                                .open(Some(space_room.clone()), cx);
+                                                        },
+                                                    );
+                                                }
+                                            })),
+                                    ),
+                            ),
                     ),
             )
             .child(

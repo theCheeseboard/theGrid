@@ -18,9 +18,11 @@ use crate::chat::chat_room::room_timeline_content::RoomTimelineContent;
 use crate::chat::chat_room::space_lobby_content::SpaceLobbyContent;
 use crate::chat::chat_room::user_action_dialogs::UserActionDialogs;
 use crate::chat::displayed_room::DisplayedRoom;
+use crate::chat::join_room::create_room_popover::CreateRoomPopover;
+use crate::chat::join_room::create_space_popover::CreateSpacePopover;
 use cntp_i18n::tr;
 use contemporary::components::button::button;
-use contemporary::components::dialog_box::{dialog_box, StandardButton};
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::pager::lift_animation::LiftAnimation;
@@ -28,9 +30,9 @@ use contemporary::components::pager::pager;
 use contemporary::components::spinner::spinner;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, AnimationExt, App, AppContext, BorrowAppContext, Context,
-    Entity, InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled,
-    VisualContext, Window,
+    AnimationExt, App, AppContext, BorrowAppContext, Context, Entity, InteractiveElement,
+    IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled, VisualContext, Window,
+    div, px,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use smol::stream::StreamExt;
@@ -72,6 +74,8 @@ impl ChatRoom {
     pub fn new(
         room_id: OwnedRoomId,
         displayed_room: Entity<DisplayedRoom>,
+        create_room_popover: Entity<CreateRoomPopover>,
+        create_space_popover: Entity<CreateSpacePopover>,
         on_surface_change: Rc<Box<SurfaceChangeHandler>>,
         cx: &mut App,
     ) -> Entity<Self> {
@@ -120,10 +124,14 @@ impl ChatRoom {
                     };
 
                     if room.is_space() {
-                        this.view = ChatRoomView::SpaceLobby(cx.new({
-                            let open_room = open_room.clone();
-                            let displayed_room = displayed_room.clone();
-                            move |cx| SpaceLobbyContent::new(displayed_room, open_room, cx)
+                        this.view = ChatRoomView::SpaceLobby(cx.new(|cx| {
+                            SpaceLobbyContent::new(
+                                displayed_room.clone(),
+                                open_room.clone(),
+                                create_room_popover.clone(),
+                                create_space_popover.clone(),
+                                cx,
+                            )
                         }))
                     } else {
                         let trigger_user_action_listener = cx.listener(Self::trigger_user_action);

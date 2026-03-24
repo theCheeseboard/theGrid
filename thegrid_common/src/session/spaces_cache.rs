@@ -3,9 +3,9 @@ use async_channel::Sender;
 use gpui::private::anyhow;
 use gpui::{AppContext, AsyncApp, Context, Entity, WeakEntity};
 use imbl::Vector;
+use matrix_sdk::Client;
 use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::stream::StreamExt;
-use matrix_sdk::Client;
 use matrix_sdk_ui::spaces::room_list::SpaceRoomListPaginationState;
 use matrix_sdk_ui::spaces::{SpaceRoom, SpaceRoomList, SpaceService};
 use std::sync::Arc;
@@ -82,6 +82,35 @@ impl SpacesCache {
 
         space_room_list_entity
     }
+
+    pub fn get_editable_spaces(&self, cx: &mut Context<Self>) -> Entity<Option<Vec<SpaceRoom>>> {
+        let space_service = self.space_service.clone();
+
+        cx.new(|cx| {
+            cx.spawn(
+                async move |weak_this: WeakEntity<Option<Vec<SpaceRoom>>>, cx: &mut AsyncApp| {
+                    let editable_spaces = cx
+                        .spawn_tokio(async move {
+                            Ok::<_, anyhow::Error>(space_service.editable_spaces().await)
+                        })
+                        .await
+                        .unwrap();
+
+                    let _ = weak_this.update(cx, |this, cx| {
+                        *this = Some(editable_spaces);
+                        cx.notify();
+                    });
+                },
+            )
+            .detach();
+
+            None
+        })
+    }
+
+    pub fn space_service(&self) -> Arc<SpaceService> {
+        self.space_service.clone()
+    }
 }
 
 pub struct SpaceRoomListEntity {
@@ -134,19 +163,22 @@ impl SpaceRoomListEntity {
 
         self.pagination_state = space_room_list.pagination_state();
         let mut stream = space_room_list.subscribe_to_pagination_state_updates();
-        cx.spawn(async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-            while let Some(pagination_state) = stream.next().await {
-                if weak_this
-                    .update(cx, |this, cx| {
-                        this.pagination_state = pagination_state;
-                        cx.notify();
-                    })
-                    .is_err()
-                {
-                    return;
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                while let Some(pagination_state) = stream.next().await {
+                    if weak_this
+                        .update(cx, |this, cx| {
+                            this.pagination_state = pagination_state;
+                            cx.notify();
+                        })
+                        .is_err()
+                    {
+                        return;
+                    }
                 }
-            }
-        }).detach();
+            },
+        )
+        .detach();
 
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
@@ -175,7 +207,7 @@ impl SpaceRoomListEntity {
     pub fn ready(&self) -> bool {
         self.ready
     }
-    
+
     pub fn pagination_state(&self) -> &SpaceRoomListPaginationState {
         &self.pagination_state
     }

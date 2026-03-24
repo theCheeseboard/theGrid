@@ -12,21 +12,23 @@ mod utilities;
 mod account_settings;
 mod uiaa_client;
 
-use crate::actions::{register_actions, AccountSettings, AccountSwitcher, CreateRoom, LogOut};
+use crate::actions::{
+    AccountSettings, AccountSwitcher, CreateRoom, CreateSpace, LogOut, register_actions,
+};
 use crate::chat::chat_input::bind_chat_input_keys;
 use crate::main_window::MainWindow;
-use cntp_i18n::{tr, tr_load, I18N_MANAGER};
+use cntp_i18n::{I18N_MANAGER, tr, tr_load};
 use cntp_icon_tool_macros::application_icon;
-use contemporary::application::{new_contemporary_application, ApplicationLink, Details, License};
+use contemporary::application::{ApplicationLink, Details, License, new_contemporary_application};
 use contemporary::macros::application_details;
-use contemporary::setup::{setup_contemporary, Contemporary, ContemporaryMenus};
+use contemporary::setup::{Contemporary, ContemporaryMenus, setup_contemporary};
 use contemporary::window::contemporary_window_options;
-use gpui::{px, size, App, AsyncApp, Bounds, Menu, MenuItem, WindowBounds, WindowOptions};
+use gpui::{App, AsyncApp, Bounds, Menu, MenuItem, WindowBounds, WindowOptions, px, size};
 use smol_macros::main;
 use std::any::TypeId;
 use std::ptr;
 use std::rc::Rc;
-use thegrid_common::session::session_manager::{setup_session_manager, SessionManager};
+use thegrid_common::session::session_manager::{SessionManager, setup_session_manager};
 use thegrid_common::session::sso_login::SsoLogin;
 use thegrid_common::setup_thegrid_common;
 use thegrid_rtc_livekit::call_manager::setup_call_manager;
@@ -140,6 +142,10 @@ fn mane() {
                                         MenuItem::action(
                                             tr!("ROOMS_CREATE", "Create Room..."),
                                             CreateRoom,
+                                        ),
+                                        MenuItem::action(
+                                            tr!("ROOMS_CREATE_SPACE", "Create Space..."),
+                                            CreateSpace,
                                         ),
                                         MenuItem::action(
                                             tr!("ROOMS_DIRECT_JOIN", "Join a room..."),

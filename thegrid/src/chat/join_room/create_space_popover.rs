@@ -25,28 +25,21 @@ use gpui::{
 };
 use matrix_sdk::ruma::api::client::room::Visibility;
 use matrix_sdk::ruma::api::client::room::create_room::v3::{CreationContent, Request};
-use matrix_sdk::ruma::room::{AllowRule, JoinRule, Restricted, RoomMembership};
+use matrix_sdk::ruma::room::{AllowRule, JoinRule, Restricted, RoomMembership, RoomType};
 use matrix_sdk::ruma::serde::Raw;
 use matrix_sdk::{Error, Room};
 use matrix_sdk_ui::spaces::SpaceRoom;
 use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
+use crate::chat::join_room::create_room_popover::RoomCreateAccess;
 
-#[derive(Copy, Clone, PartialEq)]
-pub enum RoomCreateAccess {
-    Public,
-    Private,
-    Space,
-}
-
-pub struct CreateRoomPopover {
+pub struct CreateSpacePopover {
     visible: bool,
     processing: bool,
 
     name_field: Entity<TextField>,
-    access: RoomCreateAccess,
-    encrypt: bool,
+    is_private_room: bool,
     federation: bool,
 
     editable_spaces: Entity<Option<Vec<SpaceRoom>>>,
@@ -55,26 +48,17 @@ pub struct CreateRoomPopover {
     displayed_room: Entity<DisplayedRoom>,
 }
 
-impl CreateRoomPopover {
+impl CreateSpacePopover {
     pub fn new(displayed_room: Entity<DisplayedRoom>, cx: &mut Context<Self>) -> Self {
-        cx.observe_self(|this, cx| {
-            if this.create_in_space.is_none() && this.access == RoomCreateAccess::Space {
-                this.access = RoomCreateAccess::Private;
-                cx.notify();
-            }
-        })
-        .detach();
-
         Self {
             visible: false,
             processing: false,
             name_field: cx.new(|cx| {
                 let mut text_field = TextField::new("name", cx);
-                text_field.set_placeholder(tr!("ROOM_NAME", "Room Name").to_string().as_str());
+                text_field.set_placeholder(tr!("SPACE_NAME", "Space Name").to_string().as_str());
                 text_field
             }),
-            access: RoomCreateAccess::Private,
-            encrypt: true,
+            is_private_room: true,
             federation: true,
             editable_spaces: cx.new(|cx| None),
             create_in_space: None,
@@ -84,12 +68,7 @@ impl CreateRoomPopover {
 
     pub fn open(&mut self, create_in_space: Option<SpaceRoom>, cx: &mut Context<Self>) {
         self.visible = true;
-        self.access = if create_in_space.is_some() {
-            RoomCreateAccess::Space
-        } else {
-            RoomCreateAccess::Private
-        };
-        self.encrypt = true;
+        self.is_private_room = true;
         self.federation = true;
         self.processing = false;
         self.create_in_space = create_in_space;
@@ -121,17 +100,16 @@ impl CreateRoomPopover {
             Raw::new(&{
                 let mut creation_content = CreationContent::new();
                 creation_content.federate = self.federation;
+                creation_content.room_type = Some(RoomType::Space);
                 creation_content
             })
             .unwrap(),
         );
 
-        let encrypt = self.encrypt;
-
         self.processing = true;
         cx.notify();
 
-        let access = self.access;
+        let is_private_room = self.is_private_room;
         let create_in_space = self.create_in_space.clone();
 
         cx.spawn_in(
@@ -142,48 +120,29 @@ impl CreateRoomPopover {
             {
                 Ok(room) => {
                     let room_id = room.room_id().to_owned();
-                    if encrypt {
-                        let room = room.clone();
-                        let _ = cx
-                            .spawn_tokio(async move { room.enable_encryption().await })
-                            .await;
-                    }
-
+                    
                     let _ = cx
                         .spawn_tokio({
                             let create_in_space = create_in_space.clone();
                             async move {
                                 room.privacy_settings()
-                                    .update_join_rule(match access {
-                                        RoomCreateAccess::Public => JoinRule::Public,
-                                        RoomCreateAccess::Private => JoinRule::Private,
-                                        RoomCreateAccess::Space => {
-                                            JoinRule::Restricted(Restricted::new(vec![
-                                                AllowRule::RoomMembership(RoomMembership::new(
-                                                    create_in_space
-                                                        .as_ref()
-                                                        .unwrap()
-                                                        .room_id
-                                                        .clone(),
-                                                )),
-                                            ]))
-                                        }
+                                    .update_join_rule(match is_private_room {
+                                        false => JoinRule::Public,
+                                        true => JoinRule::Private,
                                     })
                                     .await
                             }
                         })
                         .await;
-
+                    
                     if let Some(create_in_space) = create_in_space {
                         let child = room_id.clone();
                         let parent = create_in_space.room_id;
-                        if let Err(e) = cx
+                        let _ = cx
                             .spawn_tokio(async move {
                                 space_service.add_child_to_space(child, parent).await
                             })
-                            .await {
-                                log::error!("Failed to add child room to space: {}", e);
-                            }
+                            .await;
                     }
 
                     let _ = weak_this.update(cx, |this, cx| {
@@ -197,12 +156,15 @@ impl CreateRoomPopover {
                         weak_this.update(cx, |this, cx| {
                             Toast::new()
                                 .title(
-                                    tr!("ROOM_CREATE_ERROR_TITLE", "Unable to create the room")
+                                    tr!("SPACE_CREATE_ERROR_TITLE", "Unable to create the space")
                                         .as_ref(),
                                 )
                                 .body(
-                                    tr!("ROOM_CREATE_ERROR_TEXT", "The room could not be created",)
-                                        .as_ref(),
+                                    tr!(
+                                        "SPACE_CREATE_ERROR_TEXT",
+                                        "The space could not be created",
+                                    )
+                                    .as_ref(),
                                 )
                                 .severity(AdmonitionSeverity::Error)
                                 .post(window, cx);
@@ -217,7 +179,7 @@ impl CreateRoomPopover {
         .detach();
     }
 
-    fn create_room_page_contents(&mut self, cx: &mut Context<Self>) -> impl IntoElement {
+    fn create_space_page_contents(&mut self, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.theme();
 
         constrainer("create-room-constrainer").child(
@@ -226,13 +188,16 @@ impl CreateRoomPopover {
                 .flex_col()
                 .p(px(8.))
                 .w_full()
-                .child(subtitle(tr!("CREATE_ROOM_OPTIONS", "Room Options")))
+                .child(subtitle(tr!("CREATE_SPACE_OPTIONS", "Space Options")))
                 .child(
                     div()
                         .flex()
                         .flex_col()
                         .gap(px(8.))
-                        .child(tr!("CREATE_ROOM_DESCRIPTION", "Create a room to chat in"))
+                        .child(tr!(
+                            "CREATE_SPACE_DESCRIPTION",
+                            "Create a space to collect related rooms into a group"
+                        ))
                         .child(self.name_field.clone())
                         .child(
                             layer().p(px(8.)).flex().flex_col().child(
@@ -240,7 +205,7 @@ impl CreateRoomPopover {
                                     .flex()
                                     .items_center()
                                     .gap(px(4.))
-                                    .child(tr!("CREATE_ROOM_SPACE", "Create in space"))
+                                    .child(tr!("CREATE_ROOM_SPACE"))
                                     .child(div().flex_grow())
                                     .when_some(self.create_in_space.as_ref(), |david, space| {
                                         david.child(
@@ -255,9 +220,7 @@ impl CreateRoomPopover {
                                         self.create_in_space
                                             .as_ref()
                                             .map(|space| space.display_name.clone())
-                                            .unwrap_or(
-                                                tr!("CREATE_ROOM_SPACE_NONE", "No Space").into(),
-                                            ),
+                                            .unwrap_or(tr!("CREATE_ROOM_SPACE_NONE").into()),
                                     )
                                     .child({
                                         let mut space_menu = vec![
@@ -302,57 +265,33 @@ impl CreateRoomPopover {
                                 .flex()
                                 .flex_col()
                                 .gap(px(4.))
-                                .when_some(self.create_in_space.as_ref(), |david, _| {
-                                    david.child(
-                                        radio_button("room-visibility-space")
-                                            .label(tr!(
-                                                "CREATE_ROOM_VISIBILITY_SPACE",
-                                                "Space Members Only"
-                                            ))
-                                            .when(self.access == RoomCreateAccess::Space, |david| {
-                                                david.checked()
-                                            })
-                                            .on_checked_changed(cx.listener(
-                                                |this, event: &CheckedChangeEvent, _, cx| {
-                                                    if event.check_state == CheckState::On {
-                                                        this.access = RoomCreateAccess::Space;
-                                                        cx.notify()
-                                                    }
-                                                },
-                                            )),
-                                    )
-                                })
                                 .child(
-                                    radio_button("room-visibility-private")
+                                    radio_button("space-visibility-private")
                                         .label(tr!(
-                                            "CREATE_ROOM_VISIBILITY_PRIVATE",
-                                            "Create Private Room"
+                                            "CREATE_SPACE_VISIBILITY_PRIVATE",
+                                            "Create Private Space"
                                         ))
-                                        .when(self.access == RoomCreateAccess::Private, |david| {
-                                            david.checked()
-                                        })
+                                        .when(self.is_private_room, |david| david.checked())
                                         .on_checked_changed(cx.listener(
                                             |this, event: &CheckedChangeEvent, _, cx| {
                                                 if event.check_state == CheckState::On {
-                                                    this.access = RoomCreateAccess::Private;
+                                                    this.is_private_room = true;
                                                     cx.notify()
                                                 }
                                             },
                                         )),
                                 )
                                 .child(
-                                    radio_button("room-visibility-public")
+                                    radio_button("space-visibility-public")
                                         .label(tr!(
-                                            "CREATE_ROOM_VISIBILITY_PUBLIC",
-                                            "Create Public Room"
+                                            "CREATE_SPACE_VISIBILITY_PUBLIC",
+                                            "Create Public Space"
                                         ))
-                                        .when(self.access == RoomCreateAccess::Public, |david| {
-                                            david.checked()
-                                        })
+                                        .when(!self.is_private_room, |david| david.checked())
                                         .on_checked_changed(cx.listener(
                                             |this, event: &CheckedChangeEvent, _, cx| {
                                                 if event.check_state == CheckState::On {
-                                                    this.access = RoomCreateAccess::Public;
+                                                    this.is_private_room = false;
                                                     cx.notify()
                                                 }
                                             },
@@ -360,36 +299,10 @@ impl CreateRoomPopover {
                                 ),
                         )
                         .child(
-                            layer()
-                                .p(px(8.))
-                                .flex()
-                                .flex_col()
-                                .child(
-                                    div()
-                                        .flex()
-                                        .child(tr!("CREATE_ROOM_ENCRYPT", "Enable Encryption"))
-                                        .child(div().flex_grow())
-                                        .child(
-                                            switch("encrypt-switch")
-                                                .when(self.encrypt, |david| david.checked())
-                                                .on_change(cx.listener(
-                                                    |this, event: &SwitchChangeEvent, _, cx| {
-                                                        this.encrypt = event.checked;
-                                                        cx.notify()
-                                                    },
-                                                )),
-                                        ),
-                                )
-                                .child(tr!(
-                                    "CREATE_ROOM_ENCRYPT_SUBTEXT",
-                                    "Once enabled, encryption cannot be disabled"
-                                )),
-                        )
-                        .child(
                             button("do-create")
                                 .child(icon_text(
                                     "list-add".into(),
-                                    tr!("CREATE_ROOM", "Create Room").into(),
+                                    tr!("CREATE_SPACE", "Create Space").into(),
                                 ))
                                 .on_click(cx.listener(move |this, _, window, cx| {
                                     this.create_room(window, cx)
@@ -400,14 +313,14 @@ impl CreateRoomPopover {
     }
 }
 
-impl Render for CreateRoomPopover {
+impl Render for CreateSpacePopover {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        popover("create-room-popover")
+        popover("create-space-popover")
             .visible(self.visible)
             .size_neg(100.)
             .anchor_bottom()
             .content(
-                pager("create-room-pager", if self.processing { 1 } else { 0 })
+                pager("create-space-pager", if self.processing { 1 } else { 0 })
                     .animation(SlideHorizontalAnimation::new())
                     .size_full()
                     .page(
@@ -416,14 +329,14 @@ impl Render for CreateRoomPopover {
                             .flex_col()
                             .gap(px(9.))
                             .child(
-                                grandstand("create-room-grandstand")
-                                    .text(tr!("CREATE_ROOM_TITLE", "Create Room"))
+                                grandstand("create-space-grandstand")
+                                    .text(tr!("CREATE_SPACE_TITLE", "Create Space"))
                                     .on_back_click(cx.listener(move |this, _, _, cx| {
                                         this.visible = false;
                                         cx.notify()
                                     })),
                             )
-                            .child(self.create_room_page_contents(cx))
+                            .child(self.create_space_page_contents(cx))
                             .into_any_element(),
                     )
                     .page(
