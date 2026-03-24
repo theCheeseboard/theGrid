@@ -7,13 +7,18 @@ use cntp_i18n::tr;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{
-    AppContext, AsyncApp, ClipboardEntry, Context, Entity, PathPromptOptions, WeakEntity, Window,
+    App, AppContext, AsyncApp, AsyncWindowContext, ClipboardEntry, Context, Entity,
+    PathPromptOptions, WeakEntity, Window,
 };
+use log::error;
 use matrix_sdk::room::RoomMember;
+use matrix_sdk::ruma::api::client::room::aliases::v3::Response;
+use matrix_sdk::ruma::events::room;
+use matrix_sdk::ruma::events::room::canonical_alias::RoomCanonicalAliasEventContent;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::events::tag::Tags;
-use matrix_sdk::ruma::OwnedRoomId;
-use matrix_sdk::Room;
+use matrix_sdk::ruma::{api, OwnedRoomAliasId, OwnedRoomId};
+use matrix_sdk::{Error, HttpError, Room};
 use matrix_sdk_ui::timeline::{AttachmentConfig, AttachmentSource, EventTimelineItem, RoomExt};
 use mime2ext::mime2ext;
 use std::fs::read;
@@ -36,6 +41,7 @@ pub struct OpenRoom {
     pub timeline: Option<Entity<Timeline>>,
     pub tags: Tags,
     pub pending_reply: Option<EventTimelineItem>,
+    local_aliases: Vec<OwnedRoomAliasId>,
     pagination_pending: bool,
 }
 
@@ -93,6 +99,7 @@ impl OpenRoom {
             tags: Default::default(),
             pagination_pending: false,
             pending_reply: None,
+            local_aliases: Vec::new(),
         };
 
         let Some(room) = client.get_room(&room_id) else {
@@ -144,6 +151,8 @@ impl OpenRoom {
             },
         )
         .detach();
+
+        self_return.update_local_aliases(cx);
 
         self_return
     }
@@ -396,5 +405,185 @@ impl OpenRoom {
 
     pub fn pagination_pending(&self) -> bool {
         self.pagination_pending
+    }
+
+    pub fn local_aliases(&self) -> Vec<OwnedRoomAliasId> {
+        self.local_aliases.clone()
+    }
+
+    pub fn publish_local_alias(
+        &mut self,
+        alias: OwnedRoomAliasId,
+        callback: impl FnOnce(&Result<(), HttpError>, &mut Window, &mut App) + 'static,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let session_manager = cx.global::<SessionManager>();
+        let client = session_manager.client().unwrap().read(cx).clone();
+        let room_id = self.room_id.clone();
+
+        cx.spawn_in(
+            window,
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncWindowContext| {
+                let result = cx
+                    .spawn_tokio({
+                        let alias = alias.clone();
+                        async move { client.create_room_alias(&alias, &room_id).await }
+                    })
+                    .await;
+
+                cx.update(|window, cx| {
+                    let _ = weak_this.update(cx, |this, cx| {
+                        this.local_aliases.push(alias);
+                        cx.notify();
+
+                        this.update_local_aliases(cx);
+                    });
+                    callback(&result, window, cx);
+                })
+            },
+        )
+        .detach();
+    }
+
+    pub fn unpublish_local_alias(
+        &mut self,
+        alias: OwnedRoomAliasId,
+        callback: impl FnOnce(&Result<(), Error>, &mut Window, &mut App) + 'static,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let session_manager = cx.global::<SessionManager>();
+        let client = session_manager.client().unwrap().read(cx).clone();
+
+        if !self.local_aliases.contains(&alias) {
+            callback(&Ok(()), window, cx);
+            return;
+        }
+
+        // If the alias is currently published, unpublish it first.
+        let room = self.room.clone().unwrap();
+        let canonical_alias = room.canonical_alias();
+        let mut alt_aliases = room.alt_aliases();
+
+        let state_event = if canonical_alias
+            .as_ref()
+            .is_some_and(|canonical_alias| canonical_alias == &alias)
+            || alt_aliases.contains(&alias)
+        {
+            let mut event = RoomCanonicalAliasEventContent::new();
+            event.alias = if canonical_alias
+                .as_ref()
+                .is_some_and(|canonical_alias| canonical_alias == &alias)
+            {
+                None
+            } else {
+                canonical_alias
+            };
+            alt_aliases.retain(|a| a != &alias);
+            event.alt_aliases = alt_aliases;
+
+            Some(event)
+        } else {
+            None
+        };
+
+        cx.spawn_in(
+            window,
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncWindowContext| {
+                if let Some(state_event) = state_event {
+                    if let Err(e) = cx
+                        .spawn_tokio(async move { room.send_state_event(state_event).await })
+                        .await
+                    {
+                        let _ = cx.update(|window, cx| {
+                            callback(&Err(e), window, cx);
+                        });
+                        return;
+                    }
+                }
+
+                let result = cx
+                    .spawn_tokio({
+                        let alias = alias.clone();
+                        async move { client.remove_room_alias(&alias).await }
+                    })
+                    .await;
+
+                let _ = cx.update(|window, cx| {
+                    let _ = weak_this.update(cx, |this, cx| {
+                        this.local_aliases.retain(|a| a != &alias);
+                        cx.notify();
+
+                        this.update_local_aliases(cx);
+                    });
+                    callback(&result.map_err(|e| Error::Http(Box::new(e))), window, cx);
+                });
+            },
+        )
+        .detach();
+    }
+
+    pub fn publish_public_aliases(
+        &mut self,
+        canonical_alias: Option<OwnedRoomAliasId>,
+        alt_aliases: Vec<OwnedRoomAliasId>,
+        callback: impl FnOnce(
+            &Result<api::client::state::send_state_event::v3::Response, Error>,
+            &mut Window,
+            &mut App,
+        ) + 'static,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let room = self.room.clone().unwrap();
+
+        let mut event = RoomCanonicalAliasEventContent::new();
+        event.alias = canonical_alias;
+        event.alt_aliases = alt_aliases;
+
+        cx.spawn_in(
+            window,
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncWindowContext| {
+                let result = cx
+                    .spawn_tokio(async move { room.send_state_event(event).await })
+                    .await;
+
+                cx.update(|window, cx| {
+                    callback(&result, window, cx);
+                })
+            },
+        )
+        .detach();
+    }
+
+    fn update_local_aliases(&mut self, cx: &mut Context<Self>) {
+        let session_manager = cx.global::<SessionManager>();
+        let client = session_manager.client().unwrap().read(cx).clone();
+
+        let room_id = self.room_id.clone();
+
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| match cx
+                .spawn_tokio(async move {
+                    client
+                        .send(api::client::room::aliases::v3::Request::new(room_id))
+                        .await
+                })
+                .await
+            {
+                Ok(response) => {
+                    let _ = weak_this.update(cx, |this, cx| {
+                        this.local_aliases = response.aliases;
+                        cx.notify();
+                    });
+                }
+                Err(e) => {
+                    error!("Failed to get room aliases: {}", e);
+                    return;
+                }
+            },
+        )
+        .detach();
     }
 }

@@ -187,6 +187,53 @@ impl RenderOnce for StateEventItem {
                 )),
             )
                 .into_any_element(),
+            AnyOtherFullStateEventContent::RoomHistoryVisibility(event) => state_change_element(
+                Some("im-room".to_string()),
+                match event {
+                    FullStateEventContent::Original { content, .. } => match content.history_visibility {
+                        HistoryVisibility::Invited => Some(tr!(
+                            "ROOM_STATE_JOIN_RULES_INVITED",
+                            "{{user}} allowed people to see messages from when they were invited",
+                            user = sender
+                        )),
+                        HistoryVisibility::Joined => Some(tr!(
+                            "ROOM_STATE_JOIN_RULES_JOINED",
+                            "{{user}} allowed people to see messages from when they \
+                            joined the room",
+                            user = sender
+                        )),
+                        HistoryVisibility::Shared => Some(tr!(
+                            "ROOM_STATE_JOIN_RULES_SHARED",
+                            "{{user}} allowed people in the room to see all messages since \
+                            the room was created",
+                            user = sender
+                        )),
+                        HistoryVisibility::WorldReadable => Some(tr!(
+                            "ROOM_STATE_JOIN_RULES_WORLD_READABLE",
+                            "{{user}} allowed anyone to see all messages in the room, even if \
+                            they are not currently in the room",
+                            user = sender
+                        )),
+                        _ => None,
+                    },
+                    FullStateEventContent::Redacted(_) => None,
+                }
+                    .unwrap_or(tr!(
+                    "ROOM_STATE_HISTORY_VISIBILITY_REDACTED",
+                    "{{user}} changed who can see historical messages in the room",
+                    user = sender
+                )),
+            )
+                .into_any_element(),
+            AnyOtherFullStateEventContent::RoomCanonicalAlias(_) => state_change_element(
+                Some("im-room".to_string()),
+                tr!(
+                    "ROOM_STATE_ALIASES_UPDATED",
+                    "{{user}} updated the public aliases for the room",
+                    user = sender
+                ),
+            )
+                .into_any_element(),
             _ => div().into_any_element(),
         }
     }
