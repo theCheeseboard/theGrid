@@ -198,7 +198,7 @@ impl RoomSettings {
             .child(subtitle(tr!("ROOM_ALIASES", "Aliases")))
             .child(if is_space {
                 tr!(
-                    "ROOM_ALIASES_DESCRIPTION",
+                    "ROOM_ALIASES_DESCRIPTION_SPACE",
                     "Aliases can be used to join this space directly, \
                     if the access policy is set to Public. Public aliases \
                     can be used by anyone, whilst non-public aliases can only \
