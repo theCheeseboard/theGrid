@@ -1,3 +1,10 @@
+mod verification_reciporicate_page;
+mod verification_sas_page;
+mod verification_select_page;
+
+use crate::auth::verification_popover::verification_reciporicate_page::VerificationReciporicatePage;
+use crate::auth::verification_popover::verification_sas_page::VerificationSasPage;
+use crate::auth::verification_popover::verification_select_page::VerificationSelectPage;
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
@@ -12,41 +19,53 @@ use contemporary::components::subtitle::subtitle;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, AppContext, AsyncApp, Context, Flatten, IntoElement, ParentElement, Render,
-    Styled, WeakEntity, Window,
+    App, AppContext, AsyncApp, ClickEvent, Context, Element, Entity, Flatten, IntoElement,
+    ParentElement, Render, RenderImage, Styled, WeakEntity, Window, div, img, px, svg,
 };
 use gpui_tokio::Tokio;
+use image::{Frame, Luma, Rgb, Rgba};
 use matrix_sdk::encryption::identities::Device;
 use matrix_sdk::encryption::verification::VerificationRequestState;
-use matrix_sdk::ruma::events::key::verification::cancel::CancelCode;
 use matrix_sdk::ruma::events::key::verification::VerificationMethod;
-use matrix_sdk_crypto::CancelInfo;
+use matrix_sdk::ruma::events::key::verification::cancel::CancelCode;
+use matrix_sdk_crypto::{CancelInfo, QrVerificationState};
+use smallvec::smallvec;
+use std::rc::Rc;
+use std::sync::Arc;
 use thegrid_common::sas_emoji::SasEmoji;
 use thegrid_common::session::session_manager::SessionManager;
-use thegrid_common::session::verification_requests_cache::VerificationRequestDetails;
+use thegrid_common::session::verification_requests_cache::{
+    SUPPORTED_VERIFICATION_METHODS, VerificationRequestDetails,
+};
 use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct VerificationPopover {
-    verification_request: Option<String>,
+    state: VerificationPopoverState,
+}
+
+enum VerificationPopoverState {
+    Idle,
+    RequestingVerification,
+    ActiveVerification(Entity<VerificationRequestDetails>),
 }
 
 impl VerificationPopover {
     pub fn new(cx: &mut Context<VerificationPopover>) -> VerificationPopover {
         VerificationPopover {
-            verification_request: None,
+            state: VerificationPopoverState::Idle,
         }
     }
 
     pub fn set_verification_request(
         &mut self,
-        verification_request: VerificationRequestDetails,
+        verification_request: Entity<VerificationRequestDetails>,
         cx: &mut Context<VerificationPopover>,
     ) {
-        self.verification_request = Some(verification_request.inner.flow_id().to_string());
+        self.state = VerificationPopoverState::ActiveVerification(verification_request);
     }
 
     pub fn trigger_outgoing_verification(&mut self, cx: &mut Context<VerificationPopover>) {
-        self.verification_request = Some(String::default());
+        self.state = VerificationPopoverState::RequestingVerification;
 
         let session_manager = cx.global::<SessionManager>();
         let client = session_manager.client().unwrap().read(cx).clone();
@@ -66,19 +85,26 @@ impl VerificationPopover {
                     if let Ok(verification_request) = cx
                         .spawn_tokio(async move {
                             identity
-                                .request_verification_with_methods(vec![VerificationMethod::SasV1])
+                                .request_verification_with_methods(
+                                    SUPPORTED_VERIFICATION_METHODS.to_vec(),
+                                )
                                 .await
                         })
                         .await
                     {
                         let verification_request_clone = verification_request.clone();
-                        let _ = verification_requests.update(cx, |requests, cx| {
-                            requests
-                                .notify_new_verification_request(verification_request_clone, cx);
-                        });
+                        let Ok(verification_request) =
+                            verification_requests.update(cx, |requests, cx| {
+                                requests
+                                    .notify_new_verification_request(verification_request_clone, cx)
+                            })
+                        else {
+                            return;
+                        };
+
                         let _ = weak_this.update(cx, |this, cx| {
-                            this.verification_request =
-                                Some(verification_request.flow_id().to_string());
+                            this.state =
+                                VerificationPopoverState::ActiveVerification(verification_request);
                             cx.notify()
                         });
                     }
@@ -95,7 +121,7 @@ impl VerificationPopover {
         device: Device,
         cx: &mut Context<VerificationPopover>,
     ) {
-        self.verification_request = Some(String::default());
+        self.state = VerificationPopoverState::RequestingVerification;
 
         let session_manager = cx.global::<SessionManager>();
         let verification_requests = session_manager.verification_requests();
@@ -105,18 +131,24 @@ impl VerificationPopover {
                 if let Ok(verification_request) = cx
                     .spawn_tokio(async move {
                         device
-                            .request_verification_with_methods(vec![VerificationMethod::SasV1])
+                            .request_verification_with_methods(
+                                SUPPORTED_VERIFICATION_METHODS.to_vec(),
+                            )
                             .await
                     })
                     .await
                 {
                     let verification_request_clone = verification_request.clone();
-                    let _ = verification_requests.update(cx, |requests, cx| {
-                        requests.notify_new_verification_request(verification_request_clone, cx);
-                    });
+                    let Ok(verification_request) =
+                        verification_requests.update(cx, |requests, cx| {
+                            requests.notify_new_verification_request(verification_request_clone, cx)
+                        })
+                    else {
+                        return;
+                    };
                     let _ = weak_this.update(cx, |this, cx| {
-                        this.verification_request =
-                            Some(verification_request.flow_id().to_string());
+                        this.state =
+                            VerificationPopoverState::ActiveVerification(verification_request);
                         cx.notify()
                     });
                 }
@@ -128,37 +160,48 @@ impl VerificationPopover {
     }
 
     pub fn clear_verification_request(&mut self) {
-        self.verification_request = None;
+        self.state = VerificationPopoverState::Idle;
     }
 
     pub fn on_back_click(&mut self, cx: &mut Context<VerificationPopover>) {
-        let session_manager = cx.global::<SessionManager>();
-        let verification_requests = session_manager.verification_requests().read(cx);
-
-        if let Some(verification_request) = &self.verification_request {
-            let verification_request = verification_requests
-                .verification_request(verification_request.as_str())
-                .cloned();
-
-            if let Some(verification_request) = verification_request.clone() {
+        if let Some(verification_request) = self.verification_request(cx) {
+            verification_request.update(cx, |verification_request, cx| {
                 if !verification_request.inner.is_done()
                     && !verification_request.inner.is_cancelled()
                 {
-                    cx.spawn(async move |_, cx: &mut AsyncApp| {
-                        let _ = cx
-                            .spawn_tokio(async move {
-                                verification_request.clone().inner.cancel().await
-                            })
-                            .await;
-                    })
-                    .detach();
+                    verification_request.cancel(cx);
                 }
-            }
-            self.verification_request = None;
+            });
+            self.state = VerificationPopoverState::Idle;
         }
 
         cx.notify()
     }
+
+    fn verification_request(
+        &self,
+        cx: &mut Context<Self>,
+    ) -> Option<Entity<VerificationRequestDetails>> {
+        let session_manager = cx.global::<SessionManager>();
+        let verification_requests = session_manager.verification_requests().read(cx);
+
+        match &self.state {
+            VerificationPopoverState::ActiveVerification(verification_request) => {
+                Some(verification_request.clone())
+            }
+            _ => None,
+        }
+    }
+}
+
+enum VerificationPopoverPage {
+    Loading = 0,
+    Completed = 1,
+    SelectMethod = 2,
+    Sas = 3,
+    QrReciporicate = 4,
+    Cancelled = 5,
+    AwaitingOtherDevice = 6,
 }
 
 impl Render for VerificationPopover {
@@ -167,36 +210,42 @@ impl Render for VerificationPopover {
         let account = session_manager.current_account().read(cx);
         let verified = account.we_are_verified();
 
-        let verification_request = session_manager
-            .verification_requests()
-            .read(cx)
-            .verification_request(
-                self.verification_request
-                    .clone()
-                    .unwrap_or_default()
-                    .as_str(),
-            )
-            .cloned();
+        let on_back_click: Rc<Box<dyn Fn(&ClickEvent, &mut Window, &mut App)>> = Rc::new(Box::new(
+            cx.listener(move |this, _, _, cx| this.on_back_click(cx)),
+        ));
+
+        let verification_request_entity = self.verification_request(cx);
+        let verification_request = verification_request_entity
+            .as_ref()
+            .map(|verification_request| verification_request.read(cx).clone());
 
         popover("verification-popover")
-            .visible(self.verification_request.is_some())
+            .visible(matches!(
+                self.state,
+                VerificationPopoverState::RequestingVerification
+                    | VerificationPopoverState::ActiveVerification(_)
+            ))
             .size_neg(100.)
             .anchor_bottom()
             .content(
                 pager(
                     "verification-popover-pager",
                     match &verification_request {
-                        None => 0,
+                        None => VerificationPopoverPage::Loading,
                         Some(verification_request) => match verification_request.inner.state() {
-                            VerificationRequestState::Created { .. } => 4,
+                            VerificationRequestState::Created { .. } => {
+                                VerificationPopoverPage::AwaitingOtherDevice
+                            }
                             VerificationRequestState::Requested { .. } => {
                                 if verification_request.inner.we_started() {
-                                    4
+                                    VerificationPopoverPage::AwaitingOtherDevice
                                 } else {
-                                    0
+                                    VerificationPopoverPage::Loading
                                 }
                             }
-                            VerificationRequestState::Ready { .. } => 0,
+                            VerificationRequestState::Ready { .. } => {
+                                VerificationPopoverPage::SelectMethod
+                            }
                             VerificationRequestState::Transitioned { .. } => {
                                 match &verification_request.sas_state {
                                     Some(sas_state)
@@ -204,15 +253,39 @@ impl Render for VerificationPopover {
                                             && !sas_state.is_cancelled()
                                             && sas_state.emoji().is_some() =>
                                     {
-                                        2
+                                        VerificationPopoverPage::Sas
                                     }
-                                    _ => 0,
+                                    _ => {
+                                        if verification_request.sas_manually_started {
+                                            VerificationPopoverPage::Loading
+                                        } else {
+                                            match &verification_request.qr_state {
+                                                Some(qr_state)
+                                                    if !matches!(
+                                                        qr_state.state(),
+                                                        QrVerificationState::Done { .. }
+                                                            | QrVerificationState::Cancelled(..)
+                                                            | QrVerificationState::Confirmed
+                                                    ) =>
+                                                {
+                                                    if qr_state.has_been_scanned() {
+                                                        VerificationPopoverPage::QrReciporicate
+                                                    } else {
+                                                        VerificationPopoverPage::SelectMethod
+                                                    }
+                                                }
+                                                _ => VerificationPopoverPage::Loading,
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                            VerificationRequestState::Done => 1,
-                            VerificationRequestState::Cancelled(_) => 3,
+                            VerificationRequestState::Done => VerificationPopoverPage::Completed,
+                            VerificationRequestState::Cancelled(_) => {
+                                VerificationPopoverPage::Cancelled
+                            }
                         },
-                    },
+                    } as usize,
                 )
                 .animation(FadeAnimation::new())
                 .size_full()
@@ -225,9 +298,10 @@ impl Render for VerificationPopover {
                         .child(
                             grandstand("verify-popover-grandstand")
                                 .text(tr!("POPOVER_VERIFY", "Verification"))
-                                .on_back_click(
-                                    cx.listener(move |this, _, _, cx| this.on_back_click(cx)),
-                                ),
+                                .on_back_click({
+                                    let on_back_click = on_back_click.clone();
+                                    move |event, window, cx| on_back_click(event, window, cx)
+                                }),
                         )
                         .child(
                             div()
@@ -247,9 +321,10 @@ impl Render for VerificationPopover {
                         .child(
                             grandstand("verify-popover-grandstand")
                                 .text(tr!("POPOVER_VERIFY"))
-                                .on_back_click(
-                                    cx.listener(move |this, _, _, cx| this.on_back_click(cx)),
-                                ),
+                                .on_back_click({
+                                    let on_back_click = on_back_click.clone();
+                                    move |event, window, cx| on_back_click(event, window, cx)
+                                }),
                         )
                         .child(
                             constrainer("verify-popover-constrainer").child(
@@ -270,7 +345,7 @@ impl Render for VerificationPopover {
                                             .child(tr!(
                                                 "VERIFICATION_POPOVER_OK_MESSAGE",
                                                 "Your device is now verified, and encryption \
-                                                     keys have been shared."
+                                                 keys have been shared."
                                             ))
                                             .child(
                                                 button("verification-popover-ok")
@@ -279,7 +354,7 @@ impl Render for VerificationPopover {
                                                         tr!("CLOSE", "Close").into(),
                                                     ))
                                                     .on_click(cx.listener(|this, _, _, cx| {
-                                                        this.verification_request = None;
+                                                        this.clear_verification_request();
                                                         cx.notify()
                                                     })),
                                             ),
@@ -290,132 +365,25 @@ impl Render for VerificationPopover {
                         .into_any_element(),
                 )
                 .page(
-                    div()
-                        .flex()
-                        .flex_col()
-                        .gap(px(9.))
-                        .child(
-                            grandstand("verify-popover-grandstand")
-                                .text(tr!("POPOVER_VERIFY"))
-                                .on_back_click(
-                                    cx.listener(move |this, _, _, cx| this.on_back_click(cx)),
-                                ),
-                        )
-                        .child({
-                            if let Some(verification_request) = &verification_request
-                                && let Some(sas_state) = verification_request.sas_state.as_ref()
-                                && let Some(emoji) = sas_state.emoji()
-                            {
-                                let sas_state_clone = sas_state.clone();
-                                let sas_state_clone_2 = sas_state.clone();
-                                constrainer("verify-popover-constrainer")
-                                    .child(
-                                        layer()
-                                            .flex()
-                                            .flex_col()
-                                            .p(px(8.))
-                                            .w_full()
-                                            .child(subtitle(tr!(
-                                                "VERIFICATION_SAS_EMOJI",
-                                                "Compare these emoji"
-                                            )))
-                                            .child(tr!(
-                                                "VERIFICATION_SAS_EMOJI_DESCRIPTION",
-                                                "Check on the other device and ensure that these \
-                                                emoji are displayed, in the same order."
-                                            ))
-                                            .child(
-                                                div()
-                                                    .flex()
-                                                    .flex_col()
-                                                    .gap(px(8.))
-                                                    .child(emoji.iter().fold(
-                                                        div().flex().flex_col(),
-                                                        |david, emoji| {
-                                                            david.child(format!(
-                                                                "{} {}",
-                                                                emoji.symbol,
-                                                                emoji.translated_description()
-                                                            ))
-                                                        },
-                                                    ))
-                                                    .child(
-                                                        button("verification-popover-ok")
-                                                            .child(icon_text(
-                                                                "dialog-ok".into(),
-                                                                tr!(
-                                                                    "EMOJI_MATCH",
-                                                                    "The emoji match"
-                                                                )
-                                                                .into(),
-                                                            ))
-                                                            .on_click(cx.listener(
-                                                                move |this, _, _, cx| {
-                                                                    let sas_state =
-                                                                        sas_state_clone.clone();
-                                                                    cx.spawn(async move |_, cx| {
-                                                                        Tokio::spawn_result(
-                                                                            cx,
-                                                                            async move {
-                                                                                sas_state
-                                                                                    .confirm()
-                                                                                    .await
-                                                                                    .map_err(|e| {
-                                                                                        anyhow!(e)
-                                                                                    })
-                                                                            },
-                                                                        )
-                                                                        .unwrap()
-                                                                        .await
-                                                                    })
-                                                                    .detach();
-                                                                    cx.notify()
-                                                                },
-                                                            )),
-                                                    )
-                                                    .child(
-                                                        button("verification-popover-not-ok")
-                                                            .child(icon_text(
-                                                                "dialog-cancel".into(),
-                                                                tr!(
-                                                                    "EMOJI_NO_MATCH",
-                                                                    "The emoji do not match"
-                                                                )
-                                                                .into(),
-                                                            ))
-                                                            .on_click(cx.listener(
-                                                                move |_, _, _, cx| {
-                                                                    let sas_state =
-                                                                        sas_state_clone_2.clone();
-                                                                    cx.spawn(async move |_, cx| {
-                                                                        Tokio::spawn_result(
-                                                                            cx,
-                                                                            async move {
-                                                                                sas_state
-                                                                                    .mismatch()
-                                                                                    .await
-                                                                                    .map_err(|e| {
-                                                                                        anyhow!(e)
-                                                                                    })
-                                                                            },
-                                                                        )
-                                                                        .unwrap()
-                                                                        .await
-                                                                    })
-                                                                    .detach();
-                                                                    cx.notify()
-                                                                },
-                                                            )),
-                                                    ),
-                                            )
-                                            .into_any_element(),
-                                    )
-                                    .into_any_element()
-                            } else {
-                                div().into_any_element()
-                            }
-                        })
-                        .into_any_element(),
+                    VerificationSelectPage {
+                        verification_request: verification_request_entity.clone(),
+                        on_back_click: on_back_click.clone(),
+                    }
+                    .into_any_element(),
+                )
+                .page(
+                    VerificationSasPage {
+                        verification_request: verification_request_entity.clone(),
+                        on_back_click: on_back_click.clone(),
+                    }
+                    .into_any_element(),
+                )
+                .page(
+                    VerificationReciporicatePage {
+                        verification_request: verification_request_entity.clone(),
+                        on_back_click: on_back_click.clone(),
+                    }
+                    .into_any_element(),
                 )
                 .page(
                     div()
@@ -425,9 +393,10 @@ impl Render for VerificationPopover {
                         .child(
                             grandstand("verify-popover-grandstand")
                                 .text(tr!("POPOVER_VERIFY"))
-                                .on_back_click(
-                                    cx.listener(move |this, _, _, cx| this.on_back_click(cx)),
-                                ),
+                                .on_back_click({
+                                    let on_back_click = on_back_click.clone();
+                                    move |event, window, cx| on_back_click(event, window, cx)
+                                }),
                         )
                         .child({
                             let reason = verification_request
@@ -456,7 +425,7 @@ impl Render for VerificationPopover {
                                                     tr!("CLOSE").into(),
                                                 ))
                                                 .on_click(cx.listener(|this, _, _, cx| {
-                                                    this.verification_request = None;
+                                                    this.clear_verification_request();
                                                     cx.notify()
                                                 })),
                                         ),
@@ -474,9 +443,10 @@ impl Render for VerificationPopover {
                         .child(
                             grandstand("verify-popover-grandstand")
                                 .text(tr!("POPOVER_VERIFY"))
-                                .on_back_click(
-                                    cx.listener(move |this, _, _, cx| this.on_back_click(cx)),
-                                ),
+                                .on_back_click({
+                                    let on_back_click = on_back_click.clone();
+                                    move |event, window, cx| on_back_click(event, window, cx)
+                                }),
                         )
                         .child(
                             constrainer("verify-popover-constrainer").child(
@@ -537,11 +507,18 @@ impl Render for VerificationPopover {
 
 fn cancel_string(cancel_info: &CancelInfo) -> String {
     match cancel_info.cancel_code() {
-        CancelCode::User => tr!(
-            "VERIFICATION_CANCEL_REASON_USER",
-            "Verification was cancelled from the other device."
-        )
-            .to_string(),
+        CancelCode::User => if cancel_info.cancelled_by_us() {
+            tr!(
+                "VERIFICATION_CANCEL_REASON_USER_IS",
+                "Verification was cancelled by this device."
+            )
+        } else {
+            tr!(
+                "VERIFICATION_CANCEL_REASON_USER",
+                "Verification was cancelled from the other device."
+            )
+        }
+        .to_string(),
         CancelCode::Timeout => tr!(
             "VERIFICATION_CANCEL_REASON_TIMEOUT",
             "Verification failed because the verification process took too long to complete."

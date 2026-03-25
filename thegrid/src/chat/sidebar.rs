@@ -22,9 +22,9 @@ use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, App, AppContext, AsyncApp, BorrowAppContext, Context, Entity,
-    InteractiveElement, IntoElement, ListAlignment, ListState, ParentElement, Render,
-    RenderOnce, StatefulInteractiveElement, Styled, Window,
+    div, px, App, AppContext, AsyncApp, BorrowAppContext, ClickEvent, Context,
+    Entity, InteractiveElement, IntoElement, ListAlignment, ListState, ParentElement,
+    Render, RenderOnce, StatefulInteractiveElement, Styled, Window,
 };
 use gpui_tokio::Tokio;
 use matrix_sdk::encryption::recovery::RecoveryState;
@@ -60,7 +60,7 @@ pub enum SidebarPage {
 #[derive(IntoElement)]
 enum SidebarAlert {
     None,
-    IncomingVerificationRequest(VerificationRequestDetails),
+    IncomingVerificationRequest(Entity<VerificationRequestDetails>),
     SetupRecovery,
     VerifySession(bool),
     UnverifiedDevices(usize, Option<Rc<Box<SurfaceChangeHandler>>>),
@@ -101,7 +101,7 @@ impl Sidebar {
         let shown_verification_requests: Vec<_> = verification_requests
             .pending_verification_requests
             .iter()
-            .filter(|request| !request.inner.is_done() && !request.inner.is_cancelled())
+            .filter(|request| request.read(cx).is_active())
             .collect();
 
         if !shown_verification_requests.is_empty() {
@@ -240,7 +240,7 @@ impl Render for Sidebar {
 }
 
 impl RenderOnce for SidebarAlert {
-    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+    fn render<'a>(self, window: &mut Window, cx: &'a mut App) -> impl IntoElement {
         let verification_popover = window.use_state(cx, |_, cx| VerificationPopover::new(cx));
         let verification_popover_clone = verification_popover.clone();
 
@@ -257,8 +257,8 @@ impl RenderOnce for SidebarAlert {
         div()
             .child(match self {
                 SidebarAlert::None => div(),
-                SidebarAlert::IncomingVerificationRequest(verification_request) => {
-                    let verification_request_clone = verification_request.clone();
+                SidebarAlert::IncomingVerificationRequest(verification_request_entity) => {
+                    let verification_request = verification_request_entity.read(cx);
 
                     div().p(px(4.)).child(
                         admonition()
@@ -309,38 +309,25 @@ impl RenderOnce for SidebarAlert {
                                                         )
                                                         .into(),
                                                     ))
-                                                    .on_click(move |_, _, cx| {
-                                                        let verification_request =
-                                                            verification_request.clone();
-                                                        let verification_request_clone =
-                                                            verification_request.clone();
+                                                    .on_click({
+                                                        let verification_request_entity = verification_request_entity.clone();
+                                                        move |_, _, cx| {
+                                                            let verification_request_entity = verification_request_entity.clone();
+                                                            verification_request_entity.update(cx, |verification_request, cx| {
+                                                                verification_request.accept(cx);
+                                                            });
 
-                                                        cx.spawn(async move |cx: &mut AsyncApp| {
-                                                            Tokio::spawn(cx, async move {
-                                                                verification_request_clone
-                                                                    .clone()
-                                                                    .inner
-                                                                    .accept_with_methods(vec![
-                                                                        VerificationMethod::SasV1,
-                                                                    ])
-                                                                    .await
-                                                                    .map_err(|e| anyhow!(e))
-                                                            })
-                                                            .unwrap()
-                                                            .await
-                                                        })
-                                                        .detach();
-
-                                                        verification_popover.update(
-                                                            cx,
-                                                            |verification_popover, cx| {
-                                                                verification_popover
-                                                                    .set_verification_request(
-                                                                        verification_request,
-                                                                        cx,
-                                                                    );
-                                                            },
-                                                        );
+                                                            verification_popover.update(
+                                                                cx,
+                                                                |verification_popover, cx| {
+                                                                    verification_popover
+                                                                        .set_verification_request(
+                                                                            verification_request_entity,
+                                                                            cx,
+                                                                        );
+                                                                },
+                                                            );
+                                                        }
                                                     }),
                                             )
                                             .child(
@@ -353,21 +340,13 @@ impl RenderOnce for SidebarAlert {
                                                         )
                                                         .into(),
                                                     ))
-                                                    .on_click(move |_, _, cx| {
-                                                        let verification_request =
-                                                            verification_request_clone.clone();
-
-                                                        cx.spawn(async move |cx: &mut AsyncApp| {
-                                                            cx.spawn_tokio(async move {
-                                                                verification_request
-                                                                    .clone()
-                                                                    .inner
-                                                                    .cancel()
-                                                                    .await
-                                                            })
-                                                            .await
-                                                        })
-                                                        .detach()
+                                                    .on_click({
+                                                        let verification_request_entity = verification_request_entity.clone();
+                                                        move |_, _, cx: &mut App| {
+                                                            verification_request_entity.update(cx, |verification_request, cx| {
+                                                                verification_request.cancel(cx);
+                                                            });
+                                                        }
                                                     }),
                                             ),
                                     ),

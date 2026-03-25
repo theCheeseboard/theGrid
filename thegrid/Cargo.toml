@@ -38,6 +38,7 @@ thegrid_rtc_livekit = { workspace = true }
 keyring = { workspace = true }
 getrandom = { workspace = true }
 base64 = { workspace = true }
+qrcode = { workspace = true }
 
 [build-dependencies]
 cntp_i18n_gen = { workspace = true }

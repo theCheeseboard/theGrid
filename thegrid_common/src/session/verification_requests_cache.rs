@@ -1,12 +1,11 @@
+use crate::tokio_helper::TokioHelper;
 use cntp_i18n::tr;
 use contemporary::notification::Notification;
 use gpui::{App, AppContext, AsyncApp, Context, Entity, WeakEntity};
-use log::{error, info};
-use matrix_sdk::Client;
+use log::error;
 use matrix_sdk::encryption::verification::{
-    SasVerification, Verification, VerificationRequest, VerificationRequestState,
+    QrVerification, SasVerification, Verification, VerificationRequest, VerificationRequestState,
 };
-use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use matrix_sdk::ruma::events::key::verification::accept::ToDeviceKeyVerificationAcceptEvent;
 use matrix_sdk::ruma::events::key::verification::cancel::ToDeviceKeyVerificationCancelEvent;
 use matrix_sdk::ruma::events::key::verification::done::ToDeviceKeyVerificationDoneEvent;
@@ -15,17 +14,29 @@ use matrix_sdk::ruma::events::key::verification::request::ToDeviceKeyVerificatio
 use matrix_sdk::ruma::events::key::verification::start::{
     StartMethod, ToDeviceKeyVerificationStartEvent,
 };
+use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use matrix_sdk::ruma::{OwnedDeviceId, OwnedTransactionId};
+use matrix_sdk::{Client, Error};
+
+pub static SUPPORTED_VERIFICATION_METHODS: &[VerificationMethod] = &[
+    VerificationMethod::SasV1,
+    VerificationMethod::QrCodeShowV1,
+    VerificationMethod::ReciprocateV1,
+];
 
 pub struct VerificationRequestsCache {
-    pub pending_verification_requests: Vec<VerificationRequestDetails>,
+    pub pending_verification_requests: Vec<Entity<VerificationRequestDetails>>,
 }
 
 #[derive(Clone)]
 pub struct VerificationRequestDetails {
     pub inner: VerificationRequest,
     pub sas_state: Option<SasVerification>,
+    pub qr_state: Option<QrVerification>,
     pub device_id: Option<OwnedDeviceId>,
+
+    // Used to immediately hide the QR code show flow after the user manually starts SAS
+    pub sas_manually_started: bool,
 }
 
 enum CacheMutation {
@@ -53,7 +64,9 @@ impl VerificationRequestsCache {
                             .send(CacheMutation::Push(VerificationRequestDetails {
                                 inner: verification_request,
                                 sas_state: None,
+                                qr_state: None,
                                 device_id: Some(event.content.from_device),
+                                sas_manually_started: false,
                             }))
                             .await;
                     }
@@ -91,7 +104,9 @@ impl VerificationRequestsCache {
                                 VerificationRequestDetails {
                                     inner: verification_request,
                                     sas_state,
+                                    qr_state: None,
                                     device_id: Some(event.content.from_device),
+                                    sas_manually_started: false,
                                 },
                             ))
                             .await;
@@ -109,20 +124,19 @@ impl VerificationRequestsCache {
                 match verification_request {
                     None => {}
                     Some(verification_request) => {
-                        let sas_state = if verification_request.we_started() {
-                            if event
-                                .content
-                                .methods
-                                .iter()
-                                .any(|method| matches!(method, VerificationMethod::SasV1))
-                            {
-                                verification_request.start_sas().await.unwrap_or_else(|e| {
-                                    error!("Unable to start SAS: {e}");
+                        let methods = event.content.methods;
+
+                        // Start QR Show if QR Scan is supported by the peer
+                        let qr_state = if methods.contains(&VerificationMethod::QrCodeScanV1)
+                            && methods.contains(&VerificationMethod::ReciprocateV1)
+                        {
+                            verification_request
+                                .generate_qr_code()
+                                .await
+                                .unwrap_or_else(|e| {
+                                    error!("Unable to generate QR code: {e}");
                                     None
                                 })
-                            } else {
-                                None
-                            }
                         } else {
                             None
                         };
@@ -132,8 +146,10 @@ impl VerificationRequestsCache {
                                 event.content.transaction_id,
                                 VerificationRequestDetails {
                                     inner: verification_request,
-                                    sas_state,
+                                    sas_state: None,
+                                    qr_state,
                                     device_id: None,
+                                    sas_manually_started: false,
                                 },
                             ))
                             .await;
@@ -157,7 +173,9 @@ impl VerificationRequestsCache {
                                 VerificationRequestDetails {
                                     inner: verification_request,
                                     sas_state: None,
+                                    qr_state: None,
                                     device_id: None,
+                                    sas_manually_started: false,
                                 },
                             ))
                             .await;
@@ -181,7 +199,9 @@ impl VerificationRequestsCache {
                                 VerificationRequestDetails {
                                     inner: verification_request,
                                     sas_state: None,
+                                    qr_state: None,
                                     device_id: None,
+                                    sas_manually_started: false,
                                 },
                             ))
                             .await;
@@ -205,7 +225,9 @@ impl VerificationRequestsCache {
                                 VerificationRequestDetails {
                                     inner: verification_request,
                                     sas_state: None,
+                                    qr_state: None,
                                     device_id: None,
+                                    sas_manually_started: false,
                                 },
                             ))
                             .await;
@@ -255,24 +277,37 @@ impl VerificationRequestsCache {
                                         }
 
                                         this.pending_verification_requests
-                                            .push(verification_request);
+                                            .push(cx.new(|_| verification_request));
                                     }
                                     CacheMutation::Remove(transaction_id) => {
                                         this.pending_verification_requests.retain(|request| {
-                                            request.inner.flow_id() != transaction_id
+                                            request.read(cx).inner.flow_id() != transaction_id
                                         })
                                     }
                                     CacheMutation::Replace(transaction_id, new_request) => {
                                         for request in this.pending_verification_requests.iter_mut()
                                         {
-                                            if request.inner.flow_id() == transaction_id {
-                                                *request = VerificationRequestDetails {
-                                                    inner: new_request.inner,
-                                                    sas_state: new_request
-                                                        .sas_state
-                                                        .or(request.sas_state.clone()),
-                                                    device_id: new_request.device_id,
-                                                };
+                                            let new_request = new_request.clone();
+                                            if request.update(cx, |request, cx| {
+                                                if request.inner.flow_id() == transaction_id {
+                                                    *request = VerificationRequestDetails {
+                                                        inner: new_request.inner,
+                                                        sas_state: new_request
+                                                            .sas_state
+                                                            .or(request.sas_state.clone()),
+                                                        qr_state: new_request
+                                                            .qr_state
+                                                            .or(request.qr_state.clone()),
+                                                        device_id: new_request.device_id,
+                                                        sas_manually_started: request
+                                                            .sas_manually_started,
+                                                    };
+                                                    cx.notify();
+                                                    true
+                                                } else {
+                                                    false
+                                                }
+                                            }) {
                                                 break;
                                             }
                                         }
@@ -299,19 +334,120 @@ impl VerificationRequestsCache {
         &mut self,
         verification_request: VerificationRequest,
         cx: &mut Context<Self>,
-    ) {
-        self.pending_verification_requests
-            .push(VerificationRequestDetails {
-                inner: verification_request,
-                sas_state: None,
-                device_id: None,
-            });
-        cx.notify()
+    ) -> Entity<VerificationRequestDetails> {
+        let details = cx.new(|_| VerificationRequestDetails {
+            inner: verification_request,
+            sas_state: None,
+            qr_state: None,
+            device_id: None,
+            sas_manually_started: false,
+        });
+        self.pending_verification_requests.push(details.clone());
+        cx.notify();
+
+        details
     }
 
-    pub fn verification_request(&self, flow_id: &str) -> Option<&VerificationRequestDetails> {
+    pub fn verification_request(
+        &self,
+        flow_id: &str,
+        cx: &App,
+    ) -> Option<Entity<VerificationRequestDetails>> {
         self.pending_verification_requests
             .iter()
-            .find(|request| request.inner.flow_id() == flow_id)
+            .find(|request| request.read(cx).inner.flow_id() == flow_id)
+            .cloned()
+    }
+}
+
+impl VerificationRequestDetails {
+    pub fn cancel(&self, cx: &mut Context<Self>) {
+        let verification_request = self.inner.clone();
+        cx.spawn(async move |_, cx: &mut AsyncApp| {
+            let _ = cx
+                .spawn_tokio(async move { verification_request.cancel().await })
+                .await;
+        })
+        .detach();
+    }
+
+    pub fn start_sas(&mut self, cx: &mut Context<Self>) {
+        self.sas_manually_started = true;
+        cx.notify();
+
+        let verification_request = self.inner.clone();
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| match cx
+                .spawn_tokio(async move { verification_request.start_sas().await })
+                .await
+            {
+                Ok(sas_state) => {
+                    let _ = weak_this.update(cx, |this, cx| {
+                        this.sas_state = sas_state;
+                        cx.notify();
+                    });
+                }
+                Err(e) => {
+                    error!("Unable to start SAS: {e}");
+                }
+            },
+        )
+        .detach();
+    }
+
+    pub fn start_qr_show(&self, cx: &mut Context<Self>) {
+        let verification_request = self.inner.clone();
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| match cx
+                .spawn_tokio(async move { verification_request.generate_qr_code().await })
+                .await
+            {
+                Ok(qr_state) => {
+                    let _ = weak_this.update(cx, |this, cx| {
+                        this.qr_state = qr_state;
+                        cx.notify();
+                    });
+                }
+                Err(e) => {
+                    error!("Unable to start QR: {e}");
+                }
+            },
+        )
+        .detach();
+    }
+
+    pub fn is_active(&self) -> bool {
+        !self.inner.is_done() && !self.inner.is_cancelled()
+    }
+
+    pub fn accept(&self, cx: &mut Context<Self>) {
+        let verification_request = self.inner.clone();
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                let should_show_qr =
+                    verification_request
+                        .their_supported_methods()
+                        .is_some_and(|other_methods| {
+                            other_methods.contains(&VerificationMethod::QrCodeScanV1)
+                                && other_methods.contains(&VerificationMethod::ReciprocateV1)
+                        });
+
+                let _ = cx
+                    .spawn_tokio(async move {
+                        verification_request
+                            .accept_with_methods(SUPPORTED_VERIFICATION_METHODS.to_vec())
+                            .await
+                    })
+                    .await;
+
+                if should_show_qr {
+                    let _ = weak_this.update(cx, |this, cx| {
+                        this.start_qr_show(cx);
+                        cx.notify();
+                    });
+                }
+            },
+        )
+        .detach();
     }
 }

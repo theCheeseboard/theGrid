@@ -48,3 +48,4 @@ libwebrtc = "0.3"
 ringbuffer = "0.16"
 raw-window-handle = "0.6"
 rustc-hash = "2"
+qrcode = { version = "0.14", features = ["image"] }
