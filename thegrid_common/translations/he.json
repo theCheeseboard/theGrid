@@ -1,0 +1,17 @@
+{
+  "INCOMING_SELF_VERIFICATION_DESCRIPTION": "אנא אמת את המכשיר האחר ({{device_id}}) כדי לשתף את מפתחות הצפנה. המכשיר יוכל לפענח את ההודעות שלך.",
+  "INCOMING_VERIFICATION": "בקשת אימות נכנסת",
+  "NOTIFICATION_INVITE_BODY": "{{user}} הזמין אותך להצטרף ל-{{room}}",
+  "NOTIFICATION_INVITE_SUMMARY": "הזמנה חדשה לחדר",
+  "NOTIFICATION_MESSAGE_BODY_AUDIO": "שלח הודעה קולית",
+  "NOTIFICATION_MESSAGE_BODY_FILE": "שלח {{filename}}",
+  "NOTIFICATION_MESSAGE_BODY_IMAGE": "שלח תמונה",
+  "NOTIFICATION_MESSAGE_BODY_VIDEO": "שלח סרטון",
+  "NOTIFICATION_MESSAGE_SUMMARY": "{{sender}} ב-{{room}}",
+  "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE": "מנותק משרת הבית",
+  "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE_DESCRIPTION": "מנסה להתחבר מחדש...",
+  "TERMINAL_ERROR_SECRET_FAILURE": "לא ניתן היה לפענח את הסודות.",
+  "TERMINAL_ERROR_UNKNOWN_ERROR": "אירעה שגיאה לא ידועה.",
+  "TERMINAL_ERROR_UNKNOWN_TOKEN": "סשן זה נותק על ידי מכשיר אחר.",
+  "UNKNOWN_DEVICE": "מכשיר לא מזוהה"
+}
