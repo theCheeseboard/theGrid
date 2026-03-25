@@ -371,18 +371,6 @@
     "plural": false,
     "description": null
   },
-  "AUTH_REQUIRED_OAUTH_DESCRIPTION": {
-    "context": "identity_reset.rs",
-    "definedIn": "src/account_settings/security_settings/identity_reset.rs:398",
-    "plural": false,
-    "description": null
-  },
-  "AUTH_REQUIRED_OAUTH_GO": {
-    "context": "identity_reset.rs",
-    "definedIn": "src/account_settings/security_settings/identity_reset.rs:410",
-    "plural": false,
-    "description": null
-  },
   "AUTH_SESSION_RESTORE": {
     "context": "auth_surface.rs",
     "definedIn": "src/auth/auth_surface.rs:904",

@@ -2,7 +2,7 @@ use crate::uiaa_client::{CancelAuthenticationEvent, SendAuthDataEvent, UiaaClien
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -15,17 +15,17 @@ use contemporary::styling::theme::Theme;
 use contemporary::surface::surface;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, AsyncWindowContext, Context, Entity, IntoElement, ParentElement,
-    Render, Styled, WeakEntity, Window, div, px,
+    div, px, App, AppContext, AsyncApp, AsyncWindowContext, Context, Entity,
+    IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
 };
-use matrix_sdk::encryption::CrossSigningResetAuthType;
 use matrix_sdk::encryption::recovery::{IdentityResetHandle, RecoveryError};
+use matrix_sdk::encryption::CrossSigningResetAuthType;
 use matrix_sdk::ruma::api::client::uiaa::AuthData;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use thegrid_common::tokio_helper::TokioHelper;
-use tracing::{Id, error};
+use tracing::{error, Id};
 
 pub struct IdentityResetSurface {
     state: IdentityResetState,
@@ -390,14 +390,35 @@ impl Render for IdentityResetSurface {
                             CrossSigningResetAuthType::Uiaa(_) => david,
                             CrossSigningResetAuthType::OAuth(oauth) => {
                                 let oauth_url = oauth.approval_url.as_str().to_string();
+
+                                let oauth_step_completed = window.use_state(cx, |_, _| false);
+
                                 david.child(
                                     dialog_box("oauth")
                                         .visible(true)
                                         .title(tr!("AUTH_REQUIRED").into())
-                                        .content(tr!(
-                                            "AUTH_REQUIRED_OAUTH_DESCRIPTION",
-                                            "To continue, authenticate yourself with Single Sign-on"
-                                        ))
+                                        .content(
+                                            div()
+                                                .flex()
+                                                .flex_col()
+                                                .child(tr!("UIAA_BROWSER_AUTH"))
+                                                .child(
+                                                    button("open-browser-button")
+                                                        .child(icon_text(
+                                                            "text-html".into(),
+                                                            tr!("UIAA_BROWSER_OPEN").into(),
+                                                        ))
+                                                        .on_click(cx.listener({
+                                                            let oauth_step_completed =
+                                                                oauth_step_completed.clone();
+                                                            move |this, _, _, cx| {
+                                                                cx.open_url(oauth_url.as_str());
+                                                                oauth_step_completed
+                                                                    .write(cx, true);
+                                                            }
+                                                        })),
+                                                ),
+                                        )
                                         .standard_button(
                                             StandardButton::Cancel,
                                             cx.listener(|this, _, _, cx| {
@@ -406,12 +427,14 @@ impl Render for IdentityResetSurface {
                                         )
                                         .button(
                                             button("continue-button")
-                                                .child(tr!(
-                                                    "AUTH_REQUIRED_OAUTH_GO",
-                                                    "Continue with Single Sign-on"
+                                                .when(!*oauth_step_completed.read(cx), |david| {
+                                                    david.disabled()
+                                                })
+                                                .child(icon_text(
+                                                    "dialog-ok".into(),
+                                                    tr!("AUTH_REQUIRED_BROWSER_GO").into(),
                                                 ))
                                                 .on_click(cx.listener(move |this, _, _, cx| {
-                                                    cx.open_url(oauth_url.as_str());
                                                     this.continue_handle(None, cx);
                                                 })),
                                         ),

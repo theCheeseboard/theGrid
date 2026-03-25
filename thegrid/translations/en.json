@@ -64,8 +64,6 @@
   "AUTH_POPOVER_INITIAL_SYNC": "Initial Sync in progress. This can take a while.",
   "AUTH_REQUIRED": "Authentication Required",
   "AUTH_REQUIRED_BROWSER_GO": "Continue",
-  "AUTH_REQUIRED_OAUTH_DESCRIPTION": "To continue, authenticate yourself with Single Sign-on",
-  "AUTH_REQUIRED_OAUTH_GO": "Continue with Single Sign-on",
   "AUTH_SESSION_RESTORE": "Use existing login",
   "AUTH_SSO": "Single Sign-on",
   "AUTH_SSO_BUTTON": "Log in with SSO",
