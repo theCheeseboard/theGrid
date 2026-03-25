@@ -691,13 +691,13 @@
   },
   "EMOJI_MATCH": {
     "context": "verification_sas_page.rs",
-    "definedIn": "src/auth/verification_popover/verification_sas_page.rs:86",
+    "definedIn": "src/auth/verification_popover/verification_sas_page.rs:100",
     "plural": false,
     "description": null
   },
   "EMOJI_NO_MATCH": {
     "context": "verification_sas_page.rs",
-    "definedIn": "src/auth/verification_popover/verification_sas_page.rs:106",
+    "definedIn": "src/auth/verification_popover/verification_sas_page.rs:120",
     "plural": false,
     "description": null
   },
@@ -1340,6 +1340,18 @@
   "NO_DISPLAYED_ROOM_TITLE": {
     "context": "main_chat_surface.rs",
     "definedIn": "src/chat/main_chat_surface.rs:224",
+    "plural": false,
+    "description": null
+  },
+  "NUMBERS_MATCH": {
+    "context": "verification_sas_page.rs",
+    "definedIn": "src/auth/verification_popover/verification_sas_page.rs:179",
+    "plural": false,
+    "description": null
+  },
+  "NUMBERS_NO_MATCH": {
+    "context": "verification_sas_page.rs",
+    "definedIn": "src/auth/verification_popover/verification_sas_page.rs:201",
     "plural": false,
     "description": null
   },
@@ -2639,15 +2651,27 @@
     "plural": false,
     "description": null
   },
+  "VERIFICATION_SAS_DECIMAL": {
+    "context": "verification_sas_page.rs",
+    "definedIn": "src/auth/verification_popover/verification_sas_page.rs:150",
+    "plural": false,
+    "description": null
+  },
+  "VERIFICATION_SAS_DECIMAL_DESCRIPTION": {
+    "context": "verification_sas_page.rs",
+    "definedIn": "src/auth/verification_popover/verification_sas_page.rs:154",
+    "plural": false,
+    "description": null
+  },
   "VERIFICATION_SAS_EMOJI": {
     "context": "verification_sas_page.rs",
-    "definedIn": "src/auth/verification_popover/verification_sas_page.rs:59",
+    "definedIn": "src/auth/verification_popover/verification_sas_page.rs:62",
     "plural": false,
     "description": null
   },
   "VERIFICATION_SAS_EMOJI_DESCRIPTION": {
     "context": "verification_sas_page.rs",
-    "definedIn": "src/auth/verification_popover/verification_sas_page.rs:63",
+    "definedIn": "src/auth/verification_popover/verification_sas_page.rs:66",
     "plural": false,
     "description": null
   },

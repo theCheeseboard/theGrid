@@ -4,7 +4,8 @@ use contemporary::notification::Notification;
 use gpui::{App, AppContext, AsyncApp, Context, Entity, WeakEntity};
 use log::error;
 use matrix_sdk::encryption::verification::{
-    QrVerification, SasVerification, Verification, VerificationRequest, VerificationRequestState,
+    AcceptSettings, QrVerification, SasVerification, Verification, VerificationRequest,
+    VerificationRequestState,
 };
 use matrix_sdk::ruma::events::key::verification::accept::ToDeviceKeyVerificationAcceptEvent;
 use matrix_sdk::ruma::events::key::verification::cancel::ToDeviceKeyVerificationCancelEvent;
@@ -14,7 +15,7 @@ use matrix_sdk::ruma::events::key::verification::request::ToDeviceKeyVerificatio
 use matrix_sdk::ruma::events::key::verification::start::{
     StartMethod, ToDeviceKeyVerificationStartEvent,
 };
-use matrix_sdk::ruma::events::key::verification::VerificationMethod;
+use matrix_sdk::ruma::events::key::verification::{ShortAuthenticationString, VerificationMethod};
 use matrix_sdk::ruma::{OwnedDeviceId, OwnedTransactionId};
 use matrix_sdk::{Client, Error};
 

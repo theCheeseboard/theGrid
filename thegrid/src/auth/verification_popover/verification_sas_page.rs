@@ -6,9 +6,10 @@ use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::subtitle::subtitle;
 use gpui::{
-    App, AsyncApp, ClickEvent, Entity, InteractiveElement, IntoElement, ParentElement, RenderOnce,
-    StatefulInteractiveElement, Styled, Window, div, px,
+    div, px, App, AsyncApp, ClickEvent, Entity, InteractiveElement, IntoElement,
+    ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window,
 };
+use std::fmt::format;
 use std::rc::Rc;
 use thegrid_common::sas_emoji::SasEmoji;
 use thegrid_common::session::verification_requests_cache::VerificationRequestDetails;
@@ -30,7 +31,6 @@ impl RenderOnce for VerificationSasPage {
 
         if let Some(verification_request) = &verification_request
             && let Some(sas_state) = verification_request.sas_state.as_ref()
-            && let Some(emoji) = sas_state.emoji()
         {
             let sas_state_clone = sas_state.clone();
             let sas_state_clone_2 = sas_state.clone();
@@ -50,78 +50,181 @@ impl RenderOnce for VerificationSasPage {
                         .overflow_y_scroll()
                         .child(
                             constrainer("verify-popover-constrainer").child(
-                                layer()
-                                    .flex()
-                                    .flex_col()
-                                    .p(px(8.))
-                                    .w_full()
-                                    .child(subtitle(tr!(
-                                        "VERIFICATION_SAS_EMOJI",
-                                        "Compare these emoji"
-                                    )))
-                                    .child(tr!(
-                                        "VERIFICATION_SAS_EMOJI_DESCRIPTION",
-                                        "Check on the other device and ensure that these \
-                                        emoji are displayed, in the same order."
-                                    ))
-                                    .child(
-                                        div()
-                                            .flex()
-                                            .flex_col()
-                                            .gap(px(8.))
-                                            .child(emoji.iter().fold(
-                                                div().flex().flex_col(),
-                                                |david, emoji| {
-                                                    david.child(format!(
-                                                        "{} {}",
-                                                        emoji.symbol,
-                                                        emoji.translated_description()
-                                                    ))
-                                                },
-                                            ))
-                                            .child(
-                                                button("verification-popover-ok")
-                                                    .child(icon_text(
-                                                        "dialog-ok".into(),
-                                                        tr!("EMOJI_MATCH", "The emoji match")
-                                                            .into(),
-                                                    ))
-                                                    .on_click(move |_, _, cx| {
-                                                        let sas_state = sas_state_clone.clone();
-                                                        cx.spawn(async move |cx| {
-                                                            let _ = cx
-                                                                .spawn_tokio(async move {
-                                                                    sas_state.confirm().await
-                                                                })
-                                                                .await;
-                                                        })
-                                                        .detach();
-                                                    }),
-                                            )
-                                            .child(
-                                                button("verification-popover-not-ok")
-                                                    .child(icon_text(
-                                                        "dialog-cancel".into(),
-                                                        tr!(
-                                                            "EMOJI_NO_MATCH",
-                                                            "The emoji do not match"
+                                if sas_state.supports_emoji()
+                                    && let Some(emoji) = sas_state.emoji()
+                                {
+                                    layer()
+                                        .flex()
+                                        .flex_col()
+                                        .p(px(8.))
+                                        .w_full()
+                                        .child(subtitle(tr!(
+                                            "VERIFICATION_SAS_EMOJI",
+                                            "Compare these emoji"
+                                        )))
+                                        .child(tr!(
+                                            "VERIFICATION_SAS_EMOJI_DESCRIPTION",
+                                            "Check on the other device and ensure that these \
+                                            emoji are displayed, in the same order."
+                                        ))
+                                        .child(
+                                            div()
+                                                .flex()
+                                                .flex_col()
+                                                .gap(px(8.))
+                                                .child(emoji.iter().fold(
+                                                    div().grid().grid_cols(7).gap(px(4.)),
+                                                    |david, emoji| {
+                                                        david.child(
+                                                            layer()
+                                                                .flex()
+                                                                .flex_col()
+                                                                .justify_start()
+                                                                .items_center()
+                                                                .p(px(2.))
+                                                                .child(
+                                                                    div()
+                                                                        .text_size(px(25.))
+                                                                        .child(emoji.symbol),
+                                                                )
+                                                                .child(
+                                                                    emoji.translated_description(),
+                                                                ),
                                                         )
-                                                        .into(),
-                                                    ))
-                                                    .on_click(move |_, _, cx| {
-                                                        let sas_state = sas_state_clone_2.clone();
-                                                        cx.spawn(async move |cx: &mut AsyncApp| {
-                                                            let _ = cx
-                                                                .spawn_tokio(async move {
-                                                                    sas_state.mismatch().await
-                                                                })
-                                                                .await;
-                                                        })
-                                                        .detach();
-                                                    }),
-                                            ),
-                                    )
-                                    .into_any_element(),
+                                                    },
+                                                ))
+                                                .child(
+                                                    button("verification-popover-ok")
+                                                        .child(icon_text(
+                                                            "dialog-ok".into(),
+                                                            tr!("EMOJI_MATCH", "The emoji match")
+                                                                .into(),
+                                                        ))
+                                                        .on_click(move |_, _, cx| {
+                                                            let sas_state = sas_state_clone.clone();
+                                                            cx.spawn(async move |cx| {
+                                                                let _ = cx
+                                                                    .spawn_tokio(async move {
+                                                                        sas_state.confirm().await
+                                                                    })
+                                                                    .await;
+                                                            })
+                                                            .detach();
+                                                        }),
+                                                )
+                                                .child(
+                                                    button("verification-popover-not-ok")
+                                                        .child(icon_text(
+                                                            "dialog-cancel".into(),
+                                                            tr!(
+                                                                "EMOJI_NO_MATCH",
+                                                                "The emoji do not match"
+                                                            )
+                                                            .into(),
+                                                        ))
+                                                        .on_click(move |_, _, cx| {
+                                                            let sas_state =
+                                                                sas_state_clone_2.clone();
+                                                            cx.spawn(
+                                                                async move |cx: &mut AsyncApp| {
+                                                                    let _ = cx
+                                                                        .spawn_tokio(async move {
+                                                                            sas_state
+                                                                                .mismatch()
+                                                                                .await
+                                                                        })
+                                                                        .await;
+                                                                },
+                                                            )
+                                                            .detach();
+                                                        }),
+                                                ),
+                                        )
+                                } else if let Some(decimals) = sas_state.decimals() {
+                                    layer()
+                                        .flex()
+                                        .flex_col()
+                                        .p(px(8.))
+                                        .w_full()
+                                        .child(subtitle(tr!(
+                                            "VERIFICATION_SAS_DECIMAL",
+                                            "Compare these numbers"
+                                        )))
+                                        .child(tr!(
+                                            "VERIFICATION_SAS_DECIMAL_DESCRIPTION",
+                                            "Check on the other device and ensure that these \
+                                            numbers are displayed, in the same order."
+                                        ))
+                                        .child(
+                                            div()
+                                                .flex()
+                                                .flex_col()
+                                                .gap(px(8.))
+                                                .child(
+                                                    layer()
+                                                        .flex()
+                                                        .justify_center()
+                                                        .text_size(px(35.))
+                                                        .p(px(4.))
+                                                        .child(format!(
+                                                            "{} - {} - {}",
+                                                            decimals.0, decimals.1, decimals.2
+                                                        )),
+                                                )
+                                                .child(
+                                                    button("verification-popover-ok")
+                                                        .child(icon_text(
+                                                            "dialog-ok".into(),
+                                                            tr!(
+                                                                "NUMBERS_MATCH",
+                                                                "The numbers match"
+                                                            )
+                                                            .into(),
+                                                        ))
+                                                        .on_click(move |_, _, cx| {
+                                                            let sas_state = sas_state_clone.clone();
+                                                            cx.spawn(async move |cx| {
+                                                                let _ = cx
+                                                                    .spawn_tokio(async move {
+                                                                        sas_state.confirm().await
+                                                                    })
+                                                                    .await;
+                                                            })
+                                                            .detach();
+                                                        }),
+                                                )
+                                                .child(
+                                                    button("verification-popover-not-ok")
+                                                        .child(icon_text(
+                                                            "dialog-cancel".into(),
+                                                            tr!(
+                                                                "NUMBERS_NO_MATCH",
+                                                                "The numbers do not match"
+                                                            )
+                                                            .into(),
+                                                        ))
+                                                        .on_click(move |_, _, cx| {
+                                                            let sas_state =
+                                                                sas_state_clone_2.clone();
+                                                            cx.spawn(
+                                                                async move |cx: &mut AsyncApp| {
+                                                                    let _ = cx
+                                                                        .spawn_tokio(async move {
+                                                                            sas_state
+                                                                                .mismatch()
+                                                                                .await
+                                                                        })
+                                                                        .await;
+                                                                },
+                                                            )
+                                                            .detach();
+                                                        }),
+                                                ),
+                                        )
+                                } else {
+                                    layer()
+                                }
+                                .into_any_element(),
                             ),
                         ),
                 )
