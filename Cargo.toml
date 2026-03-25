@@ -10,8 +10,7 @@ thegrid_rtc_livekit = { path = "thegrid_rtc_livekit" }
 thegrid_screen_share = { path = "thegrid_screen_share" }
 smol = "2"
 smol-macros = "0.1"
-#contemporary = { git = "https://github.com/vicr123/contemporary-rs" }
-contemporary = { path = "/home/victor/Documents/Apps/contemporary-rs/contemporary" }
+contemporary = { git = "https://github.com/vicr123/contemporary-rs" }
 cntp_i18n = { version = "*", features = ["gpui"] }
 cntp_icon_tool_macros = { git = "https://github.com/vicr123/contemporary-rs" }
 cntp_i18n_gen = "*"
