@@ -2515,31 +2515,37 @@
   },
   "VERIFICATION_CANCEL_REASON_ACCEPTED": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:556",
+    "definedIn": "src/auth/verification_popover.rs:561",
     "plural": false,
     "description": null
   },
   "VERIFICATION_CANCEL_REASON_MISMATCHED_SAS": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:561",
+    "definedIn": "src/auth/verification_popover.rs:566",
     "plural": false,
     "description": null
   },
   "VERIFICATION_CANCEL_REASON_TIMEOUT": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:541",
+    "definedIn": "src/auth/verification_popover.rs:546",
     "plural": false,
     "description": null
   },
   "VERIFICATION_CANCEL_REASON_UNKNOWN_METHOD": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:546",
+    "definedIn": "src/auth/verification_popover.rs:551",
+    "plural": false,
+    "description": null
+  },
+  "VERIFICATION_CANCEL_REASON_USER": {
+    "context": "verification_popover.rs",
+    "definedIn": "src/auth/verification_popover.rs:541",
     "plural": false,
     "description": null
   },
   "VERIFICATION_CANCEL_UNEXPECTED_MESSAGE": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:551",
+    "definedIn": "src/auth/verification_popover.rs:556",
     "plural": false,
     "description": null
   },

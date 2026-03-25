@@ -537,6 +537,11 @@ impl Render for VerificationPopover {
 
 fn cancel_string(cancel_info: &CancelInfo) -> String {
     match cancel_info.cancel_code() {
+        CancelCode::User => tr!(
+            "VERIFICATION_CANCEL_REASON_USER",
+            "Verification was cancelled from the other device."
+        )
+            .to_string(),
         CancelCode::Timeout => tr!(
             "VERIFICATION_CANCEL_REASON_TIMEOUT",
             "Verification failed because the verification process took too long to complete."

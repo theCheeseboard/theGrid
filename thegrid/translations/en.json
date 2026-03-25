@@ -437,6 +437,7 @@
   "VERIFICATION_CANCEL_REASON_MISMATCHED_SAS": "Verification failed because the displayed emoji could not be confirmed on both devices.",
   "VERIFICATION_CANCEL_REASON_TIMEOUT": "Verification failed because the verification process took too long to complete.",
   "VERIFICATION_CANCEL_REASON_UNKNOWN_METHOD": "Verification failed because the negotiated verification method is not supported.",
+  "VERIFICATION_CANCEL_REASON_USER": "Verification was cancelled from the other device.",
   "VERIFICATION_CANCEL_UNEXPECTED_MESSAGE": "Verification failed because an unexpected message was received.",
   "VERIFICATION_POPOVER_AWAITING_OK": "Verification Request Sent",
   "VERIFICATION_POPOVER_AWAITING_OK_SPINNER": "Waiting for other device to respond...",
