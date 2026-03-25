@@ -12,13 +12,16 @@ use contemporary::components::subtitle::subtitle;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AppContext, AsyncApp, Context, Flatten, IntoElement, ParentElement, Render, Styled, WeakEntity,
-    Window, div, px,
+    div, px, AppContext, AsyncApp, Context, Flatten, IntoElement, ParentElement, Render,
+    Styled, WeakEntity, Window,
 };
 use gpui_tokio::Tokio;
 use matrix_sdk::encryption::identities::Device;
 use matrix_sdk::encryption::verification::VerificationRequestState;
+use matrix_sdk::ruma::events::key::verification::cancel::CancelCode;
 use matrix_sdk::ruma::events::key::verification::VerificationMethod;
+use matrix_sdk_crypto::CancelInfo;
+use thegrid_common::sas_emoji::SasEmoji;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::session::verification_requests_cache::VerificationRequestDetails;
 use thegrid_common::tokio_helper::TokioHelper;
@@ -331,7 +334,8 @@ impl Render for VerificationPopover {
                                                         |david, emoji| {
                                                             david.child(format!(
                                                                 "{} {}",
-                                                                emoji.symbol, emoji.description
+                                                                emoji.symbol,
+                                                                emoji.translated_description()
                                                             ))
                                                         },
                                                     ))
@@ -431,7 +435,7 @@ impl Render for VerificationPopover {
                                 .and_then(|verification_request| {
                                     verification_request.inner.cancel_info()
                                 })
-                                .map(|cancel_info| cancel_info.reason().to_string())
+                                .map(|cancel_info| cancel_string(&cancel_info))
                                 .unwrap_or_default();
 
                             constrainer("verify-popover-constrainer").child(
@@ -528,5 +532,37 @@ impl Render for VerificationPopover {
                         .into_any_element(),
                 ),
             )
+    }
+}
+
+fn cancel_string(cancel_info: &CancelInfo) -> String {
+    match cancel_info.cancel_code() {
+        CancelCode::Timeout => tr!(
+            "VERIFICATION_CANCEL_REASON_TIMEOUT",
+            "Verification failed because the verification process took too long to complete."
+        )
+        .to_string(),
+        CancelCode::UnknownMethod => tr!(
+            "VERIFICATION_CANCEL_REASON_UNKNOWN_METHOD",
+            "Verification failed because the negotiated verification method is not supported."
+        )
+        .to_string(),
+        CancelCode::UnexpectedMessage => tr!(
+            "VERIFICATION_CANCEL_UNEXPECTED_MESSAGE",
+            "Verification failed because an unexpected message was received."
+        )
+        .to_string(),
+        CancelCode::Accepted => tr!(
+            "VERIFICATION_CANCEL_REASON_ACCEPTED",
+            "The verification request was accepted on a different device."
+        )
+        .to_string(),
+        CancelCode::MismatchedSas => tr!(
+            "VERIFICATION_CANCEL_REASON_MISMATCHED_SAS",
+            "Verification failed because the displayed emoji could not be confirmed on \
+                both devices."
+        )
+        .to_string(),
+        _ => cancel_info.reason().to_string(),
     }
 }
