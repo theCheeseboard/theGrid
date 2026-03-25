@@ -1,0 +1,17 @@
+{
+  "INCOMING_SELF_VERIFICATION_DESCRIPTION": "Xác minh thiết bị khác ({{device_id}}) của bạn để chia sẻ khóa mã hóa. Thiết bị đó sẽ được giải mã các tin nhắn của ban.",
+  "INCOMING_VERIFICATION": "Yeu cầu xác minh thiết bị",
+  "NOTIFICATION_INVITE_BODY": "{{user}} mời bạn tham gia phòng {{room}}",
+  "NOTIFICATION_INVITE_SUMMARY": "Lời mời phòng mới",
+  "NOTIFICATION_MESSAGE_BODY_AUDIO": "gửi tin nhắn thoại",
+  "NOTIFICATION_MESSAGE_BODY_FILE": "gửi {{filename}}",
+  "NOTIFICATION_MESSAGE_BODY_IMAGE": "gửi hình ảnh",
+  "NOTIFICATION_MESSAGE_BODY_VIDEO": "",
+  "NOTIFICATION_MESSAGE_SUMMARY": "{{sender}} trong {{room}}",
+  "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE": "Bị ngắt kết nối khỏi máy chủ",
+  "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE_DESCRIPTION": "Đang cố kết nối lại...",
+  "TERMINAL_ERROR_SECRET_FAILURE": "Không thẻ giải mã bí mật",
+  "TERMINAL_ERROR_UNKNOWN_ERROR": "Một lỗi không xác định đã xảy ra.",
+  "TERMINAL_ERROR_UNKNOWN_TOKEN": "Phiên này đã bị đăng xuất bởi thiết bị khác.",
+  "UNKNOWN_DEVICE": ""
+}
