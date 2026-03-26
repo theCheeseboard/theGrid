@@ -1,10 +1,11 @@
 use crate::focus::get_focus_url;
-use crate::{CallState, LivekitCall, TrackType, sfx};
+use crate::{CallState, LivekitCall, TrackType};
 use gpui::{App, AppContext, AsyncApp, BorrowAppContext, Context, Entity, Global, WeakEntity};
 use matrix_sdk::ruma::OwnedRoomId;
 use std::collections::HashMap;
 use thegrid_common::outbound_track::OutboundTrack;
 use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::sfx::SoundEffect;
 use thegrid_screen_share::setup_screenshare_manager;
 
 pub struct LivekitCallManager {
@@ -143,9 +144,9 @@ pub fn setup_call_manager(cx: &mut App) {
 
     cx.observe(&mute, |mute, cx| {
         if *mute.read(cx) {
-            sfx::play_sound_effect(include_bytes!("../assets/mute-on.ogg"));
+            SoundEffect::MuteOn.play()
         } else {
-            sfx::play_sound_effect(include_bytes!("../assets/mute-off.ogg"));
+            SoundEffect::MuteOff.play()
         }
     })
     .detach();

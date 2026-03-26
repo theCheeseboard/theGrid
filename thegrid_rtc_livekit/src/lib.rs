@@ -6,7 +6,6 @@ pub mod call_manager;
 pub mod call_surface;
 mod focus;
 mod mic;
-pub(crate) mod sfx;
 mod webcam;
 
 use crate::call_manager::LivekitCallManager;
@@ -72,6 +71,8 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use thegrid_common::outbound_track::{OutboundTrack, OutboundTrackStatus};
 use thegrid_common::room::active_call_participants::track_active_call_participants;
 use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::sfx;
+use thegrid_common::sfx::SoundEffect;
 use thegrid_common::tokio_helper::TokioHelper;
 use yuv::{
     yuv420_to_bgra, yuv420_to_rgba, yuv422_to_uyvy422, yuyv422_to_yuv422, BufferStoreMut,
@@ -508,9 +509,9 @@ impl LivekitCall {
 
             if matches!(this.state, CallState::Active { .. }) {
                 if old_call_members < call_members.len() {
-                    sfx::play_sound_effect(include_bytes!("../assets/call-join.ogg"));
+                    SoundEffect::CallJoin.play();
                 } else if old_call_members > call_members.len() {
-                    sfx::play_sound_effect(include_bytes!("../assets/call-leave.ogg"));
+                    SoundEffect::CallLeave.play();
                 }
             }
 
@@ -518,7 +519,7 @@ impl LivekitCall {
         })
         .detach();
 
-        sfx::play_sound_effect(include_bytes!("../assets/call-join.ogg"));
+        SoundEffect::CallJoin.play();
 
         cx.observe_global::<LivekitCallManager>(|this, cx| {
             let call_manager = cx.global::<LivekitCallManager>();
@@ -1252,7 +1253,7 @@ impl LivekitCall {
         self.state = CallState::Ended;
         cx.notify();
 
-        sfx::play_sound_effect(include_bytes!("../assets/call-leave.ogg"));
+        SoundEffect::CallLeave.play();
     }
 
     pub fn state(&self) -> &CallState {

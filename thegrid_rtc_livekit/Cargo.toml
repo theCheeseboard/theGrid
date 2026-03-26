@@ -13,7 +13,6 @@ livekit = { workspace = true }
 reqwest = { workspace = true }
 serde = { version = "1.0.228", features = ["derive"] }
 log = "0.4.28"
-rodio = "0.22"
 cpal = "0.17"
 async-ringbuf = { workspace = true }
 cancellation-token = { workspace = true }
