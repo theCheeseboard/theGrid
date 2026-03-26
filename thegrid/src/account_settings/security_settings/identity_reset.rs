@@ -13,6 +13,7 @@ use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
 use contemporary::surface::surface;
+use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
     div, px, App, AppContext, AsyncApp, AsyncWindowContext, Context, Entity,

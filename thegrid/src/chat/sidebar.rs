@@ -31,6 +31,7 @@ use matrix_sdk::encryption::recovery::RecoveryState;
 use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use matrix_sdk::ruma::room_id;
 use std::rc::Rc;
+use matrix_sdk::encryption::VerificationState;
 use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::error_handling::{ClientError, RecoverableClientError};
 use thegrid_common::session::room_cache::RoomCategory;
@@ -61,8 +62,9 @@ pub enum SidebarPage {
 enum SidebarAlert {
     None,
     IncomingVerificationRequest(Entity<VerificationRequestDetails>),
-    SetupRecovery,
     VerifySession(bool),
+    SetupRecovery,
+    RecoverRecovery,
     UnverifiedDevices(usize, Option<Rc<Box<SurfaceChangeHandler>>>),
     ClientError(RecoverableClientError),
     ActiveCall(Option<Rc<Box<SurfaceChangeHandler>>>),
@@ -115,18 +117,19 @@ impl Sidebar {
             return SidebarAlert::ActiveCall(self.on_surface_change.clone());
         }
 
+        let account = session_manager.current_account().read(cx);
+        let devices = session_manager.devices().read(cx);
+        if account.verification_state() != VerificationState::Verified
+        {
+            return SidebarAlert::VerifySession(devices.is_last_device());
+        }
+
         let client = session_manager.client().unwrap().read(cx);
         let recovery = client.encryption().recovery();
         if recovery.state() == RecoveryState::Disabled {
             return SidebarAlert::SetupRecovery;
-        }
-
-        let account = session_manager.current_account().read(cx);
-        let devices = session_manager.devices().read(cx);
-        if let Some(identity) = account.identity()
-            && !identity.is_verified()
-        {
-            return SidebarAlert::VerifySession(devices.is_last_device());
+        } else if recovery.state() == RecoveryState::Incomplete {
+            return SidebarAlert::RecoverRecovery;
         }
 
         let unverified_devices = devices.unverified_devices();
@@ -392,6 +395,49 @@ impl RenderOnce for SidebarAlert {
                                 ),
                         ),
                 ),
+                SidebarAlert::RecoverRecovery => div().p(px(4.)).child(
+                    admonition()
+                        .severity(AdmonitionSeverity::Warning)
+                        .title(tr!("FIX_RECOVERY", "Recovery data corrupt"))
+                        .child(
+                            div()
+                                .flex()
+                                .flex_col()
+                                .gap(px(4.))
+                                .child(tr!(
+                                    "FIX_RECOVERY_DESCRIPTION",
+                                    "Your local recovery data is corrupt. Your recovery key is \
+                                    required to continue backing up your encryption keys.",
+                                ))
+                                .child(
+                                    div()
+                                        .flex()
+                                        .flex_col()
+                                        .rounded(theme.border_radius)
+                                        .bg(theme.button_background)
+                                        .child(
+                                            button("verify-recovery")
+                                                .child(icon_text(
+                                                    "visibility".into(),
+                                                    tr!(
+                                                        "VERIFY_SESSION_RECOVERY_KEY",
+                                                    )
+                                                        .into(),
+                                                ))
+                                                .on_click(move |_, _, cx| {
+                                                    recovery_passphrase_popover.update(
+                                                        cx,
+                                                        |recovery_passphrase_popover, cx| {
+                                                            recovery_passphrase_popover
+                                                                .set_visible(true);
+                                                            cx.notify()
+                                                        },
+                                                    )
+                                                }),
+                                        )
+                                ),
+                        ),
+                ),
                 SidebarAlert::VerifySession(is_last_device) => div().p(px(4.)).child(
                     admonition()
                         .severity(AdmonitionSeverity::Warning)
@@ -463,8 +509,7 @@ impl RenderOnce for SidebarAlert {
                                                 .child(icon_text(
                                                     "view-refresh".into(),
                                                     tr!(
-                                                        "VERIFY_SESSION_RESET_CRYPTO",
-                                                        "Reset Recovery Key"
+                                                        "SECURITY_IDENTITY_RESET",
                                                     )
                                                     .into(),
                                                 ))

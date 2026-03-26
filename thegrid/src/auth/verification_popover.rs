@@ -19,15 +19,16 @@ use contemporary::components::subtitle::subtitle;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, ClickEvent, Context, Element, Entity, Flatten, IntoElement,
-    ParentElement, Render, RenderImage, Styled, WeakEntity, Window, div, img, px, svg,
+    div, img, px, svg, App, AppContext, AsyncApp, ClickEvent, Context,
+    Element, Entity, Flatten, IntoElement, ParentElement, Render, RenderImage, Styled, WeakEntity, Window,
 };
 use gpui_tokio::Tokio;
 use image::{Frame, Luma, Rgb, Rgba};
 use matrix_sdk::encryption::identities::Device;
 use matrix_sdk::encryption::verification::VerificationRequestState;
-use matrix_sdk::ruma::events::key::verification::VerificationMethod;
+use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::ruma::events::key::verification::cancel::CancelCode;
+use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use matrix_sdk_crypto::{CancelInfo, QrVerificationState};
 use smallvec::smallvec;
 use std::rc::Rc;
@@ -35,7 +36,7 @@ use std::sync::Arc;
 use thegrid_common::sas_emoji::SasEmoji;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::session::verification_requests_cache::{
-    SUPPORTED_VERIFICATION_METHODS, VerificationRequestDetails,
+    VerificationRequestDetails, SUPPORTED_VERIFICATION_METHODS,
 };
 use thegrid_common::tokio_helper::TokioHelper;
 
@@ -208,7 +209,7 @@ impl Render for VerificationPopover {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let session_manager = cx.global::<SessionManager>();
         let account = session_manager.current_account().read(cx);
-        let verified = account.we_are_verified();
+        let verified = account.verification_state() == VerificationState::Verified;
 
         let on_back_click: Rc<Box<dyn Fn(&ClickEvent, &mut Window, &mut App)>> = Rc::new(Box::new(
             cx.listener(move |this, _, _, cx| this.on_back_click(cx)),

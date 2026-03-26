@@ -1,17 +1,14 @@
 use crate::tokio_helper::TokioHelper;
-use gpui::http_client::anyhow;
-use gpui::private::anyhow;
 use gpui::{App, AppContext, AsyncApp, Entity, WeakEntity};
-use matrix_sdk::encryption::identities::UserIdentity;
-use matrix_sdk::ruma::OwnedMxcUri;
+use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::ruma::events::room::member::SyncRoomMemberEvent;
+use matrix_sdk::ruma::OwnedMxcUri;
 use matrix_sdk::{Client, Room};
-use std::time::Duration;
 
 pub struct AccountCache {
     display_name: Option<String>,
     avatar_url: Option<OwnedMxcUri>,
-    identity: Option<UserIdentity>,
+    verification_state: VerificationState,
 }
 
 enum CacheMutation {
@@ -57,22 +54,15 @@ impl AccountCache {
                 async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                     loop {
                         let client = client_clone.clone();
-                        let user_id = client.user_id().unwrap().to_owned();
-                        if let Ok(identity) = cx
-                            .spawn_tokio(async move {
-                                client.encryption().request_user_identity(&user_id).await
-                            })
-                            .await
-                        {
+                        let mut state_stream = client.encryption().verification_state();
+                        state_stream.reset();
+
+                        while let Some(state) = state_stream.next().await {
                             let _ = weak_this.update(cx, |this, cx| {
-                                this.identity = identity;
+                                this.verification_state = state;
                                 cx.notify()
                             });
                         }
-
-                        cx.background_executor()
-                            .timer(Duration::from_secs(10))
-                            .await;
                     }
                 },
             )
@@ -124,7 +114,7 @@ impl AccountCache {
             AccountCache {
                 display_name: None,
                 avatar_url: None,
-                identity: None,
+                verification_state: VerificationState::Unknown,
             }
         })
     }
@@ -137,17 +127,7 @@ impl AccountCache {
         self.avatar_url.clone()
     }
 
-    pub fn identity(&self) -> Option<UserIdentity> {
-        self.identity.clone()
-    }
-
-    pub fn we_are_verified(&self) -> bool {
-        if let Some(identity) = self.identity()
-            && identity.is_verified()
-        {
-            true
-        } else {
-            false
-        }
+    pub fn verification_state(&self) -> VerificationState {
+        self.verification_state
     }
 }

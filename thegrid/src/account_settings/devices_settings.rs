@@ -3,10 +3,10 @@ use crate::auth::verification_popover::VerificationPopover;
 use crate::uiaa_client::{SendAuthDataEvent, UiaaClient};
 use chrono::{DateTime, Local};
 use cntp_i18n::tr;
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
@@ -15,13 +15,14 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, Context, ElementId, Entity, InteractiveElement, IntoElement,
-    ParentElement, Render, RenderOnce, Styled, WeakEntity, Window, div, px, rgba,
+    div, px, rgba, App, AppContext, AsyncApp, Context, ElementId,
+    Entity, InteractiveElement, IntoElement, ParentElement, Render, RenderOnce, Styled, WeakEntity, Window,
 };
 use matrix_sdk::encryption::identities::Device;
 use matrix_sdk::encryption::recovery::RecoveryState;
-use matrix_sdk::ruma::OwnedDeviceId;
+use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::ruma::api::client::uiaa::AuthData;
+use matrix_sdk::ruma::OwnedDeviceId;
 use std::rc::Rc;
 use thegrid_common::session::devices_cache::CachedDevice;
 use thegrid_common::session::session_manager::SessionManager;
@@ -111,7 +112,7 @@ impl Render for DevicesSettings {
         let session_manager = cx.global::<SessionManager>();
 
         let account = session_manager.current_account().read(cx);
-        let verified = account.we_are_verified();
+        let verified = account.verification_state() == VerificationState::Verified;
 
         let client = session_manager.client().unwrap().read(cx).clone();
         let recovery_not_set_up = client.encryption().recovery().state() == RecoveryState::Disabled;
@@ -336,14 +337,14 @@ impl RenderOnce for DeviceItem {
 
         let account = session_manager.current_account().read(cx);
 
-        let device_verified = if account.we_are_verified() {
-            match self.device.encryption_status {
-                None => true,
-                Some(device_encryption) => device_encryption.is_verified(),
+        let device_verified = match self.device.encryption_status {
+            None => true,
+            Some(device_encryption)
+                if account.verification_state() == VerificationState::Verified =>
+            {
+                device_encryption.is_verified()
             }
-        } else {
-            // True because we ourselves aren't verified, so we can't verify this device.
-            true
+            _ => true,
         };
 
         let mut supplementary_text = Vec::new();

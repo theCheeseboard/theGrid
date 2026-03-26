@@ -41,6 +41,7 @@ use std::fs::{create_dir_all, read_dir, remove_dir_all};
 use std::hash::RandomState;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::Duration;
 use uuid::Uuid;
 
 pub struct SessionManager {

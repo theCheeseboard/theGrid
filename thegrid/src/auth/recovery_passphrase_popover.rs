@@ -151,8 +151,8 @@ impl Render for RecoveryPassphrasePopover {
                                             .child(tr!(
                                                 "POPOVER_RECOVERY_PASSPHRASE_DESCRIPTION",
                                                 "Enter the recovery passphrase for your \
-                                                    account to verify this session. You can also \
-                                                    use the recovery key here."
+                                                account to verify this session. You can also \
+                                                use the recovery key here."
                                             ))
                                             .child(
                                                 admonition()
@@ -164,12 +164,13 @@ impl Render for RecoveryPassphrasePopover {
                                                     .child(tr!(
                                                         "RECOVERY_KEY_WHAT_DESCRIPTION",
                                                         "The recovery passphrase and key was \
-                                                            set up when you first set up your \
-                                                            account. If you don't know your \
-                                                            recovery passphrase or key, and you \
-                                                            don't have any verified devices to \
-                                                            recover from, you'll have to reset \
-                                                            your account's encryption details."
+                                                        set up when you configured key backups \
+                                                        for your account. If you don't know your \
+                                                        recovery passphrase or key, and you \
+                                                        don't have any verified devices to \
+                                                        recover from, you'll have to reset \
+                                                        your cryptographic identity from Account \
+                                                        Settings."
                                                     )),
                                             )
                                             .child(self.recovery_passphrase_field.clone())

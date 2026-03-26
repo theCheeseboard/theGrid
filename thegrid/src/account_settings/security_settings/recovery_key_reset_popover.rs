@@ -1,5 +1,5 @@
 use cntp_i18n::tr;
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
@@ -14,11 +14,11 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::{MaskMode, TextField};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, ClipboardItem, Context, Entity, IntoElement, ParentElement, Render,
-    Styled, WeakEntity, Window, div, px,
+    div, px, App, AppContext, AsyncApp, ClipboardItem, Context, Entity, IntoElement,
+    ParentElement, Render, Styled, WeakEntity, Window,
 };
-use matrix_sdk::encryption::RoomKeyImportError;
 use matrix_sdk::encryption::recovery::{RecoveryError, RecoveryState};
+use matrix_sdk::encryption::RoomKeyImportError;
 use std::path::PathBuf;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
@@ -26,7 +26,7 @@ use tracing::error;
 
 pub struct RecoveryKeyResetPopover {
     visible: bool,
-    recovery_not_set_up: bool,
+    recovery_state: RecoveryState,
     state: RecoveryKeyResetState,
     error: Option<RecoveryError>,
     passphrase_field: Entity<TextField>,
@@ -40,9 +40,9 @@ enum RecoveryKeyResetState {
 }
 
 impl RecoveryKeyResetPopover {
-    pub fn new(cx: &mut App) -> Self {
+    pub fn new(cx: &mut Context<Self>) -> Self {
         Self {
-            recovery_not_set_up: false,
+            recovery_state: RecoveryState::Unknown,
             visible: false,
             state: RecoveryKeyResetState::RecoveryPassphrase,
             error: None,
@@ -63,9 +63,8 @@ impl RecoveryKeyResetPopover {
         let session_manager = cx.global::<SessionManager>();
         let client = session_manager.client().unwrap().read(cx);
         let recovery = client.encryption().recovery();
-        let recovery_not_set_up = recovery.state() == RecoveryState::Disabled;
 
-        self.recovery_not_set_up = recovery_not_set_up;
+        self.recovery_state = recovery.state();
         self.state = RecoveryKeyResetState::RecoveryPassphrase;
         self.error = None;
         self.visible = true;
@@ -80,6 +79,8 @@ impl RecoveryKeyResetPopover {
         let recovery = encryption.recovery();
         let backups = encryption.backups();
 
+        let recovery_state = self.recovery_state;
+
         self.state = RecoveryKeyResetState::Processing;
         cx.notify();
 
@@ -87,20 +88,27 @@ impl RecoveryKeyResetPopover {
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 let result = cx
                     .spawn_tokio(async move {
-                        if backups.fetch_exists_on_server().await.unwrap() {
-                            if passphrase.is_empty() {
-                                recovery.reset_key().await
-                            } else {
-                                recovery
-                                    .reset_key()
-                                    .with_passphrase(passphrase.as_str())
-                                    .await
+                        match recovery_state {
+                            RecoveryState::Enabled => {
+                                // Just reset the recovery key
+                                if passphrase.is_empty() {
+                                    recovery.reset_key().await
+                                } else {
+                                    recovery
+                                        .reset_key()
+                                        .with_passphrase(passphrase.as_str())
+                                        .await
+                                }
                             }
-                        } else {
-                            if passphrase.is_empty() {
-                                recovery.enable().await
-                            } else {
-                                recovery.enable().with_passphrase(passphrase.as_str()).await
+                            RecoveryState::Unknown
+                            | RecoveryState::Disabled
+                            | RecoveryState::Incomplete => {
+                                // Create a new backup and enable recovery
+                                if passphrase.is_empty() {
+                                    recovery.enable().await
+                                } else {
+                                    recovery.enable().with_passphrase(passphrase.as_str()).await
+                                }
                             }
                         }
                     })
@@ -154,15 +162,17 @@ impl Render for RecoveryKeyResetPopover {
                         .gap(px(9.))
                         .child(
                             grandstand("key-reset-grandstand")
-                                .when_else(
-                                    self.recovery_not_set_up,
-                                    |david| {
-                                        david.text(tr!("KEY_SETUP_TITLE", "Set up Recovery Key"))
-                                    },
-                                    |david| {
-                                        david.text(tr!("KEY_RESET_TITLE", "Reset Recovery Key"))
-                                    },
-                                )
+                                .text(match self.recovery_state {
+                                    RecoveryState::Enabled => {
+                                        tr!("KEY_CHANGE_TITLE", "Change Recovery Key")
+                                    }
+                                    RecoveryState::Unknown | RecoveryState::Disabled => {
+                                        tr!("KEY_SETUP_TITLE", "Set up Recovery Key")
+                                    }
+                                    RecoveryState::Incomplete => {
+                                        tr!("KEY_RESET_TITLE", "Reset Recovery Key")
+                                    }
+                                })
                                 .on_back_click(cx.listener(move |this, _, _, cx| {
                                     this.visible = false;
                                     cx.notify()
@@ -184,27 +194,39 @@ impl Render for RecoveryKeyResetPopover {
                                             .flex()
                                             .flex_col()
                                             .gap(px(8.))
-                                            .when_else(
-                                                self.recovery_not_set_up,
-                                                |david| {
-                                                    david.child(tr!(
+                                            .child(match self.recovery_state {
+                                                RecoveryState::Enabled => {
+                                                    tr!(
+                                                        "KEY_CHANGE_DESCRIPTION",
+                                                        "If you've forgotten your recovery \
+                                                        key, you can change it here. Your old \
+                                                        recovery key and recovery passphrase, \
+                                                        if set, will become invalid."
+                                                    )
+                                                }
+                                                RecoveryState::Unknown
+                                                | RecoveryState::Disabled => {
+                                                    tr!(
                                                         "KEY_SETUP_DESCRIPTION",
                                                         "A recovery key will be created, \
                                                         which you can use to recover your \
                                                         encrypted messages in the event \
                                                         you log out of all of your devices."
-                                                    ))
-                                                },
-                                                |david| {
-                                                    david.child(tr!(
+                                                    )
+                                                }
+                                                RecoveryState::Incomplete => {
+                                                    tr!(
                                                         "KEY_RESET_DESCRIPTION",
-                                                        "If you've forgotten your recovery \
-                                                        key, you can reset it here. Your old \
-                                                        recovery key and recovery passphrase, \
-                                                        if set, will become invalid."
-                                                    ))
-                                                },
-                                            )
+                                                        "A recovery key will be created, \
+                                                        and the encryption keys on the \
+                                                        server will be replaced with \
+                                                        the encryption keys on this \
+                                                        device. You may lose some messages \
+                                                        if this device does not have the \
+                                                        encryption keys."
+                                                    )
+                                                }
+                                            })
                                             .child(tr!(
                                                 "KEY_RESET_PASSPHRASE",
                                                 "You have the option of setting up a recovery \
@@ -248,23 +270,33 @@ impl Render for RecoveryKeyResetPopover {
                                             })
                                             .child(
                                                 button("do-import")
-                                                    .when_else(
-                                                        self.recovery_not_set_up,
-                                                        |button| {
-                                                            button.child(icon_text(
-                                                                "dialog-ok".into(),
-                                                                tr!("SECURITY_RECOVERY_KEY_SETUP")
-                                                                    .into(),
-                                                            ))
-                                                        },
-                                                        |button| {
-                                                            button.child(icon_text(
-                                                                "edit-rename".into(),
-                                                                tr!("SECURITY_RECOVERY_KEY_RESET")
-                                                                    .into(),
-                                                            ))
-                                                        },
-                                                    )
+                                                    .child(match self.recovery_state {
+                                                        RecoveryState::Enabled => icon_text(
+                                                            "edit-rename".into(),
+                                                            tr!(
+                                                                "SECURITY_RECOVERY_KEY_CHANGE",
+                                                                "Change Recovery Key"
+                                                            )
+                                                            .into(),
+                                                        ),
+                                                        RecoveryState::Unknown
+                                                        | RecoveryState::Disabled => icon_text(
+                                                            "configure".into(),
+                                                            tr!(
+                                                                "SECURITY_RECOVERY_KEY_SETUP",
+                                                                "Set up Recovery Key"
+                                                            )
+                                                            .into(),
+                                                        ),
+                                                        RecoveryState::Incomplete => icon_text(
+                                                            "edit-rename".into(),
+                                                            tr!(
+                                                                "SECURITY_RECOVERY_KEY_RESET",
+                                                                "Reset Recovery Key"
+                                                            )
+                                                            .into(),
+                                                        ),
+                                                    })
                                                     .on_click(cx.listener(
                                                         move |this, _, _, cx| {
                                                             this.perform_reset(cx)
@@ -292,11 +324,17 @@ impl Render for RecoveryKeyResetPopover {
                         .gap(px(9.))
                         .child(
                             grandstand("key-reset-grandstand")
-                                .when_else(
-                                    self.recovery_not_set_up,
-                                    |david| david.text(tr!("KEY_SETUP_TITLE")),
-                                    |david| david.text(tr!("KEY_RESET_TITLE")),
-                                )
+                                .text(match self.recovery_state {
+                                    RecoveryState::Enabled => {
+                                        tr!("KEY_CHANGE_TITLE")
+                                    }
+                                    RecoveryState::Unknown | RecoveryState::Disabled => {
+                                        tr!("KEY_SETUP_TITLE")
+                                    }
+                                    RecoveryState::Incomplete => {
+                                        tr!("KEY_RESET_TITLE")
+                                    }
+                                })
                                 .on_back_click(cx.listener(move |this, _, _, cx| {
                                     this.visible = false;
                                     cx.notify()
