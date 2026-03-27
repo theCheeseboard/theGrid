@@ -583,7 +583,7 @@
   },
   "CREATE_SUBSPACE": {
     "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:403",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:404",
     "plural": false,
     "description": null
   },
@@ -1843,7 +1843,7 @@
   },
   "ROOM_DIRECTORY_MEMBER_COUNT": {
     "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:260",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:261",
     "plural": true,
     "description": null
   },
@@ -2365,7 +2365,7 @@
   },
   "SPACE_LOBBY_INTRO": {
     "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:358",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:359",
     "plural": false,
     "description": null
   },

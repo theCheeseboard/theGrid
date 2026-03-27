@@ -13,17 +13,17 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AnyElement, AsyncWindowContext, Context, Entity, InteractiveElement, IntoElement,
-    ListAlignment, ListScrollEvent, ListState, ParentElement, Render, Styled, WeakEntity, Window,
-    div, list, px,
+    div, list, px, AnyElement, AsyncWindowContext, Context,
+    Entity, InteractiveElement, IntoElement, ListAlignment, ListScrollEvent, ListState, ParentElement, Render,
+    Styled, WeakEntity, Window,
 };
 use matrix_sdk::ruma::room::JoinRuleSummary;
 use matrix_sdk::ruma::{OwnedRoomId, OwnedRoomOrAliasId};
 use matrix_sdk::{Room, RoomState};
-use matrix_sdk_ui::spaces::SpaceRoom;
 use matrix_sdk_ui::spaces::room_list::SpaceRoomListPaginationState;
+use matrix_sdk_ui::spaces::SpaceRoom;
 use std::collections::HashSet;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::room_cache::RoomJoinEvent;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::session::spaces_cache::SpaceRoomListEntity;
@@ -231,6 +231,7 @@ impl SpaceLobbyContent {
                     .p(px(4.))
                     .child(
                         mxc_image(space_room.avatar_url.clone())
+                            .fallback_image(&space_room.room_id)
                             .rounded(theme.border_radius)
                             .size(px(40.))
                             .size_policy(SizePolicy::Fit),
