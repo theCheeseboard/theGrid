@@ -1,0 +1,81 @@
+<html lang="en">
+<head>
+    <title>Sign in to theGrid</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+<div class="main">
+    <div class="grandstand">
+        <h1>Sign in to theGrid</h1>
+    </div>
+    <div id="success-constrainer" class="constrainer" style="display: none">
+        <div class="constrainer-inner">
+            <div class="layer">
+                <h2>Complete Login</h2>
+                <p>Click below to open theGrid and log in</p>
+                <button id="openButton">Open theGrid</button>
+            </div>
+            <div class="layer">
+                <h2>Manual Login</h2>
+                <p>If you can't log in using the button, copy the token below and paste it into theGrid to log in.</p>
+                <div class="token-area">
+                    <pre id="token"></pre>
+                    <button id="see-token" class="icon">
+                        <img src="visibility.svg" alt="Reveal token" />
+                    </button>
+                    <button id="copy-token" class="icon">
+                        <img src="edit-copy.svg" alt="Copy to clipboard" />
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="error-constrainer" class="constrainer" style="display: none">
+        <div class="constrainer-inner">
+            <div class="error-admonition">
+                <h2>Complete Login</h2>
+                <p>Unable to log you in. Please try again.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const loginToken = window.location.search.substring(1);
+    if (loginToken) {
+        const utf8 = new TextEncoder().encode(loginToken);
+        const base64EncodedToken = utf8.toBase64({
+            alphabet: "base64url",
+            omitPadding: true
+        });
+
+        let tokenVisible = false;
+        document.getElementById('token').innerText = "*****";
+
+        document.getElementById('openButton').addEventListener('click', () => {
+            window.location = `thegrid:///token-callback?token=${base64EncodedToken}`
+        })
+        document.getElementById('see-token').addEventListener('click', () => {
+            if (tokenVisible) {
+                document.getElementById('token').innerText = "*****";
+            } else {
+                document.getElementById('token').innerText = base64EncodedToken;
+            }
+            tokenVisible = !tokenVisible;
+        })
+        document.getElementById('copy-token').addEventListener('click', () => {
+            navigator.clipboard.writeText(base64EncodedToken)
+        })
+
+        document.getElementById('success-constrainer').style.display = 'flex'
+    } else {
+        document.getElementById('error-constrainer').style.display = 'flex'
+    }
+
+    history.replaceState(null, null, '/oauth-signin');
+</script>
+</body>
+</html>

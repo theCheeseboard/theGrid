@@ -95,6 +95,9 @@ h2 {
 pre {
     margin: 0;
     flex-grow: 1;
+    overflow-x: hidden;
+    overflow-wrap: anywhere;
+    white-space: wrap;
 }
 
 .token-area {
