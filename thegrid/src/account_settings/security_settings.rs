@@ -6,9 +6,10 @@ pub mod recovery_key_reset_popover;
 use crate::account_settings::security_settings::key_export_popover::KeyExportPopover;
 use crate::account_settings::security_settings::key_import_popover::KeyImportPopover;
 use crate::account_settings::security_settings::recovery_key_reset_popover::RecoveryKeyResetPopover;
+use crate::auth::oauth_management_page_redirect_dialog::OAuthManagementPageRedirectDialog;
 use crate::auth::recovery_passphrase_popover::RecoveryPassphrasePopover;
 use cntp_i18n::tr;
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
@@ -18,11 +19,12 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, PathPromptOptions,
-    Render, Styled, Window, div, px,
+    div, px, App, AppContext, AsyncApp, ClickEvent, Context, Entity,
+    IntoElement, ParentElement, PathPromptOptions, Render, Styled, Window,
 };
-use matrix_sdk::encryption::VerificationState;
+use matrix_sdk::authentication::oauth::AccountManagementActionFull;
 use matrix_sdk::encryption::recovery::RecoveryState;
+use matrix_sdk::encryption::VerificationState;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{
@@ -35,20 +37,47 @@ pub struct SecuritySettings {
     key_export_popover: Entity<KeyExportPopover>,
     key_import_popover: Entity<KeyImportPopover>,
     on_surface_change: Rc<Box<SurfaceChangeHandler>>,
+    oauth_management_page_redirect_dialog: Entity<OAuthManagementPageRedirectDialog>,
 }
 
 impl SecuritySettings {
     pub fn new(
         cx: &mut App,
         on_surface_change: impl Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static,
-    ) -> Entity<Self> {
-        cx.new(|cx| Self {
+    ) -> Self {
+        Self {
             recovery_key_reset_popover: cx.new(|cx| RecoveryKeyResetPopover::new(cx)),
             recovery_passphrase_popover: cx.new(|cx| RecoveryPassphrasePopover::new(cx)),
             key_export_popover: cx.new(|cx| KeyExportPopover::new(cx)),
             key_import_popover: cx.new(|cx| KeyImportPopover::new(cx)),
             on_surface_change: Rc::new(Box::new(on_surface_change)),
-        })
+            oauth_management_page_redirect_dialog: cx
+                .new(|cx| OAuthManagementPageRedirectDialog::new(cx)),
+        }
+    }
+
+    fn open_crypto_reset_page(
+        &mut self,
+        _: &ClickEvent,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        // Try to go through the homeserver management page first
+        if !self
+            .oauth_management_page_redirect_dialog
+            .update(cx, |dialog, cx| {
+                dialog.perform_action(AccountManagementActionFull::CrossSigningReset, cx)
+            })
+        {
+            (self.on_surface_change)(
+                &SurfaceChangeEvent {
+                    change: SurfaceChange::Push(MainWindowSurface::IdentityReset),
+                },
+                window,
+                cx,
+            );
+            cx.notify();
+        }
     }
 
     fn start_import(&mut self, cx: &mut Context<Self>) {
@@ -329,18 +358,7 @@ impl Render for SecuritySettings {
                                                     .into(),
                                             ))
                                             .destructive()
-                                            .on_click(cx.listener(|this, _, window, cx| {
-                                                (this.on_surface_change)(
-                                                    &SurfaceChangeEvent {
-                                                        change: SurfaceChange::Push(
-                                                            MainWindowSurface::IdentityReset,
-                                                        ),
-                                                    },
-                                                    window,
-                                                    cx,
-                                                );
-                                                cx.notify();
-                                            })),
+                                            .on_click(cx.listener(Self::open_crypto_reset_page)),
                                     ),
                             ),
                     ),
@@ -348,6 +366,6 @@ impl Render for SecuritySettings {
             .child(self.key_export_popover.clone())
             .child(self.key_import_popover.clone())
             .child(self.recovery_key_reset_popover.clone())
-            .child(self.recovery_passphrase_popover.clone())
+            .child(self.recovery_passphrase_popover.clone()).child(self.oauth_management_page_redirect_dialog.clone())
     }
 }

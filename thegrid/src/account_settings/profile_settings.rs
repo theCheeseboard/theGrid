@@ -1,3 +1,4 @@
+use crate::auth::oauth_management_page_redirect_dialog::OAuthManagementPageRedirectDialog;
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
@@ -13,6 +14,7 @@ use gpui::{
     div, px, rgb, App, AppContext, AsyncApp, BorrowAppContext, Context,
     Entity, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
 };
+use matrix_sdk::authentication::oauth::AccountManagementActionFull;
 use std::rc::Rc;
 use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
@@ -28,6 +30,7 @@ pub struct ProfileSettings {
     new_display_name_text_field: Entity<TextField>,
     on_surface_change: Rc<Box<SurfaceChangeHandler>>,
     call_disconnect_confirmation_dialog: Entity<CallDisconnectConfirmationDialog>,
+    oauth_management_page_redirect_dialog: Entity<OAuthManagementPageRedirectDialog>,
 }
 
 impl ProfileSettings {
@@ -37,6 +40,8 @@ impl ProfileSettings {
     ) -> Entity<Self> {
         let call_disconnect_confirmation_dialog =
             cx.new(|cx| CallDisconnectConfirmationDialog::new(cx));
+        let oauth_management_page_redirect_dialog =
+            cx.new(|cx| OAuthManagementPageRedirectDialog::new(cx));
 
         cx.new(|cx| Self {
             edit_display_name_open: false,
@@ -53,19 +58,28 @@ impl ProfileSettings {
             }),
             on_surface_change: Rc::new(Box::new(on_surface_change)),
             call_disconnect_confirmation_dialog,
+            oauth_management_page_redirect_dialog,
         })
     }
 
     fn open_deactivate_account_page(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let on_complete = cx.listener(|this, _, window, cx| {
-            (this.on_surface_change)(
-                &SurfaceChangeEvent {
-                    change: SurfaceChange::Push(MainWindowSurface::DeactivateAccount),
-                },
-                window,
-                cx,
-            );
-            cx.notify();
+            // Try to go through the homeserver management page first
+            if !this
+                .oauth_management_page_redirect_dialog
+                .update(cx, |dialog, cx| {
+                    dialog.perform_action(AccountManagementActionFull::AccountDeactivate, cx)
+                })
+            {
+                (this.on_surface_change)(
+                    &SurfaceChangeEvent {
+                        change: SurfaceChange::Push(MainWindowSurface::DeactivateAccount),
+                    },
+                    window,
+                    cx,
+                );
+                cx.notify();
+            }
         });
 
         self.call_disconnect_confirmation_dialog.update(
@@ -269,5 +283,6 @@ impl Render for ProfileSettings {
                     ),
             )
             .child(self.call_disconnect_confirmation_dialog.clone())
+            .child(self.oauth_management_page_redirect_dialog.clone())
     }
 }

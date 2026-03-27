@@ -1,5 +1,6 @@
 pub mod auth_surface;
 pub mod emoji_flyout;
 pub mod logout_popover;
+pub mod oauth_management_page_redirect_dialog;
 pub mod recovery_passphrase_popover;
 pub mod verification_popover;

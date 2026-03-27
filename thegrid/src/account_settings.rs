@@ -20,8 +20,8 @@ use contemporary::styling::theme::Theme;
 use contemporary::surface::surface;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, Context, Entity, InteractiveElement, IntoElement, ParentElement, Render,
-    StatefulInteractiveElement, Styled, Window, div, px, uniform_list,
+    div, px, uniform_list, App, AppContext, Context, Entity, InteractiveElement,
+    IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled, Window,
 };
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
@@ -58,8 +58,10 @@ impl AccountSettingsSurface {
             profile_settings: ProfileSettings::new(cx, move |event, window, cx| {
                 on_surface_change_2(event, window, cx)
             }),
-            security_settings: SecuritySettings::new(cx, move |event, window, cx| {
-                on_surface_change_3(event, window, cx)
+            security_settings: cx.new(|cx| {
+                SecuritySettings::new(cx, move |event, window, cx| {
+                    on_surface_change_3(event, window, cx)
+                })
             }),
             notifications_settings: NotificationsSettings::new(cx),
             devices_settings: DevicesSettings::new(cx),

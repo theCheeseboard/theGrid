@@ -103,37 +103,37 @@
   },
   "ACCOUNT_SETTINGS_DEVICES": {
     "context": "account_settings.rs",
-    "definedIn": "src/account_settings.rs:150",
+    "definedIn": "src/account_settings.rs:152",
     "plural": false,
     "description": null
   },
   "ACCOUNT_SETTINGS_IGNORED_USERS": {
     "context": "account_settings.rs",
-    "definedIn": "src/account_settings.rs:154",
+    "definedIn": "src/account_settings.rs:156",
     "plural": false,
     "description": null
   },
   "ACCOUNT_SETTINGS_NOTIFICATIONS": {
     "context": "account_settings.rs",
-    "definedIn": "src/account_settings.rs:146",
+    "definedIn": "src/account_settings.rs:148",
     "plural": false,
     "description": null
   },
   "ACCOUNT_SETTINGS_PROFILE": {
     "context": "account_settings.rs",
-    "definedIn": "src/account_settings.rs:138",
+    "definedIn": "src/account_settings.rs:140",
     "plural": false,
     "description": null
   },
   "ACCOUNT_SETTINGS_SECURITY": {
     "context": "account_settings.rs",
-    "definedIn": "src/account_settings.rs:142",
+    "definedIn": "src/account_settings.rs:144",
     "plural": false,
     "description": null
   },
   "ACCOUNT_SETTINGS_TITLE": {
     "context": "account_settings.rs",
-    "definedIn": "src/account_settings.rs:102",
+    "definedIn": "src/account_settings.rs:104",
     "plural": false,
     "description": null
   },
@@ -1087,7 +1087,7 @@
   },
   "KEY_IMPORT_IMPORT": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:57",
+    "definedIn": "src/account_settings/security_settings.rs:86",
     "plural": false,
     "description": null
   },
@@ -1345,7 +1345,7 @@
   },
   "NEW_DISPLAY_NAME_PLACEHOLDER": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:48",
+    "definedIn": "src/account_settings/profile_settings.rs:53",
     "plural": false,
     "description": null
   },
@@ -1394,6 +1394,60 @@
   "NUMBERS_NO_MATCH": {
     "context": "verification_sas_page.rs",
     "definedIn": "src/auth/verification_popover/verification_sas_page.rs:201",
+    "plural": false,
+    "description": null
+  },
+  "OAUTH_MANAGEMENT_ACTION_ACCOUNT_DEACTIVATE_TEXT": {
+    "context": "oauth_management_page_redirect_dialog.rs",
+    "definedIn": "src/auth/oauth_management_page_redirect_dialog.rs:67",
+    "plural": false,
+    "description": null
+  },
+  "OAUTH_MANAGEMENT_ACTION_ACCOUNT_DEACTIVATE_TITLE": {
+    "context": "oauth_management_page_redirect_dialog.rs",
+    "definedIn": "src/auth/oauth_management_page_redirect_dialog.rs:62",
+    "plural": false,
+    "description": null
+  },
+  "OAUTH_MANAGEMENT_ACTION_CROSS_SIGNING_RESET_TEXT": {
+    "context": "oauth_management_page_redirect_dialog.rs",
+    "definedIn": "src/auth/oauth_management_page_redirect_dialog.rs:79",
+    "plural": false,
+    "description": null
+  },
+  "OAUTH_MANAGEMENT_ACTION_CROSS_SIGNING_RESET_TITLE": {
+    "context": "oauth_management_page_redirect_dialog.rs",
+    "definedIn": "src/auth/oauth_management_page_redirect_dialog.rs:74",
+    "plural": false,
+    "description": null
+  },
+  "OAUTH_MANAGEMENT_ACTION_GENERIC_TEXT": {
+    "context": "oauth_management_page_redirect_dialog.rs",
+    "definedIn": "src/auth/oauth_management_page_redirect_dialog.rs:91",
+    "plural": false,
+    "description": null
+  },
+  "OAUTH_MANAGEMENT_ACTION_GENERIC_TITLE": {
+    "context": "oauth_management_page_redirect_dialog.rs",
+    "definedIn": "src/auth/oauth_management_page_redirect_dialog.rs:86",
+    "plural": false,
+    "description": null
+  },
+  "OAUTH_MANAGEMENT_ACTION_SESSION_END_TEXT": {
+    "context": "oauth_management_page_redirect_dialog.rs",
+    "definedIn": "src/auth/oauth_management_page_redirect_dialog.rs:55",
+    "plural": false,
+    "description": null
+  },
+  "OAUTH_MANAGEMENT_ACTION_SESSION_END_TITLE": {
+    "context": "oauth_management_page_redirect_dialog.rs",
+    "definedIn": "src/auth/oauth_management_page_redirect_dialog.rs:50",
+    "plural": false,
+    "description": null
+  },
+  "OAUTH_MANAGEMENT_PAGE_REDIRECT_DIALOG_CONTINUE": {
+    "context": "oauth_management_page_redirect_dialog.rs",
+    "definedIn": "src/auth/oauth_management_page_redirect_dialog.rs:142",
     "plural": false,
     "description": null
   },
@@ -1537,37 +1591,37 @@
   },
   "PROFILE_ACCOUNT": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:188",
+    "definedIn": "src/account_settings/profile_settings.rs:202",
     "plural": false,
     "description": null
   },
   "PROFILE_CHANGE_DISPLAY_NAME": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:154",
+    "definedIn": "src/account_settings/profile_settings.rs:168",
     "plural": false,
     "description": null
   },
   "PROFILE_CHANGE_DISPLAY_NAME_DESCRIPTION": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:221",
+    "definedIn": "src/account_settings/profile_settings.rs:235",
     "plural": false,
     "description": null
   },
   "PROFILE_CHANGE_PROFILE_PICTURE": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:174",
+    "definedIn": "src/account_settings/profile_settings.rs:188",
     "plural": false,
     "description": null
   },
   "PROFILE_DEACTIVATE": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:199",
+    "definedIn": "src/account_settings/profile_settings.rs:213",
     "plural": false,
     "description": null
   },
   "PROFILE_PROFILE": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:142",
+    "definedIn": "src/account_settings/profile_settings.rs:156",
     "plural": false,
     "description": null
   },
@@ -2227,55 +2281,55 @@
   },
   "SECURITY_CRYPTO_IDENTITY": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:300",
+    "definedIn": "src/account_settings/security_settings.rs:329",
     "plural": false,
     "description": null
   },
   "SECURITY_ENCRYPTION": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:187",
+    "definedIn": "src/account_settings/security_settings.rs:216",
     "plural": false,
     "description": null
   },
   "SECURITY_IDENTITY_DESCRIPTION": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:304",
+    "definedIn": "src/account_settings/security_settings.rs:333",
     "plural": false,
     "description": null
   },
   "SECURITY_IDENTITY_DESCRIPTION_2": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:309",
+    "definedIn": "src/account_settings/security_settings.rs:338",
     "plural": false,
     "description": null
   },
   "SECURITY_IDENTITY_RESET": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:326",
+    "definedIn": "src/account_settings/security_settings.rs:355",
     "plural": false,
     "description": null
   },
   "SECURITY_KEY_BACKUP": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:244",
+    "definedIn": "src/account_settings/security_settings.rs:273",
     "plural": false,
     "description": null
   },
   "SECURITY_KEY_BACKUP_DESCRIPTION": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:246",
+    "definedIn": "src/account_settings/security_settings.rs:275",
     "plural": false,
     "description": null
   },
   "SECURITY_KEY_BACKUP_EXPORT": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:262",
+    "definedIn": "src/account_settings/security_settings.rs:291",
     "plural": false,
     "description": null
   },
   "SECURITY_KEY_BACKUP_IMPORT": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:282",
+    "definedIn": "src/account_settings/security_settings.rs:311",
     "plural": false,
     "description": null
   },
