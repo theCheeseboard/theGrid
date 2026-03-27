@@ -11,6 +11,7 @@ mod utilities;
 
 mod account_settings;
 mod uiaa_client;
+mod upload_mxc_dialog;
 
 use crate::actions::{
     register_actions, AccountSettings, AccountSwitcher, CreateRoom, CreateSpace, DirectJoinRoom,

@@ -6210,6 +6210,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "mimetype-detector"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a34f91272994b89ad81a1f11cc7358da2767e52af7b389bcde7a3cf86270987"
+
+[[package]]
 name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -10118,6 +10124,7 @@ dependencies = [
  "matrix-sdk-crypto",
  "matrix-sdk-ui",
  "mime2ext",
+ "mimetype-detector",
  "qrcode",
  "serde",
  "serde_json",

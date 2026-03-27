@@ -1,4 +1,5 @@
 use crate::chat::chat_room::open_room::OpenRoom;
+use crate::upload_mxc_dialog::{upload_mxc_dialog, UploadMxcAcceptEvent};
 use cntp_i18n::{tr, I18nString};
 use contemporary::components::button::{button, ButtonMenuOpenPolicy};
 use contemporary::components::constrainer::constrainer;
@@ -19,8 +20,9 @@ use gpui::{
     ElementId, Entity, InteractiveElement, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
 };
 use matrix_sdk::ruma::api::client::room::Visibility;
+use matrix_sdk::ruma::events::room::avatar::ImageInfo;
 use matrix_sdk::ruma::room::JoinRule;
-use matrix_sdk::ruma::{OwnedRoomAliasId, RoomAliasId};
+use matrix_sdk::ruma::{OwnedRoomAliasId, RoomAliasId, UInt};
 use matrix_sdk::HttpError;
 use std::rc::Rc;
 use thegrid_common::mxc_image::{mxc_image, SizePolicy};
@@ -32,6 +34,7 @@ pub struct RoomSettings {
     on_back_click: Rc<Box<dyn Fn(&ClickEvent, &mut Window, &mut App)>>,
     on_members_click: Rc<Box<dyn Fn(&ClickEvent, &mut Window, &mut App)>>,
     edit_room_name_open: bool,
+    edit_room_image_open: bool,
     new_name_text_field: Entity<TextField>,
     enable_encryption_open: bool,
     busy: bool,
@@ -85,6 +88,7 @@ impl RoomSettings {
             }),
 
             edit_room_name_open: false,
+            edit_room_image_open: false,
             enable_encryption_open: false,
             busy: false,
             published_to_directory: false,
@@ -711,10 +715,17 @@ impl Render for RoomSettings {
                                                 cx.notify()
                                             })),
                                     )
-                                    .child(button("room-change-profile-picture").child(icon_text(
-                                        "edit-rename".into(),
-                                        tr!("ROOM_CHANGE_PICTURE", "Change Picture").into(),
-                                    )))
+                                    .child(
+                                        button("room-change-profile-picture")
+                                            .child(icon_text(
+                                                "edit-rename".into(),
+                                                tr!("ROOM_CHANGE_PICTURE", "Change Picture").into(),
+                                            ))
+                                            .on_click(cx.listener(move |this, _, _, cx| {
+                                                this.edit_room_image_open = true;
+                                                cx.notify()
+                                            })),
+                                    )
                                     .child(
                                         button("room-view-members")
                                             .child(icon_text(
@@ -921,6 +932,52 @@ impl Render for RoomSettings {
                             })),
                     ),
             )
+            .child(upload_mxc_dialog(
+                tr!("ROOM_CHANGE_PICTURE"),
+                self.edit_room_image_open,
+                "dialog-ok".into(),
+                tr!("ROOM_CHANGE_PICTURE").into(),
+                cx.listener(move |this, _, _, cx| {
+                    this.edit_room_image_open = false;
+                    cx.notify();
+                }),
+                cx.listener({
+                    let room = room.clone();
+                    move |this, event: &UploadMxcAcceptEvent, _, cx| {
+                        let mxc_url = event.mxc_url.clone();
+
+                        let mut image_info = ImageInfo::new();
+                        image_info.height = UInt::new(event.height);
+                        image_info.width = UInt::new(event.width);
+                        image_info.blurhash = event.blur_hash.clone();
+                        image_info.size = UInt::new(event.file_size);
+                        cx.spawn({
+                            let room = room.clone();
+                            async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                                if cx
+                                    .spawn_tokio(async move {
+                                        room.set_avatar_url(&mxc_url, Some(image_info)).await
+                                    })
+                                    .await
+                                    .is_err()
+                                {
+                                    this.update(cx, |this, cx| {
+                                        this.edit_room_image_open = false;
+                                        cx.notify()
+                                    })
+                                } else {
+                                    this.update(cx, |this, cx| {
+                                        this.edit_room_image_open = false;
+                                        cx.notify()
+                                    })
+                                }
+                            }
+                        })
+                        .detach();
+                        cx.notify()
+                    }
+                }),
+            ))
             .child(
                 dialog_box("enable-encryption")
                     .visible(self.enable_encryption_open)
@@ -929,10 +986,10 @@ impl Render for RoomSettings {
                     .content(tr!(
                         "ROOM_ENCRYPTION_ENABLE_DESCRIPTION",
                         "By enabling encryption, you will prevent anyone joining the room \
-                            from being able to read message history. If there are any bots or \
-                            services in this room, they may also stop working.\n\n\
-                            Once enabled, encryption cannot be turned off.\n\n\
-                            Do you want to enable encryption for this room?"
+                        from being able to read message history. If there are any bots or \
+                        services in this room, they may also stop working.\n\n\
+                        Once enabled, encryption cannot be turned off.\n\n\
+                        Do you want to enable encryption for this room?"
                     ))
                     .standard_button(
                         StandardButton::Cancel,
