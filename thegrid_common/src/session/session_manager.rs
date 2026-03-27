@@ -132,9 +132,15 @@ impl SessionManager {
             let homeserver = std::fs::read_to_string(homeserver_file);
 
             cx.spawn(async move |cx: &mut AsyncApp| {
-                if let Err(error) =
-                    Self::setup_session(user_id, store_dir, session.secrets, homeserver.ok(), cx)
-                        .await
+                if let Err(error) = Self::setup_session(
+                    uuid,
+                    user_id,
+                    store_dir,
+                    session.secrets,
+                    homeserver.ok(),
+                    cx,
+                )
+                .await
                 {
                     error!("Unable to create client: {error:?}");
                     let _ = cx.update_global::<Self, ()>(|session_manager, cx| {
@@ -148,6 +154,7 @@ impl SessionManager {
     }
 
     async fn setup_session(
+        uuid: Uuid,
         user_id: OwnedUserId,
         store_dir: PathBuf,
         secrets: DatabaseSecret,
@@ -171,7 +178,44 @@ impl SessionManager {
             })
             .await?;
 
+        let desktop_entry =
+            cx.read_global::<Details, _>(|details, cx| details.generatable.desktop_entry)?;
+
         if let Some(oauth_session) = secrets.oauth_session() {
+            // Configure refresh tokens
+            client.set_session_callbacks(
+                Box::new({
+                    let uuid = uuid.clone();
+                    move |_| {
+                        let uuid = uuid.to_string();
+                        let creds =
+                            default_credential_builder().build(None, desktop_entry, &uuid)?;
+                        Ok(creds
+                            .get_database_secret()
+                            .unwrap()
+                            .oauth_session()
+                            .unwrap()
+                            .user
+                            .tokens)
+                    }
+                }),
+                Box::new({
+                    let uuid = uuid.clone();
+                    move |client| {
+                        let uuid = uuid.to_string();
+                        let creds =
+                            default_credential_builder().build(None, desktop_entry, &uuid)?;
+                        let mut secret = creds.get_database_secret().unwrap();
+                        secret.set_oauth_session(client.oauth().full_session().unwrap());
+                        creds
+                            .set_secret(&serde_json::to_vec(&secret).unwrap())
+                            .expect("Unable to save Matrix secret in secret store");
+
+                        Ok(())
+                    }
+                }),
+            )?;
+
             cx.spawn_tokio({
                 let client = client.clone();
                 async move {

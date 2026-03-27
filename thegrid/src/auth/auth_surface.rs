@@ -539,12 +539,6 @@ impl AuthSurface {
     }
 
     fn perform_login(&mut self, login_method: LoginMethod, cx: &mut Context<Self>) {
-        let session_manager = cx.global::<SessionManager>();
-        let session_secrets = session_manager
-            .session_secrets(&self.session_uuid, cx)
-            .expect("Secrets should be able to be accessed");
-
-        let session_dir = self.session_dir(cx);
         let default_device_name = default_device_name(cx);
         let client = self.client.clone().unwrap();
         let client_clone = client.clone();
@@ -553,9 +547,7 @@ impl AuthSurface {
             .clone()
             .map(|user_id| user_id.localpart().to_string())
             .unwrap_or_else(|| self.username_field.read(cx).text().to_string());
-        let session_uuid = self.session_uuid;
 
-        let mut database_secret = self.database_secret.clone();
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
             let login_response = cx
                 .spawn_tokio(async move {
