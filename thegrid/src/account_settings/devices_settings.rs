@@ -1,4 +1,5 @@
 use crate::account_settings::security_settings::recovery_key_reset_popover::RecoveryKeyResetPopover;
+use crate::auth::oauth_management_page_redirect_dialog::OAuthManagementPageRedirectDialog;
 use crate::auth::verification_popover::VerificationPopover;
 use crate::uiaa_client::{SendAuthDataEvent, UiaaClient};
 use chrono::{DateTime, Local};
@@ -18,6 +19,7 @@ use gpui::{
     div, px, rgba, App, AppContext, AsyncApp, Context, ElementId,
     Entity, InteractiveElement, IntoElement, ParentElement, Render, RenderOnce, Styled, WeakEntity, Window,
 };
+use matrix_sdk::authentication::oauth::AccountManagementActionFull;
 use matrix_sdk::encryption::identities::Device;
 use matrix_sdk::encryption::recovery::RecoveryState;
 use matrix_sdk::encryption::VerificationState;
@@ -35,6 +37,7 @@ pub struct DevicesSettings {
     log_out_device: Option<OwnedDeviceId>,
     log_out_confirm_dialog_visible: bool,
     uiaa_client: Entity<UiaaClient>,
+    oauth_management_page_redirect_dialog: Entity<OAuthManagementPageRedirectDialog>,
 }
 
 impl DevicesSettings {
@@ -51,6 +54,8 @@ impl DevicesSettings {
                 log_out_device: None,
                 log_out_confirm_dialog_visible: false,
                 uiaa_client: cx.new(|cx| UiaaClient::new(send_auth_data, |_, _, _| {}, cx)),
+                oauth_management_page_redirect_dialog: cx
+                    .new(|cx| OAuthManagementPageRedirectDialog::new(cx)),
             }
         })
     }
@@ -70,9 +75,22 @@ impl DevicesSettings {
     }
 
     pub fn log_out_device(&mut self, device: OwnedDeviceId, cx: &mut Context<Self>) {
-        self.log_out_device = Some(device);
-        self.log_out_confirm_dialog_visible = true;
-        cx.notify();
+        // Try to go through the homeserver management page first
+        if !self
+            .oauth_management_page_redirect_dialog
+            .update(cx, |dialog, cx| {
+                dialog.perform_action(
+                    AccountManagementActionFull::SessionEnd {
+                        device_id: device.clone(),
+                    },
+                    cx,
+                )
+            })
+        {
+            self.log_out_device = Some(device);
+            self.log_out_confirm_dialog_visible = true;
+            cx.notify();
+        }
     }
 
     pub fn confirm_log_out_device(&mut self, auth_data: Option<AuthData>, cx: &mut Context<Self>) {
@@ -320,6 +338,7 @@ impl Render for DevicesSettings {
                     ),
             )
             .child(self.uiaa_client.clone())
+            .child(self.oauth_management_page_redirect_dialog.clone())
     }
 }
 

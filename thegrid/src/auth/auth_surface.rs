@@ -651,26 +651,19 @@ impl AuthSurface {
         })
         .unwrap();
 
-        let (mut database_secret, session_secrets, session_dir, session_uuid, default_device_name) =
-            this.update(cx, |this, cx| {
+        let (mut database_secret, session_secrets, session_dir, session_uuid) = this
+            .update(cx, |this, cx| {
                 let session_manager = cx.global::<SessionManager>();
                 let session_secrets = session_manager
                     .session_secrets(&this.session_uuid, cx)
                     .expect("Secrets should be able to be accessed");
 
                 let session_dir = this.session_dir(cx);
-                let default_device_name = default_device_name(cx);
                 let session_uuid = this.session_uuid;
 
                 let database_secret = this.database_secret.clone();
 
-                (
-                    database_secret,
-                    session_secrets,
-                    session_dir,
-                    session_uuid,
-                    default_device_name,
-                )
+                (database_secret, session_secrets, session_dir, session_uuid)
             })
             .unwrap();
 

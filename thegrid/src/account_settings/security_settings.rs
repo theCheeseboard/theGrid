@@ -62,22 +62,14 @@ impl SecuritySettings {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        // Try to go through the homeserver management page first
-        if !self
-            .oauth_management_page_redirect_dialog
-            .update(cx, |dialog, cx| {
-                dialog.perform_action(AccountManagementActionFull::CrossSigningReset, cx)
-            })
-        {
-            (self.on_surface_change)(
-                &SurfaceChangeEvent {
-                    change: SurfaceChange::Push(MainWindowSurface::IdentityReset),
-                },
-                window,
-                cx,
-            );
-            cx.notify();
-        }
+        (self.on_surface_change)(
+            &SurfaceChangeEvent {
+                change: SurfaceChange::Push(MainWindowSurface::IdentityReset),
+            },
+            window,
+            cx,
+        );
+        cx.notify();
     }
 
     fn start_import(&mut self, cx: &mut Context<Self>) {
