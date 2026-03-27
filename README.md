@@ -10,6 +10,7 @@
 <img src="https://img.shields.io/github/license/theCheeseboard/thegrid?style=for-the-badge" />
 <a href="https://parlance.vicr123.com/projects/thegrid"><img src="https://parlance.vicr123.com/api/projects/thegrid/badge?style=for-the-badge" /></a>
 <a href="https://parlance.vicr123.com/projects/thegrid"><img src="https://parlance.vicr123.com/api/projects/thegrid/badge/languages?style=for-the-badge" /></a>
+<a href="https://matrix.to/#/#thegrid:bnbdiscord.net"><img src="https://img.shields.io/badge/Matrix-%23thegrid%3Abnbdiscord.net-blue?style=for-the-badge&logo=matrix" /></a>
 </p>
 
 A cross-platform [Matrix](matrix.org) client written in Rust, with the [GPUI](https://www.gpui.rs/) rendering library.
