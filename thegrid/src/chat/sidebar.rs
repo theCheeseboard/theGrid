@@ -28,10 +28,10 @@ use gpui::{
 };
 use gpui_tokio::Tokio;
 use matrix_sdk::encryption::recovery::RecoveryState;
+use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use matrix_sdk::ruma::room_id;
 use std::rc::Rc;
-use matrix_sdk::encryption::VerificationState;
 use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::error_handling::{ClientError, RecoverableClientError};
 use thegrid_common::session::room_cache::RoomCategory;
@@ -119,8 +119,7 @@ impl Sidebar {
 
         let account = session_manager.current_account().read(cx);
         let devices = session_manager.devices().read(cx);
-        if account.verification_state() != VerificationState::Verified
-        {
+        if account.verification_state() != VerificationState::Verified {
             return SidebarAlert::VerifySession(devices.is_last_device());
         }
 
@@ -226,17 +225,9 @@ impl Render for Sidebar {
                             .justify_center()
                             .gap(px(4.))
                             .child(account.display_name().unwrap_or_default())
-                            .child(
-                                div().text_color(theme.foreground.disabled()).child(
-                                    session
-                                        .secrets
-                                        .matrix_session()
-                                        .unwrap()
-                                        .meta
-                                        .user_id
-                                        .to_string(),
-                                ),
-                            ),
+                            .child(div().text_color(theme.foreground.disabled()).child(
+                                session.secrets.session_meta().unwrap().user_id.to_string(),
+                            )),
                     ),
             )
     }

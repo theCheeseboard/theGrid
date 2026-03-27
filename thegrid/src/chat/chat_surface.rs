@@ -1,4 +1,6 @@
-use crate::actions::{AccountSettings, AccountSwitcher, CreateRoom, CreateSpace, DirectJoinRoom, LogOut};
+use crate::actions::{
+    AccountSettings, AccountSwitcher, CreateRoom, CreateSpace, DirectJoinRoom, LogOut,
+};
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::main_chat_surface::MainChatSurface;
 use cntp_i18n::tr;
@@ -14,8 +16,8 @@ use contemporary::styling::theme::Theme;
 use contemporary::surface::surface;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, BorrowAppContext, Context, Entity, InteractiveElement, IntoElement, Menu,
-    MenuItem, ParentElement, Render, Styled, Window, div, px,
+    div, px, App, AppContext, BorrowAppContext, Context, Entity, InteractiveElement,
+    IntoElement, Menu, MenuItem, ParentElement, Render, Styled, Window,
 };
 use std::fs::remove_dir_all;
 use thegrid_common::session::error_handling::ClientError;
@@ -51,7 +53,10 @@ impl ChatSurface {
                         MenuItem::action(tr!("ROOMS_CREATE_SPACE"), CreateSpace),
                         MenuItem::action(tr!("ROOMS_DIRECT_JOIN"), DirectJoinRoom),
                         MenuItem::separator(),
-                        MenuItem::action(tr!("ACCOUNT_ACCOUNT_SETTINGS", "Account Settings"), AccountSettings),
+                        MenuItem::action(
+                            tr!("ACCOUNT_ACCOUNT_SETTINGS", "Account Settings"),
+                            AccountSettings,
+                        ),
                         MenuItem::separator(),
                         MenuItem::action(tr!("ACCOUNT_ACCOUNT_SWITCHER"), AccountSwitcher),
                         MenuItem::action(tr!("ACCOUNT_LOG_OUT"), LogOut),
@@ -98,19 +103,16 @@ impl Render for ChatSurface {
                             .justify_center()
                             .gap(px(8.))
                             .child(spinner())
-                            .child(
-                                div().text_size(theme.heading_font_size).child(tr!(
+                            .child(div().text_size(theme.heading_font_size).child(tr!(
                                     "MAIN_CHAT_WELCOME",
                                     "Welcome back, {{user}}!",
                                     user = current_session
                                         .secrets
-                                        .matrix_session()
+                                        .session_meta()
                                         .unwrap()
-                                        .meta
                                         .user_id
                                         .localpart()
-                                )),
-                            )
+                                )))
                             .into_any_element(),
                     )
                     .page(self.main_chat_surface.clone().into_any_element())

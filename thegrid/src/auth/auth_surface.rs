@@ -28,16 +28,24 @@ use gpui::{
 use gpui_tokio::Tokio;
 use keyring::default::default_credential_builder;
 use matrix_sdk::authentication::matrix::MatrixSession;
+use matrix_sdk::authentication::oauth::error::OAuthDiscoveryError;
+use matrix_sdk::authentication::oauth::registration::{
+    ApplicationType, ClientMetadata, ClientRegistrationResponse, Localized, OAuthGrantType,
+};
+use matrix_sdk::authentication::oauth::{ClientRegistrationData, OAuthError, UrlOrQuery};
 use matrix_sdk::config::SyncSettings;
 use matrix_sdk::encryption::CrossSigningStatus;
+use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::AuthorizationServerMetadata;
 use matrix_sdk::ruma::api::client::session::get_login_types::v3::{IdentityProvider, LoginType};
+use matrix_sdk::ruma::serde::Raw;
 use matrix_sdk::ruma::{user_id, DeviceId, OwnedUserId};
 use matrix_sdk::{Client, ClientBuildError};
 use smol::future::FutureExt;
+use std::iter;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
-use thegrid_common::session::database_secret::DatabaseSecret;
+use thegrid_common::session::database_secret::{DatabaseSecret, SessionType};
 use thegrid_common::session::session_manager::{SessionManager, SessionSecretPurpose};
 use thegrid_common::session::sso_login::SsoLogin;
 use thegrid_common::surfaces::{
@@ -57,6 +65,7 @@ enum AuthState {
     ConnectionError,
     AuthRequired,
     SsoTokenRequired(Option<IdentityProvider>, Entity<Option<SsoLogin>>),
+    OAuthContinueInBrowserPrompt(Url, Entity<Option<SsoLogin>>),
 }
 
 enum LoginMethod {
@@ -184,52 +193,21 @@ impl AuthSurface {
         let database_password = self.database_secret.database_password();
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
             let client = cx
-                .spawn_tokio(async move {
-                    Client::builder()
-                        .server_name(user_id.server_name())
-                        .sqlite_store(store_dir, Some(&database_password))
-                        .build()
-                        .await
+                .spawn_tokio({
+                    let user_id = user_id.clone();
+                    async move {
+                        Client::builder()
+                            .server_name(user_id.server_name())
+                            .sqlite_store(store_dir, Some(&database_password))
+                            .handle_refresh_tokens()
+                            .build()
+                            .await
+                    }
                 })
                 .await;
 
-            match client {
-                Ok(client) => {
-                    let client_clone = client.clone();
-                    let login_types = cx
-                        .spawn_tokio(
-                            async move { client_clone.matrix_auth().get_login_types().await },
-                        )
-                        .await;
-
-                    match login_types {
-                        Ok(login_types) => {
-                            this.update(cx, |this, cx| {
-                                if !matches!(this.state, AuthState::Connecting) {
-                                    return;
-                                }
-
-                                this.client = Some(client);
-                                this.login_types = login_types.flows;
-                                this.state = AuthState::AuthRequired;
-                                cx.notify();
-                            })
-                            .unwrap();
-                        }
-                        Err(e) => {
-                            this.update(cx, |this, cx| {
-                                if !matches!(this.state, AuthState::Connecting) {
-                                    return;
-                                }
-
-                                this.state = AuthState::ConnectionError;
-                                error!("Unable to create client");
-                                cx.notify();
-                            })
-                            .unwrap();
-                        }
-                    }
-                }
+            let client = match client {
+                Ok(client) => client,
                 Err(e) => {
                     this.update(cx, |this, cx| {
                         if !matches!(this.state, AuthState::Connecting) {
@@ -241,8 +219,11 @@ impl AuthSurface {
                         cx.notify();
                     })
                     .unwrap();
+                    return;
                 }
-            }
+            };
+
+            Self::proceed_with_login(client, None, this, cx).await;
         })
         .detach();
 
@@ -288,6 +269,7 @@ impl AuthSurface {
                     Client::builder()
                         .homeserver_url(&homeserver_url)
                         .sqlite_store(store_dir, Some(&database_password))
+                        .handle_refresh_tokens()
                         .build()
                         .await
                 })
@@ -295,40 +277,7 @@ impl AuthSurface {
 
             match client {
                 Ok(client) => {
-                    let client_clone = client.clone();
-                    let login_types = cx
-                        .spawn_tokio(
-                            async move { client_clone.matrix_auth().get_login_types().await },
-                        )
-                        .await;
-
-                    match login_types {
-                        Ok(login_types) => {
-                            this.update(cx, |this, cx| {
-                                if !matches!(this.state, AuthState::Connecting) {
-                                    return;
-                                }
-
-                                this.client = Some(client);
-                                this.login_types = login_types.flows;
-                                this.state = AuthState::AuthRequired;
-                                cx.notify();
-                            })
-                            .unwrap();
-                        }
-                        Err(e) => {
-                            this.update(cx, |this, cx| {
-                                if !matches!(this.state, AuthState::Connecting) {
-                                    return;
-                                }
-
-                                this.state = AuthState::ConnectionError;
-                                error!("Unable to create client");
-                                cx.notify();
-                            })
-                            .unwrap();
-                        }
-                    }
+                    Self::proceed_with_login(client, None, this, cx).await;
                 }
                 Err(e) => {
                     this.update(cx, |this, cx| {
@@ -348,6 +297,160 @@ impl AuthSurface {
 
         self.state = AuthState::Connecting;
         cx.notify();
+    }
+
+    async fn proceed_with_login(
+        client: Client,
+        user_id: Option<OwnedUserId>,
+        this: WeakEntity<Self>,
+        cx: &mut AsyncApp,
+    ) {
+        let application_name = cx
+            .read_global::<Details, _>(|details, cx| details.generatable.application_name.clone())
+            .unwrap();
+        match cx
+            .spawn_tokio({
+                let client = client.clone();
+                async move { client.oauth().server_metadata().await }
+            })
+            .await
+        {
+            Ok(_) => {
+                let redirect_uri = Url::parse("https://thegrid.vicr123.com/oauth-signin").unwrap();
+
+                // Continue with OAuth
+                let mut client_metadata = ClientMetadata::new(
+                    ApplicationType::Native,
+                    vec![OAuthGrantType::AuthorizationCode {
+                        redirect_uris: vec![redirect_uri.clone()],
+                    }],
+                    Localized::new(
+                        Url::parse("https://thegrid.vicr123.com").unwrap(),
+                        iter::empty(),
+                    ),
+                );
+
+                // TODO: Once support lands in Contemporary, read out all the localised values
+                client_metadata.client_name = Some(Localized::new(
+                    application_name.default_value(),
+                    iter::empty(),
+                ));
+
+                let login_url = match cx
+                    .spawn_tokio({
+                        let client = client.clone();
+                        async move {
+                            let mut builder = client.oauth().login(
+                                redirect_uri,
+                                None,
+                                Some(ClientRegistrationData::new(
+                                    Raw::new(&client_metadata).unwrap(),
+                                )),
+                                None,
+                            );
+                            if let Some(user_id) = user_id {
+                                builder = builder.user_id_hint(&user_id);
+                            }
+                            builder.build().await
+                        }
+                    })
+                    .await
+                {
+                    Ok(response) => response.url,
+                    Err(e) => {
+                        this.update(cx, |this, cx| {
+                            if !matches!(this.state, AuthState::Connecting) {
+                                return;
+                            }
+
+                            this.state = AuthState::ConnectionError;
+                            error!("Unable to register OAuth client: {e:?}");
+                            cx.notify();
+                        })
+                        .unwrap();
+                        return;
+                    }
+                };
+
+                this.update(cx, |this, cx| {
+                    if !matches!(this.state, AuthState::Connecting) {
+                        return;
+                    }
+
+                    let sso_login_entity = cx.new(|cx| None);
+                    let weak_sso_login_entity = sso_login_entity.downgrade();
+                    cx.update_global::<SessionManager, _>(|session_manager, cx| {
+                        session_manager.set_sso_login_entity(weak_sso_login_entity);
+                    });
+
+                    cx.observe(&sso_login_entity, |this, sso_login_entity, cx| {
+                        let Some(sso_login) = sso_login_entity
+                            .update(cx, |sso_login_entity, _| sso_login_entity.take())
+                        else {
+                            return;
+                        };
+
+                        let _ = this.trigger_oauth_state_login(sso_login.token, cx);
+                    })
+                    .detach();
+
+                    this.client = Some(client);
+                    this.state =
+                        AuthState::OAuthContinueInBrowserPrompt(login_url, sso_login_entity);
+                    cx.notify();
+                })
+                .unwrap();
+            }
+            Err(e) if e.is_not_supported() => {
+                // Continue with legacy Matrix auth
+                let login_types = cx
+                    .spawn_tokio({
+                        let client = client.clone();
+                        async move { client.matrix_auth().get_login_types().await }
+                    })
+                    .await;
+
+                match login_types {
+                    Ok(login_types) => {
+                        this.update(cx, |this, cx| {
+                            if !matches!(this.state, AuthState::Connecting) {
+                                return;
+                            }
+
+                            this.client = Some(client);
+                            this.login_types = login_types.flows;
+                            this.state = AuthState::AuthRequired;
+                            cx.notify();
+                        })
+                        .unwrap();
+                    }
+                    Err(e) => {
+                        this.update(cx, |this, cx| {
+                            if !matches!(this.state, AuthState::Connecting) {
+                                return;
+                            }
+
+                            this.state = AuthState::ConnectionError;
+                            error!("Unable to create client: {e:?}");
+                            cx.notify();
+                        })
+                        .unwrap();
+                    }
+                }
+            }
+            Err(e) => {
+                this.update(cx, |this, cx| {
+                    if !matches!(this.state, AuthState::Connecting) {
+                        return;
+                    }
+
+                    this.state = AuthState::ConnectionError;
+                    error!("OAuth discovery failed");
+                    cx.notify();
+                })
+                .unwrap();
+            }
+        }
     }
 
     fn login_password_clicked(&mut self, cx: &mut Context<Self>) {
@@ -423,6 +526,18 @@ impl AuthSurface {
         Ok(())
     }
 
+    fn trigger_oauth_state_login(
+        &mut self,
+        base64_encoded_query_string: String,
+        cx: &mut Context<Self>,
+    ) -> Result<(), anyhow::Error> {
+        let query_string = String::from_utf8(
+            BASE64_URL_SAFE_NO_PAD.decode(base64_encoded_query_string.as_bytes())?,
+        )?;
+        self.perform_oauth_login(query_string, cx);
+        Ok(())
+    }
+
     fn perform_login(&mut self, login_method: LoginMethod, cx: &mut Context<Self>) {
         let session_manager = cx.global::<SessionManager>();
         let session_secrets = session_manager
@@ -460,49 +575,13 @@ impl AuthSurface {
 
             match login_response {
                 Ok(login_response) => {
-                    // Start sync to ensure we have the latest state
-                    this.update(cx, |this, cx| {
-                        if !matches!(this.state, AuthState::Connecting) {
-                            return;
-                        }
-
-                        this.state = AuthState::InitialSync;
-                        cx.notify();
-                    })
-                    .unwrap();
-
-                    let client_clone = client.clone();
-                    let _ = cx
-                        .spawn_tokio(async move {
-                            client_clone.sync_once(SyncSettings::default()).await
-                        })
-                        .await;
-
-                    let matrix_session: MatrixSession = (&login_response.clone()).into();
-
-                    database_secret.set_matrix_session(matrix_session);
-                    session_secrets
-                        .set_secret(&serde_json::to_vec(&database_secret).unwrap())
-                        .expect("Unable to save Matrix secret in secret store");
-
-                    let homeserver_file = session_dir.join("homeserver");
-                    std::fs::write(homeserver_file, client.homeserver().to_string()).unwrap();
-
-                    cx.update_global::<SessionManager, ()>(|session_manager, cx| {
-                        session_manager.set_session(session_uuid, cx);
-                    })
-                    .unwrap();
-
-                    this.update(cx, |this, cx| {
-                        if !matches!(this.state, AuthState::InitialSync) {
-                            return;
-                        }
-
-                        this.state = AuthState::Idle;
-                        info!("Logged in");
-                        cx.notify();
-                    })
-                    .unwrap();
+                    Self::complete_successful_login(
+                        client,
+                        SessionType::LegacyMatrix((&login_response.clone()).into()),
+                        this,
+                        cx,
+                    )
+                    .await
                 }
                 Err(e) => {
                     this.update(cx, |this, cx| {
@@ -524,6 +603,115 @@ impl AuthSurface {
         cx.notify();
     }
 
+    fn perform_oauth_login(&mut self, query_string: String, cx: &mut Context<Self>) {
+        let session_manager = cx.global::<SessionManager>();
+        let client = self.client.clone().unwrap();
+
+        cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
+            if let Err(e) = cx
+                .spawn_tokio({
+                    let client = client.clone();
+                    async move {
+                        client
+                            .oauth()
+                            .finish_login(UrlOrQuery::Query(query_string))
+                            .await
+                    }
+                })
+                .await
+            {
+                this.update(cx, |this, cx| {
+                    if !matches!(this.state, AuthState::Connecting) {
+                        return;
+                    }
+
+                    this.state = AuthState::ConnectionError;
+                    error!("Unable to finish login: {e:?}");
+                    cx.notify();
+                })
+                .unwrap();
+                return;
+            }
+
+            let session = client.oauth().full_session().unwrap().into();
+            Self::complete_successful_login(client, SessionType::OAuth(session), this, cx).await;
+        })
+        .detach();
+
+        self.state = AuthState::Connecting;
+        cx.notify();
+    }
+
+    async fn complete_successful_login(
+        client: Client,
+        session: SessionType,
+        this: WeakEntity<Self>,
+        cx: &mut AsyncApp,
+    ) {
+        // Start sync to ensure we have the latest state
+        this.update(cx, |this, cx| {
+            if !matches!(this.state, AuthState::Connecting) {
+                return;
+            }
+
+            this.state = AuthState::InitialSync;
+            cx.notify();
+        })
+        .unwrap();
+
+        let (mut database_secret, session_secrets, session_dir, session_uuid, default_device_name) =
+            this.update(cx, |this, cx| {
+                let session_manager = cx.global::<SessionManager>();
+                let session_secrets = session_manager
+                    .session_secrets(&this.session_uuid, cx)
+                    .expect("Secrets should be able to be accessed");
+
+                let session_dir = this.session_dir(cx);
+                let default_device_name = default_device_name(cx);
+                let session_uuid = this.session_uuid;
+
+                let database_secret = this.database_secret.clone();
+
+                (
+                    database_secret,
+                    session_secrets,
+                    session_dir,
+                    session_uuid,
+                    default_device_name,
+                )
+            })
+            .unwrap();
+
+        let client_clone = client.clone();
+        let _ = cx
+            .spawn_tokio(async move { client_clone.sync_once(SyncSettings::default()).await })
+            .await;
+
+        database_secret.set_session(session);
+        session_secrets
+            .set_secret(&serde_json::to_vec(&database_secret).unwrap())
+            .expect("Unable to save Matrix secret in secret store");
+
+        let homeserver_file = session_dir.join("homeserver");
+        std::fs::write(homeserver_file, client.homeserver().to_string()).unwrap();
+
+        cx.update_global::<SessionManager, ()>(|session_manager, cx| {
+            session_manager.set_session(session_uuid, cx);
+        })
+        .unwrap();
+
+        this.update(cx, |this, cx| {
+            if !matches!(this.state, AuthState::InitialSync) {
+                return;
+            }
+
+            this.state = AuthState::Idle;
+            info!("Logged in");
+            cx.notify();
+        })
+        .unwrap();
+    }
+
     fn render_popover_child(
         &mut self,
         window: &mut Window,
@@ -539,6 +727,7 @@ impl AuthSurface {
                 AuthState::ConnectionError => 4,
                 AuthState::AuthRequired => 5,
                 AuthState::SsoTokenRequired(_, _) => 6,
+                AuthState::OAuthContinueInBrowserPrompt(_, _) => 7,
             },
         )
         .animation(FadeAnimation::new())
@@ -856,6 +1045,83 @@ impl AuthSurface {
                 ))
                 .into_any_element(),
         )
+        .page(
+            constrainer("oauth-continue-in-browser-constrainer")
+                .child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap(px(8.))
+                        .child(
+                            layer()
+                                .flex()
+                                .flex_col()
+                                .p(px(8.))
+                                .w_full()
+                                .child(subtitle(tr!("AUTH_OAUTH", "Proceed with login")))
+                                .child(tr!(
+                                    "AUTH_OAUTH_DESCRIPTION",
+                                    "Complete login in your browser, and then come back here once \
+                                    you're done."
+                                ))
+                                .child(
+                                    button("continue-oauth-button")
+                                        .child(icon_text(
+                                            "arrow-right".into(),
+                                            tr!("AUTH_OAUTH_BUTTON", "Continue in Browser").into(),
+                                        ))
+                                        .on_click(cx.listener(move |this, _, _, cx| {
+                                            let AuthState::OAuthContinueInBrowserPrompt(url, _) =
+                                                &this.state
+                                            else {
+                                                return;
+                                            };
+
+                                            cx.open_url(url.as_str())
+                                        })),
+                                ),
+                        )
+                        .child(
+                            layer()
+                                .flex()
+                                .flex_col()
+                                .p(px(8.))
+                                .w_full()
+                                .gap(px(6.))
+                                .child(subtitle(tr!("AUTH_MANUAL_LOGIN")))
+                                .child(tr!("AUTH_MANUAL_LOGIN_MESSAGE",))
+                                .child(self.token_field.clone().into_any_element())
+                                .child(
+                                    div().flex().child(div().flex_grow()).child(
+                                        button("oauth_log_in_button")
+                                            .child(icon_text(
+                                                "arrow-right".into(),
+                                                tr!("AUTH_LOG_IN").into(),
+                                            ))
+                                            .on_click(cx.listener(|this, _, window, cx| {
+                                                let base64_encoded_state =
+                                                    this.token_field.read(cx).text().to_string();
+                                                if this
+                                                    .trigger_oauth_state_login(
+                                                        base64_encoded_state,
+                                                        cx,
+                                                    )
+                                                    .is_err()
+                                                {
+                                                    this.token_field.update(
+                                                        cx,
+                                                        |token_field, cx| {
+                                                            token_field.flash_error(window, cx);
+                                                        },
+                                                    );
+                                                };
+                                            })),
+                                    ),
+                                ),
+                        ),
+                )
+                .into_any_element(),
+        )
     }
 }
 
@@ -913,9 +1179,8 @@ impl Render for AuthSurface {
                                         .child(
                                             session
                                                 .secrets
-                                                .matrix_session()
+                                                .session_meta()
                                                 .unwrap()
-                                                .meta
                                                 .user_id
                                                 .to_string(),
                                         )

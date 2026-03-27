@@ -125,8 +125,7 @@ impl SessionManager {
         if let Some(session) = session {
             self.current_session = Some(session.clone());
 
-            let matrix_session = session.secrets.matrix_session().unwrap();
-            let user_id = matrix_session.meta.user_id.clone();
+            let user_id = session.secrets.session_meta().unwrap().user_id.clone();
             let store_dir = session.session_dir.join("store");
 
             let homeserver_file = session.session_dir.join("homeserver");
@@ -156,7 +155,6 @@ impl SessionManager {
         cx: &mut AsyncApp,
     ) -> anyhow::Result<()> {
         let database_password = secrets.database_password();
-        let matrix_session = secrets.matrix_session().unwrap().clone();
         let client = cx
             .spawn_tokio(async move {
                 {
@@ -167,19 +165,36 @@ impl SessionManager {
                     }
                 }
                 .sqlite_store(store_dir, Some(&database_password))
+                .handle_refresh_tokens()
                 .build()
                 .await
             })
             .await?;
 
-        let client_clone = client.clone();
-        cx.spawn_tokio(async move {
-            client_clone
-                .matrix_auth()
-                .restore_session(matrix_session, RoomLoadSettings::All)
-                .await
-        })
-        .await?;
+        if let Some(oauth_session) = secrets.oauth_session() {
+            cx.spawn_tokio({
+                let client = client.clone();
+                async move {
+                    client
+                        .oauth()
+                        .restore_session(oauth_session, RoomLoadSettings::All)
+                        .await
+                }
+            })
+            .await?;
+        } else {
+            let matrix_session = secrets.matrix_session().unwrap().clone();
+            cx.spawn_tokio({
+                let client = client.clone();
+                async move {
+                    client
+                        .matrix_auth()
+                        .restore_session(matrix_session, RoomLoadSettings::All)
+                        .await
+                }
+            })
+            .await?;
+        }
 
         client.event_cache().subscribe()?;
 
