@@ -15,6 +15,8 @@ use gpui::{
     Entity, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
 };
 use matrix_sdk::authentication::oauth::AccountManagementActionFull;
+use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::AccountManagementAction;
+use matrix_sdk::{AuthApi, OwnedServerName};
 use std::rc::Rc;
 use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
@@ -23,6 +25,7 @@ use thegrid_common::surfaces::{
 };
 use thegrid_common::tokio_helper::TokioHelper;
 use thegrid_rtc_livekit::call_disconnect_confirmation_dialog::CallDisconnectConfirmationDialog;
+use url::Url;
 
 pub struct ProfileSettings {
     edit_display_name_open: bool,
@@ -31,19 +34,65 @@ pub struct ProfileSettings {
     on_surface_change: Rc<Box<SurfaceChangeHandler>>,
     call_disconnect_confirmation_dialog: Entity<CallDisconnectConfirmationDialog>,
     oauth_management_page_redirect_dialog: Entity<OAuthManagementPageRedirectDialog>,
+
+    current_client_settings: Option<Url>,
+    account_management_url: Option<Url>,
 }
 
 impl ProfileSettings {
     pub fn new(
-        cx: &mut App,
+        cx: &mut Context<Self>,
         on_surface_change: impl Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static,
-    ) -> Entity<Self> {
+    ) -> Self {
         let call_disconnect_confirmation_dialog =
             cx.new(|cx| CallDisconnectConfirmationDialog::new(cx));
         let oauth_management_page_redirect_dialog =
             cx.new(|cx| OAuthManagementPageRedirectDialog::new(cx));
 
-        cx.new(|cx| Self {
+        cx.observe_global::<SessionManager>(|this, cx| {
+            let session_manager = cx.global::<SessionManager>();
+            let Some(client) = session_manager.client() else {
+                this.current_client_settings = None;
+                this.account_management_url = None;
+                cx.notify();
+                return;
+            };
+
+            let client = client.read(cx).clone();
+            if this
+                .current_client_settings
+                .as_ref()
+                .is_none_or(|url| url != &client.homeserver())
+            {
+                // Update the current information for the homeserver
+                this.current_client_settings = Some(client.homeserver());
+
+                if let Some(AuthApi::OAuth(oauth)) = client.auth_api() {
+                    cx.spawn(
+                        async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                            let Ok(Some(account_management_url)) = cx
+                                .spawn_tokio(async move { oauth.account_management_url().await })
+                                .await
+                            else {
+                                return;
+                            };
+
+                            let profile_management_url = account_management_url
+                                .action(AccountManagementActionFull::Profile)
+                                .build();
+                            let _ = weak_this.update(cx, |this, cx| {
+                                this.account_management_url = Some(profile_management_url);
+                                cx.notify();
+                            });
+                        },
+                    )
+                    .detach();
+                }
+            }
+        })
+        .detach();
+
+        Self {
             edit_display_name_open: false,
             edit_profile_picture_open: false,
 
@@ -59,7 +108,10 @@ impl ProfileSettings {
             on_surface_change: Rc::new(Box::new(on_surface_change)),
             call_disconnect_confirmation_dialog,
             oauth_management_page_redirect_dialog,
-        })
+
+            current_client_settings: None,
+            account_management_url: None,
+        }
     }
 
     fn open_deactivate_account_page(&mut self, window: &mut Window, cx: &mut Context<Self>) {
@@ -147,6 +199,40 @@ impl Render for ProfileSettings {
                                     )),
                             ),
                     )
+                    .when_some(self.account_management_url.clone(), |david, url| {
+                        david.child(
+                            layer()
+                                .flex()
+                                .flex_col()
+                                .p(px(8.))
+                                .w_full()
+                                .child(subtitle(tr!("PROFILE_MANAGE_ACCOUNT", "Manage Account")))
+                                .child(tr!(
+                                    "PROFILE_MANAGE_ACCOUNT_DESCRIPTION",
+                                    "Proceed to your homeserver to see and configure \
+                                    additional settings."
+                                ))
+                                .child(
+                                    div()
+                                        .flex()
+                                        .flex_col()
+                                        .bg(theme.button_background)
+                                        .rounded(theme.border_radius)
+                                        .child(
+                                            button("account-manage")
+                                                .child(icon_text(
+                                                    "configure".into(),
+                                                    tr!("PROFILE_MANAGE_ACCOUNT").into(),
+                                                ))
+                                                .on_click(cx.listener(
+                                                    move |this, _, window, cx| {
+                                                        cx.open_url(url.as_str())
+                                                    },
+                                                )),
+                                        ),
+                                ),
+                        )
+                    })
                     .child(
                         layer()
                             .flex()
@@ -193,32 +279,56 @@ impl Render for ProfileSettings {
                                     ),
                             ),
                     )
-                    .child(
-                        layer()
-                            .flex()
-                            .flex_col()
-                            .p(px(8.))
-                            .w_full()
-                            .child(subtitle(tr!("PROFILE_ACCOUNT", "Account")))
-                            .child(
-                                div()
+                    .when(
+                        match client.auth_api() {
+                            Some(AuthApi::OAuth(_)) => {
+                                let session_manager = cx.global::<SessionManager>();
+                                session_manager
+                                    .current_account()
+                                    .read(cx)
+                                    .supports_account_management_action(
+                                        AccountManagementAction::AccountDeactivate,
+                                    )
+                            }
+                            Some(AuthApi::Matrix(_)) => true,
+                            _ => false,
+                        },
+                        |david| {
+                            david.child(
+                                layer()
                                     .flex()
                                     .flex_col()
-                                    .bg(theme.button_background)
-                                    .rounded(theme.border_radius)
+                                    .p(px(8.))
+                                    .w_full()
+                                    .child(subtitle(tr!("PROFILE_ACCOUNT", "Account")))
                                     .child(
-                                        button("profile-deactivate")
-                                            .child(icon_text(
-                                                "list-remove".into(),
-                                                tr!("PROFILE_DEACTIVATE", "Deactivate Account")
-                                                    .into(),
-                                            ))
-                                            .destructive()
-                                            .on_click(cx.listener(move |this, _, window, cx| {
-                                                this.open_deactivate_account_page(window, cx)
-                                            })),
+                                        div()
+                                            .flex()
+                                            .flex_col()
+                                            .bg(theme.button_background)
+                                            .rounded(theme.border_radius)
+                                            .child(
+                                                button("profile-deactivate")
+                                                    .child(icon_text(
+                                                        "list-remove".into(),
+                                                        tr!(
+                                                            "PROFILE_DEACTIVATE",
+                                                            "Deactivate Account"
+                                                        )
+                                                        .into(),
+                                                    ))
+                                                    .destructive()
+                                                    .on_click(cx.listener(
+                                                        move |this, _, window, cx| {
+                                                            this.open_deactivate_account_page(
+                                                                window, cx,
+                                                            )
+                                                        },
+                                                    )),
+                                            ),
                                     ),
-                            ),
+                            )
+                        },
                     ),
             )
             .child(

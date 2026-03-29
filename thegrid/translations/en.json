@@ -272,6 +272,8 @@
   "PROFILE_CHANGE_DISPLAY_NAME_DESCRIPTION": "Your Display Name is shown to other users to identify you",
   "PROFILE_CHANGE_PROFILE_PICTURE": "Change Profile Picture",
   "PROFILE_DEACTIVATE": "Deactivate Account",
+  "PROFILE_MANAGE_ACCOUNT": "Manage Account",
+  "PROFILE_MANAGE_ACCOUNT_DESCRIPTION": "Proceed to your homeserver to see and configure additional settings.",
   "PROFILE_PROFILE": "Profile",
   "PROFILE_UPDATE_AVATAR": "{{user}} updated their profile picture",
   "PROFILE_UPDATE_DISPLAY_NAME": "{{user}} updated their display name from {{old_name}} to {{new_name}}",

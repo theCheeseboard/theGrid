@@ -55,8 +55,10 @@ impl AccountSettingsSurface {
                 on_surface_change(event, window, cx)
             })),
 
-            profile_settings: ProfileSettings::new(cx, move |event, window, cx| {
-                on_surface_change_2(event, window, cx)
+            profile_settings: cx.new(|cx| {
+                ProfileSettings::new(cx, move |event, window, cx| {
+                    on_surface_change_2(event, window, cx)
+                })
             }),
             security_settings: cx.new(|cx| {
                 SecuritySettings::new(cx, move |event, window, cx| {

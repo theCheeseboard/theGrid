@@ -335,6 +335,10 @@ impl AuthSurface {
                     application_name.default_value(),
                     iter::empty(),
                 ));
+                client_metadata.logo_uri = Some(Localized::new(
+                    Url::parse("https://thegrid.vicr123.com/thegrid.png").unwrap(),
+                    iter::empty(),
+                ));
 
                 let login_url = match cx
                     .spawn_tokio({
