@@ -104,6 +104,9 @@ impl RecoveryKeyResetPopover {
                             | RecoveryState::Disabled
                             | RecoveryState::Incomplete => {
                                 // Create a new backup and enable recovery
+                                if backups.exists_on_server().await? {
+                                    backups.disable_and_delete().await?;
+                                }
                                 if passphrase.is_empty() {
                                     recovery.enable().await
                                 } else {

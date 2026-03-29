@@ -146,7 +146,7 @@
   "IGNORED_USERS_NO_USERS": "No users have been added to your ignore list.",
   "IGNORE_ERROR_TEXT": "Unable to add {{user}} to the ignore list",
   "IGNORE_ERROR_TITLE": "Unable to add to ignore list",
-  "INCOMING_SELF_VERIFICATION_DESCRIPTION": "Verify your other device ({{device_id}}) to share encryption keys. The other device will be able to decrypt your messages.",
+  "INCOMING_SELF_VERIFICATION_DESCRIPTION": "Verify {{device_name}} to trust it and share encryption keys. The other device will be able to decrypt your messages.",
   "INCOMING_VERIFICATION": "Incoming Verification Request",
   "INCOMING_VERIFICATION_ACCEPT": "Verify Now",
   "INCOMING_VERIFICATION_DECLINE": "Don't Verify",
@@ -491,6 +491,9 @@
   "VERIFY_SESSION_DESCRIPTION_ADDITIONAL": "Until you verify this device, you can't verify any other devices. If you don't have another device to verify with, head to the Security settings for other options.",
   "VERIFY_SESSION_OTHER_DEVICE": "Verify with another verified device",
   "VERIFY_SESSION_RECOVERY_KEY": "Enter Recovery Key",
+  "VERIFY_SESSION_RESET_CRYPTO": "I lost my verification methods",
+  "VERIFY_SESSION_RESET_CRYPTO_DIALOG_MESSAGE": "If you can't verify this session because you've lost access to all your other verification methods, you can reset your cryptographic identity to start over. You will lose access to your existing encrypted messages, and all of your devices will become unverified.",
+  "VERIFY_SESSION_RESET_CRYPTO_DIALOG_TITLE": "Encryption Setup Recovery",
   "VIEW_ROOM": "View Room",
   "WARNING": "Warning"
 }

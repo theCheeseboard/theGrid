@@ -14,6 +14,7 @@ use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
 use cntp_i18n::{tr, trn};
 use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::pager::pager;
@@ -62,7 +63,7 @@ pub enum SidebarPage {
 enum SidebarAlert {
     None,
     IncomingVerificationRequest(Entity<VerificationRequestDetails>),
-    VerifySession(bool),
+    VerifySession(bool, Option<Rc<Box<SurfaceChangeHandler>>>),
     SetupRecovery,
     RecoverRecovery,
     UnverifiedDevices(usize, Option<Rc<Box<SurfaceChangeHandler>>>),
@@ -120,7 +121,10 @@ impl Sidebar {
         let account = session_manager.current_account().read(cx);
         let devices = session_manager.devices().read(cx);
         if account.verification_state() != VerificationState::Verified {
-            return SidebarAlert::VerifySession(devices.is_last_device());
+            return SidebarAlert::VerifySession(
+                devices.is_last_device(),
+                self.on_surface_change.clone(),
+            );
         }
 
         let client = session_manager.client().unwrap().read(cx);
@@ -254,6 +258,30 @@ impl RenderOnce for SidebarAlert {
                 SidebarAlert::IncomingVerificationRequest(verification_request_entity) => {
                     let verification_request = verification_request_entity.read(cx);
 
+                    let session_manager = cx.global::<SessionManager>();
+                    let devices = session_manager.devices().read(cx);
+                    let device_list = devices.devices();
+
+                    let device = verification_request.device_id.as_ref().and_then(|device_id| {
+                        device_list.iter().find(|device| &device.inner.device_id == device_id)
+                    });
+
+                    let device_name =
+                        device.map(
+                            |device|
+                                device
+                                    .inner
+                                    .display_name
+                                    .clone()
+                                    .map(|display_name| format!("{display_name} ({})", device.inner.device_id))
+                                    .unwrap_or_else(
+                                        || device.inner.device_id.to_string()
+                                    )
+                        ).unwrap_or_else(|| tr!(
+                            "UNKNOWN_DEVICE",
+                            "Unknown Device"
+                        ).into());
+
                     div().p(px(4.)).child(
                         admonition()
                             .title(tr!(
@@ -268,18 +296,10 @@ impl RenderOnce for SidebarAlert {
                                     .child(if verification_request.inner.is_self_verification() {
                                         tr!(
                                             "INCOMING_SELF_VERIFICATION_DESCRIPTION",
-                                            "Verify your other device ({{device_id}}) to share \
-                                             encryption keys. The other device will be able to \
-                                             decrypt your messages.",
-                                            device_id = verification_request
-                                                .device_id
-                                                .clone()
-                                                .map(|id| id.to_string())
-                                                .unwrap_or_else(|| tr!(
-                                                    "UNKNOWN_DEVICE",
-                                                    "Unknown Device"
-                                                )
-                                                .to_string())
+                                            "Verify {{device_name}} to trust \
+                                            it and share encryption keys. The other device will \
+                                            be able to decrypt your messages.",
+                                            device_name:quote = device_name
                                         )
                                     } else {
                                         tr!(
@@ -301,7 +321,7 @@ impl RenderOnce for SidebarAlert {
                                                             "INCOMING_VERIFICATION_ACCEPT",
                                                             "Verify Now"
                                                         )
-                                                        .into(),
+                                                            .into(),
                                                     ))
                                                     .on_click({
                                                         let verification_request_entity = verification_request_entity.clone();
@@ -332,7 +352,7 @@ impl RenderOnce for SidebarAlert {
                                                             "INCOMING_VERIFICATION_DECLINE",
                                                             "Don't Verify"
                                                         )
-                                                        .into(),
+                                                            .into(),
                                                     ))
                                                     .on_click({
                                                         let verification_request_entity = verification_request_entity.clone();
@@ -429,86 +449,140 @@ impl RenderOnce for SidebarAlert {
                                 ),
                         ),
                 ),
-                SidebarAlert::VerifySession(is_last_device) => div().p(px(4.)).child(
-                    admonition()
-                        .severity(AdmonitionSeverity::Warning)
-                        .title(tr!("VERIFY_SESSION", "Verify Session"))
-                        .child(
-                            div()
-                                .flex()
-                                .flex_col()
-                                .gap(px(4.))
-                                .child(tr!(
+                SidebarAlert::VerifySession(is_last_device, handler) => {
+                    let theme = theme.clone();
+                    let reset_dialog_open = window.use_state(cx, |_, _| false);
+
+                    div().p(px(4.)).child(
+                        admonition()
+                            .severity(AdmonitionSeverity::Warning)
+                            .title(tr!("VERIFY_SESSION", "Verify Session"))
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap(px(4.))
+                                    .child(tr!(
                                     "VERIFY_SESSION_DESCRIPTION",
                                     "Verify this session to access encrypted messages sent from \
                                     other devices.",
                                 ))
-                                .child(
-                                    div()
-                                        .flex()
-                                        .flex_col()
-                                        .rounded(theme.border_radius)
-                                        .bg(theme.button_background)
-                                        .when(!is_last_device, |david| {
-                                            david.child(
-                                                button("verify-now")
-                                                    .child(icon_text(
-                                                        "edit-copy".into(),
-                                                        tr!(
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .flex_col()
+                                            .rounded(theme.border_radius)
+                                            .bg(theme.button_background)
+                                            .when(!is_last_device, |david| {
+                                                david.child(
+                                                    button("verify-now")
+                                                        .child(icon_text(
+                                                            "edit-copy".into(),
+                                                            tr!(
                                                             "VERIFY_SESSION_OTHER_DEVICE",
                                                             "Verify with another verified device"
                                                         )
-                                                        .into(),
-                                                    ))
-                                                    .on_click(move |_, _, cx| {
-                                                        verification_popover.update(
-                                                            cx,
-                                                            |verification_popover, cx| {
-                                                                verification_popover
-                                                                    .trigger_outgoing_verification(
-                                                                        cx,
-                                                                    )
-                                                            },
-                                                        );
-                                                    }),
-                                            )
-                                        })
-                                        .child(
-                                            button("verify-recovery")
-                                                .child(icon_text(
-                                                    "visibility".into(),
-                                                    tr!(
+                                                                .into(),
+                                                        ))
+                                                        .on_click(move |_, _, cx| {
+                                                            verification_popover.update(
+                                                                cx,
+                                                                |verification_popover, cx| {
+                                                                    verification_popover
+                                                                        .trigger_outgoing_verification(
+                                                                            cx,
+                                                                        )
+                                                                },
+                                                            );
+                                                        }),
+                                                )
+                                            })
+                                            .child(
+                                                button("verify-recovery")
+                                                    .child(icon_text(
+                                                        "visibility".into(),
+                                                        tr!(
                                                         "VERIFY_SESSION_RECOVERY_KEY",
                                                         "Enter Recovery Key"
                                                     )
-                                                    .into(),
-                                                ))
-                                                .on_click(move |_, _, cx| {
-                                                    recovery_passphrase_popover.update(
-                                                        cx,
-                                                        |recovery_passphrase_popover, cx| {
-                                                            recovery_passphrase_popover
-                                                                .set_visible(true);
-                                                            cx.notify()
-                                                        },
-                                                    )
-                                                }),
-                                        )
-                                        .child(
-                                            button("reset-crypto")
-                                                .destructive()
-                                                .child(icon_text(
-                                                    "view-refresh".into(),
-                                                    tr!(
-                                                        "SECURITY_IDENTITY_RESET",
-                                                    )
-                                                    .into(),
-                                                ))
-                                                .on_click(move |_, _, cx| {}),
-                                        ),
-                                ),
-                        ),
-                ),
+                                                            .into(),
+                                                    ))
+                                                    .on_click(move |_, _, cx| {
+                                                        recovery_passphrase_popover.update(
+                                                            cx,
+                                                            |recovery_passphrase_popover, cx| {
+                                                                recovery_passphrase_popover
+                                                                    .set_visible(true);
+                                                                cx.notify()
+                                                            },
+                                                        )
+                                                    }),
+                                            )
+                                            .child(
+                                                button("reset-crypto")
+                                                    .destructive()
+                                                    .child(icon_text(
+                                                        "help-contents".into(),
+                                                        tr!(
+                                                            "VERIFY_SESSION_RESET_CRYPTO",
+                                                            "I lost my verification methods"
+                                                        ).into(),
+                                                    ))
+                                                    .on_click({
+                                                        let reset_dialog_open = reset_dialog_open.clone();
+                                                        move |_, window, cx| {
+                                                            reset_dialog_open.write(cx, true);
+                                                        }
+                                                    }),
+                                            ),
+                                    ),
+                            ),
+                    ).child(
+                        dialog_box("crypto-reset-dialog")
+                            .visible(*reset_dialog_open.read(cx))
+                            .title(
+                                tr!(
+                                    "VERIFY_SESSION_RESET_CRYPTO_DIALOG_TITLE",
+                                    "Encryption Setup Recovery"
+                                ).into()
+                            )
+                            .content(
+                                tr!(
+                                    "VERIFY_SESSION_RESET_CRYPTO_DIALOG_MESSAGE",
+                                    "If you can't verify this session because you've lost access \
+                                    to all your other verification methods, you can reset your \
+                                    cryptographic identity to start over. You will lose access to \
+                                    your existing encrypted messages, and all of your devices \
+                                    will become unverified."
+                                )
+                            )
+                            .standard_button(StandardButton::Cancel, {
+                                let reset_dialog_open = reset_dialog_open.clone();
+                                move |_, _, cx| {
+                                    reset_dialog_open.write(cx, false);
+                                }
+                            }).button(
+                            button("do-reset-crypto")
+                                .destructive()
+                                .child(icon_text(
+                                    "view-refresh".into(),
+                                    tr!("SECURITY_IDENTITY_RESET").into(),
+                                ))
+                                .on_click(move |_, window, cx| {
+                                    reset_dialog_open.write(cx, false);
+                                    if let Some(handler) = handler.clone() {
+                                        handler(
+                                            &SurfaceChangeEvent {
+                                                change: MainWindowSurface::IdentityReset.into(),
+                                            },
+                                            window,
+                                            cx,
+                                        );
+                                    }
+                                }),
+                        )
+                    )
+                }
                 SidebarAlert::UnverifiedDevices(count, handler) => div().p(px(4.)).child(
                     admonition()
                         .severity(AdmonitionSeverity::Warning)
@@ -542,7 +616,7 @@ impl RenderOnce for SidebarAlert {
                                                         "UNVERIFIED_DEVICES_VIEW_DEVICES",
                                                         "View Devices"
                                                     )
-                                                    .into(),
+                                                        .into(),
                                                 ))
                                                 .on_click(move |_, window, cx| {
                                                     if let Some(handler) = handler.clone() {
