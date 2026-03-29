@@ -31,10 +31,10 @@ cargo build
 
 theGrid currently supports the following features:
 
-- [ ] Login
+- [X] Login
     - [X] Username and Password
     - [X] SSO
-    - [ ] Native MAS
+    - [X] Native MAS
 - [X] Multi-account
 - [X] E2EE
     - [X] Cross-Signing
@@ -42,7 +42,7 @@ theGrid currently supports the following features:
 - [ ] Chat Features
     - [X] Text Messages
     - [X] Attachments
-    - [ ] Replies
+    - [X] Replies
     - [ ] Edits
     - [ ] Redactions
     - [ ] Reactions
@@ -61,19 +61,22 @@ theGrid currently supports the following features:
 - [X] Spaces
     - [X] Room Categorisation
     - [X] Join Space Rooms
-    - [ ] Space Management
+    - [X] Space Management
 - [ ] Threads
     - [ ] Create Thread
     - [ ] Focus Thread
 - [ ] Message Search
 - [ ] Account Settings
     - [X] Update User Profile
+    - [ ] Change Password
+    - [ ] 3PID Management
     - [X] Session Management
         - [X] Emoji Verification
         - [X] Recovery Key Verification
         - [X] Recovery Key Management
         - [X] Forced Log Out
     - [X] Ignored Users
+    - [X] Account Deactivation
 - [ ] Notifications
 - [X] Element Call
     - [X] Voice Chats
