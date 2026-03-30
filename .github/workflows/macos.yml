@@ -74,7 +74,7 @@ jobs:
           # notarization service
 
           echo "Creating temp notarization archive"
-          ditto -c -k --keepParent "target/bundle/*/release/*.app" "notarization.zip"
+          ditto -c -k --keepParent target/bundle/*/release/*.app "notarization.zip"
 
           # Here we send the notarization request to the Apple's Notarization service, waiting for the result.
           # This typically takes a few seconds inside a CI environment, but it might take more depending on the App
@@ -87,7 +87,7 @@ jobs:
           # Finally, we need to "attach the staple" to our executable, which will allow our app to be
           # validated by macOS even when an internet connection is not available.
           echo "Attach staple"
-          xcrun stapler staple "target/bundle/*/release/*.app"
+          xcrun stapler staple target/bundle/*/release/*.app
       - name: Deploy
         run: cargo cntp-deploy --target x86_64-apple-darwin --target aarch64-apple-darwin --output-file "$HOME/theGrid-macOS.dmg"
         working-directory: thegrid
