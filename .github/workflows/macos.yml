@@ -102,11 +102,13 @@ jobs:
           name: theGrid-macOS
           path: "~/theGrid-macOS.dmg"
       - name: Print build UUID
-        run: echo "$BUILD_UUID" > "~/build_uuid.txt"
+        env:
+          BUILD_UUID: ${{ steps.build_uuid.outputs.BUILD_UUID }}
+        run: echo "$BUILD_UUID" > build_uuid.txt
       - uses: actions/upload-artifact@v4
         with:
           name: build_uuid
-          path: "~/build_uuid.txt"
+          path: build_uuid.txt
   bin-chicken:
     needs: build
     runs-on: ubuntu-latest
