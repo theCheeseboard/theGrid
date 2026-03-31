@@ -121,12 +121,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: theGrid-macOS
-          path: "~/theGrid-macOS.dmg"
       - name: Download build UUID
         uses: actions/download-artifact@v4
         with:
           name: build_uuid
-          path: "~/build_uuid.txt"
       - name: Sign artifact
         env:
           MINISIGN_PRIV_KEY: ${{ secrets.MINISIGN_KEY }}
