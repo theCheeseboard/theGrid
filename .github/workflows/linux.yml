@@ -81,6 +81,8 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-24.04, ubuntu-24.04-arm ]
+    env:
+      ARCH: "${{ endsWith(matrix.os, 'arm') && 'aarch64' || 'x86_64' }}"
     steps:
       - name: Install minisign
         run: |
@@ -108,7 +110,7 @@ jobs:
           BIN_CHICKEN_REPOSITORY: test_repository
           UPLOAD_FILE: theGrid-${{ env.ARCH }}.AppImage
         run: |
-          curl -v -T $UPLOAD_FILE \
+          curl -v -T --fail-with-body $UPLOAD_FILE \
             -H "Authorization: Bearer $BIN_CHICKEN_TOKEN" \
             -H "Content-Type: application/octet-stream" \
             -H "X-Bin-Chicken-Channel: $BIN_CHICKEN_CHANNEL" \

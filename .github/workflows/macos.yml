@@ -139,7 +139,7 @@ jobs:
           BIN_CHICKEN_REPOSITORY: test_repository
           UPLOAD_FILE: "theGrid-macOS.dmg"
         run: |
-          curl -v -T $UPLOAD_FILE \
+          curl -v -T --fail-with-body $UPLOAD_FILE \
             -H "Authorization: Bearer $BIN_CHICKEN_TOKEN" \
             -H "Content-Type: application/octet-stream" \
             -H "X-Bin-Chicken-Channel: $BIN_CHICKEN_CHANNEL" \
