@@ -24,6 +24,7 @@ use matrix_sdk::ruma::{MatrixToUri, OwnedRoomOrAliasId};
 use matrix_sdk::{Error, Room};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
+use tracing::error;
 
 pub struct DirectJoinRoomPopover {
     visible: bool,
@@ -115,6 +116,7 @@ impl DirectJoinRoomPopover {
                             .unwrap();
                     }
                     Err(e) => {
+                        error!("Failed to join room: {:?}", e);
                         weak_this
                             .update(cx, |this, cx| {
                                 // TODO: Show error message

@@ -667,7 +667,7 @@
   },
   "DIRECT_JOIN_ROOM_DESCRIPTION": {
     "context": "direct_join_room_popover.rs",
-    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:146",
+    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:148",
     "plural": false,
     "description": null
   },
@@ -1008,20 +1008,20 @@
     "description": null
   },
   "JOIN_ERROR_TEXT": {
-    "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:129",
+    "context": "room_directory.rs",
+    "definedIn": "src/chat/room_directory.rs:278",
     "plural": false,
     "description": null
   },
   "JOIN_ERROR_TITLE": {
-    "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:126",
+    "context": "room_directory.rs",
+    "definedIn": "src/chat/room_directory.rs:275",
     "plural": false,
     "description": null
   },
   "JOIN_ROOM": {
     "context": "direct_join_room_popover.rs",
-    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:155",
+    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:157",
     "plural": false,
     "description": null
   },
@@ -1789,7 +1789,7 @@
   },
   "ROOM_ADDRESS": {
     "context": "direct_join_room_popover.rs",
-    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:40",
+    "definedIn": "src/chat/join_room/direct_join_room_popover.rs:41",
     "plural": false,
     "description": null
   },
@@ -1926,8 +1926,8 @@
     "description": null
   },
   "ROOM_DIRECTORY_MEMBER_COUNT": {
-    "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:261",
+    "context": "room_directory.rs",
+    "definedIn": "src/chat/room_directory.rs:417",
     "plural": true,
     "description": null
   },
@@ -2352,20 +2352,20 @@
     "description": null
   },
   "SECURITY_RECOVERY_KEY_CHANGE": {
-    "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:280",
+    "context": "security_settings.rs",
+    "definedIn": "src/account_settings/security_settings.rs:222",
     "plural": false,
     "description": null
   },
   "SECURITY_RECOVERY_KEY_RESET": {
-    "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:297",
+    "context": "security_settings.rs",
+    "definedIn": "src/account_settings/security_settings.rs:239",
     "plural": false,
     "description": null
   },
   "SECURITY_RECOVERY_KEY_SETUP": {
-    "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:289",
+    "context": "security_settings.rs",
+    "definedIn": "src/account_settings/security_settings.rs:231",
     "plural": false,
     "description": null
   },
