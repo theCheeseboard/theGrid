@@ -139,11 +139,12 @@ jobs:
           BIN_CHICKEN_REPOSITORY: test_repository
           UPLOAD_FILE: "theGrid-macOS.dmg"
         run: |
-          curl -v -T --fail-with-body $UPLOAD_FILE \
+          curl -v --fail-with-body -T $UPLOAD_FILE \
             -H "Authorization: Bearer $BIN_CHICKEN_TOKEN" \
             -H "Content-Type: application/octet-stream" \
             -H "X-Bin-Chicken-Channel: $BIN_CHICKEN_CHANNEL" \
             -H "X-Bin-Chicken-Target: $BIN_CHICKEN_TARGET" \
             -H "X-Bin-Chicken-UUID: $(cat build_uuid.txt)" \
+            -H "X-Bin-Chicken-Original-Filename: $UPLOAD_FILE" \
             -H "X-Bin-Chicken-Signature: $(cat $UPLOAD_FILE.minisig | base64 -w 0)" \
             https://binchicken.vicr123.com/api/repositories/$BIN_CHICKEN_REPOSITORY
