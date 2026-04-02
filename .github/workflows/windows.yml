@@ -13,6 +13,13 @@ jobs:
     env:
       ARCH: "${{ endsWith(matrix.os, 'arm') && 'aarch64' || 'x86_64' }}"
     steps:
+      - name: Generate build UUID
+        id: build_uuid
+        run: |
+          $BUILD_UUID = [guid]::NewGuid().ToString()
+          echo "BUILD_UUID=$BUILD_UUID" >> $env:GITHUB_OUTPUT
+          echo "BIN_CHICKEN_UUID=$BUILD_UUID" >> $env:GITHUB_ENV
+          echo "The UUID for this build is $BUILD_UUID"
       - uses: actions/checkout@v4
         with:
           submodules: "true"
@@ -41,3 +48,55 @@ jobs:
         with:
           name: theGrid-windows-${{ env.ARCH }}
           path: "theGrid-${{ env.ARCH }}.exe"
+      - name: Print build UUID
+        env:
+          BUILD_UUID: ${{ steps.build_uuid.outputs.BUILD_UUID }}
+        run: echo "$BUILD_UUID" > build_uuid.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build_uuid-${{ env.ARCH }}
+          path: build_uuid.txt
+  bin-chicken:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ ubuntu-24.04, ubuntu-24.04-arm ]
+    env:
+      ARCH: "${{ endsWith(matrix.os, 'arm') && 'aarch64' || 'x86_64' }}"
+    steps:
+      - name: Install minisign
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y minisign
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: theGrid-windows-${{ env.ARCH }}
+      - name: Download build UUID
+        uses: actions/download-artifact@v4
+        with:
+          name: build_uuid-${{ env.ARCH }}
+      - name: Sign artifact
+        env:
+          MINISIGN_PRIV_KEY: ${{ secrets.MINISIGN_KEY }}
+        run: |
+          printf '%s' "$MINISIGN_PRIV_KEY" > minisign.key
+          minisign -S -s minisign.key -m theGrid-${{ env.ARCH }}.exe
+      - name: Upload to bin-chicken
+        env:
+          BIN_CHICKEN_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BIN_CHICKEN_CHANNEL: blueprint
+          BIN_CHICKEN_TARGET: ${{ env.ARCH }}-pc-windows-msvc
+          BIN_CHICKEN_REPOSITORY: thegrid
+          UPLOAD_FILE: theGrid-${{ env.ARCH }}.exe
+        run: |
+          curl -v --fail-with-body -T $UPLOAD_FILE \
+            -H "Authorization: Bearer $BIN_CHICKEN_TOKEN" \
+            -H "Content-Type: application/octet-stream" \
+            -H "X-Bin-Chicken-Channel: $BIN_CHICKEN_CHANNEL" \
+            -H "X-Bin-Chicken-Target: $BIN_CHICKEN_TARGET" \
+            -H "X-Bin-Chicken-Original-Filename: $UPLOAD_FILE" \
+            -H "X-Bin-Chicken-UUID: $(cat build_uuid.txt)" \
+            -H "X-Bin-Chicken-Signature: $(cat $UPLOAD_FILE.minisig | base64 -w 0)" \
+            https://binchicken.vicr123.com/api/repositories/$BIN_CHICKEN_REPOSITORY

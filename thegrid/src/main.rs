@@ -23,13 +23,18 @@ use cntp_i18n::{tr, tr_load, I18N_MANAGER};
 use cntp_icon_tool_macros::application_icon;
 use contemporary::application::{new_contemporary_application, ApplicationLink, Details, License};
 use contemporary::macros::application_details;
+use contemporary::self_update::init_self_update;
 use contemporary::setup::{setup_contemporary, Contemporary, ContemporaryMenus};
 use contemporary::window::contemporary_window_options;
-use gpui::{px, size, App, AsyncApp, Bounds, Menu, MenuItem, WindowBounds, WindowOptions};
+use gpui::{
+    px, size, App, AsyncApp, Bounds, Menu, MenuItem, WeakEntity, WindowBounds, WindowOptions,
+};
 use smol_macros::main;
 use std::any::TypeId;
+use std::cell::RefCell;
 use std::ptr;
 use std::rc::Rc;
+use std::str::FromStr;
 use thegrid_common::session::session_manager::{setup_session_manager, SessionManager};
 use thegrid_common::session::sso_login::SsoLogin;
 use thegrid_common::setup_thegrid_common;
@@ -50,6 +55,7 @@ fn mane() {
         })
         .detach();
     });
+
     application.run(|cx: &mut App| {
         gpui_tokio::init(cx);
         thegrid_text_rendering::init(cx);
@@ -57,6 +63,95 @@ fn mane() {
         setup_thegrid_common();
         setup_thegrid_rtc_livekit();
         let bounds = Bounds::centered(None, size(px(800.0), px(600.0)), cx);
+
+        let outer_window: Rc<RefCell<WeakEntity<MainWindow>>> =
+            Rc::new(RefCell::new(WeakEntity::new_invalid()));
+
+        setup_contemporary(
+            cx,
+            Contemporary {
+                details: Details {
+                    generatable: application_details!(),
+                    copyright_holder: "Victor Tran",
+                    copyright_year: "2026",
+                    application_version: "1.0",
+                    license: License::Gpl3OrLater,
+                    links: [
+                        (
+                            ApplicationLink::FileBug,
+                            "https://github.com/theCheeseboard/thegrid/issues",
+                        ),
+                        (
+                            ApplicationLink::SourceCode,
+                            "https://github.com/theCheeseboard/thegrid",
+                        ),
+                    ]
+                    .into(),
+                },
+                menus: ContemporaryMenus {
+                    menus: vec![
+                        Menu {
+                            name: tr!("MENU_ACCOUNT", "Account").into(),
+                            items: vec![
+                                MenuItem::action(
+                                    tr!("ACCOUNT_ACCOUNT_SWITCHER", "Switch Accounts..."),
+                                    AccountSwitcher,
+                                ),
+                                MenuItem::action(tr!("ACCOUNT_LOG_OUT", "Log Out"), LogOut),
+                            ],
+                        },
+                        Menu {
+                            name: tr!("MENU_ROOMS", "Rooms").into(),
+                            items: vec![
+                                MenuItem::action(tr!("ROOMS_CREATE", "Create Room..."), CreateRoom),
+                                MenuItem::action(
+                                    tr!("ROOMS_CREATE_SPACE", "Create Space..."),
+                                    CreateSpace,
+                                ),
+                                MenuItem::action(
+                                    tr!("ROOMS_DIRECT_JOIN", "Join a room..."),
+                                    DirectJoinRoom,
+                                ),
+                            ],
+                        },
+                    ],
+                    on_about: Rc::new({
+                        let outer_window = outer_window.clone();
+                        move |cx| {
+                            outer_window
+                                .borrow()
+                                .upgrade()
+                                .unwrap()
+                                .update(cx, |window, cx| {
+                                    window.about_surface_open(true);
+                                    cx.notify()
+                                })
+                        }
+                    }),
+                    on_settings: Some(Rc::new({
+                        let outer_window = outer_window.clone();
+                        move |cx| {
+                            outer_window
+                                .borrow()
+                                .upgrade()
+                                .unwrap()
+                                .update(cx, |window, cx| {
+                                    window.open_settings();
+                                    cx.notify()
+                                })
+                        }
+                    })),
+                },
+            },
+        );
+
+        init_self_update(
+            Url::from_str("https://binchicken.vicr123.com").unwrap(),
+            "thegrid",
+            option_env!("BIN_CHICKEN_UUID"),
+            option_env!("BIN_CHICKEN_SIGNATURE_PUBLIC_KEY"),
+            cx,
+        );
 
         setup_session_manager(cx);
         setup_call_manager(cx);
@@ -96,76 +191,7 @@ fn mane() {
             },
             |window, cx| {
                 let window = MainWindow::new(cx);
-                let weak_window = window.downgrade();
-                let weak_windew = window.downgrade();
-                let weak_windaw = window.downgrade();
-
-                setup_contemporary(
-                    cx,
-                    Contemporary {
-                        details: Details {
-                            generatable: application_details!(),
-                            copyright_holder: "Victor Tran",
-                            copyright_year: "2026",
-                            application_version: "1.0",
-                            license: License::Gpl3OrLater,
-                            links: [
-                                (
-                                    ApplicationLink::FileBug,
-                                    "https://github.com/theCheeseboard/thegrid/issues",
-                                ),
-                                (
-                                    ApplicationLink::SourceCode,
-                                    "https://github.com/theCheeseboard/thegrid",
-                                ),
-                            ]
-                            .into(),
-                        },
-                        menus: ContemporaryMenus {
-                            menus: vec![
-                                Menu {
-                                    name: tr!("MENU_ACCOUNT", "Account").into(),
-                                    items: vec![
-                                        MenuItem::action(
-                                            tr!("ACCOUNT_ACCOUNT_SWITCHER", "Switch Accounts..."),
-                                            AccountSwitcher,
-                                        ),
-                                        MenuItem::action(tr!("ACCOUNT_LOG_OUT", "Log Out"), LogOut),
-                                    ],
-                                },
-                                Menu {
-                                    name: tr!("MENU_ROOMS", "Rooms").into(),
-                                    items: vec![
-                                        MenuItem::action(
-                                            tr!("ROOMS_CREATE", "Create Room..."),
-                                            CreateRoom,
-                                        ),
-                                        MenuItem::action(
-                                            tr!("ROOMS_CREATE_SPACE", "Create Space..."),
-                                            CreateSpace,
-                                        ),
-                                        MenuItem::action(
-                                            tr!("ROOMS_DIRECT_JOIN", "Join a room..."),
-                                            DirectJoinRoom,
-                                        ),
-                                    ],
-                                },
-                            ],
-                            on_about: Rc::new(move |cx| {
-                                weak_window.upgrade().unwrap().update(cx, |window, cx| {
-                                    window.about_surface_open(true);
-                                    cx.notify()
-                                })
-                            }),
-                            on_settings: Some(Rc::new(move |cx| {
-                                weak_windew.upgrade().unwrap().update(cx, |window, cx| {
-                                    window.open_settings();
-                                    cx.notify()
-                                })
-                            })),
-                        },
-                    },
-                );
+                *outer_window.borrow_mut() = window.downgrade();
 
                 window
             },

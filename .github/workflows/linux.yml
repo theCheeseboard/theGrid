@@ -12,12 +12,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       ARCH: "${{ endsWith(matrix.os, 'arm') && 'aarch64' || 'x86_64' }}"
+      BIN_CHICKEN_SIGNATURE_PUBLIC_KEY: ${{ vars.MINISIGN_PUBLIC_KEY }}
     steps:
       - name: Generate build UUID
         id: build_uuid
         run: |
           BUILD_UUID=$(uuidgen)
           echo "BUILD_UUID=$BUILD_UUID" >> $GITHUB_OUTPUT
+          echo "BIN_CHICKEN_UUID=$BUILD_UUID" >> $GITHUB_ENV
           echo "The UUID for this build is $BUILD_UUID"
       - uses: actions/checkout@v4
       - name: Install dependencies
@@ -107,7 +109,7 @@ jobs:
           BIN_CHICKEN_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BIN_CHICKEN_CHANNEL: blueprint
           BIN_CHICKEN_TARGET: ${{ env.ARCH }}-unknown-linux-gnu
-          BIN_CHICKEN_REPOSITORY: test_repository
+          BIN_CHICKEN_REPOSITORY: thegrid
           UPLOAD_FILE: theGrid-${{ env.ARCH }}.AppImage
         run: |
           curl -v --fail-with-body -T $UPLOAD_FILE \
@@ -119,3 +121,4 @@ jobs:
             -H "X-Bin-Chicken-UUID: $(cat build_uuid.txt)" \
             -H "X-Bin-Chicken-Signature: $(cat $UPLOAD_FILE.minisig | base64 -w 0)" \
             https://binchicken.vicr123.com/api/repositories/$BIN_CHICKEN_REPOSITORY
+
