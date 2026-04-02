@@ -1375,7 +1375,7 @@ dependencies = [
 [[package]]
 name = "cntp_config"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#782c3d26a1c604b5c2967a41b63beae59073fa77"
+source = "git+https://github.com/vicr123/contemporary-rs#1d48634e4c840e0a59aa6ac019d5780d35bcc654"
 dependencies = [
  "serde",
  "serde_json",
@@ -1401,7 +1401,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#782c3d26a1c604b5c2967a41b63beae59073fa77"
+source = "git+https://github.com/vicr123/contemporary-rs#1d48634e4c840e0a59aa6ac019d5780d35bcc654"
 dependencies = [
  "cntp_i18n_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
  "cntp_i18n_macros 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
@@ -1426,7 +1426,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_build_core"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#782c3d26a1c604b5c2967a41b63beae59073fa77"
+source = "git+https://github.com/vicr123/contemporary-rs#1d48634e4c840e0a59aa6ac019d5780d35bcc654"
 dependencies = [
  "serde",
  "serde_json",
@@ -1448,7 +1448,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_core"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#782c3d26a1c604b5c2967a41b63beae59073fa77"
+source = "git+https://github.com/vicr123/contemporary-rs#1d48634e4c840e0a59aa6ac019d5780d35bcc654"
 dependencies = [
  "anyhow",
  "cntp_localesupport 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
@@ -1477,7 +1477,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_gen"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#782c3d26a1c604b5c2967a41b63beae59073fa77"
+source = "git+https://github.com/vicr123/contemporary-rs#1d48634e4c840e0a59aa6ac019d5780d35bcc654"
 dependencies = [
  "cntp_i18n_build_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
  "cntp_i18n_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
@@ -1510,7 +1510,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#782c3d26a1c604b5c2967a41b63beae59073fa77"
+source = "git+https://github.com/vicr123/contemporary-rs#1d48634e4c840e0a59aa6ac019d5780d35bcc654"
 dependencies = [
  "cntp_i18n_build_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
  "cntp_i18n_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
@@ -1534,7 +1534,7 @@ dependencies = [
 [[package]]
 name = "cntp_i18n_parse"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#782c3d26a1c604b5c2967a41b63beae59073fa77"
+source = "git+https://github.com/vicr123/contemporary-rs#1d48634e4c840e0a59aa6ac019d5780d35bcc654"
 dependencies = [
  "syn 2.0.117",
 ]
@@ -1542,7 +1542,7 @@ dependencies = [
 [[package]]
 name = "cntp_icon_tool_core"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#782c3d26a1c604b5c2967a41b63beae59073fa77"
+source = "git+https://github.com/vicr123/contemporary-rs#1d48634e4c840e0a59aa6ac019d5780d35bcc654"
 dependencies = [
  "regex",
 ]
@@ -1550,7 +1550,7 @@ dependencies = [
 [[package]]
 name = "cntp_icon_tool_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#782c3d26a1c604b5c2967a41b63beae59073fa77"
+source = "git+https://github.com/vicr123/contemporary-rs#1d48634e4c840e0a59aa6ac019d5780d35bcc654"
 dependencies = [
  "cntp_config",
  "cntp_icon_tool_core",
@@ -1576,7 +1576,7 @@ dependencies = [
 [[package]]
 name = "cntp_localesupport"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#782c3d26a1c604b5c2967a41b63beae59073fa77"
+source = "git+https://github.com/vicr123/contemporary-rs#1d48634e4c840e0a59aa6ac019d5780d35bcc654"
 dependencies = [
  "chrono",
  "icu",
@@ -1590,7 +1590,7 @@ dependencies = [
 [[package]]
 name = "cntp_macros"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#782c3d26a1c604b5c2967a41b63beae59073fa77"
+source = "git+https://github.com/vicr123/contemporary-rs#1d48634e4c840e0a59aa6ac019d5780d35bcc654"
 dependencies = [
  "cntp_config",
  "quote",
@@ -1804,7 +1804,7 @@ checksum = "3d52eff69cd5e647efe296129160853a42795992097e8af39800e1060caeea9b"
 [[package]]
 name = "contemporary"
 version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#782c3d26a1c604b5c2967a41b63beae59073fa77"
+source = "git+https://github.com/vicr123/contemporary-rs#1d48634e4c840e0a59aa6ac019d5780d35bcc654"
 dependencies = [
  "ashpd 0.11.1",
  "async-channel 2.5.0",
@@ -5034,14 +5034,14 @@ version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49980b382c0e59635b99bb2d9ef4c039a90aefa1b821d5d7a8526d4504e14594"
 dependencies = [
- "async-channel 1.9.0",
+ "async-channel 2.5.0",
  "castaway",
  "crossbeam-utils",
  "curl",
  "curl-sys",
  "encoding_rs",
  "event-listener 5.4.1",
- "futures-lite 1.13.0",
+ "futures-lite 2.6.1",
  "http 0.2.12",
  "log",
  "mime",
@@ -7255,6 +7255,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c87def4c32ab89d880effc9e097653c8da5d6ef28e6b539d313baaacfbafcbe"
 
 [[package]]
+name = "openssl-src"
+version = "300.5.5+3.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f1787d533e03597a7934fd0a765f0d28e94ecc5fb7789f8053b1e699a56f709"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "openssl-sys"
 version = "0.9.112"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7262,6 +7271,7 @@ checksum = "57d55af3b3e226502be1526dfdba67ab0e9c96fc293004e79576b2b9edb0dbdb"
 dependencies = [
  "cc",
  "libc",
+ "openssl-src",
  "pkg-config",
  "vcpkg",
 ]
