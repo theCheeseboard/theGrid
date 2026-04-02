@@ -27,7 +27,6 @@ jobs:
         run: |
           rustup update
           rustup default 1.93
-          rustup target install x86_64-apple-darwin
       - uses: Swatinem/rust-cache@v2
       - uses: r7kamura/rust-problem-matchers@v1
       - name: Install libcontemporary utils
@@ -36,10 +35,8 @@ jobs:
           cargo install --git https://github.com/vicr123/contemporary-rs.git cargo-cntp-deploy
       - name: Build (arm)
         run: cargo build --verbose --release
-      - name: Build (x86_64)
-        run: cargo build --verbose --release --target x86_64-apple-darwin
       - name: Bundle
-        run: cargo cntp-bundle --target x86_64-apple-darwin --target aarch64-apple-darwin
+        run: cargo cntp-bundle --target aarch64-apple-darwin
         working-directory: thegrid
       # Codesigning adapted from https://federicoterzi.com/blog/automatic-code-signing-and-notarization-for-macos-apps-using-github-actions/
       - name: Codesign app bundle
@@ -98,11 +95,11 @@ jobs:
           echo "Attach staple"
           xcrun stapler staple target/bundle/*/release/*.app
       - name: Deploy
-        run: cargo cntp-deploy --target x86_64-apple-darwin --target aarch64-apple-darwin --output-file "$HOME/theGrid-macOS.dmg"
+        run: cargo cntp-deploy --target aarch64-apple-darwin --output-file "$HOME/theGrid-macOS.dmg"
         working-directory: thegrid
       - name: Build Zip
         run: |
-          cd target/bundle/x86_64-apple-darwin-aarch64-apple-darwin/release
+          cd target/bundle/aarch64-apple-darwin/release
           zip -r ~/theGrid-macOS.zip *.app
       - uses: actions/upload-artifact@v4
         with:
