@@ -1,4 +1,6 @@
 ---
+import { ClientRouter } from "astro:transitions";
+
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header/Header.astro";
 import MobileHeader from "../components/Header/MobileHeader.astro";
@@ -21,6 +23,7 @@ const title = page_title ? `${page_title} - theGrid` : "theGrid";
 		<link rel="stylesheet" href="/styles.css" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+		<ClientRouter />
 	</head>
 	<body>
 		<div class="main-container">
@@ -32,12 +35,13 @@ const title = page_title ? `${page_title} - theGrid` : "theGrid";
 					<Header />
 				</div>
 			</div>
-			<div class="content" transition:name="content">
+			<div class="content" transition:name="content" transition:animate="fade">
 				<slot />
 				<div class="filler" />
 				<Footer />
 			</div>
 		</div>
+		<div id="loading-bar" transition:persist transition:name="progress-bar" transition:animate="none" />
 	</body>
 </html>
 
@@ -112,4 +116,47 @@ const title = page_title ? `${page_title} - theGrid` : "theGrid";
 			display: none;
 		}
 	}
+	
+	#loading-bar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		height: 4px;
+		background: linear-gradient(to right, var(--accent-color-1), var(--accent-color-2));
+		z-index: 1;
+		animation: load-end 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	#loading-bar.loading {
+		animation: load-start 5s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	@keyframes load-start {
+		0% {
+			width: 0;
+			opacity: 1;
+		}
+
+		100% {
+			width: 80%;
+		}
+	}
+
+	@keyframes load-end {
+		100% {
+			width: 100%;
+			opacity: 0;
+		}
+	}
 </style>
+
+<script is:inline>
+	document.addEventListener("astro:before-preparation", (event) => {
+		const bar = document.getElementById("loading-bar");
+		bar.classList.add("loading");
+	});
+	document.addEventListener("astro:after-swap", (event) => {
+		const bar = document.getElementById("loading-bar");
+		bar.classList.remove("loading");
+	});
+</script>
