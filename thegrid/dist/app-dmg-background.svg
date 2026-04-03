@@ -21,6 +21,18 @@
   <defs
      id="defs2">
     <linearGradient
+       id="linearGradient47"
+       inkscape:collect="always">
+      <stop
+         style="stop-color:#753026;stop-opacity:1;"
+         offset="0"
+         id="stop46" />
+      <stop
+         style="stop-color:#fe654f;stop-opacity:0.5;"
+         offset="1"
+         id="stop47" />
+    </linearGradient>
+    <linearGradient
        inkscape:collect="always"
        id="linearGradient1069">
       <stop
@@ -74,22 +86,40 @@
        y2="134.72221"
        gradientUnits="userSpaceOnUse"
        gradientTransform="matrix(0.75539028,0,0,0.61804661,20.175249,120.60822)" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient47"
+       id="linearGradient44"
+       x1="127.00002"
+       y1="229.9722"
+       x2="24.694448"
+       y2="229.9722"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient47"
+       id="linearGradient49"
+       x1="127.00002"
+       y1="229.9722"
+       x2="24.694448"
+       y2="229.9722"
+       gradientUnits="userSpaceOnUse" />
   </defs>
   <sodipodi:namedview
      borderlayer="true"
      inkscape:document-rotation="0"
      inkscape:window-maximized="0"
-     inkscape:window-y="40"
+     inkscape:window-y="39"
      inkscape:window-x="0"
-     inkscape:window-height="950"
+     inkscape:window-height="922"
      inkscape:window-width="1760"
      units="px"
      showgrid="true"
-     inkscape:current-layer="layer1-8"
+     inkscape:current-layer="layer1"
      inkscape:document-units="mm"
-     inkscape:cy="195.51478"
-     inkscape:cx="316.28633"
-     inkscape:zoom="1.1840537"
+     inkscape:cy="202.52696"
+     inkscape:cx="324.04313"
+     inkscape:zoom="1.3208118"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
      borderopacity="1.0"
@@ -150,25 +180,34 @@
          x="5.9211923e-16"
          y="148.83331" />
       <rect
-         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.85208;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:3.52778;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="applications"
+         width="37.041664"
+         height="37.041664"
+         x="148.16669"
+         y="212.33331" />
+      <path
+         id="path40"
+         style="baseline-shift:baseline;display:inline;overflow:visible;vector-effect:none;stroke-linecap:round;stroke-linejoin:round;enable-background:accumulate;stop-color:#000000;fill-opacity:1;fill:url(#linearGradient44)"
+         d="M 116.41668 211.62776 A 0.70562558 0.70562558 0 0 0 116.14658 211.6815 A 0.70562558 0.70562558 0 0 0 115.71112 212.334 L 115.71112 222.21109 L 65.263895 222.21109 L 65.263895 239.49789 L 115.71112 239.49789 L 115.71112 249.37498 A 0.70562558 0.70562558 0 0 0 116.91621 249.87314 L 135.43567 231.35369 A 0.70562558 0.70562558 0 0 0 135.43567 230.3553 L 116.91621 211.83378 A 0.70562558 0.70562558 0 0 0 116.41668 211.62776 z " />
+      <text
+         xml:space="preserve"
+         style="font-size:22.5618px;line-height:1.25;font-family:sans-serif;text-align:center;text-anchor:middle;stroke-width:0.352779"
+         x="106.21892"
+         y="192.35832"
+         id="text1"><tspan
+           sodipodi:role="line"
+           id="tspan1"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Giphurs;-inkscape-font-specification:Giphurs;stroke-width:0.352779"
+           x="106.21892"
+           y="192.35832">theGrid</tspan></text>
+      <rect
+         style="fill:#ffffff;fill-opacity:1;stroke:url(#linearGradient49);stroke-width:3.5277778;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          id="app"
          width="37.041664"
          height="37.041664"
          x="26.458336"
          y="212.33331" />
-      <rect
-         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.85208;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         id="applications"
-         width="37.041664"
-         height="37.041664"
-         x="147.24063"
-         y="213.25935" />
-      <path
-         style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-         d="m 89.958341,222.91663 v 15.87501 H 103.1875 v 10.58335 l 18.52084,-18.52084 -18.52084,-18.52083 v 10.58332 z"
-         id="path4649"
-         inkscape:connector-curvature="0"
-         sodipodi:nodetypes="cccccccc" />
     </g>
   </g>
 </svg>

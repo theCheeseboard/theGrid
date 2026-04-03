@@ -139,7 +139,7 @@ jobs:
         env:
           BIN_CHICKEN_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BIN_CHICKEN_CHANNEL: blueprint
-          BIN_CHICKEN_TARGET: universal-apple-darwin-dmg
+          BIN_CHICKEN_TARGET: aarch64-apple-darwin-dmg
           BIN_CHICKEN_REPOSITORY: thegrid
           UPLOAD_FILE: "theGrid-macOS.dmg"
         run: |
@@ -178,7 +178,7 @@ jobs:
         env:
           BIN_CHICKEN_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BIN_CHICKEN_CHANNEL: blueprint
-          BIN_CHICKEN_TARGET: universal-apple-darwin
+          BIN_CHICKEN_TARGET: aarch64-apple-darwin
           BIN_CHICKEN_REPOSITORY: thegrid
           UPLOAD_FILE: "theGrid-macOS.zip"
         run: |
