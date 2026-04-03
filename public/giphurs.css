@@ -1,41 +1,41 @@
 @font-face {
     font-family: 'Giphurs';
-    src: url('/src/assets/giphurs/Giphurs-Regular.woff2') format('woff2');
+    src: url('giphurs/Giphurs-Regular.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'Giphurs';
-    src: url('/src/assets/giphurs/Giphurs-Italic.woff2') format('woff2');
+    src: url('giphurs/Giphurs-Italic.woff2') format('woff2');
     font-weight: 400;
     font-style: italic;
 }
 
 @font-face {
     font-family: 'Giphurs';
-    src: url('/src/assets/giphurs/Giphurs-Light.woff2') format('woff2');
+    src: url('giphurs/Giphurs-Light.woff2') format('woff2');
     font-weight: 300;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'Giphurs';
-    src: url('/src/assets/giphurs/Giphurs-LightItalic.woff2') format('woff2');
+    src: url('giphurs/Giphurs-LightItalic.woff2') format('woff2');
     font-weight: 300;
     font-style: italic;
 }
 
 @font-face {
     font-family: 'Giphurs';
-    src: url('/src/assets/giphurs/Giphurs-Bold.woff2') format('woff2');
+    src: url('giphurs/Giphurs-Bold.woff2') format('woff2');
     font-weight: 700;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'Giphurs';
-    src: url('/src/assets/giphurs/Giphurs-BoldItalic.woff2') format('woff2');
+    src: url('giphurs/Giphurs-BoldItalic.woff2') format('woff2');
     font-weight: 700;
     font-style: italic;
 }
