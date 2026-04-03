@@ -59,6 +59,9 @@ impl RenderOnce for VerificationSelectPage {
                                 )
                                 .child(SasLayer {
                                     verification_request: self.verification_request.clone(),
+                                    is_only_verification_method: verification_request
+                                        .as_ref()
+                                        .is_none_or(|request| request.qr_state.is_none()),
                                 }),
                         ),
                     ),
@@ -120,6 +123,7 @@ impl RenderOnce for QrShowLayer {
 #[derive(IntoElement)]
 struct SasLayer {
     verification_request: Option<Entity<VerificationRequestDetails>>,
+    is_only_verification_method: bool,
 }
 
 impl RenderOnce for SasLayer {
@@ -138,10 +142,18 @@ impl RenderOnce for SasLayer {
                     .flex()
                     .flex_col()
                     .gap(px(8.))
-                    .child(tr!(
-                        "VERIFICATION_POPOVER_EMOJI_TEXT",
-                        "Verify by comparing emoji if you don't have any other options."
-                    ))
+                    .child(if self.is_only_verification_method {
+                        tr!(
+                            "VERIFICATION_POPOVER_EMOJI_ONLY_TEXT",
+                            "Verify by comparing emoji on both devices."
+                        )
+                    } else {
+                        tr!(
+                            "VERIFICATION_POPOVER_EMOJI_TEXT",
+                            "If you can't verify using another method, you can complete \
+                            verification by comparing emoji on both devices."
+                        )
+                    })
                     .child(
                         button("verification-popover-ok")
                             .child(icon_text(
