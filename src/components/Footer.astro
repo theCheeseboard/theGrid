@@ -1,0 +1,35 @@
+---
+import Grid from "./Grid.astro";
+import GridSlice from "./GridSlice.astro";
+import LogoContainer from "./Header/LogoContainer.astro";
+
+
+---
+
+<footer>
+    <Grid>
+        <GridSlice class="left">
+            <span class="copyright-notice">&copy; Victor Tran, 2026.</span>
+        </GridSlice>
+    </Grid>
+</footer>
+
+<style>
+    footer {
+        background-color: var(--layer-color);
+
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+    }
+
+    .left {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .copyright-notice {
+        font-size: 12px;
+        opacity: 0.7;
+    }
+</style>

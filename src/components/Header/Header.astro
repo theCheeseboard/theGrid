@@ -1,0 +1,49 @@
+---
+import HeaderItem from "./HeaderItem.astro";
+import LogoContainer from "./LogoContainer.astro";
+import SocialIcons from "./SocialIcons.astro";
+---
+
+<div class="header">
+    <LogoContainer />
+    <div class="items">
+        <HeaderItem href="/">
+            Home
+        </HeaderItem>
+        <div class="line">
+            <div />
+        </div>
+    </div>
+    <SocialIcons />
+</div>
+
+<style>
+    .header {
+        display: flex;
+        flex-direction: column;
+        padding: 16px;
+
+        flex-grow: 1;
+    }
+
+    .items {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+
+        padding-top: 16px;
+
+        flex-grow: 1;
+    }
+
+    .line {
+        display: flex;
+        justify-content: center;
+    }
+
+    .line > div {
+        width: 80%;
+        height: 1px;
+        background-color: var(--layer-color);
+    }
+</style>

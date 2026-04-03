@@ -1,0 +1,26 @@
+---
+interface Props {
+    width?: 4 | 8 | 12;
+    class?: string;
+}
+
+const { width = 4, class: className, ...rest } = Astro.props;
+---
+
+<div class:list={[`slice-width-${width}`, className]} {...rest}>
+    <slot/>
+</div>
+
+<style>
+    .slice-width-4 {
+        grid-column: span 4;
+    }
+
+    .slice-width-8 {
+        grid-column: span 8;
+    }
+
+    .slice-width-12 {
+        grid-column: span 12;
+    }
+</style>

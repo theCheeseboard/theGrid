@@ -1,0 +1,47 @@
+---
+import GridSlice from '../components/GridSlice.astro';
+import Grid from '../components/Grid.astro';
+import Layout from '../layouts/Layout.astro';
+
+import Screenshot1 from "./index/screenshot-1.png"
+import Image from 'astro/components/Image.astro';
+---
+
+<Layout>
+    <Grid>
+        <GridSlice class='title'>
+            <span>A simple</span>
+            <span class="accented">Native</span>
+            <span>Cross Platform</span>
+            <span>[matrix] client</span>
+        </GridSlice>
+        <GridSlice width={8}>
+            <Image src={Screenshot1} alt="Screenshot of theGrid"/>
+        </GridSlice>
+    </Grid>
+    <Grid>
+        <GridSlice width={12}>
+            We're under construction here, so come back soon! You can find more information about theGrid on our <a
+                href="https://github.com/theCheeseboard/theGrid">GitHub</a> page.
+        </GridSlice>
+    </Grid>
+</Layout>
+
+<style>
+    .title {
+        display: flex;
+        flex-direction: column;
+        font-size: 28pt;
+        justify-content: flex-end;
+    }
+
+    .accented {
+        color: var(--accent-color-2);
+    }
+
+    img {
+        max-width: 100%;
+        height: auto;
+        filter: drop-shadow(0 0 0.75rem black);
+    }
+</style>

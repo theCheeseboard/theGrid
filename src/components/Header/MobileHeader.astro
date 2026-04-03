@@ -1,0 +1,23 @@
+---
+import LogoContainer from "./LogoContainer.astro";
+import SocialIcons from "./SocialIcons.astro";
+---
+
+<div class="mobile-header">
+    <LogoContainer />
+    <div class="filler" />
+    <SocialIcons />
+</div>
+
+<style>
+    .mobile-header {
+        display: flex;
+        align-items: center;
+
+        flex-grow: 1;
+    }
+
+    .filler {
+        flex-grow: 1;
+    }
+</style>
