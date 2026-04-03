@@ -14,10 +14,10 @@ use chrono::{DateTime, Local};
 use cntp_i18n::tr;
 use contemporary::components::anchorer::WithAnchorer;
 use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
-use contemporary::styling::theme::{Theme, VariableColor};
+use contemporary::styling::theme::{variable_transparent, Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, App, AsyncApp, Entity, InteractiveElement, IntoElement,
+    div, px, App, AsyncApp, ElementId, Entity, InteractiveElement, IntoElement,
     ParentElement, RenderOnce, StatefulInteractiveElement, Styled, WeakEntity, Window,
 };
 use matrix_sdk::room::RoomMember;
@@ -170,6 +170,29 @@ impl TimelineItem {
                 )
             });
 
+        let hovered = window.use_keyed_state(
+            ElementId::NamedChild(
+                Box::new(ElementId::Name("hovered".into())),
+                event
+                    .event_id()
+                    .map(|event_id| event_id.to_string())
+                    .unwrap_or_default()
+                    .into(),
+            ),
+            cx,
+            |_, _| false,
+        );
+
+        let mut background = variable_transparent();
+        if event.is_highlighted() {
+            background = theme.warning_accent_color.blend(background);
+        }
+        if *hovered.read(cx) {
+            let mut layer = theme.layer_background;
+            layer.a /= 2.;
+            background = layer.blend(background)
+        }
+
         match row_type {
             TimelineRowType::MessageWithAuthor => {
                 let sender = event.sender().to_owned();
@@ -189,7 +212,7 @@ impl TimelineItem {
                                 return;
                             };
 
-                            let _ = weak_this.update(cx, |mut this, cx| {
+                            let _ = weak_this.update(cx, |this, cx| {
                                 *this = member;
                                 cx.notify();
                             });
@@ -206,8 +229,12 @@ impl TimelineItem {
                 div()
                     .id("container")
                     .when(event.is_local_echo(), |david| david.opacity(0.7))
-                    .when(event.is_highlighted(), |david| {
-                        david.bg(theme.warning_accent_color)
+                    .bg(background)
+                    .on_hover({
+                        let hovered = hovered.clone();
+                        move |is_hover, _, cx| {
+                            hovered.write(cx, *is_hover);
+                        }
                     })
                     .flex()
                     .flex_grow()
@@ -280,9 +307,14 @@ impl TimelineItem {
                     .into_any_element()
             }
             TimelineRowType::MessageWithoutAuthor => div()
+                .id("container")
                 .when(event.is_local_echo(), |david| david.opacity(0.7))
-                .when(event.is_highlighted(), |david| {
-                    david.bg(theme.warning_accent_color)
+                .bg(background)
+                .on_hover({
+                    let hovered = hovered.clone();
+                    move |is_hover, _, cx| {
+                        hovered.write(cx, *is_hover);
+                    }
                 })
                 .flex()
                 .overflow_hidden()
