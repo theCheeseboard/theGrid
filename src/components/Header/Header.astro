@@ -5,10 +5,15 @@ import SocialIcons from "./SocialIcons.astro";
 ---
 
 <div class="header">
-    <LogoContainer />
+    <a href="/">
+        <LogoContainer />
+    </a>
     <div class="items">
         <HeaderItem href="/">
             Home
+        </HeaderItem>
+        <HeaderItem href="/download">
+            Download
         </HeaderItem>
         <div class="line">
             <div />
@@ -18,6 +23,10 @@ import SocialIcons from "./SocialIcons.astro";
 </div>
 
 <style>
+    a {
+        color: var(--foreground-color);
+    }
+
     .header {
         display: flex;
         flex-direction: column;
@@ -29,7 +38,7 @@ import SocialIcons from "./SocialIcons.astro";
     .items {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 4px;
 
         padding-top: 16px;
 

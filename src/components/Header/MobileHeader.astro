@@ -4,12 +4,18 @@ import SocialIcons from "./SocialIcons.astro";
 ---
 
 <div class="mobile-header">
-    <LogoContainer />
+    <a href="/">
+        <LogoContainer />
+    </a>
     <div class="filler" />
     <SocialIcons />
 </div>
 
 <style>
+    a {
+        color: var(--foreground-color);
+    }
+
     .mobile-header {
         display: flex;
         align-items: center;

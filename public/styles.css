@@ -5,9 +5,11 @@
     --foreground-color: rgb(255, 255, 255);
     --layer-color: rgba(255, 255, 255, 0.08);
     --link-color: rgb(0, 200, 255);
+    --border-color: rgb(255, 255, 255, 0.4);
 
     --accent-color-1: #753026;
     --accent-color-2: #fe654f;
+    --warning-accent: rgba(255, 200, 0, 0.1);
 
     background-color: var(--background-color);
     color: var(--foreground-color);
@@ -18,6 +20,8 @@
         --foreground-color: rgb(0, 0, 0);
         --background-color: rgb(255, 255, 255);
         --layer-color: rgba(0, 0, 0, 0.1);
+        --border-color: rgb(0, 0, 0, 0.4);
+        --warning-accent: rgba(200, 100, 0, 0.2);
     }
 }
 
@@ -38,4 +42,10 @@ body {
 a {
     color: var(--link-color);
     text-decoration: none;
+}
+
+h1 {
+    font-size: 28pt;
+    font-weight: normal;
+    margin: 0;
 }

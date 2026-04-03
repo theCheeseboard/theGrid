@@ -5,6 +5,7 @@ import Layout from '../layouts/Layout.astro';
 
 import Screenshot1 from "./index/screenshot-1.png"
 import Image from 'astro/components/Image.astro';
+import Button from '../components/Button.astro';
 ---
 
 <Layout>
@@ -14,6 +15,9 @@ import Image from 'astro/components/Image.astro';
             <span class="accented">Native</span>
             <span>Cross Platform</span>
             <span>[matrix] client</span>
+            <div class="cta-container">
+                <Button href="/download">Get it</Button>
+            </div>
         </GridSlice>
         <GridSlice width={8}>
             <Image src={Screenshot1} alt="Screenshot of theGrid"/>
@@ -30,9 +34,19 @@ import Image from 'astro/components/Image.astro';
 <style>
     .title {
         display: flex;
+        align-items: flex-start;
         flex-direction: column;
-        font-size: 28pt;
         justify-content: flex-end;
+    }
+
+    .title span {
+        font-size: 28pt;
+    }
+
+    .cta-container {
+        display: flex;
+        padding-top: 16px;
+        font-size: 18pt;
     }
 
     .accented {

@@ -1,0 +1,73 @@
+---
+import Button from "../components/Button.astro";
+import Grid from "../components/Grid.astro";
+import GridSlice from "../components/GridSlice.astro";
+import Layout from "../layouts/Layout.astro";
+
+function downloadUrl(target: string, channel: string) {
+    return `https://binchicken.vicr123.com/api/repositories/thegrid/latest/by_target_channel/${target}/${channel}/download`
+}
+---
+
+<Layout>
+    <Grid>
+        <GridSlice>
+            <h1>Download theGrid</h1>
+        </GridSlice>
+    </Grid>
+    <Grid>
+        <GridSlice width={12} class="warning">
+            <p>BEFORE YOU CONTINUE</p>
+            It's great to have you on board, but before you go ahead, be aware that theGrid is still under construction.
+            You may encounter strange bugs and missing features.
+        </GridSlice>
+    </Grid>
+    <Grid>
+        <GridSlice class="download-platform-group">
+            <h2>Windows</h2>
+            <!--
+            <Button href={downloadUrl("x86_64-pc-windows-msvc", "blueprint")}>Windows (x86_64)</Button>
+            <Button href={downloadUrl("aarch64-pc-windows-msvc", "blueprint")}>Windows (arm64)</Button>
+            -->
+            Windows builds are coming soon. Stay tuned!
+        </GridSlice>
+        <GridSlice class="download-platform-group">
+            <h2>macOS</h2>
+            <Button href={downloadUrl("aarch64-apple-darwin-dmg", "blueprint")}>macOS (Apple Silicon)</Button>
+        </GridSlice>
+        <GridSlice class="download-platform-group">
+            <h2>Linux</h2>
+            <Button href={downloadUrl("x86_64-unknown-linux-gnu", "blueprint")}>AppImage (x86_64)</Button>
+            <Button href={downloadUrl("aarch64-unknown-linux-gnu", "blueprint")}>AppImage (arm64)</Button>
+        </GridSlice>
+    </Grid>
+</Layout>
+
+<style>
+    .warning {
+        border: 1px solid var(--border-color);
+        background-color: var(--warning-accent);
+        border-radius: 4px;
+        padding: 3px;
+    }
+
+    .warning p {
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .download-platform-group {
+        background-color: var(--layer-color);
+        padding: 4px;
+        border-radius: 4px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .download-platform-group h2 {
+        text-transform: uppercase;
+        margin: 0;
+        font-size: unset;
+    }
+</style>
