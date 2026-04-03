@@ -4,21 +4,19 @@ use cntp_i18n::{i18n_manager, tr, Quote, I18N_MANAGER};
 use contemporary::components::button::button;
 use contemporary::components::context_menu::ContextMenuItem;
 use contemporary::components::icon::icon;
-use contemporary::components::icon_text::icon_text;
 use contemporary::components::spinner::spinner;
-use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
+use contemporary::styling::theme::{Theme, ThemeStorage};
 use directories::UserDirs;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, rgba, AnyElement, App, AsyncApp, BorrowAppContext, Entity,
-    IntoElement, ParentElement, RenderOnce, Styled, Window,
+    canvas, div, point, px, rgba, AnyElement, App, AsyncApp,
+    BorrowAppContext, Entity, IntoElement, ParentElement, Path, RenderOnce, Styled, Window,
 };
 use matrix_sdk::ruma::events::room::message::{
     FileMessageEventContent, FormattedBody, MessageType,
 };
-use matrix_sdk_ui::timeline::{
-    EmbeddedEvent, MsgLikeContent, MsgLikeKind, TimelineDetails, TimelineItemContent,
-};
+use matrix_sdk::ruma::OwnedUserId;
+use matrix_sdk_ui::timeline::{MsgLikeContent, MsgLikeKind, Profile, TimelineDetails};
 use std::fs::copy;
 use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::media_cache::{MediaCacheEntry, MediaFile, MediaState};
@@ -28,10 +26,20 @@ use thegrid_text_rendering::TextView;
 #[derive(IntoElement)]
 pub struct TimelineMessageItem {
     content: MsgLikeContent,
+    sender_profile: TimelineDetails<Profile>,
+    sender: OwnedUserId,
 }
 
-pub fn timeline_message_item(content: MsgLikeContent) -> TimelineMessageItem {
-    TimelineMessageItem { content }
+pub fn timeline_message_item(
+    content: MsgLikeContent,
+    sender_profile: TimelineDetails<Profile>,
+    sender: OwnedUserId,
+) -> TimelineMessageItem {
+    TimelineMessageItem {
+        content,
+        sender_profile,
+        sender,
+    }
 }
 
 impl RenderOnce for TimelineMessageItem {
@@ -51,6 +59,8 @@ impl RenderOnce for TimelineMessageItem {
             .child(match self.content.kind {
                 MsgLikeKind::Message(message) => div().child(msgtype_to_message_line(
                     message.msgtype(),
+                    self.sender,
+                    self.sender_profile,
                     false,
                     window,
                     cx,
@@ -90,12 +100,60 @@ impl RenderOnce for TimelineMessageItem {
 
 pub fn msgtype_to_message_line<'a>(
     msgtype: &MessageType,
+    sender: OwnedUserId,
+    sender_profile: TimelineDetails<Profile>,
     as_reply: bool,
     window: &mut Window,
     cx: &mut App,
 ) -> impl IntoElement + 'a {
+    let theme = cx.theme();
     match msgtype {
-        MessageType::Emote(emote) => div().child(emote.body.clone()).into_any_element(),
+        MessageType::Emote(emote) => div()
+            .flex()
+            .items_center()
+            .when_some(
+                match sender_profile {
+                    TimelineDetails::Ready(profile) => Some(profile),
+                    _ => None,
+                },
+                |david, profile| {
+                    david.child(
+                        mxc_image(profile.avatar_url.clone())
+                            .size(px(24.))
+                            .size_policy(SizePolicy::Fit)
+                            .rounded(theme.border_radius)
+                            .fallback_image(sender)
+                            .mr(px(2.)),
+                    )
+                },
+            )
+            .child(
+                canvas(
+                    |bounds, _, _| {
+                        // TODO: RTL?
+                        let mut path = Path::new(bounds.top_right());
+                        path.line_to(point(bounds.left(), bounds.center().y));
+                        path.line_to(bounds.bottom_right());
+                        path
+                    },
+                    |_, path, window, cx| {
+                        let theme = cx.theme();
+                        window.paint_path(path, theme.layer_background)
+                    },
+                )
+                .w(px(12.))
+                .h(px(24.)),
+            )
+            .child(
+                div()
+                    .min_h(px(24.))
+                    .bg(theme.layer_background)
+                    .rounded_tr(theme.border_radius)
+                    .rounded_br(theme.border_radius)
+                    .flex()
+                    .child(div().p(px(2.)).italic().child(emote.body.clone())),
+            )
+            .into_any_element(),
         MessageType::Image(image) => div()
             .child(
                 mxc_image(image.source.clone())

@@ -2,28 +2,45 @@ use crate::chat::chat_room::timeline_view::timeline_message_item::msgtype_to_mes
 use cntp_i18n::tr;
 use contemporary::styling::theme::{ThemeStorage, VariableColor};
 use gpui::{div, App, IntoElement, ParentElement, RenderOnce, Styled, Window};
+use matrix_sdk::ruma::OwnedUserId;
 use matrix_sdk_ui::timeline::{
-    InReplyToDetails, MsgLikeKind, TimelineDetails, TimelineItemContent,
+    InReplyToDetails, MsgLikeKind, Profile, TimelineDetails, TimelineItemContent,
 };
 
 #[derive(IntoElement)]
 pub struct ReplyFragment {
     content: Option<TimelineItemContent>,
+    sender_profile: Option<TimelineDetails<Profile>>,
+    sender: Option<OwnedUserId>,
 }
 
-pub fn reply_fragment(content: TimelineItemContent) -> ReplyFragment {
+pub fn reply_fragment(
+    content: TimelineItemContent,
+    sender_profile: TimelineDetails<Profile>,
+    sender: OwnedUserId,
+) -> ReplyFragment {
     ReplyFragment {
         content: Some(content),
+        sender_profile: Some(sender_profile),
+        sender: Some(sender),
     }
 }
 
 pub fn reply_fragment_in_reply_to(details: InReplyToDetails) -> ReplyFragment {
+    let (content, sender_profile, sender) = if let TimelineDetails::Ready(reply) = details.event {
+        (
+            Some(reply.content),
+            Some(reply.sender_profile),
+            Some(reply.sender),
+        )
+    } else {
+        (None, None, None)
+    };
+
     ReplyFragment {
-        content: if let TimelineDetails::Ready(reply) = details.event {
-            Some(reply.content)
-        } else {
-            None
-        },
+        content,
+        sender_profile,
+        sender,
     }
 }
 
@@ -42,7 +59,14 @@ impl RenderOnce for ReplyFragment {
                         MsgLikeKind::Message(message) => Some(
                             div()
                                 .flex()
-                                .child(msgtype_to_message_line(message.msgtype(), true, window, cx))
+                                .child(msgtype_to_message_line(
+                                    message.msgtype(),
+                                    self.sender.unwrap(),
+                                    self.sender_profile.unwrap(),
+                                    true,
+                                    window,
+                                    cx,
+                                ))
                                 .into_any_element(),
                         ),
                         _ => None,

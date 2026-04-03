@@ -133,7 +133,12 @@ impl TimelineItem {
                             })
                             .build(),
                     );
-                    timeline_message_item(msg.clone()).into_any_element()
+                    timeline_message_item(
+                        msg.clone(),
+                        event.sender_profile().clone(),
+                        event.sender().to_owned(),
+                    )
+                    .into_any_element()
                 }
                 TimelineItemContent::MembershipChange(membership_change) => {
                     membership_change_item(membership_change.clone()).into_any_element()
