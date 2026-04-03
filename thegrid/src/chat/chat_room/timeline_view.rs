@@ -133,7 +133,7 @@ impl Render for TimelineView {
         let Some(timeline_entity) = open_room.timeline.as_ref() else {
             return div().flex_grow().into_any_element();
         };
-        let is_paginating = open_room.pagination_pending();
+        let is_paginating = open_room.pagination_pending(cx);
 
         let timeline_entity = timeline_entity.clone();
         let room_id = open_room.room_id.clone();

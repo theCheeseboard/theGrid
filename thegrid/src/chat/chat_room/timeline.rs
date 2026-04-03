@@ -1,13 +1,16 @@
-use gpui::{App, AsyncApp, Context, WeakEntity};
+use gpui::{AsyncApp, Context, WeakEntity};
 use imbl::Vector;
-use matrix_sdk_ui::Timeline as MatrixUiTimeline;
 use matrix_sdk_ui::timeline::TimelineItem;
+use matrix_sdk_ui::Timeline as MatrixUiTimeline;
 use smol::stream::StreamExt;
 use std::sync::Arc;
 
 pub struct Timeline {
     pub inner: Arc<MatrixUiTimeline>,
     timeline_items: Vector<Arc<TimelineItem>>,
+
+    pub pagination_pending: bool,
+    pub pagination_at_top: bool,
 }
 
 impl Timeline {
@@ -49,6 +52,8 @@ impl Timeline {
         Self {
             inner: timeline_arc_2,
             timeline_items: Default::default(),
+            pagination_pending: false,
+            pagination_at_top: false,
         }
     }
 

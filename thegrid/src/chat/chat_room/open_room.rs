@@ -42,7 +42,6 @@ pub struct OpenRoom {
     pub tags: Tags,
     pub pending_reply: Option<EventTimelineItem>,
     local_aliases: Vec<OwnedRoomAliasId>,
-    pagination_pending: bool,
 }
 
 pub struct PendingAttachment {
@@ -97,7 +96,6 @@ impl OpenRoom {
             chat_input,
             timeline: None,
             tags: Default::default(),
-            pagination_pending: false,
             pending_reply: None,
             local_aliases: Vec::new(),
         };
@@ -158,26 +156,33 @@ impl OpenRoom {
     }
 
     pub fn paginate_backwards(&mut self, cx: &mut Context<Self>) {
-        if self.pagination_pending {
-            return;
-        }
-
+        let weak_this = cx.weak_entity();
         if let Some(timeline) = self.timeline.as_ref() {
-            // Paginate
-            self.pagination_pending = true;
-
-            let weak_this = cx.weak_entity();
             timeline.update(cx, |timeline, cx| {
+                if timeline.pagination_pending || timeline.pagination_at_top {
+                    return;
+                }
+
+                timeline.pagination_pending = true;
+
                 let timeline = timeline.inner.clone();
                 cx.spawn(
                     async move |weak_timeline: WeakEntity<Timeline>, cx: &mut AsyncApp| {
-                        let _ = cx
+                        let pagination_at_top = cx
                             .spawn_tokio(async move { timeline.paginate_backwards(50).await })
-                            .await;
-                        weak_this.update(cx, |this, cx| {
-                            this.pagination_pending = false;
+                            .await
+                            .unwrap_or_else(|e| {
+                                error!("Failed to paginate backwards: {}", e);
+                                false
+                            });
+                        let _ = weak_timeline.update(cx, |timeline, cx| {
+                            timeline.pagination_at_top = pagination_at_top;
+                            timeline.pagination_pending = false;
                             cx.notify();
-                        })
+                        });
+                        let _ = weak_this.update(cx, |this, cx| {
+                            cx.notify();
+                        });
                     },
                 )
                 .detach();
@@ -403,8 +408,11 @@ impl OpenRoom {
         cx.notify()
     }
 
-    pub fn pagination_pending(&self) -> bool {
-        self.pagination_pending
+    pub fn pagination_pending(&self, cx: &App) -> bool {
+        match self.timeline.as_ref() {
+            None => false,
+            Some(timeline) => timeline.read(cx).pagination_pending,
+        }
     }
 
     pub fn local_aliases(&self) -> Vec<OwnedRoomAliasId> {
