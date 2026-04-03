@@ -2,6 +2,13 @@
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header/Header.astro";
 import MobileHeader from "../components/Header/MobileHeader.astro";
+
+interface Props {
+	page_title?: string;
+}
+
+const { page_title } = Astro.props;
+const title = page_title ? `${page_title} - theGrid` : "theGrid";
 ---
 
 <!doctype html>
@@ -13,7 +20,7 @@ import MobileHeader from "../components/Header/MobileHeader.astro";
 		<link rel="icon" href="/favicon.ico" />
 		<link rel="stylesheet" href="/styles.css" />
 		<meta name="generator" content={Astro.generator} />
-		<title>theGrid</title>
+		<title>{title}</title>
 	</head>
 	<body>
 		<div class="main-container">
@@ -25,7 +32,7 @@ import MobileHeader from "../components/Header/MobileHeader.astro";
 					<Header />
 				</div>
 			</div>
-			<div class="content">
+			<div class="content" transition:name="content">
 				<slot />
 				<div class="filler" />
 				<Footer />
