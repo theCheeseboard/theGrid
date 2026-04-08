@@ -1,12 +1,14 @@
 ---
 interface Props {
     href?: string;
+    target?: string;
+    type?: "secondary";
 }
 
-const { href } = Astro.props;
+const { type, target, href } = Astro.props;
 ---
 
-<a href={href}>
+<a class:list={type ? [type] : []} href={href} target={target}>
     <slot />
 </a>
 
@@ -18,5 +20,9 @@ const { href } = Astro.props;
         background-color: var(--accent-color-1);
         color: var(--foreground-color);
         text-align: center;
+    }
+
+    a.secondary {
+        background-color: var(--layer-color);
     }
 </style>
