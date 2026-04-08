@@ -20,7 +20,7 @@ impl Timeline {
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 let subscription = timeline_arc.subscribe();
-                let (vec, mut updates) = subscription.await;
+                let (vec, mut updates) = tokio::task::unconstrained(subscription).await;
 
                 if weak_this
                     .update(cx, |this, cx| {
@@ -32,7 +32,7 @@ impl Timeline {
                     return;
                 };
 
-                while let Some(diffs) = updates.next().await {
+                while let Some(diffs) = tokio::task::unconstrained(updates.next()).await {
                     if weak_this
                         .update(cx, |this, cx| {
                             for diff in diffs {
