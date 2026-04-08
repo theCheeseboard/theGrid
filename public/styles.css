@@ -7,8 +7,10 @@
     --link-color: rgb(0, 200, 255);
     --border-color: rgb(255, 255, 255, 0.4);
 
-    --accent-color-1: #753026;
-    --accent-color-2: #fe654f;
+    --accent-dark: #753026;
+    --accent-light: #fe654f;
+    --accent-color-1: var(--accent-dark);
+    --accent-color-2: var(--accent-light);
     --warning-accent: rgba(255, 200, 0, 0.1);
 
     background-color: var(--background-color);
@@ -22,6 +24,8 @@
         --layer-color: rgba(0, 0, 0, 0.1);
         --border-color: rgb(0, 0, 0, 0.4);
         --warning-accent: rgba(200, 100, 0, 0.2);
+        --accent-color-1: var(--accent-light);
+        --accent-color-2: var(--accent-dark);
     }
 }
 
@@ -47,5 +51,18 @@ a {
 h1 {
     font-size: 28pt;
     font-weight: normal;
+    margin-top: 20px;
+    margin-bottom: 0;
+}
+
+h2 {
+    font-size: 20pt;
+    font-weight: 300;
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+h3 {
+    font-size: 16pt;
     margin: 0;
 }

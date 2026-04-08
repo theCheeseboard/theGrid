@@ -8,6 +8,27 @@ import LogoContainer from "./Header/LogoContainer.astro";
 
 <footer>
     <Grid>
+        <GridSlice>
+            <LogoContainer />
+        </GridSlice>
+    </Grid>
+    <Grid>
+        <GridSlice>
+            <div class="footer-links">
+                <a href="/">
+                    Home
+                </a>
+                <a href="/download">
+                    Download
+                </a>
+                <div class="line" />
+                <a href="https://vicr123.com" target="_blank">
+                    Victor Tran
+                </a>
+            </div>
+        </GridSlice>
+    </Grid>
+    <Grid>
         <GridSlice class="left">
             <span class="copyright-notice">&copy; Victor Tran, 2026.</span>
         </GridSlice>
@@ -31,5 +52,25 @@ import LogoContainer from "./Header/LogoContainer.astro";
     .copyright-notice {
         font-size: 12px;
         opacity: 0.7;
+    }
+
+    .footer-links {
+        opacity: 0.7;
+        display: flex;
+        align-items: stretch;
+        gap: 16px;
+    }
+
+    .footer-links a {
+        color: var(--foreground-color);
+    }
+
+    .line {
+        width: 1px;
+        background-color: var(--foreground-color);
+    }
+
+    .footer-links a:hover {
+        text-decoration: underline;
     }
 </style>

@@ -23,4 +23,20 @@ const { width = 4, class: className, ...rest } = Astro.props;
     .slice-width-12 {
         grid-column: span 12;
     }
+
+    @media (max-width: 1024px) {
+        .slice-width-12 {
+            grid-column: span 8;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .slice-width-12 {
+            grid-column: span 4;
+        }
+
+        .slice-width-8 {
+            grid-column: span 4;
+        }
+    }
 </style>

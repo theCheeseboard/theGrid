@@ -9,7 +9,7 @@ import Button from '../components/Button.astro';
 ---
 
 <Layout>
-    <Grid>
+    <Grid class="title-container">
         <GridSlice class='title'>
             <span>A simple</span>
             <span class="accented">Native</span>
@@ -25,8 +25,48 @@ import Button from '../components/Button.astro';
     </Grid>
     <Grid>
         <GridSlice width={12}>
-            We're under construction here, so come back soon! You can find more information about theGrid on our <a
-                href="https://github.com/theCheeseboard/theGrid">GitHub</a> page.
+            <h2>Features</h2>
+        </GridSlice>
+        <GridSlice width={4}>
+            <h3>Fast. Native.</h3>
+            <p>
+                theGrid is speedy. Really speedy. It is written in Rust, using the <a href="https://gpui.rs">GPUI</a>
+                framework, so it doesn't need an entire web browser running just to keep up with messages.
+            </p>
+        </GridSlice>
+        <GridSlice width={4}>
+            <h3>Compatible. Open.</h3>
+            <p>
+                theGrid is built on top of the decentralised <a href="https://matrix.org/">[matrix]</a> protocol. This
+                means that it is compatible with any Matrix client - so whether your contacts use <a
+                    href="https://element.io">Element</a>, <a href="https://cinny.im">Cinny</a>, <a
+                    href="https://fluffy.chat">FluffyChat</a>, or another Matrix
+                Client, you'll be able to chat to them with theGrid.
+            </p>
+        </GridSlice>
+        <GridSlice width={4}>
+            <h3>Private. Secure.</h3>
+            <p>
+                theGrid supports end-to-end encryption, so your messages cannot be read by anyone except for you and
+                your contacts. And if you want to achieve maximum sovereignty over your messages, you can run your own
+                [matrix] server.
+            </p>
+        </GridSlice>
+    </Grid>
+    <Grid>
+        <GridSlice width={12} class="center">
+            <div class="center-content">
+                <h2>Wait, did we say open!?</h2>
+                <p>theGrid is open source, so you can peek into its internals and see how it works.</p>
+                <Button href="https://github.com/thecheeseboard/thegrid">View Source</Button>
+            </div>
+        </GridSlice>
+    </Grid>
+    <Grid>
+        <GridSlice width={4}>
+            <h2>Get theGrid</h2>
+            <p>theGrid is available for macOS and Linux. Windows support is coming soon!</p>
+            <Button href="/download">Get it</Button>
         </GridSlice>
     </Grid>
 </Layout>
@@ -57,5 +97,38 @@ import Button from '../components/Button.astro';
         max-width: 100%;
         height: auto;
         filter: drop-shadow(0 0 0.75rem black);
+    }
+
+    .title-container {
+        padding-bottom: 120px;
+    }
+
+    .center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .center-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 12px 12px 22px;
+        background: var(--layer-color);
+        border-radius: 4px;
+    }
+
+    @media (max-width: 1024px) {
+        .title-container {
+            padding-bottom: 40px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .title-container {
+            min-height: 100svh;
+            padding-bottom: 0px;
+        }
     }
 </style>
