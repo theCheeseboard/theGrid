@@ -84,7 +84,7 @@ impl IdentityResetSurface {
         let weak_this = cx.entity().downgrade();
         window
             .spawn(cx, async move |cx: &mut AsyncWindowContext| {
-                match recovery.reset_identity().await {
+                match tokio::task::unconstrained(recovery.reset_identity()).await {
                     Ok(Some(handle)) => {
                         cx.window_handle()
                             .update(cx, |_, window, cx| {
@@ -134,7 +134,7 @@ impl IdentityResetSurface {
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 if let Some(handle) = handle {
-                    handle.cancel().await;
+                    tokio::task::unconstrained(handle.cancel()).await;
                 }
 
                 weak_this
@@ -155,7 +155,7 @@ impl IdentityResetSurface {
 
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                if let Err(e) = handle.reset(auth_data).await {
+                if let Err(e) = tokio::task::unconstrained(handle.reset(auth_data)).await {
                     weak_this
                         .update(cx, |this, cx| {
                             this.error = Some(e);
