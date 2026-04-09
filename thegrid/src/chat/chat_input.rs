@@ -1,4 +1,11 @@
-use contemporary::styling::theme::{Theme, VariableColor};
+mod autocomplete;
+
+use crate::chat::chat_input::autocomplete::{
+    autocomplete_list, calculate_autocomplete, ApplyAutcompleteEvent,
+};
+use contemporary::components::anchorer::WithAnchorer;
+use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
+use gpui::prelude::FluentBuilder;
 use gpui::{
     actions, div, fill, point, px, relative, size, App,
     AppContext, Bounds, ClipboardItem, Context, Element, ElementId,
@@ -7,7 +14,7 @@ use gpui::{
     MouseUpEvent, PaintQuad, ParentElement, Pixels, Point, Render, Rgba, ShapedLine, Style, Styled,
     TextRun, UTF16Selection, UnderlineStyle, Window,
 };
-use std::ops::Range;
+use std::ops::{Add, Range};
 use std::panic::Location;
 use std::rc::Rc;
 use unicode_segmentation::UnicodeSegmentation;
@@ -22,6 +29,8 @@ actions!(
         Delete,
         Left,
         Right,
+        Up,
+        Down,
         SelectLeft,
         SelectRight,
         SelectAll,
@@ -44,6 +53,8 @@ pub fn bind_chat_input_keys(cx: &mut App) {
         KeyBinding::new("delete", Delete, None),
         KeyBinding::new("left", Left, None),
         KeyBinding::new("right", Right, None),
+        KeyBinding::new("up", Up, None),
+        KeyBinding::new("down", Down, None),
         KeyBinding::new("shift-left", SelectLeft, None),
         KeyBinding::new("shift-right", SelectRight, None),
         KeyBinding::new("secondary-a", SelectAll, None),
@@ -72,6 +83,22 @@ pub struct PasteRichEvent {
     pub clipboard_item: ClipboardItem,
 }
 
+#[derive(Clone)]
+pub enum AutocompleteState {
+    Idle,
+    Loading,
+    Available {
+        options: Vec<AutocompleteOption>,
+        replace_range: Range<usize>,
+        current_option: usize,
+    },
+}
+
+#[derive(Clone)]
+pub enum AutocompleteOption {
+    Emoji { name: String, emoji: String },
+}
+
 pub struct ChatInput {
     text: String,
     placeholder: String,
@@ -82,6 +109,9 @@ pub struct ChatInput {
     last_layout: Option<Vec<ShapedLine>>,
     last_bounds: Option<Bounds<Pixels>>,
     is_selecting: bool,
+
+    autocomplete_state: AutocompleteState,
+    autocomplete_epoch: u32,
 
     escape_press_listener: Option<Rc<Box<EscapePressListener>>>,
     enter_press_listener: Option<Rc<Box<EnterPressListener>>>,
@@ -105,6 +135,8 @@ impl ChatInput {
             enter_press_listener: None,
             text_changed_listener: None,
             paste_rich_listener: None,
+            autocomplete_state: AutocompleteState::Idle,
+            autocomplete_epoch: 0,
         }
     }
 
@@ -233,6 +265,7 @@ impl ChatInput {
 
     pub fn move_to(&mut self, offset: usize, cx: &mut Context<Self>) {
         self.selected_range = offset..offset;
+        self.update_autocomplete_state(cx);
         cx.notify()
     }
 
@@ -300,6 +333,22 @@ impl ChatInput {
     }
 
     pub fn enter(&mut self, _: &Enter, window: &mut Window, cx: &mut Context<Self>) {
+        if let AutocompleteState::Available {
+            current_option,
+            replace_range,
+            options,
+        } = &self.autocomplete_state
+        {
+            // Apply the autocomplete
+            self.apply_autocomplete(
+                options[*current_option].clone(),
+                replace_range.clone(),
+                window,
+                cx,
+            );
+            return;
+        }
+
         if let Some(enter_press_listener) = &self.enter_press_listener {
             enter_press_listener(&EnterPressEvent, window, cx);
         }
@@ -342,6 +391,28 @@ impl ChatInput {
             self.move_to(self.next_boundary(self.selected_range.end), cx);
         } else {
             self.move_to(self.selected_range.end, cx)
+        }
+    }
+
+    pub fn up(&mut self, _: &Up, _: &mut Window, cx: &mut Context<Self>) {
+        if let AutocompleteState::Available {
+            current_option,
+            options,
+            ..
+        } = &mut self.autocomplete_state
+        {
+            *current_option = current_option.checked_sub(1).unwrap_or(options.len() - 1);
+        }
+    }
+
+    pub fn down(&mut self, _: &Down, _: &mut Window, cx: &mut Context<Self>) {
+        if let AutocompleteState::Available {
+            current_option,
+            options,
+            ..
+        } = &mut self.autocomplete_state
+        {
+            *current_option = current_option.add(1) % options.len();
         }
     }
 
@@ -389,13 +460,51 @@ impl ChatInput {
             cx.write_to_clipboard(ClipboardItem::new_string(
                 self.text[self.selected_range.clone()].to_string(),
             ));
-            self.replace_text_in_range(None, "", window, cx)
+            self.replace_text_in_range(None, "", window, cx);
+        }
+    }
+
+    pub fn update_autocomplete_state(&mut self, cx: &mut Context<Self>) {
+        self.autocomplete_epoch += 1;
+        let epoch = self.autocomplete_epoch;
+
+        let text_to_here = self.text[0..self.selected_range.start].to_string();
+        calculate_autocomplete(self, epoch, text_to_here, cx)
+    }
+
+    pub fn apply_autocomplete(
+        &mut self,
+        option: AutocompleteOption,
+        replace_range: Range<usize>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        match option {
+            AutocompleteOption::Emoji { emoji, .. } => {
+                self.replace_text_in_range(Some(replace_range), &emoji, window, cx);
+            }
         }
     }
 }
 
 impl Render for ChatInput {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let autocomplete_state = self.autocomplete_state.clone();
+
+        let autocomplete_listener = cx.listener(
+            |this, autocomplete_event: &ApplyAutcompleteEvent, window, cx| {
+                this.apply_autocomplete(
+                    autocomplete_event.option.clone(),
+                    match &this.autocomplete_state {
+                        AutocompleteState::Available { replace_range, .. } => replace_range.clone(),
+                        _ => panic!("Autocomplete not available"),
+                    },
+                    window,
+                    cx,
+                )
+            },
+        );
+
         div()
             .track_focus(&self.focus_handle)
             .flex()
@@ -409,12 +518,13 @@ impl Render for ChatInput {
             .on_action(cx.listener(Self::delete))
             .on_action(cx.listener(Self::left))
             .on_action(cx.listener(Self::right))
+            .on_action(cx.listener(Self::up))
+            .on_action(cx.listener(Self::down))
             .on_action(cx.listener(Self::select_left))
             .on_action(cx.listener(Self::select_right))
             .on_action(cx.listener(Self::select_all))
             .on_action(cx.listener(Self::home))
             .on_action(cx.listener(Self::end))
-            // .on_action(cx.listener(Self::show_character_palette))
             .on_action(cx.listener(Self::paste))
             .on_action(cx.listener(Self::cut))
             .on_action(cx.listener(Self::copy))
@@ -428,6 +538,35 @@ impl Render for ChatInput {
                     .p(px(4.))
                     .child(ChatElement { input: cx.entity() }),
             )
+            .with_anchorer(|david, bounds, window, cx| {
+                let theme = cx.theme();
+                david.when_some(
+                    match autocomplete_state {
+                        AutocompleteState::Available {
+                            options,
+                            replace_range,
+                            current_option,
+                        } => Some((options, replace_range, current_option)),
+                        _ => None,
+                    },
+                    |david, (options, replace_range, current_option)| {
+                        david.child(
+                            div()
+                                .absolute()
+                                .left(px(0.))
+                                .bottom(bounds.size.height)
+                                .right(px(0.))
+                                .bg(theme.background)
+                                .occlude()
+                                .child(autocomplete_list(
+                                    options,
+                                    current_option,
+                                    autocomplete_listener,
+                                )),
+                        )
+                    },
+                )
+            })
     }
 }
 
@@ -490,6 +629,8 @@ impl EntityInputHandler for ChatInput {
         if let Some(text_changed_listener) = &self.text_changed_listener {
             text_changed_listener(&TextChangedEvent, window, cx);
         }
+
+        self.update_autocomplete_state(cx);
 
         cx.notify();
     }
