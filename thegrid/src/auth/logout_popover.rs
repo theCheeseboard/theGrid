@@ -1,6 +1,6 @@
 use cntp_i18n::tr;
 use contemporary::application::Details;
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
@@ -9,15 +9,13 @@ use contemporary::components::layer::layer;
 use contemporary::components::popover::popover;
 use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
-use gpui::http_client::anyhow;
-use gpui::private::anyhow;
 use gpui::{
-    App, AppContext, AsyncApp, BorrowAppContext, Element, Entity, IntoElement, ParentElement,
-    RenderOnce, Styled, Window, div, px,
+    div, px, App, AppContext, AsyncApp, BorrowAppContext, Entity, IntoElement,
+    ParentElement, RenderOnce, Styled, Window,
 };
-use gpui_tokio::Tokio;
 use std::fs::remove_dir_all;
-use thegrid_common::session::session_manager::{SessionManager, SessionSecretPurpose};
+use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 
 enum LogoutPopoverState {
     Idle,
@@ -55,15 +53,8 @@ impl LogoutPopover {
             state.write(cx, LogoutPopoverState::Processing);
 
             cx.spawn(async move |cx: &mut AsyncApp| {
-                if let Err(e) =
-                    Tokio::spawn_result(
-                        cx,
-                        async move { client.logout().await.map_err(|e| anyhow!(e)) },
-                    )
-                    .unwrap()
-                    .await
-                {
-                    state.write(cx, LogoutPopoverState::Error).unwrap();
+                if let Err(e) = cx.spawn_tokio(async move { client.logout().await }).await {
+                    state.write(cx, LogoutPopoverState::Error);
                     return;
                 };
 
@@ -75,13 +66,10 @@ impl LogoutPopover {
 
                 cx.update_global::<SessionManager, ()>(|session_manager, cx| {
                     session_manager.clear_session();
-                })
-                .unwrap();
+                });
 
-                cx.update_entity(&visible, |visible, _| *visible = false)
-                    .unwrap();
-                cx.update_entity(&state, |state, _| *state = LogoutPopoverState::Idle)
-                    .unwrap();
+                cx.update_entity(&visible, |visible, _| *visible = false);
+                cx.update_entity(&state, |state, _| *state = LogoutPopoverState::Idle);
             })
             .detach()
         });

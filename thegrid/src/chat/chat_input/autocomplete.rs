@@ -108,7 +108,7 @@ impl RenderOnce for AutocompleteList {
                             .collect()
                     },
                 )
-                .track_scroll(scroll_handle.read(cx).clone())
+                .track_scroll(scroll_handle.read(cx))
                 .h(px(100.)),
             )
     }

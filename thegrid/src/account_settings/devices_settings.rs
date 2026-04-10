@@ -107,12 +107,10 @@ impl DevicesSettings {
                     .await
                 {
                     if let Some(uiaa) = e.as_uiaa_response() {
-                        uiaa_client_entity
-                            .update(cx, |uiaa_client, cx| {
-                                uiaa_client.set_uiaa_info(uiaa.clone(), cx);
-                                cx.notify()
-                            })
-                            .unwrap();
+                        uiaa_client_entity.update(cx, |uiaa_client, cx| {
+                            uiaa_client.set_uiaa_info(uiaa.clone(), cx);
+                            cx.notify()
+                        });
                         return;
                     } else {
                         error!("Failed to log out device: {:?}", e);

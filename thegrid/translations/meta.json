@@ -13,85 +13,85 @@
   },
   "ACCOUNT_DEACTIVATE": {
     "context": "deactivate_account.rs",
-    "definedIn": "src/account_settings/deactivate_account.rs:198",
+    "definedIn": "src/account_settings/deactivate_account.rs:196",
     "plural": false,
     "description": null
   },
   "ACCOUNT_DEACTIVATE_AND_DELETE": {
     "context": "deactivate_account.rs",
-    "definedIn": "src/account_settings/deactivate_account.rs:269",
+    "definedIn": "src/account_settings/deactivate_account.rs:267",
     "plural": false,
     "description": null
   },
   "ACCOUNT_DEACTIVATE_AND_DELETE_DESCRIPTION": {
     "context": "deactivate_account.rs",
-    "definedIn": "src/account_settings/deactivate_account.rs:259",
+    "definedIn": "src/account_settings/deactivate_account.rs:257",
     "plural": false,
     "description": null
   },
   "ACCOUNT_DEACTIVATE_CHOOSE_TITLE": {
     "context": "deactivate_account.rs",
-    "definedIn": "src/account_settings/deactivate_account.rs:225",
+    "definedIn": "src/account_settings/deactivate_account.rs:223",
     "plural": false,
     "description": null
   },
   "ACCOUNT_DEACTIVATE_COMPLETE": {
     "context": "deactivate_account.rs",
-    "definedIn": "src/account_settings/deactivate_account.rs:416",
+    "definedIn": "src/account_settings/deactivate_account.rs:414",
     "plural": false,
     "description": null
   },
   "ACCOUNT_DEACTIVATE_COMPLETE_DESCRIPTION": {
     "context": "deactivate_account.rs",
-    "definedIn": "src/account_settings/deactivate_account.rs:420",
+    "definedIn": "src/account_settings/deactivate_account.rs:418",
     "plural": false,
     "description": null
   },
   "ACCOUNT_DEACTIVATE_DESCRIPTION_2": {
     "context": "deactivate_account.rs",
-    "definedIn": "src/account_settings/deactivate_account.rs:344",
+    "definedIn": "src/account_settings/deactivate_account.rs:342",
     "plural": false,
     "description": null
   },
   "ACCOUNT_DEACTIVATE_ONLY": {
     "context": "deactivate_account.rs",
-    "definedIn": "src/account_settings/deactivate_account.rs:243",
+    "definedIn": "src/account_settings/deactivate_account.rs:241",
     "plural": false,
     "description": null
   },
   "ACCOUNT_DEACTIVATE_ONLY_DESCRIPTION": {
     "context": "deactivate_account.rs",
-    "definedIn": "src/account_settings/deactivate_account.rs:234",
+    "definedIn": "src/account_settings/deactivate_account.rs:232",
     "plural": false,
     "description": null
   },
   "ACCOUNT_DEACTIVATE_TITLE": {
     "context": "deactivate_account.rs",
-    "definedIn": "src/account_settings/deactivate_account.rs:321",
+    "definedIn": "src/account_settings/deactivate_account.rs:319",
     "plural": false,
     "description": null
   },
   "ACCOUNT_DEACTIVATE_UPSHOT_1": {
     "context": "deactivate_account.rs",
-    "definedIn": "src/account_settings/deactivate_account.rs:326",
+    "definedIn": "src/account_settings/deactivate_account.rs:324",
     "plural": false,
     "description": null
   },
   "ACCOUNT_DEACTIVATE_UPSHOT_2": {
     "context": "deactivate_account.rs",
-    "definedIn": "src/account_settings/deactivate_account.rs:330",
+    "definedIn": "src/account_settings/deactivate_account.rs:328",
     "plural": false,
     "description": null
   },
   "ACCOUNT_DEACTIVATE_UPSHOT_3": {
     "context": "deactivate_account.rs",
-    "definedIn": "src/account_settings/deactivate_account.rs:335",
+    "definedIn": "src/account_settings/deactivate_account.rs:333",
     "plural": false,
     "description": null
   },
   "ACCOUNT_DEACTIVATE_UPSHOT_4": {
     "context": "deactivate_account.rs",
-    "definedIn": "src/account_settings/deactivate_account.rs:340",
+    "definedIn": "src/account_settings/deactivate_account.rs:338",
     "plural": false,
     "description": null
   },
@@ -139,7 +139,7 @@
   },
   "ACCOUNT_SWITCHER_ERROR": {
     "context": "chat_surface.rs",
-    "definedIn": "src/chat/chat_surface.rs:168",
+    "definedIn": "src/chat/chat_surface.rs:169",
     "plural": false,
     "description": null
   },
@@ -277,7 +277,7 @@
   },
   "AUTH_ADVANCED_LOG_IN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:1213",
+    "definedIn": "src/auth/auth_surface.rs:1210",
     "plural": false,
     "description": null
   },
@@ -289,25 +289,25 @@
   },
   "AUTH_LOG_IN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:1223",
+    "definedIn": "src/auth/auth_surface.rs:1220",
     "plural": false,
     "description": null
   },
   "AUTH_LOG_IN_TO_MATRIX": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:1197",
+    "definedIn": "src/auth/auth_surface.rs:1194",
     "plural": false,
     "description": null
   },
   "AUTH_MANUAL_LOGIN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:994",
+    "definedIn": "src/auth/auth_surface.rs:991",
     "plural": false,
     "description": null
   },
   "AUTH_MANUAL_LOGIN_MESSAGE": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:996",
+    "definedIn": "src/auth/auth_surface.rs:993",
     "plural": false,
     "description": null
   },
@@ -319,25 +319,25 @@
   },
   "AUTH_OAUTH": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:1050",
+    "definedIn": "src/auth/auth_surface.rs:1047",
     "plural": false,
     "description": null
   },
   "AUTH_OAUTH_BUTTON": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:1060",
+    "definedIn": "src/auth/auth_surface.rs:1057",
     "plural": false,
     "description": null
   },
   "AUTH_OAUTH_DESCRIPTION": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:1052",
+    "definedIn": "src/auth/auth_surface.rs:1049",
     "plural": false,
     "description": null
   },
   "AUTH_PASSWORD": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:847",
+    "definedIn": "src/auth/auth_surface.rs:844",
     "plural": false,
     "description": null
   },
@@ -349,31 +349,31 @@
   },
   "AUTH_POPOVER_ADVANCED_LOGIN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:734",
+    "definedIn": "src/auth/auth_surface.rs:731",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_ADVANCED_LOGIN_TEXT": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:743",
+    "definedIn": "src/auth/auth_surface.rs:740",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_CONNECTION_ERROR": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:801",
+    "definedIn": "src/auth/auth_surface.rs:798",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_CONNECTION_ERROR_TEXT": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:810",
+    "definedIn": "src/auth/auth_surface.rs:807",
     "plural": false,
     "description": null
   },
   "AUTH_POPOVER_INITIAL_SYNC": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:786",
+    "definedIn": "src/auth/auth_surface.rs:783",
     "plural": false,
     "description": null
   },
@@ -391,49 +391,49 @@
   },
   "AUTH_SESSION_RESTORE": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:1159",
+    "definedIn": "src/auth/auth_surface.rs:1156",
     "plural": false,
     "description": null
   },
   "AUTH_SSO": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:894",
+    "definedIn": "src/auth/auth_surface.rs:891",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_BUTTON": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:911",
+    "definedIn": "src/auth/auth_surface.rs:908",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_BUTTON_GENERIC": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:916",
+    "definedIn": "src/auth/auth_surface.rs:913",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_MESSAGE": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:971",
+    "definedIn": "src/auth/auth_surface.rs:968",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_NAME": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:964",
+    "definedIn": "src/auth/auth_surface.rs:961",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_NAME_GENERIC": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:958",
+    "definedIn": "src/auth/auth_surface.rs:955",
     "plural": false,
     "description": null
   },
   "AUTH_SSO_WAITING_FOR_TOKEN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:982",
+    "definedIn": "src/auth/auth_surface.rs:979",
     "plural": false,
     "description": null
   },
@@ -487,7 +487,7 @@
   },
   "CLOSE": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:355",
+    "definedIn": "src/auth/verification_popover.rs:346",
     "plural": false,
     "description": null
   },
@@ -565,7 +565,7 @@
   },
   "CREATE_SPACE": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:182",
+    "definedIn": "src/chat/join_room.rs:184",
     "plural": false,
     "description": null
   },
@@ -619,55 +619,55 @@
   },
   "DEVICES_LOG_OUT_ACTION": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:331",
+    "definedIn": "src/account_settings/devices_settings.rs:329",
     "plural": false,
     "description": null
   },
   "DEVICES_LOG_OUT_INFORMATION": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:313",
+    "definedIn": "src/account_settings/devices_settings.rs:311",
     "plural": false,
     "description": null
   },
   "DEVICES_LOG_OUT_TEXT": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:303",
+    "definedIn": "src/account_settings/devices_settings.rs:301",
     "plural": false,
     "description": null
   },
   "DEVICES_LOG_OUT_TITLE": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:300",
+    "definedIn": "src/account_settings/devices_settings.rs:298",
     "plural": false,
     "description": null
   },
   "DEVICES_OTHER_DEVICES": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:262",
+    "definedIn": "src/account_settings/devices_settings.rs:260",
     "plural": false,
     "description": null
   },
   "DEVICES_THIS_DEVICE": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:239",
+    "definedIn": "src/account_settings/devices_settings.rs:237",
     "plural": false,
     "description": null
   },
   "DEVICE_LAST_ACTIVITY": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:380",
+    "definedIn": "src/account_settings/devices_settings.rs:378",
     "plural": false,
     "description": null
   },
   "DEVICE_VERIFY": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:440",
+    "definedIn": "src/account_settings/devices_settings.rs:438",
     "plural": false,
     "description": null
   },
   "DIRECT_JOIN_ROOM": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:197",
+    "definedIn": "src/chat/join_room.rs:200",
     "plural": false,
     "description": null
   },
@@ -901,19 +901,19 @@
   },
   "INVITE_ACCEPT": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:385",
+    "definedIn": "src/chat/join_room.rs:388",
     "plural": false,
     "description": null
   },
   "INVITE_ACCEPT_ERROR_TEXT": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:254",
+    "definedIn": "src/chat/join_room.rs:257",
     "plural": false,
     "description": null
   },
   "INVITE_ACCEPT_ERROR_TITLE": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:247",
+    "definedIn": "src/chat/join_room.rs:250",
     "plural": false,
     "description": null
   },
@@ -925,31 +925,31 @@
   },
   "INVITE_DECLINE": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:449",
+    "definedIn": "src/chat/join_room.rs:452",
     "plural": false,
     "description": null
   },
   "INVITE_DECLINE_CONFIRMATION": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:406",
+    "definedIn": "src/chat/join_room.rs:409",
     "plural": false,
     "description": null
   },
   "INVITE_DECLINE_CONFIRMATION_IGNORE": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:421",
+    "definedIn": "src/chat/join_room.rs:424",
     "plural": false,
     "description": null
   },
   "INVITE_DECLINE_CONFIRMATION_WITH_INVITER": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:414",
+    "definedIn": "src/chat/join_room.rs:417",
     "plural": false,
     "description": null
   },
   "INVITE_DECLINE_TITLE": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:404",
+    "definedIn": "src/chat/join_room.rs:407",
     "plural": false,
     "description": null
   },
@@ -973,7 +973,7 @@
   },
   "INVITE_INVITED_BY": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:357",
+    "definedIn": "src/chat/join_room.rs:360",
     "plural": false,
     "description": null
   },
@@ -1093,7 +1093,7 @@
   },
   "KEY_IMPORT_IMPORT": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:78",
+    "definedIn": "src/account_settings/security_settings.rs:77",
     "plural": false,
     "description": null
   },
@@ -1225,61 +1225,61 @@
   },
   "LEAVE_ROOM_INFORMATIONAL_NOT_PUBLIC": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:299",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:298",
     "plural": false,
     "description": null
   },
   "LEAVE_ROOM_INFORMATIONAL_PUBLIC": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:293",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:292",
     "plural": false,
     "description": null
   },
   "LEAVE_ROOM_TEXT": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:286",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:285",
     "plural": false,
     "description": null
   },
   "LOG_OUT": {
     "context": "logout_popover.rs",
-    "definedIn": "src/auth/logout_popover.rs:152",
+    "definedIn": "src/auth/logout_popover.rs:140",
     "plural": false,
     "description": null
   },
   "LOG_OUT_COMFIRMATION_MESSAGE": {
     "context": "logout_popover.rs",
-    "definedIn": "src/auth/logout_popover.rs:134",
+    "definedIn": "src/auth/logout_popover.rs:122",
     "plural": false,
     "description": null
   },
   "LOG_OUT_CONFIRMATION_TITLE": {
     "context": "logout_popover.rs",
-    "definedIn": "src/auth/logout_popover.rs:125",
+    "definedIn": "src/auth/logout_popover.rs:113",
     "plural": false,
     "description": null
   },
   "LOG_OUT_TITLE": {
     "context": "logout_popover.rs",
-    "definedIn": "src/auth/logout_popover.rs:109",
+    "definedIn": "src/auth/logout_popover.rs:97",
     "plural": false,
     "description": null
   },
   "LOG_OUT_WARNING": {
     "context": "logout_popover.rs",
-    "definedIn": "src/auth/logout_popover.rs:142",
+    "definedIn": "src/auth/logout_popover.rs:130",
     "plural": false,
     "description": null
   },
   "MAIN_CHAT_ERROR_TERMINAL": {
     "context": "chat_surface.rs",
-    "definedIn": "src/chat/chat_surface.rs:125",
+    "definedIn": "src/chat/chat_surface.rs:126",
     "plural": false,
     "description": null
   },
   "MAIN_CHAT_WELCOME": {
     "context": "chat_surface.rs",
-    "definedIn": "src/chat/chat_surface.rs:107",
+    "definedIn": "src/chat/chat_surface.rs:108",
     "plural": false,
     "description": null
   },
@@ -1309,7 +1309,7 @@
   },
   "MENU_ROOMS": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:104",
+    "definedIn": "src/main.rs:105",
     "plural": false,
     "description": null
   },
@@ -1507,13 +1507,13 @@
   },
   "POPOVER_LOGIN": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:1252",
+    "definedIn": "src/auth/auth_surface.rs:1249",
     "plural": false,
     "description": null
   },
   "POPOVER_LOGIN_HOMESERVER": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:1246",
+    "definedIn": "src/auth/auth_surface.rs:1243",
     "plural": false,
     "description": null
   },
@@ -1567,7 +1567,7 @@
   },
   "POPOVER_VERIFY": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:301",
+    "definedIn": "src/auth/verification_popover.rs:292",
     "plural": false,
     "description": null
   },
@@ -1777,19 +1777,19 @@
   },
   "ROOMS_CREATE": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:106",
+    "definedIn": "src/main.rs:107",
     "plural": false,
     "description": null
   },
   "ROOMS_CREATE_SPACE": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:108",
+    "definedIn": "src/main.rs:109",
     "plural": false,
     "description": null
   },
   "ROOMS_DIRECT_JOIN": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:112",
+    "definedIn": "src/main.rs:113",
     "plural": false,
     "description": null
   },
@@ -2023,31 +2023,31 @@
   },
   "ROOM_LEAVE": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:211",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:210",
     "plural": false,
     "description": null
   },
   "ROOM_MARK_FAVOURITE": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:160",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:159",
     "plural": false,
     "description": null
   },
   "ROOM_MARK_LOW_PRIORITY": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:184",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:183",
     "plural": false,
     "description": null
   },
   "ROOM_MARK_NOT_FAVOURITE": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:158",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:157",
     "plural": false,
     "description": null
   },
   "ROOM_MARK_NOT_LOW_PRIORITY": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:182",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:181",
     "plural": false,
     "description": null
   },
@@ -2119,7 +2119,7 @@
   },
   "ROOM_SETTINGS_ACTION": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:206",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:205",
     "plural": false,
     "description": null
   },
@@ -2311,13 +2311,13 @@
   },
   "ROOM_TYPE_ROOM": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:352",
+    "definedIn": "src/chat/join_room.rs:355",
     "plural": false,
     "description": null
   },
   "ROOM_TYPE_SPACE": {
     "context": "join_room.rs",
-    "definedIn": "src/chat/join_room.rs:351",
+    "definedIn": "src/chat/join_room.rs:354",
     "plural": false,
     "description": null
   },
@@ -2383,55 +2383,55 @@
   },
   "SECURITY_CRYPTO_IDENTITY": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:321",
+    "definedIn": "src/account_settings/security_settings.rs:318",
     "plural": false,
     "description": null
   },
   "SECURITY_ENCRYPTION": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:208",
+    "definedIn": "src/account_settings/security_settings.rs:205",
     "plural": false,
     "description": null
   },
   "SECURITY_IDENTITY_DESCRIPTION": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:325",
+    "definedIn": "src/account_settings/security_settings.rs:322",
     "plural": false,
     "description": null
   },
   "SECURITY_IDENTITY_DESCRIPTION_2": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:330",
+    "definedIn": "src/account_settings/security_settings.rs:327",
     "plural": false,
     "description": null
   },
   "SECURITY_IDENTITY_RESET": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:347",
+    "definedIn": "src/account_settings/security_settings.rs:344",
     "plural": false,
     "description": null
   },
   "SECURITY_KEY_BACKUP": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:265",
+    "definedIn": "src/account_settings/security_settings.rs:262",
     "plural": false,
     "description": null
   },
   "SECURITY_KEY_BACKUP_DESCRIPTION": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:267",
+    "definedIn": "src/account_settings/security_settings.rs:264",
     "plural": false,
     "description": null
   },
   "SECURITY_KEY_BACKUP_EXPORT": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:283",
+    "definedIn": "src/account_settings/security_settings.rs:280",
     "plural": false,
     "description": null
   },
   "SECURITY_KEY_BACKUP_IMPORT": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:303",
+    "definedIn": "src/account_settings/security_settings.rs:300",
     "plural": false,
     "description": null
   },
@@ -2509,7 +2509,7 @@
   },
   "SORRY": {
     "context": "auth_surface.rs",
-    "definedIn": "src/auth/auth_surface.rs:817",
+    "definedIn": "src/auth/auth_surface.rs:814",
     "plural": false,
     "description": null
   },
@@ -2533,7 +2533,7 @@
   },
   "SPACE_LOBBY": {
     "context": "standard_room_element.rs",
-    "definedIn": "src/chat/sidebar/standard_room_element.rs:237",
+    "definedIn": "src/chat/sidebar/standard_room_element.rs:236",
     "plural": false,
     "description": null
   },
@@ -2713,37 +2713,37 @@
   },
   "UNVERIFIED_DEVICE_BADGE": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:418",
+    "definedIn": "src/account_settings/devices_settings.rs:416",
     "plural": false,
     "description": null
   },
   "UPLOAD_MXC_BROWSE_BUTTON": {
     "context": "upload_mxc_dialog.rs",
-    "definedIn": "src/upload_mxc_dialog.rs:164",
+    "definedIn": "src/upload_mxc_dialog.rs:162",
     "plural": false,
     "description": null
   },
   "UPLOAD_MXC_BROWSE_PROMPT": {
     "context": "upload_mxc_dialog.rs",
-    "definedIn": "src/upload_mxc_dialog.rs:96",
+    "definedIn": "src/upload_mxc_dialog.rs:94",
     "plural": false,
     "description": null
   },
   "UPLOAD_MXC_CHANGE_BUTTON": {
     "context": "upload_mxc_dialog.rs",
-    "definedIn": "src/upload_mxc_dialog.rs:186",
+    "definedIn": "src/upload_mxc_dialog.rs:184",
     "plural": false,
     "description": null
   },
   "UPLOAD_MXC_PROMPT": {
     "context": "upload_mxc_dialog.rs",
-    "definedIn": "src/upload_mxc_dialog.rs:159",
+    "definedIn": "src/upload_mxc_dialog.rs:157",
     "plural": false,
     "description": null
   },
   "UPLOAD_MXC_UPLOADING": {
     "context": "upload_mxc_dialog.rs",
-    "definedIn": "src/upload_mxc_dialog.rs:221",
+    "definedIn": "src/upload_mxc_dialog.rs:219",
     "plural": false,
     "description": null
   },
@@ -2761,73 +2761,73 @@
   },
   "VERIFICATION_CANCEL_REASON_ACCEPTED": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:539",
+    "definedIn": "src/auth/verification_popover.rs:530",
     "plural": false,
     "description": null
   },
   "VERIFICATION_CANCEL_REASON_MISMATCHED_SAS": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:544",
+    "definedIn": "src/auth/verification_popover.rs:535",
     "plural": false,
     "description": null
   },
   "VERIFICATION_CANCEL_REASON_TIMEOUT": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:524",
+    "definedIn": "src/auth/verification_popover.rs:515",
     "plural": false,
     "description": null
   },
   "VERIFICATION_CANCEL_REASON_UNKNOWN_METHOD": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:529",
+    "definedIn": "src/auth/verification_popover.rs:520",
     "plural": false,
     "description": null
   },
   "VERIFICATION_CANCEL_REASON_USER": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:518",
+    "definedIn": "src/auth/verification_popover.rs:509",
     "plural": false,
     "description": null
   },
   "VERIFICATION_CANCEL_REASON_USER_IS": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:513",
+    "definedIn": "src/auth/verification_popover.rs:504",
     "plural": false,
     "description": null
   },
   "VERIFICATION_CANCEL_UNEXPECTED_MESSAGE": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:534",
+    "definedIn": "src/auth/verification_popover.rs:525",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_AWAITING_OK": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:460",
+    "definedIn": "src/auth/verification_popover.rs:451",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_AWAITING_OK_SPINNER": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:495",
+    "definedIn": "src/auth/verification_popover.rs:486",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_AWAITING_OK_TEXT": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:472",
+    "definedIn": "src/auth/verification_popover.rs:463",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_AWAITING_OK_US_TEXT": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:480",
+    "definedIn": "src/auth/verification_popover.rs:471",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_CANCELLED": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:418",
+    "definedIn": "src/auth/verification_popover.rs:409",
     "plural": false,
     "description": null
   },
@@ -2851,13 +2851,13 @@
   },
   "VERIFICATION_POPOVER_OK": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:338",
+    "definedIn": "src/auth/verification_popover.rs:329",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_OK_MESSAGE": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:347",
+    "definedIn": "src/auth/verification_popover.rs:338",
     "plural": false,
     "description": null
   },
@@ -2941,7 +2941,7 @@
   },
   "VERIFY_SESSION_DESCRIPTION_ADDITIONAL": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:210",
+    "definedIn": "src/account_settings/devices_settings.rs:208",
     "plural": false,
     "description": null
   },
@@ -2983,7 +2983,7 @@
   },
   "WARNING": {
     "context": "logout_popover.rs",
-    "definedIn": "src/auth/logout_popover.rs:140",
+    "definedIn": "src/auth/logout_popover.rs:128",
     "plural": false,
     "description": null
   }

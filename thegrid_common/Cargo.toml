@@ -27,6 +27,7 @@ yuv = { workspace = true }
 ringbuffer = { workspace = true }
 rustc-hash = { workspace = true }
 rodio = { workspace = true }
+tokio = { workspace = true }
 
 [build-dependencies]
 cntp_i18n_gen = { workspace = true }

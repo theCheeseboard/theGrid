@@ -177,7 +177,7 @@ impl TimelineItem {
 
         let hovered = window.use_keyed_state(
             ElementId::NamedChild(
-                Box::new(ElementId::Name("hovered".into())),
+                Arc::new(ElementId::Name("hovered".into())),
                 event
                     .event_id()
                     .map(|event_id| event_id.to_string())

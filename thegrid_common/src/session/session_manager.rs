@@ -1,5 +1,6 @@
 use crate::session::account_cache::AccountCache;
 use crate::session::caches::Caches;
+use crate::session::capability_cache::CapabilityCache;
 use crate::session::database_secret::{DatabaseSecret, DatabaseSecretExt};
 use crate::session::devices_cache::DevicesCache;
 use crate::session::error_handling::{handle_error, ClientError, TerminalClientError};
@@ -43,7 +44,6 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 use uuid::Uuid;
-use crate::session::capability_cache::CapabilityCache;
 
 pub struct SessionManager {
     current_session: Option<Session>,
@@ -180,7 +180,7 @@ impl SessionManager {
             .await?;
 
         let desktop_entry =
-            cx.read_global::<Details, _>(|details, cx| details.generatable.desktop_entry)?;
+            cx.read_global::<Details, _>(|details, cx| details.generatable.desktop_entry);
 
         if let Some(oauth_session) = secrets.oauth_session() {
             // Configure refresh tokens
@@ -264,14 +264,9 @@ impl SessionManager {
         .detach();
         cx.spawn(async move |cx: &mut AsyncApp| {
             while let Ok((notification, room)) = rx_notification.recv().await {
-                if cx
-                    .update(|cx| {
-                        trigger_notification(notification, room, cx);
-                    })
-                    .is_err()
-                {
-                    return;
-                };
+                cx.update(|cx| {
+                    trigger_notification(notification, room, cx);
+                })
             }
         })
         .detach();
@@ -283,14 +278,9 @@ impl SessionManager {
                     return;
                 };
 
-                if cx
-                    .update_global::<Self, ()>(|session_manager, cx| {
-                        session_manager.current_client_error = ClientError::None;
-                    })
-                    .is_err()
-                {
-                    return;
-                }
+                cx.update_global::<Self, ()>(|session_manager, cx| {
+                    session_manager.current_client_error = ClientError::None;
+                })
             }
         })
         .detach();
@@ -358,7 +348,7 @@ impl SessionManager {
         cx.update_global::<Self, ()>(|session_manager, cx| {
             session_manager.current_caches = Some(Caches::new(&client, cx));
             session_manager.current_session_client = Some(cx.new(|_| client));
-        })?;
+        });
 
         Ok(())
     }
@@ -433,9 +423,13 @@ impl SessionManager {
     pub fn spaces(&self) -> Entity<SpacesCache> {
         self.current_caches.as_ref().unwrap().spaces_cache.clone()
     }
-    
+
     pub fn capabilities(&self) -> Entity<CapabilityCache> {
-        self.current_caches.as_ref().unwrap().capability_cache.clone()
+        self.current_caches
+            .as_ref()
+            .unwrap()
+            .capability_cache
+            .clone()
     }
 }
 

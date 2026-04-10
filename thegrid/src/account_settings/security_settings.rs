@@ -22,7 +22,6 @@ use gpui::{
     div, px, App, AppContext, AsyncApp, ClickEvent, Context, Entity,
     IntoElement, ParentElement, PathPromptOptions, Render, Styled, Window,
 };
-use matrix_sdk::authentication::oauth::AccountManagementActionFull;
 use matrix_sdk::encryption::recovery::RecoveryState;
 use matrix_sdk::encryption::VerificationState;
 use std::rc::Rc;
@@ -82,12 +81,10 @@ impl SecuritySettings {
         });
         cx.spawn(async move |_, cx: &mut AsyncApp| {
             if let Some(mut path) = prompt.await.ok().and_then(|result| result.ok()).flatten() {
-                key_import_popover
-                    .update(cx, |key_import_popover, cx| {
-                        key_import_popover.open(path.remove(0));
-                        cx.notify()
-                    })
-                    .unwrap();
+                key_import_popover.update(cx, |key_import_popover, cx| {
+                    key_import_popover.open(path.remove(0));
+                    cx.notify()
+                });
             };
         })
         .detach();

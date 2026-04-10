@@ -3,7 +3,7 @@ use cntp_i18n::tr;
 use contemporary::application::Details;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -18,20 +18,20 @@ use contemporary::surface::surface;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, AsyncWindowContext, BorrowAppContext, Context, Entity, IntoElement,
-    ParentElement, Render, Styled, WeakEntity, Window, div, px,
+    div, px, App, AppContext, AsyncApp, AsyncWindowContext, BorrowAppContext, Context,
+    Entity, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
 };
 use gpui_tokio::Tokio;
-use matrix_sdk::encryption::CrossSigningResetAuthType;
 use matrix_sdk::encryption::recovery::{IdentityResetHandle, RecoveryError};
-use matrix_sdk::ruma::OwnedUserId;
+use matrix_sdk::encryption::CrossSigningResetAuthType;
 use matrix_sdk::ruma::api::client::uiaa::AuthData;
+use matrix_sdk::ruma::OwnedUserId;
 use std::fs::remove_dir_all;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use thegrid_common::tokio_helper::TokioHelper;
-use tracing::{Id, error};
+use tracing::{error, Id};
 
 pub struct DeactivateSurface {
     state: DeactivateState,
@@ -128,12 +128,10 @@ impl DeactivateSurface {
                     .await
                 {
                     if let Some(uiaa) = e.as_uiaa_response() {
-                        uiaa_client_entity
-                            .update(cx, |uiaa_client, cx| {
-                                uiaa_client.set_uiaa_info(uiaa.clone(), cx);
-                                cx.notify()
-                            })
-                            .unwrap();
+                        uiaa_client_entity.update(cx, |uiaa_client, cx| {
+                            uiaa_client.set_uiaa_info(uiaa.clone(), cx);
+                            cx.notify()
+                        });
                         return;
                     } else {
                         error!("Failed to deactivate account: {:?}", e);

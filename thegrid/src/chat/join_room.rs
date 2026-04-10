@@ -1,12 +1,13 @@
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::join_room::create_room_popover::CreateRoomPopover;
+use crate::chat::join_room::create_space_popover::CreateSpacePopover;
 use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
 use cntp_i18n::tr;
 use contemporary::components::admonition::AdmonitionSeverity;
 use contemporary::components::button::button;
-use contemporary::components::checkbox::{CheckState, checkbox};
+use contemporary::components::checkbox::{checkbox, CheckState};
 use contemporary::components::constrainer::constrainer;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -15,17 +16,16 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, Context, Element, Entity, InteractiveElement, IntoElement, ListAlignment,
-    ListSizingBehavior, ListState, ParentElement, Render, RenderOnce, Styled, Subscription, Window,
-    div, list, px,
+    div, list, px, App, AsyncApp, Context, Element, Entity,
+    InteractiveElement, IntoElement, ListAlignment, ListSizingBehavior, ListState, ParentElement, Render, RenderOnce,
+    Styled, Subscription, Window,
 };
 use matrix_sdk::room::RoomMember;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::room_cache::{CachedRoom, RoomJoinEvent};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 use tracing::error;
-use crate::chat::join_room::create_space_popover::CreateSpacePopover;
 
 pub mod create_room_popover;
 pub mod create_space_popover;
@@ -177,19 +177,22 @@ impl Render for JoinRoom {
                                                 )
                                             })),
                                     )
-                                    .child(button("create-space").child(icon_text(
-                                        "list-add".into(),
-                                        tr!("CREATE_SPACE", "Create Space").into(),
-                                    ))
-                                        .on_click(cx.listener(|this, _, _, cx| {
-                                            this.create_space_popover.update(
-                                                cx,
-                                                |create_space_popover, cx| {
-                                                    create_space_popover.open(None, cx);
-                                                    cx.notify();
-                                                },
-                                            )
-                                        })))
+                                    .child(
+                                        button("create-space")
+                                            .child(icon_text(
+                                                "list-add".into(),
+                                                tr!("CREATE_SPACE", "Create Space").into(),
+                                            ))
+                                            .on_click(cx.listener(|this, _, _, cx| {
+                                                this.create_space_popover.update(
+                                                    cx,
+                                                    |create_space_popover, cx| {
+                                                        create_space_popover.open(None, cx);
+                                                        cx.notify();
+                                                    },
+                                                )
+                                            })),
+                                    )
                                     .child(
                                         button("direct-join-room")
                                             .child(icon_text(
@@ -281,7 +284,7 @@ impl Invitation {
         cx.spawn(async move |cx: &mut AsyncApp| {
             if let Err(e) = cx.spawn_tokio(async move { room.leave().await }).await {
                 error!("Unable to reject invite: {e}");
-                processing.write(cx, false).unwrap();
+                processing.write(cx, false);
                 return;
             };
 
@@ -293,7 +296,7 @@ impl Invitation {
                     .await;
             }
 
-            processing.write(cx, false).unwrap();
+            processing.write(cx, false);
         })
         .detach();
     }

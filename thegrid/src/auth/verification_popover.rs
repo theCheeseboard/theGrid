@@ -16,23 +16,17 @@ use contemporary::components::pager::pager;
 use contemporary::components::popover::popover;
 use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
-use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, img, px, svg, App, AppContext, AsyncApp, ClickEvent, Context,
-    Element, Entity, Flatten, IntoElement, ParentElement, Render, RenderImage, Styled, WeakEntity, Window,
+    div, px, App, AppContext, AsyncApp, ClickEvent, Context, Element, Entity,
+    IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
 };
-use gpui_tokio::Tokio;
-use image::{Frame, Luma, Rgb, Rgba};
 use matrix_sdk::encryption::identities::Device;
 use matrix_sdk::encryption::verification::VerificationRequestState;
 use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::ruma::events::key::verification::cancel::CancelCode;
-use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use matrix_sdk_crypto::{CancelInfo, QrVerificationState};
-use smallvec::smallvec;
 use std::rc::Rc;
-use std::sync::Arc;
 use thegrid_common::sas_emoji::SasEmoji;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::session::verification_requests_cache::{
@@ -73,7 +67,8 @@ impl VerificationPopover {
         let user_id = client.user_id().unwrap().to_owned();
         let verification_requests = session_manager.verification_requests();
 
-        cx.spawn(
+        cx.spawn({
+            let verification_requests = verification_requests.downgrade();
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 if let Some(identity) = cx
                     .spawn_tokio(async move {
@@ -110,8 +105,8 @@ impl VerificationPopover {
                         });
                     }
                 };
-            },
-        )
+            }
+        })
         .detach();
 
         cx.notify()
@@ -140,13 +135,9 @@ impl VerificationPopover {
                     .await
                 {
                     let verification_request_clone = verification_request.clone();
-                    let Ok(verification_request) =
-                        verification_requests.update(cx, |requests, cx| {
-                            requests.notify_new_verification_request(verification_request_clone, cx)
-                        })
-                    else {
-                        return;
-                    };
+                    let verification_request = verification_requests.update(cx, |requests, cx| {
+                        requests.notify_new_verification_request(verification_request_clone, cx)
+                    });
                     let _ = weak_this.update(cx, |this, cx| {
                         this.state =
                             VerificationPopoverState::ActiveVerification(verification_request);

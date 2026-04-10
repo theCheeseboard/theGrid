@@ -31,21 +31,27 @@ impl RoomCache {
     pub fn new(client: &Client, cx: &mut App) -> Entity<Self> {
         cx.new(|cx| {
             let rooms = cx.new(|_| Vector::new());
-            let rooms_clone = rooms.clone();
 
             let client = client.clone();
 
+            let weak_rooms = rooms.downgrade();
             cx.spawn(
                 async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                     let (rooms_vector, mut room_stream) = client.rooms_stream();
-                    rooms_clone.write(cx, rooms_vector).unwrap();
+                    weak_rooms
+                        .update(cx, |rooms, cx| {
+                            *rooms = rooms_vector;
+                            cx.notify();
+                        })
+                        .unwrap();
 
                     loop {
-                        let Some(mutations) = room_stream.next().await else {
+                        let Some(mutations) = tokio::task::unconstrained(room_stream.next()).await
+                        else {
                             return;
                         };
 
-                        if rooms_clone
+                        if weak_rooms
                             .update(cx, |rooms, cx| {
                                 for mutation in mutations {
                                     mutation.apply(rooms);

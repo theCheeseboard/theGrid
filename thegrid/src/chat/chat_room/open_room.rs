@@ -292,6 +292,9 @@ impl OpenRoom {
                 ClipboardEntry::String(_) => {
                     // noop
                 }
+                ClipboardEntry::ExternalPaths(_) => {
+                    // TODO: What is this? Do we paste a file?
+                }
                 ClipboardEntry::Image(image) => {
                     let suggested_extension = mime2ext(image.format.mime_type());
 

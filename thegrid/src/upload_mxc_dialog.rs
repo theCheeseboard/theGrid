@@ -7,14 +7,12 @@ use contemporary::components::progress_bar::progress_bar;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, img, px, App, AsyncApp, AsyncWindowContext, ClickEvent,
-    Image, InteractiveElement, IntoElement, ObjectFit, ParentElement, PathPromptOptions, RenderImage,
+    div, img, px, App, AsyncApp, AsyncWindowContext,
+    ClickEvent, InteractiveElement, IntoElement, ObjectFit, ParentElement, PathPromptOptions, RenderImage,
     RenderOnce, SharedString, Styled, StyledImage, Window,
 };
 use image::{Frame, ImageReader, Pixel, RgbaImage};
-use matrix_sdk::ruma::api::client::media::create_content::v3::Response;
-use matrix_sdk::ruma::{MxcUri, OwnedMxcUri};
-use matrix_sdk::Error;
+use matrix_sdk::ruma::OwnedMxcUri;
 use smallvec::smallvec;
 use std::fs;
 use std::io::Cursor;
@@ -275,19 +273,18 @@ impl RenderOnce for UploadMxcDialog {
 
                                         let mut progress = fut.subscribe_to_send_progress();
                                         cx.spawn({
-                                            let state = state.clone();
+                                            let state = state.downgrade();
                                             let image = image.clone();
                                             async move |cx: &mut AsyncWindowContext| {
                                                 while let Some(progress) = progress.next().await {
                                                     if state
-                                                        .write(
-                                                            cx,
-                                                            UploadMxcState::Uploading {
+                                                        .update(cx, |state, cx| {
+                                                            *state = UploadMxcState::Uploading {
                                                                 image: image.clone(),
                                                                 progress: 0,
                                                                 total_progress: 1,
-                                                            },
-                                                        )
+                                                            }
+                                                        })
                                                         .is_err()
                                                     {
                                                         return;

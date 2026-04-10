@@ -6,14 +6,7 @@ use crate::chat::chat_input::autocomplete::{
 use contemporary::components::anchorer::WithAnchorer;
 use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
-use gpui::{
-    actions, div, fill, point, px, relative, size, App,
-    AppContext, Bounds, ClipboardItem, Context, Element, ElementId,
-    ElementInputHandler, Entity, EntityInputHandler, FocusHandle, GlobalElementId, Hsla,
-    InspectorElementId, InteractiveElement, IntoElement, KeyBinding, LayoutId, MouseButton, MouseDownEvent, MouseMoveEvent,
-    MouseUpEvent, PaintQuad, ParentElement, Pixels, Point, Render, Rgba, ShapedLine, Style, Styled,
-    TextRun, UTF16Selection, UnderlineStyle, Window,
-};
+use gpui::{actions, div, fill, point, px, relative, size, App, AppContext, Bounds, ClipboardItem, Context, Element, ElementId, ElementInputHandler, Entity, EntityInputHandler, FocusHandle, GlobalElementId, Hsla, InspectorElementId, InteractiveElement, IntoElement, KeyBinding, LayoutId, MouseButton, MouseDownEvent, MouseMoveEvent, MouseUpEvent, PaintQuad, ParentElement, Pixels, Point, Render, Rgba, ShapedLine, Style, Styled, TextAlign, TextRun, UTF16Selection, UnderlineStyle, Window};
 use std::ops::{Add, Range};
 use std::panic::Location;
 use std::rc::Rc;
@@ -943,6 +936,8 @@ impl Element for ChatElement {
             line.paint(
                 bounds.origin + point(px(0.), window.line_height() * i),
                 window.line_height(),
+                TextAlign::Left,
+                None,
                 window,
                 cx,
             )

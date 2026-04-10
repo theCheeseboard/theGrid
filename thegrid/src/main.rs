@@ -99,6 +99,7 @@ fn mane() {
                                 ),
                                 MenuItem::action(tr!("ACCOUNT_LOG_OUT", "Log Out"), LogOut),
                             ],
+                            disabled: false,
                         },
                         Menu {
                             name: tr!("MENU_ROOMS", "Rooms").into(),
@@ -113,6 +114,7 @@ fn mane() {
                                     DirectJoinRoom,
                                 ),
                             ],
+                            disabled: false,
                         },
                     ],
                     on_about: Rc::new({

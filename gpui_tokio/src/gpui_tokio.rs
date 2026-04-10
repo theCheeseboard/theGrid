@@ -1,8 +1,8 @@
 mod defer;
 
-use std::future::Future;
 use defer::defer;
 use gpui::{App, AppContext, Global, ReadGlobal, Task};
+use std::future::Future;
 use tokio::task::JoinError;
 
 pub fn init(cx: &mut App) {
@@ -33,10 +33,10 @@ pub struct Tokio {}
 impl Tokio {
     /// Spawns the given future on Tokio's thread pool, and returns it via a GPUI task
     /// Note that the Tokio task will be cancelled if the GPUI task is dropped
-    pub fn spawn<C, Fut, R>(cx: &C, f: Fut) -> C::Result<Task<Result<R, JoinError>>>
+    pub fn spawn<C, Fut, R>(cx: &C, f: Fut) -> Task<Result<R, JoinError>>
     where
         C: AppContext,
-        Fut: Future<Output=R> + Send + 'static,
+        Fut: Future<Output = R> + Send + 'static,
         R: Send + 'static,
     {
         cx.read_global(|tokio: &GlobalTokio, cx| {
@@ -55,10 +55,10 @@ impl Tokio {
 
     /// Spawns the given future on Tokio's thread pool, and returns it via a GPUI task
     /// Note that the Tokio task will be cancelled if the GPUI task is dropped
-    pub fn spawn_result<C, Fut, R>(cx: &C, f: Fut) -> C::Result<Task<anyhow::Result<R>>>
+    pub fn spawn_result<C, Fut, R>(cx: &C, f: Fut) -> Task<anyhow::Result<R>>
     where
         C: AppContext,
-        Fut: Future<Output=anyhow::Result<R>> + Send + 'static,
+        Fut: Future<Output = anyhow::Result<R>> + Send + 'static,
         R: Send + 'static,
     {
         cx.read_global(|tokio: &GlobalTokio, cx| {

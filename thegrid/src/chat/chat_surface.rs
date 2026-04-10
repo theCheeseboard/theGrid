@@ -61,6 +61,7 @@ impl ChatSurface {
                         MenuItem::action(tr!("ACCOUNT_ACCOUNT_SWITCHER"), AccountSwitcher),
                         MenuItem::action(tr!("ACCOUNT_LOG_OUT"), LogOut),
                     ],
+                    disabled: false
                 },
             ),
             main_chat_surface: MainChatSurface::new(cx, displayed_room.clone(), on_surface_change),

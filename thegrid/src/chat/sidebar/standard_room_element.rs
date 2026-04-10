@@ -145,8 +145,7 @@ impl RenderOnce for StandardRoomElement {
                                 cx.write_to_clipboard(ClipboardItem::new_string(
                                     room_id.matrix_to_uri_via(vias).to_string(),
                                 ))
-                            })
-                            .unwrap();
+                            });
                         })
                         .detach();
                     }

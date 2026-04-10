@@ -306,8 +306,7 @@ impl AuthSurface {
         cx: &mut AsyncApp,
     ) {
         let application_name = cx
-            .read_global::<Details, _>(|details, cx| details.generatable.application_name.clone())
-            .unwrap();
+            .read_global::<Details, _>(|details, cx| details.generatable.application_name.clone());
         match cx
             .spawn_tokio({
                 let client = client.clone();
@@ -499,8 +498,7 @@ impl AuthSurface {
                 }
             };
 
-            cx.update(|cx| cx.open_url(&requested_url.unwrap()))
-                .unwrap();
+            cx.update(|cx| cx.open_url(&requested_url.unwrap()));
         })
         .detach();
 
@@ -686,8 +684,7 @@ impl AuthSurface {
 
         cx.update_global::<SessionManager, ()>(|session_manager, cx| {
             session_manager.set_session(session_uuid, cx);
-        })
-        .unwrap();
+        });
 
         this.update(cx, |this, cx| {
             if !matches!(this.state, AuthState::InitialSync) {
