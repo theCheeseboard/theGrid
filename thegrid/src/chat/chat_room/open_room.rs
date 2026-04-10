@@ -220,7 +220,7 @@ impl OpenRoom {
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 loop {
-                    match typing_notification.recv().await {
+                    match tokio::task::unconstrained(typing_notification.recv()).await {
                         Ok(notification) => {
                             let mut typing_users = Vec::new();
                             for user in notification {
