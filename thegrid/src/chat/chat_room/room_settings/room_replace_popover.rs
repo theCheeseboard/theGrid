@@ -130,6 +130,7 @@ impl RoomReplacePopover {
                     Err(e) => {
                         let _ = weak_this.update(cx, |this, cx| {
                             this.error = Some(e.to_string());
+                            this.state = ReplacePopoverState::ReplaceConfirm;
                             cx.notify()
                         });
                     }

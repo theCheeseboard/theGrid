@@ -613,7 +613,7 @@
   },
   "DESTRUCTIVE_CONFIRM": {
     "context": "room_replace_popover.rs",
-    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:279",
+    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:280",
     "plural": false,
     "description": null
   },
@@ -1537,31 +1537,31 @@
   },
   "POPOVER_REPLACE_ROOM_FINAL_CONFIRM": {
     "context": "room_replace_popover.rs",
-    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:286",
+    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:287",
     "plural": false,
     "description": null
   },
   "POPOVER_REPLACE_ROOM_FINAL_CONFIRM_2": {
     "context": "room_replace_popover.rs",
-    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:294",
+    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:295",
     "plural": false,
     "description": null
   },
   "POPOVER_REPLACE_ROOM_FINAL_CONFIRM_3": {
     "context": "room_replace_popover.rs",
-    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:300",
+    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:301",
     "plural": false,
     "description": null
   },
   "POPOVER_REPLACE_ROOM_GRANDSTAND": {
     "context": "room_replace_popover.rs",
-    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:200",
+    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:201",
     "plural": false,
     "description": null
   },
   "POPOVER_REPLACE_ROOM_OPTIONS": {
     "context": "room_replace_popover.rs",
-    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:214",
+    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:215",
     "plural": false,
     "description": null
   },
@@ -2107,7 +2107,7 @@
   },
   "ROOM_REPLACE_ERROR_TITLE": {
     "context": "room_replace_popover.rs",
-    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:309",
+    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:310",
     "plural": false,
     "description": null
   },
@@ -2323,13 +2323,13 @@
   },
   "ROOM_VERSION": {
     "context": "room_replace_popover.rs",
-    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:228",
+    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:229",
     "plural": false,
     "description": null
   },
   "ROOM_VERSION_UNSTABLE": {
     "context": "room_replace_popover.rs",
-    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:167",
+    "definedIn": "src/chat/chat_room/room_settings/room_replace_popover.rs:168",
     "plural": false,
     "description": null
   },
