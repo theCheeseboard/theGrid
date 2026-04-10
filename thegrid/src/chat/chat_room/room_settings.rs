@@ -1,4 +1,10 @@
+mod room_replace_popover;
+
 use crate::chat::chat_room::open_room::OpenRoom;
+use crate::chat::chat_room::room_settings::room_replace_popover::{
+    RoomReplaceEvent, RoomReplacePopover,
+};
+use crate::chat::displayed_room::DisplayedRoom;
 use crate::upload_mxc_dialog::{upload_mxc_dialog, UploadMxcAcceptEvent};
 use cntp_i18n::{tr, I18nString};
 use contemporary::components::button::{button, ButtonMenuOpenPolicy};
@@ -16,14 +22,13 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, App, AppContext, AsyncApp, AsyncWindowContext, ClickEvent, Context,
-    ElementId, Entity, InteractiveElement, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
+    div, px, App, AppContext, AsyncApp, ClickEvent, Context, ElementId,
+    Entity, InteractiveElement, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
 };
 use matrix_sdk::ruma::api::client::room::Visibility;
 use matrix_sdk::ruma::events::room::avatar::ImageInfo;
 use matrix_sdk::ruma::room::JoinRule;
 use matrix_sdk::ruma::{OwnedRoomAliasId, RoomAliasId, UInt};
-use matrix_sdk::HttpError;
 use std::rc::Rc;
 use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
@@ -589,6 +594,46 @@ impl RoomSettings {
                     ),
             )
     }
+
+    fn render_room_replace(
+        &mut self,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> impl IntoElement {
+        let on_replace = cx.listener(|this, event: &RoomReplaceEvent, window, cx| {
+            let displayed_room = this.open_room.read(cx).displayed_room.clone();
+            displayed_room.write(cx, DisplayedRoom::Room(event.new_room_id.clone()));
+        });
+        let room = self.open_room.read(cx).room.as_ref().unwrap().clone();
+        let replace_popover =
+            window.use_state(cx, |_, cx| RoomReplacePopover::new(room, on_replace, cx));
+
+        layer()
+            .flex()
+            .flex_col()
+            .p(px(8.))
+            .w_full()
+            .child(subtitle(tr!("ROOM_REPLACE", "Replace Room")))
+            .child(tr!(
+                "ROOM_REPLACE_DESCRIPTION",
+                "Replacing the room can be done to reset the state of the room if the room is \
+                unstable. It can also be used to upgrade the room to a new version to take \
+                advantage of new features and improvements in newer room versions."
+            ))
+            .child(
+                button("room-replace-button")
+                    .child(icon_text("im-room".into(), tr!("ROOM_REPLACE").into()))
+                    .on_click({
+                        let replace_popover = replace_popover.clone();
+                        move |_, _, cx| {
+                            replace_popover.update(cx, |update_popover, cx| {
+                                update_popover.open(cx);
+                            });
+                        }
+                    }),
+            )
+            .child(replace_popover.clone())
+    }
 }
 
 impl Render for RoomSettings {
@@ -861,7 +906,8 @@ impl Render for RoomSettings {
                                     ),
                             ),
                     )
-                    .child(self.render_room_aliases(window, cx)),
+                    .child(self.render_room_aliases(window, cx))
+                    .child(self.render_room_replace(window, cx)),
             )
             .child(
                 dialog_box("edit-room-name")

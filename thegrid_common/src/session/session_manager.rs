@@ -43,6 +43,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 use uuid::Uuid;
+use crate::session::capability_cache::CapabilityCache;
 
 pub struct SessionManager {
     current_session: Option<Session>,
@@ -431,6 +432,10 @@ impl SessionManager {
 
     pub fn spaces(&self) -> Entity<SpacesCache> {
         self.current_caches.as_ref().unwrap().spaces_cache.clone()
+    }
+    
+    pub fn capabilities(&self) -> Entity<CapabilityCache> {
+        self.current_caches.as_ref().unwrap().capability_cache.clone()
     }
 }
 

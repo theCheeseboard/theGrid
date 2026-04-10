@@ -76,18 +76,24 @@ impl AccountCache {
                 if *event.state_key() == *own_user_id
                     && let Some(original) = event.as_original()
                 {
-                    tx_clone
+                    if tx_clone
                         .send(CacheMutation::SetDisplayName(
                             original.content.displayname.clone(),
                         ))
                         .await
-                        .unwrap();
-                    tx_clone
+                        .is_err()
+                    {
+                        return;
+                    }
+                    if tx_clone
                         .send(CacheMutation::SetAvatarUrl(
                             original.content.avatar_url.clone(),
                         ))
                         .await
-                        .unwrap();
+                        .is_err()
+                    {
+                        return;
+                    }
                 }
             });
 
@@ -95,7 +101,7 @@ impl AccountCache {
                 async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                     loop {
                         let mutation = rx.recv().await.unwrap();
-                        weak_this
+                        if weak_this
                             .update(cx, |this, cx| {
                                 match mutation {
                                     CacheMutation::SetDisplayName(display_name) => {
@@ -107,7 +113,10 @@ impl AccountCache {
                                 };
                                 cx.notify();
                             })
-                            .unwrap()
+                            .is_err()
+                        {
+                            return;
+                        }
                     }
                 },
             )

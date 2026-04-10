@@ -465,7 +465,9 @@ impl OpenRoom {
         let client = session_manager.client().unwrap().read(cx).clone();
 
         if !self.local_aliases.contains(&alias) {
-            callback(&Ok(()), window, cx);
+            window.defer(cx, |window, cx| {
+                callback(&Ok(()), window, cx);
+            });
             return;
         }
 

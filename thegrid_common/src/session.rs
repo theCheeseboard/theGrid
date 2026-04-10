@@ -11,3 +11,4 @@ pub mod session_manager;
 pub mod sso_login;
 pub mod verification_requests_cache;
 pub mod spaces_cache;
+pub mod capability_cache;

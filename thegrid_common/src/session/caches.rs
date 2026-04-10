@@ -8,10 +8,12 @@ use crate::session::verification_requests_cache::VerificationRequestsCache;
 use gpui::{App, AppContext, Entity};
 use matrix_sdk::ruma::api::client::discovery::discover_homeserver::RtcFocusInfo;
 use matrix_sdk::Client;
+use crate::session::capability_cache::CapabilityCache;
 
 pub struct Caches {
     pub verification_requests: Entity<VerificationRequestsCache>,
     pub account_cache: Entity<AccountCache>,
+    pub capability_cache: Entity<CapabilityCache>,
     pub devices_cache: Entity<DevicesCache>,
     pub media_cache: MediaCache,
     pub room_cache: Entity<RoomCache>,
@@ -27,6 +29,7 @@ impl Caches {
             verification_requests: VerificationRequestsCache::new(client, cx),
             account_cache: AccountCache::new(client, cx),
             devices_cache: DevicesCache::new(client, cx),
+            capability_cache: cx.new(|cx| CapabilityCache::new(client, cx)),
             media_cache: MediaCache::new(client),
             room_cache: RoomCache::new(client, cx),
             spaces_cache: cx.new(|cx| SpacesCache::new(client, cx)),

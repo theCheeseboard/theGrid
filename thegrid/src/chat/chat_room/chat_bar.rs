@@ -3,7 +3,7 @@ use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::timeline_view::reply_fragment::reply_fragment;
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::{tr, trn};
-use contemporary::components::admonition::{admonition, AdmonitionSeverity};
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
@@ -11,11 +11,11 @@ use contemporary::components::layer::layer;
 use contemporary::components::toast::Toast;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    anchored, deferred, div, px, AppContext, AsyncApp, AsyncWindowContext,
-    Context, Entity, InteractiveElement, IntoElement, ParentElement, Point, Render, Styled, WeakEntity, Window,
+    AppContext, AsyncApp, AsyncWindowContext, Context, Entity, InteractiveElement, IntoElement,
+    ParentElement, Point, Render, Styled, WeakEntity, Window, anchored, deferred, div, px,
 };
-use matrix_sdk::ruma::events::room::tombstone::RoomTombstoneEventContent;
 use matrix_sdk::RoomState;
+use matrix_sdk::ruma::events::room::tombstone::RoomTombstoneEventContent;
 use matrix_sdk_ui::timeline::TimelineItemContent;
 use thegrid_common::session::room_cache::RoomJoinEvent;
 use thegrid_common::session::session_manager::SessionManager;
@@ -37,157 +37,173 @@ impl ChatBar {
     pub fn render_tombstone_content(&mut self, cx: &mut Context<Self>) -> impl IntoElement {
         let open_room = self.open_room.read(cx);
         let room = open_room.room.as_ref().unwrap().clone();
-        let tombstone_content = room.tombstone_content().unwrap();
+        let replacement_room = room
+            .tombstone_content()
+            .map(|content| content.replacement_room);
 
         let session_manager = cx.global::<SessionManager>();
         let room_manager = session_manager.rooms().read(cx);
 
         let joining = room_manager.joining_room(room.room_id().to_owned());
 
-        let enter_tombstoned_room = cx.listener(move |this, _, window, cx| {
-            let session_manager = cx.global::<SessionManager>();
-            let room_manager = session_manager.rooms().read(cx);
+        let enter_tombstoned_room = cx.listener({
+            let replacement_room = replacement_room.clone();
+            move |this, _, window, cx| {
+                let session_manager = cx.global::<SessionManager>();
+                let room_manager = session_manager.rooms().read(cx);
 
-            let replacement_room = tombstone_content.replacement_room.clone();
+                let replacement_room = replacement_room.clone().unwrap();
 
-            let joined_room = room_manager.room(&replacement_room).and_then(|room| {
-                let room = &room.read(cx).inner;
-                if room.state() == RoomState::Joined {
-                    Some(room)
-                } else {
-                    None
-                }
-            });
-
-            if joined_room.is_some() {
-                this.open_room
-                    .read(cx)
-                    .displayed_room
-                    .clone()
-                    .write(cx, DisplayedRoom::Room(replacement_room));
-            } else {
-                // Join the tombstoned room
-                let callback = cx.listener({
-                    let replacement_room = replacement_room.clone();
-                    let room = room.clone();
-                    move |this, event: &RoomJoinEvent, window, cx| {
-                        if let Err(e) = &event.result {
-                            Toast::new()
-                                .title(tr!("TOMBSTONE_JOIN_ERROR_TITLE").as_ref())
-                                .body(
-                                    tr!(
-                                        "TOMBSTONE_JOIN_ERROR_TEXT",
-                                        room = replacement_room.to_string()
-                                    )
-                                    .as_ref(),
-                                )
-                                .severity(AdmonitionSeverity::Error)
-                                .post(window, cx);
-                            return;
-                        }
-
-                        // Go to the replacement room
-                        this.open_room
-                            .read(cx)
-                            .displayed_room
-                            .clone()
-                            .write(cx, DisplayedRoom::Room(replacement_room.clone()));
-
-                        // Attempt to leave the old room in the background
-                        let room = room.clone();
-                        cx.spawn(
-                            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                                let _ = cx.spawn_tokio(async move { room.leave().await }).await;
-                            },
-                        )
-                        .detach();
+                let joined_room = room_manager.room(&replacement_room).and_then(|room| {
+                    let room = &room.read(cx).inner;
+                    if room.state() == RoomState::Joined {
+                        Some(room)
+                    } else {
+                        None
                     }
                 });
 
-                // Go via the sender of the tombstone event
-                let room = room.clone();
-                cx.spawn_in(
-                    window,
-                    async move |weak_this: WeakEntity<Self>, cx: &mut AsyncWindowContext| {
-                        let sender_via = cx
-                            .spawn_tokio(async move {
-                                room.get_state_event_static::<RoomTombstoneEventContent>()
-                                    .await
-                            })
-                            .await
-                            .ok()
-                            .flatten()
-                            .and_then(|tombstone_event| tombstone_event.deserialize().ok())
-                            .map(|tombstone_event| {
-                                tombstone_event.sender().server_name().to_owned()
-                            });
-                        let _ = cx.update(move |window, cx| {
-                            let _ = weak_this.update(cx, move |this, cx| {
-                                let Some(sender_via) = sender_via else {
-                                    Toast::new()
-                                        .title(
-                                            tr!(
-                                                "TOMBSTONE_JOIN_ERROR_TITLE",
-                                                "Unable to join the replacement room"
-                                            )
-                                            .as_ref(),
+                if joined_room.is_some() {
+                    this.open_room
+                        .read(cx)
+                        .displayed_room
+                        .clone()
+                        .write(cx, DisplayedRoom::Room(replacement_room));
+                } else {
+                    // Join the tombstoned room
+                    let callback = cx.listener({
+                        let replacement_room = replacement_room.clone();
+                        let room = room.clone();
+                        move |this, event: &RoomJoinEvent, window, cx| {
+                            if let Err(e) = &event.result {
+                                Toast::new()
+                                    .title(tr!("TOMBSTONE_JOIN_ERROR_TITLE").as_ref())
+                                    .body(
+                                        tr!(
+                                            "TOMBSTONE_JOIN_ERROR_TEXT",
+                                            room = replacement_room.to_string()
                                         )
-                                        .body(
-                                            tr!(
-                                                "TOMBSTONE_JOIN_ERROR_TEXT",
-                                                "Unable to join {{room}}",
-                                                room = replacement_room.to_string()
-                                            )
-                                            .as_ref(),
-                                        )
-                                        .severity(AdmonitionSeverity::Error)
-                                        .post(window, cx);
-                                    return;
-                                };
-
-                                let session_manager = cx.global::<SessionManager>();
-                                session_manager.rooms().update(cx, |room_manager, cx| {
-                                    room_manager.join_room(
-                                        replacement_room,
-                                        false,
-                                        vec![sender_via],
-                                        callback,
-                                        window,
-                                        cx,
+                                        .as_ref(),
                                     )
+                                    .severity(AdmonitionSeverity::Error)
+                                    .post(window, cx);
+                                return;
+                            }
+
+                            // Go to the replacement room
+                            this.open_room
+                                .read(cx)
+                                .displayed_room
+                                .clone()
+                                .write(cx, DisplayedRoom::Room(replacement_room.clone()));
+
+                            // Attempt to leave the old room in the background
+                            let room = room.clone();
+                            cx.spawn(
+                                async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                                    let _ = cx.spawn_tokio(async move { room.leave().await }).await;
+                                },
+                            )
+                            .detach();
+                        }
+                    });
+
+                    // Go via the sender of the tombstone event
+                    let room = room.clone();
+                    cx.spawn_in(
+                        window,
+                        async move |weak_this: WeakEntity<Self>, cx: &mut AsyncWindowContext| {
+                            let sender_via = cx
+                                .spawn_tokio(async move {
+                                    room.get_state_event_static::<RoomTombstoneEventContent>()
+                                        .await
+                                })
+                                .await
+                                .ok()
+                                .flatten()
+                                .and_then(|tombstone_event| tombstone_event.deserialize().ok())
+                                .map(|tombstone_event| {
+                                    tombstone_event.sender().server_name().to_owned()
+                                });
+                            let _ = cx.update(move |window, cx| {
+                                let _ = weak_this.update(cx, move |this, cx| {
+                                    let Some(sender_via) = sender_via else {
+                                        Toast::new()
+                                            .title(
+                                                tr!(
+                                                    "TOMBSTONE_JOIN_ERROR_TITLE",
+                                                    "Unable to join the replacement room"
+                                                )
+                                                .as_ref(),
+                                            )
+                                            .body(
+                                                tr!(
+                                                    "TOMBSTONE_JOIN_ERROR_TEXT",
+                                                    "Unable to join {{room}}",
+                                                    room = replacement_room.to_string()
+                                                )
+                                                .as_ref(),
+                                            )
+                                            .severity(AdmonitionSeverity::Error)
+                                            .post(window, cx);
+                                        return;
+                                    };
+
+                                    let session_manager = cx.global::<SessionManager>();
+                                    session_manager.rooms().update(cx, |room_manager, cx| {
+                                        room_manager.join_room(
+                                            replacement_room,
+                                            false,
+                                            vec![sender_via],
+                                            callback,
+                                            window,
+                                            cx,
+                                        )
+                                    });
                                 });
                             });
-                        });
-                    },
-                )
-                .detach();
+                        },
+                    )
+                    .detach();
+                }
             }
         });
 
         div().p(px(2.)).child(
             admonition()
                 .severity(AdmonitionSeverity::Info)
-                .title(tr!("ROOM_TOMBSTONED_TITLE", "This room has been replaced"))
+                .title(if replacement_room.is_some() {
+                    tr!("ROOM_TOMBSTONED_TITLE", "This room has been replaced")
+                } else {
+                    tr!("ROOM_TERMINATED_TITLE", "This room has been terminated.")
+                })
                 .child(
                     div()
                         .flex()
                         .flex_col()
                         .gap(px(4.))
-                        .child(tr!(
-                            "ROOM_TOMBSTONED_TEXT",
-                            "Join the new room to keep the conversation going."
-                        ))
-                        .child(
-                            div().flex().child(div().flex_grow()).child(
-                                button("view-replaced-room-button")
-                                    .when(joining, |david| david.disabled())
-                                    .child(icon_text(
-                                        "arrow-right".into(),
-                                        tr!("ROOM_TOMBSTONED_NAVIGATE", "Go to new room").into(),
-                                    ))
-                                    .on_click(enter_tombstoned_room),
-                            ),
-                        ),
+                        .child(if replacement_room.is_some() {
+                            tr!(
+                                "ROOM_TOMBSTONED_TEXT",
+                                "Join the new room to keep the conversation going."
+                            )
+                        } else {
+                            tr!("ROOM_TERMINATED_TEXT", "Thank you for your participation.")
+                        })
+                        .when(replacement_room.is_some(), |david| {
+                            david.child(
+                                div().flex().child(div().flex_grow()).child(
+                                    button("view-replaced-room-button")
+                                        .when(joining, |david| david.disabled())
+                                        .child(icon_text(
+                                            "arrow-right".into(),
+                                            tr!("ROOM_TOMBSTONED_NAVIGATE", "Go to new room")
+                                                .into(),
+                                        ))
+                                        .on_click(enter_tombstoned_room),
+                                ),
+                            )
+                        }),
                 ),
         )
     }
