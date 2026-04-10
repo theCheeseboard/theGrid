@@ -1,5 +1,5 @@
 use cntp_i18n::tr;
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
@@ -7,15 +7,19 @@ use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::pager::fade_animation::FadeAnimation;
 use contemporary::components::pager::pager;
+use contemporary::components::pager::slide_horizontal_animation::SlideHorizontalAnimation;
 use contemporary::components::popover::popover;
 use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::{MaskMode, TextField};
+use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled,
-    WeakEntity, Window, div, px,
+    div, px, App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement,
+    Render, Styled, WeakEntity, Window,
 };
+use matrix_sdk::encryption::recovery::RecoveryError;
 use matrix_sdk::encryption::recovery::RecoveryState::Enabled;
+use matrix_sdk::encryption::secret_storage::{DecryptionError, ImportError, SecretStorageError};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 
@@ -75,7 +79,22 @@ impl RecoveryPassphrasePopover {
                     .await
                 {
                     weak_this.update(cx, |this, cx| {
-                        this.recovery_state = RecoveryState::Error(error.to_string());
+                        this.recovery_state = match error {
+                            RecoveryError::SecretStorage(SecretStorageError::ImportError {
+                                error: ImportError::Decryption(DecryptionError::Mac(_)),
+                                ..
+                            }) => RecoveryState::Error(
+                                tr!(
+                                    "RECOVERY_KEY_ERROR_INVALID_MAC",
+                                    "The recovery key or recovery passphrase is incorrect"
+                                )
+                                .to_string(),
+                            ),
+                            RecoveryError::SecretStorage(SecretStorageError::ImportError {
+                                ..
+                            }) => RecoveryState::CompleteWithIncompleteRecovery,
+                            _ => RecoveryState::Error(error.to_string()),
+                        };
                         cx.notify();
                     })
                 } else {
@@ -117,7 +136,7 @@ impl Render for RecoveryPassphrasePopover {
                     },
                 )
                 .size_full()
-                .animation(FadeAnimation::new())
+                .animation(SlideHorizontalAnimation::new())
                 .page(
                     div()
                         .flex()
@@ -172,6 +191,23 @@ impl Render for RecoveryPassphrasePopover {
                                                         your cryptographic identity from Account \
                                                         Settings."
                                                     )),
+                                            )
+                                            .when_some(
+                                                match &self.recovery_state {
+                                                    RecoveryState::Error(e) => Some(e),
+                                                    _ => None,
+                                                },
+                                                |david, error| {
+                                                    david.child(
+                                                        admonition()
+                                                            .severity(AdmonitionSeverity::Error)
+                                                            .title(tr!(
+                                                                "RECOVERY_KEY_ERROR_TITLE",
+                                                                "Unable to recover your account"
+                                                            ))
+                                                            .child(error.clone()),
+                                                    )
+                                                },
                                             )
                                             .child(self.recovery_passphrase_field.clone())
                                             .child(

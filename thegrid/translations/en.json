@@ -278,6 +278,8 @@
   "PROFILE_UPDATE_AVATAR": "{{user}} updated their profile picture",
   "PROFILE_UPDATE_DISPLAY_NAME": "{{user}} updated their display name from {{old_name}} to {{new_name}}",
   "PROFILE_UPDATE_DISPLAY_NAME_AVATAR": "{{user}} updated their profile picture and their display name to {{new_name}}",
+  "RECOVERY_KEY_ERROR_INVALID_MAC": "The recovery key or recovery passphrase is incorrect",
+  "RECOVERY_KEY_ERROR_TITLE": "Unable to recover your account",
   "RECOVERY_KEY_WHAT_DESCRIPTION": "The recovery passphrase and key was set up when you configured key backups for your account. If you don't know your recovery passphrase or key, and you don't have any verified devices to recover from, you'll have to reset your cryptographic identity from Account Settings.",
   "RECOVERY_KEY_WHAT_TITLE": "Recovery what?",
   "RECOVERY_PASSPHRASE": "Recovery Passphrase (optional)",

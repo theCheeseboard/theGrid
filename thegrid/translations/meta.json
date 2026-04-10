@@ -1513,19 +1513,19 @@
   },
   "POPOVER_RECOVERY_PASSPHRASE": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:143",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:162",
     "plural": false,
     "description": null
   },
   "POPOVER_RECOVERY_PASSPHRASE_DESCRIPTION": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:152",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:171",
     "plural": false,
     "description": null
   },
   "POPOVER_RECOVERY_PASSPHRASE_GRANDSTAND": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:262",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:298",
     "plural": false,
     "description": null
   },
@@ -1655,15 +1655,27 @@
     "plural": false,
     "description": null
   },
+  "RECOVERY_KEY_ERROR_INVALID_MAC": {
+    "context": "recovery_passphrase_popover.rs",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:88",
+    "plural": false,
+    "description": null
+  },
+  "RECOVERY_KEY_ERROR_TITLE": {
+    "context": "recovery_passphrase_popover.rs",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:205",
+    "plural": false,
+    "description": null
+  },
   "RECOVERY_KEY_WHAT_DESCRIPTION": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:165",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:184",
     "plural": false,
     "description": null
   },
   "RECOVERY_KEY_WHAT_TITLE": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:161",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:180",
     "plural": false,
     "description": null
   },
@@ -1675,37 +1687,37 @@
   },
   "RECOVERY_PASSPHRASE_PLACEHOLDER": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:44",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:48",
     "plural": false,
     "description": null
   },
   "RECOVERY_PASSPHRASE_POPOVER_CORRUPT": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:279",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:315",
     "plural": false,
     "description": null
   },
   "RECOVERY_PASSPHRASE_POPOVER_CORRUPT_MESSAGE": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:288",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:324",
     "plural": false,
     "description": null
   },
   "RECOVERY_PASSPHRASE_POPOVER_OK": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:224",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:260",
     "plural": false,
     "description": null
   },
   "RECOVERY_PASSPHRASE_POPOVER_OK_MESSAGE": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:233",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:269",
     "plural": false,
     "description": null
   },
   "RECOVER_ACCOUNT": {
     "context": "recovery_passphrase_popover.rs",
-    "definedIn": "src/auth/recovery_passphrase_popover.rs:181",
+    "definedIn": "src/auth/recovery_passphrase_popover.rs:217",
     "plural": false,
     "description": null
   },
