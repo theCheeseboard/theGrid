@@ -19,7 +19,7 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::components::switch::switch;
 use contemporary::components::text_field::TextField;
 use contemporary::components::toast::Toast;
-use contemporary::styling::theme::Theme;
+use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
     div, px, App, AppContext, AsyncApp, ClickEvent, Context, ElementId,
@@ -730,6 +730,9 @@ impl Render for RoomSettings {
                                     }),
                             ),
                     )
+                    .when_some(room.topic(), |david, topic| {
+                        david.child(div().text_color(theme.foreground.disabled()).child(topic))
+                    })
                     .child(
                         layer()
                             .flex()
