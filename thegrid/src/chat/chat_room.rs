@@ -215,7 +215,6 @@ impl Render for ChatRoom {
             return div();
         };
 
-        let client = client.read(cx);
         let open_room = self.open_room.read(cx);
 
         let Some(room) = &open_room.room else {
@@ -225,14 +224,6 @@ impl Render for ChatRoom {
                     .pt(px(36.)),
             );
         };
-
-        let room_clone = self.open_room.clone();
-        let pending_attachments = &open_room.pending_attachments;
-
-        let room_id = room.room_id().to_owned();
-        let room_id_2 = room.room_id().to_owned();
-
-        let call_members = open_room.active_call_users.read(cx).clone();
 
         div()
             .size_full()

@@ -83,6 +83,7 @@
   "BAN_TEXT": "Do you want to ban {{user}}?",
   "BAN_TITLE": "Ban",
   "CHANGE_POWER_LEVEL": "Change...",
+  "CHAT_BAR_NO_SEND_PERMISSION": "You do not have permission to send messages in this room.",
   "CLOSE": "Close",
   "CREATE_JOIN_ROOM": "Create or Join Room",
   "CREATE_ROOM": "Create Room",

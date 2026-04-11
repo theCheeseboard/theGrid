@@ -9,12 +9,14 @@ use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::toast::Toast;
+use contemporary::styling::theme::{ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
     anchored, deferred, div, px, AppContext, AsyncApp, AsyncWindowContext,
     Context, Entity, InteractiveElement, IntoElement, ParentElement, Point, Render, Styled, WeakEntity, Window,
 };
 use matrix_sdk::ruma::events::room::tombstone::RoomTombstoneEventContent;
+use matrix_sdk::ruma::events::MessageLikeEventType;
 use matrix_sdk::RoomState;
 use matrix_sdk_ui::timeline::TimelineItemContent;
 use thegrid_common::session::room_cache::RoomJoinEvent;
@@ -218,11 +220,16 @@ impl Render for ChatBar {
         if room.is_tombstoned() {
             return self.render_tombstone_content(cx).into_any_element();
         }
+        let can_send_message = open_room.current_user.as_ref().is_some_and(|current_user| {
+            current_user.can_send_message(MessageLikeEventType::Message)
+        });
 
         let window_size = window.viewport_size();
         let inset = window.client_inset().unwrap_or_else(|| px(0.));
 
         let typing_users = &open_room.typing_users;
+
+        let theme = cx.theme();
 
         div()
             .when_some(open_room.pending_reply.as_ref(), |david, pending_reply| {
@@ -244,6 +251,7 @@ impl Render for ChatBar {
                     .flex()
                     .child(
                         button("attach_button")
+                            .when(!can_send_message, |david| david.disabled())
                             .child(icon("mail-attachment"))
                             .flat()
                             .on_click(cx.listener(move |this, _, window, cx| {
@@ -252,27 +260,47 @@ impl Render for ChatBar {
                                 });
                             })),
                     )
-                    .child(open_room.chat_input.clone())
-                    .child(button("emoji").child("😀").flat().on_click(cx.listener(
-                        |this, _, _, cx| {
-                            let chat_input = this.open_room.read(cx).chat_input.clone();
-                            this.emoji_flyout = Some(cx.new(|cx| {
-                                let mut emoji_flyout = EmojiFlyout::new(cx);
-                                emoji_flyout.set_emoji_selected_listener(
-                                    move |event, window, cx| {
-                                        chat_input.update(cx, |chat_input, cx| {
-                                            chat_input.type_string(&event.emoji, window, cx);
-                                        });
-                                    },
-                                );
-                                emoji_flyout
-                            }));
-                            cx.notify()
+                    .when_else(
+                        can_send_message,
+                        |david| david.child(open_room.chat_input.clone()),
+                        |david| {
+                            david.child(
+                                div()
+                                    .flex_grow()
+                                    .self_center()
+                                    .text_color(theme.foreground.disabled())
+                                    .child(tr!(
+                                        "CHAT_BAR_NO_SEND_PERMISSION",
+                                        "You do not have permission to send messages in this room."
+                                    )),
+                            )
                         },
-                    )))
+                    )
+                    .child(
+                        button("emoji")
+                            .child("😀")
+                            .flat()
+                            .when(!can_send_message, |david| david.disabled())
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                let chat_input = this.open_room.read(cx).chat_input.clone();
+                                this.emoji_flyout = Some(cx.new(|cx| {
+                                    let mut emoji_flyout = EmojiFlyout::new(cx);
+                                    emoji_flyout.set_emoji_selected_listener(
+                                        move |event, window, cx| {
+                                            chat_input.update(cx, |chat_input, cx| {
+                                                chat_input.type_string(&event.emoji, window, cx);
+                                            });
+                                        },
+                                    );
+                                    emoji_flyout
+                                }));
+                                cx.notify()
+                            })),
+                    )
                     .child(
                         button("send_button")
                             .child(icon("mail-send"))
+                            .when(!can_send_message, |david| david.disabled())
                             .on_click(cx.listener(move |this, _, window, cx| {
                                 this.open_room.update(cx, |open_room, cx| {
                                     open_room.send_pending_message(window, cx);

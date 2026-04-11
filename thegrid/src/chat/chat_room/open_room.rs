@@ -16,7 +16,7 @@ use matrix_sdk::ruma::api::client::room::aliases::v3::Response;
 use matrix_sdk::ruma::events::room::canonical_alias::RoomCanonicalAliasEventContent;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::events::tag::Tags;
-use matrix_sdk::ruma::events::{room, Mentions};
+use matrix_sdk::ruma::events::{room, Mentions, MessageLikeEventType};
 use matrix_sdk::ruma::{api, OwnedRoomAliasId, OwnedRoomId, UserId};
 use matrix_sdk::{Error, HttpError, Room};
 use matrix_sdk_ui::timeline::{AttachmentConfig, AttachmentSource, EventTimelineItem, RoomExt};
@@ -317,6 +317,13 @@ impl OpenRoom {
     }
 
     pub fn attach_from_disk(&mut self, path: PathBuf, cx: &mut Context<Self>) {
+        let can_send_message = self.current_user.as_ref().is_some_and(|current_user| {
+            current_user.can_send_message(MessageLikeEventType::Message)
+        });
+        if !can_send_message {
+            return;
+        }
+
         let file_contents = read(&path);
 
         self.pending_attachments.push(PendingAttachment {
