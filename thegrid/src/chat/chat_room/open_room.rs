@@ -13,11 +13,11 @@ use gpui::{
 use log::error;
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::api::client::room::aliases::v3::Response;
-use matrix_sdk::ruma::events::room;
 use matrix_sdk::ruma::events::room::canonical_alias::RoomCanonicalAliasEventContent;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::events::tag::Tags;
-use matrix_sdk::ruma::{api, OwnedRoomAliasId, OwnedRoomId};
+use matrix_sdk::ruma::events::{room, Mentions};
+use matrix_sdk::ruma::{api, OwnedRoomAliasId, OwnedRoomId, UserId};
 use matrix_sdk::{Error, HttpError, Room};
 use matrix_sdk_ui::timeline::{AttachmentConfig, AttachmentSource, EventTimelineItem, RoomExt};
 use mime2ext::mime2ext;
@@ -341,7 +341,7 @@ impl OpenRoom {
             let content = if message.is_empty() {
                 None
             } else {
-                Some(RoomMessageEventContent::text_plain(message.to_string()))
+                Some(enrich_message(message))
             };
 
             cx.spawn(async move |_, cx: &mut AsyncApp| {
@@ -599,4 +599,32 @@ impl OpenRoom {
         )
         .detach();
     }
+}
+
+pub fn enrich_message(message: &str) -> RoomMessageEventContent {
+    let original_message = message.to_string();
+    let mut sent_message = String::new();
+    let mut mentions = Mentions::new();
+
+    let mut last_end = 0;
+    for part in original_message.split_whitespace() {
+        let start = part.as_ptr() as usize - original_message.as_ptr() as usize;
+        let previous_whitespace = &original_message[last_end..start];
+        if !previous_whitespace.is_empty() {
+            sent_message.push_str(previous_whitespace);
+        }
+        last_end = start + part.len();
+
+        if part == "@room" {
+            mentions.room = true;
+            sent_message.push_str(part);
+        } else if let Ok(user_id) = UserId::parse(part) {
+            sent_message.push_str(&format!("[{}]({})", part, user_id.matrix_to_uri()));
+            mentions.user_ids.extend([user_id]);
+        } else {
+            sent_message.push_str(part);
+        }
+    }
+
+    RoomMessageEventContent::text_markdown(sent_message).add_mentions(mentions)
 }
