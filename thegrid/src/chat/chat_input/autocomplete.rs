@@ -1,15 +1,19 @@
 use crate::chat::chat_input::{AutocompleteOption, AutocompleteState, ChatInput};
+use crate::chat::chat_room::open_room::OpenRoom;
 use contemporary::components::layer::layer;
-use contemporary::styling::theme::ThemeStorage;
+use contemporary::styling::theme::{ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
     div, px, uniform_list, App, AsyncApp, Context, InteractiveElement,
     IntoElement, ParentElement, RenderOnce, ScrollStrategy, StatefulInteractiveElement,
     Styled, UniformListScrollHandle, WeakEntity, Window,
 };
+use matrix_sdk::RoomMemberships;
 use std::cmp::Ordering;
 use std::ops::Range;
 use std::rc::Rc;
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct ApplyAutcompleteEvent {
     pub option: AutocompleteOption,
@@ -90,6 +94,31 @@ impl RenderOnce for AutocompleteList {
                                                 .child(emoji),
                                         )
                                         .child(name),
+                                    AutocompleteOption::User {
+                                        user_id,
+                                        avatar_url,
+                                        display_name,
+                                    } => div()
+                                        .id(i)
+                                        .flex()
+                                        .items_center()
+                                        .w_full()
+                                        .p(px(2.))
+                                        .gap(px(8.))
+                                        .child(
+                                            mxc_image(avatar_url)
+                                                .fallback_image(user_id.clone())
+                                                .rounded(theme.border_radius)
+                                                .size(px(32.))
+                                                .size_policy(SizePolicy::Fit),
+                                        )
+                                        .child(
+                                            div().flex().flex_col().child(display_name).child(
+                                                div()
+                                                    .text_color(theme.foreground.disabled())
+                                                    .child(user_id.to_string()),
+                                            ),
+                                        ),
                                 }
                                 .when(i == current_option, |david| {
                                     david.bg(theme.layer_background)
@@ -109,7 +138,7 @@ impl RenderOnce for AutocompleteList {
                     },
                 )
                 .track_scroll(scroll_handle.read(cx))
-                .h(px(100.)),
+                .h(px(200.)),
             )
     }
 }
@@ -118,6 +147,7 @@ pub fn calculate_autocomplete(
     chat_input: &mut ChatInput,
     epoch: u32,
     typed: String,
+    room: WeakEntity<OpenRoom>,
     cx: &mut Context<ChatInput>,
 ) {
     // split the typed string into words
@@ -157,6 +187,23 @@ pub fn calculate_autocomplete(
         )
         .detach();
         return;
+    } else if last_word.starts_with("@") {
+        chat_input.autocomplete_state = AutocompleteState::Loading;
+
+        cx.spawn(
+            async move |weak_chat_input: WeakEntity<ChatInput>, cx: &mut AsyncApp| {
+                let state =
+                    calculate_user_id_autocomplete(last_word, room, last_word_range, cx).await;
+                let _ = weak_chat_input.update(cx, |chat_input, cx| {
+                    if chat_input.autocomplete_epoch == epoch {
+                        chat_input.autocomplete_state = state;
+                        cx.notify();
+                    }
+                });
+            },
+        )
+        .detach();
+        return;
     }
 
     chat_input.autocomplete_state = AutocompleteState::Idle;
@@ -173,6 +220,60 @@ pub async fn calculate_emoji_autocomplete(typed: String, range: Range<usize>) ->
                     name: format!(":{}:", shortcode),
                     emoji: emoji.to_string(),
                 })
+        })
+        .collect();
+
+    if options.is_empty() {
+        AutocompleteState::Idle
+    } else {
+        AutocompleteState::Available {
+            options,
+            replace_range: range,
+            current_option: 0,
+        }
+    }
+}
+
+pub async fn calculate_user_id_autocomplete(
+    typed: String,
+    room: WeakEntity<OpenRoom>,
+    range: Range<usize>,
+    cx: &mut AsyncApp,
+) -> AutocompleteState {
+    let Some(room) = room
+        .read_with(cx, |room, _| room.room.clone())
+        .ok()
+        .flatten()
+    else {
+        return AutocompleteState::Idle;
+    };
+
+    let Ok(room_members) = cx
+        .spawn_tokio(async move { room.members(RoomMemberships::JOIN).await })
+        .await
+    else {
+        return AutocompleteState::Idle;
+    };
+
+    let lowercase_typed = typed.trim_start_matches("@").to_lowercase();
+    let options: Vec<_> = room_members
+        .iter()
+        .filter(|member| {
+            member.user_id().as_str().starts_with(&typed)
+                || member.display_name().is_some_and(|display_name| {
+                    display_name
+                        .replace(|c: char| c.is_whitespace(), "")
+                        .to_lowercase()
+                        .contains(&lowercase_typed)
+                })
+        })
+        .map(|member| AutocompleteOption::User {
+            user_id: member.user_id().to_owned(),
+            avatar_url: member.avatar_url().map(|mxc_uri| mxc_uri.to_owned()),
+            display_name: member
+                .display_name()
+                .map(|display_name| display_name.to_string())
+                .unwrap_or(member.user_id().to_string()),
         })
         .collect();
 

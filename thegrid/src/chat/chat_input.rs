@@ -3,10 +3,19 @@ mod autocomplete;
 use crate::chat::chat_input::autocomplete::{
     autocomplete_list, calculate_autocomplete, ApplyAutcompleteEvent,
 };
+use crate::chat::chat_room::open_room::OpenRoom;
 use contemporary::components::anchorer::WithAnchorer;
 use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
-use gpui::{actions, div, fill, point, px, relative, size, App, AppContext, Bounds, ClipboardItem, Context, Element, ElementId, ElementInputHandler, Entity, EntityInputHandler, FocusHandle, GlobalElementId, Hsla, InspectorElementId, InteractiveElement, IntoElement, KeyBinding, LayoutId, MouseButton, MouseDownEvent, MouseMoveEvent, MouseUpEvent, PaintQuad, ParentElement, Pixels, Point, Render, Rgba, ShapedLine, Style, Styled, TextAlign, TextRun, UTF16Selection, UnderlineStyle, Window};
+use gpui::{
+    actions, div, fill, point, px, relative, size, App,
+    AppContext, Bounds, ClipboardItem, Context, Element, ElementId,
+    ElementInputHandler, Entity, EntityInputHandler, FocusHandle, GlobalElementId, Hsla,
+    InspectorElementId, InteractiveElement, IntoElement, KeyBinding, LayoutId, MouseButton, MouseDownEvent, MouseMoveEvent,
+    MouseUpEvent, PaintQuad, ParentElement, Pixels, Point, Render, Rgba, ShapedLine,
+    Style, Styled, TextAlign, TextRun, UTF16Selection, UnderlineStyle, WeakEntity, Window,
+};
+use matrix_sdk::ruma::{OwnedMxcUri, OwnedUserId};
 use std::ops::{Add, Range};
 use std::panic::Location;
 use std::rc::Rc;
@@ -89,7 +98,15 @@ pub enum AutocompleteState {
 
 #[derive(Clone)]
 pub enum AutocompleteOption {
-    Emoji { name: String, emoji: String },
+    Emoji {
+        name: String,
+        emoji: String,
+    },
+    User {
+        user_id: OwnedUserId,
+        avatar_url: Option<OwnedMxcUri>,
+        display_name: String,
+    },
 }
 
 pub struct ChatInput {
@@ -103,6 +120,8 @@ pub struct ChatInput {
     last_bounds: Option<Bounds<Pixels>>,
     is_selecting: bool,
 
+    room: WeakEntity<OpenRoom>,
+
     autocomplete_state: AutocompleteState,
     autocomplete_epoch: u32,
 
@@ -113,7 +132,7 @@ pub struct ChatInput {
 }
 
 impl ChatInput {
-    pub fn new(cx: &mut App) -> Self {
+    pub fn new(room: WeakEntity<OpenRoom>, cx: &mut App) -> Self {
         Self {
             text: "".into(),
             placeholder: "".into(),
@@ -130,6 +149,7 @@ impl ChatInput {
             paste_rich_listener: None,
             autocomplete_state: AutocompleteState::Idle,
             autocomplete_epoch: 0,
+            room,
         }
     }
 
@@ -462,7 +482,7 @@ impl ChatInput {
         let epoch = self.autocomplete_epoch;
 
         let text_to_here = self.text[0..self.selected_range.start].to_string();
-        calculate_autocomplete(self, epoch, text_to_here, cx)
+        calculate_autocomplete(self, epoch, text_to_here, self.room.clone(), cx)
     }
 
     pub fn apply_autocomplete(
@@ -474,7 +494,15 @@ impl ChatInput {
     ) {
         match option {
             AutocompleteOption::Emoji { emoji, .. } => {
-                self.replace_text_in_range(Some(replace_range), &emoji, window, cx);
+                self.replace_text_in_range(Some(replace_range), &format!("{emoji} "), window, cx);
+            }
+            AutocompleteOption::User { user_id, .. } => {
+                self.replace_text_in_range(
+                    Some(replace_range),
+                    &format!("{} ", user_id.to_string()),
+                    window,
+                    cx,
+                );
             }
         }
     }

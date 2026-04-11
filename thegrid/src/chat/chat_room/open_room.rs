@@ -57,6 +57,7 @@ impl OpenRoom {
         cx: &mut Context<Self>,
     ) -> Self {
         let this_entity = cx.entity();
+        let weak_this = cx.weak_entity();
         let chat_bar = cx.new(|cx| ChatBar::new(this_entity, cx));
 
         let enter_press_listener = cx.listener(|this: &mut Self, _, window, cx| {
@@ -70,7 +71,7 @@ impl OpenRoom {
         });
         let paste_rich_listener = cx.listener(Self::paste_rich);
         let chat_input = cx.new(|cx| {
-            let mut chat_input = ChatInput::new(cx);
+            let mut chat_input = ChatInput::new(weak_this, cx);
             chat_input.on_enter_press(enter_press_listener);
             chat_input.on_escape_press(escape_press_listener);
             chat_input.on_text_changed(text_changed_listener);
