@@ -145,7 +145,7 @@
   },
   "ACTIONS": {
     "context": "room_members.rs",
-    "definedIn": "src/chat/chat_room/room_members.rs:341",
+    "definedIn": "src/chat/chat_room/room_members.rs:355",
     "plural": false,
     "description": null
   },
@@ -751,7 +751,7 @@
   },
   "FILTERS": {
     "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:497",
+    "definedIn": "src/chat/room_directory.rs:499",
     "plural": false,
     "description": null
   },
@@ -1219,7 +1219,7 @@
   },
   "KNOCK_ON_ROOM": {
     "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:446",
+    "definedIn": "src/chat/room_directory.rs:448",
     "plural": false,
     "description": null
   },
@@ -1285,19 +1285,19 @@
   },
   "MEMBER_LIST_FILTER_BANNED": {
     "context": "room_members.rs",
-    "definedIn": "src/chat/chat_room/room_members.rs:324",
+    "definedIn": "src/chat/chat_room/room_members.rs:338",
     "plural": false,
     "description": null
   },
   "MEMBER_LIST_FILTER_INVITED": {
     "context": "room_members.rs",
-    "definedIn": "src/chat/chat_room/room_members.rs:310",
+    "definedIn": "src/chat/chat_room/room_members.rs:324",
     "plural": false,
     "description": null
   },
   "MEMBER_LIST_FILTER_JOINED": {
     "context": "room_members.rs",
-    "definedIn": "src/chat/chat_room/room_members.rs:296",
+    "definedIn": "src/chat/chat_room/room_members.rs:310",
     "plural": false,
     "description": null
   },
@@ -1969,7 +1969,7 @@
   },
   "ROOM_DIRECTORY_ERROR": {
     "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:549",
+    "definedIn": "src/chat/room_directory.rs:551",
     "plural": false,
     "description": null
   },
@@ -1987,7 +1987,7 @@
   },
   "ROOM_DIRECTORY_TITLE": {
     "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:479",
+    "definedIn": "src/chat/room_directory.rs:481",
     "plural": false,
     "description": null
   },
@@ -2059,7 +2059,7 @@
   },
   "ROOM_MEMBERS": {
     "context": "room_members.rs",
-    "definedIn": "src/chat/chat_room/room_members.rs:264",
+    "definedIn": "src/chat/chat_room/room_members.rs:278",
     "plural": false,
     "description": null
   },
@@ -2377,7 +2377,7 @@
   },
   "SEARCH_PLACEHOLDER": {
     "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:77",
+    "definedIn": "src/chat/room_directory.rs:78",
     "plural": false,
     "description": null
   },
@@ -2977,7 +2977,7 @@
   },
   "VIEW_ROOM": {
     "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:434",
+    "definedIn": "src/chat/room_directory.rs:436",
     "plural": false,
     "description": null
   },

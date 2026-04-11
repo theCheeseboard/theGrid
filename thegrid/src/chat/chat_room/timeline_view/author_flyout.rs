@@ -273,7 +273,7 @@ impl RenderOnce for AuthorFlyout {
                                                 power_level =
                                                     match room_member.normalized_power_level() {
                                                         UserPowerLevel::Infinite => {
-                                                            tr!("POWER_LEVEL_INFINITE", "Infinite")
+                                                            tr!("POWER_LEVEL_INFINITE", "Founder")
                                                                 .into()
                                                         }
                                                         UserPowerLevel::Int(power_level) => {

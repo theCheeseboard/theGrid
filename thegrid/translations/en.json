@@ -265,7 +265,7 @@
   "POPOVER_REPLACE_ROOM_OPTIONS": "New Room Options",
   "POPOVER_VERIFY": "Verification",
   "POWER_LEVEL_ADMINISTRATOR": "Administrator",
-  "POWER_LEVEL_INFINITE": "Infinite",
+  "POWER_LEVEL_INFINITE": "Founder",
   "POWER_LEVEL_MODERATOR": "Moderator",
   "POWER_LEVEL_UPDATE_ACTION": "Set Power Level",
   "POWER_LEVEL_UPDATE_DEMOTION_WARNING": "Once this demotion takes effect, you will not be able to undo it, as you will lack sufficient permissions to promote yourself again.",

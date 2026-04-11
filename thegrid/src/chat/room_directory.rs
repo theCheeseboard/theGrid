@@ -15,11 +15,12 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, list, px, AnyElement, AppContext,
-    AsyncApp, Context, Entity, InteractiveElement, IntoElement,
-    ListAlignment, ListScrollEvent, ListState, ParentElement, Render, Styled, WeakEntity, Window,
+    div, list, px, AnyElement, AppContext, AsyncApp, Context,
+    Entity, InteractiveElement, IntoElement, ListAlignment, ListScrollEvent, ListState, ParentElement, Render,
+    Styled, WeakEntity, Window,
 };
 use imbl::Vector;
+use log::error;
 use matrix_sdk::room_directory_search::{RoomDescription, RoomDirectorySearch};
 use matrix_sdk::ruma::room::JoinRuleKind;
 use matrix_sdk::ruma::{OwnedRoomId, OwnedRoomOrAliasId};
@@ -269,6 +270,7 @@ impl RoomDirectory {
             let room_id = room_id.clone();
             move |this, event: &RoomJoinEvent, window, cx| {
                 if let Err(e) = &event.result {
+                    error!("Unable to join {room_id}: {e}");
                     Toast::new()
                         .title(tr!("JOIN_ERROR_TITLE", "Unable to join room").as_ref())
                         .body(

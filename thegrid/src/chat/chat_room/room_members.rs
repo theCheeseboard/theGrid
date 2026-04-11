@@ -20,6 +20,7 @@ use gpui::{
 };
 use matrix_sdk::room::{RoomMember, RoomMemberRole};
 use matrix_sdk::ruma::events::room::member::MembershipState;
+use matrix_sdk::ruma::events::room::power_levels::UserPowerLevel;
 use matrix_sdk::RoomMemberships;
 use std::cmp::Reverse;
 use std::rc::Rc;
@@ -137,6 +138,7 @@ impl RoomMembers {
     ) -> AnyElement {
         let member: &RoomMember = &self.displayed_members[i];
         let suggested_role = member.suggested_role_for_power_level();
+        let is_founder = member.power_level() == UserPowerLevel::Infinite;
 
         let author_flyout_open_entity = window.use_keyed_state(i, cx, |_, _| false);
         let author_flyout_open_entity_2 = author_flyout_open_entity.clone();
@@ -181,6 +183,18 @@ impl RoomMembers {
                                     .display_name()
                                     .map(|name| name.to_string())
                                     .unwrap_or_else(|| member.user_id().to_string()),
+                            )
+                            .when(
+                                is_founder && *member.membership() == MembershipState::Join,
+                                |david| {
+                                    david.child(
+                                        div()
+                                            .rounded(theme.border_radius)
+                                            .bg(theme.warning_accent_color)
+                                            .p(px(2.))
+                                            .child(tr!("POWER_LEVEL_INFINITE")),
+                                    )
+                                },
                             )
                             .when(
                                 suggested_role == RoomMemberRole::Administrator
