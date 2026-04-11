@@ -3,6 +3,7 @@ use base64::alphabet::URL_SAFE;
 use base64::prelude::{BASE64_URL_SAFE, BASE64_URL_SAFE_NO_PAD};
 use base64::{DecodeError, Engine};
 use cntp_i18n::{i18n_manager, tr};
+use cntp_icon_tool_macros::{application_icon_asset_path, application_icon_source};
 use contemporary::application::Details;
 use contemporary::components::button::button;
 use contemporary::components::constrainer;
@@ -23,7 +24,8 @@ use gpui::private::anyhow;
 use gpui::LineFragment::Text;
 use gpui::{
     div, img, px, App, AppContext, AsyncApp, BorrowAppContext, Context,
-    ElementId, Entity, InteractiveElement, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
+    ElementId, Entity, ImageSource, InteractiveElement, IntoElement, ParentElement, Render,
+    Resource, SharedString, Styled, WeakEntity, Window,
 };
 use gpui_tokio::Tokio;
 use keyring::default::default_credential_builder;
@@ -1133,7 +1135,7 @@ impl Render for AuthSurface {
                             .flex()
                             .items_center()
                             .gap(px(12.))
-                            .child(img("contemporary-icon:/application").w(px(40.)))
+                            .child(img(application_icon_source!()).w(px(40.)))
                             .child(
                                 div().text_size(px(35.)).child(
                                     details
