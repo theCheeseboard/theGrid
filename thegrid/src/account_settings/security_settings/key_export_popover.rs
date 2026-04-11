@@ -1,5 +1,5 @@
 use cntp_i18n::tr;
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
@@ -13,8 +13,8 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::{MaskMode, TextField};
 use directories::UserDirs;
 use gpui::{
-    App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled,
-    WeakEntity, Window, div, px,
+    div, px, App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement,
+    Render, Styled, WeakEntity, Window,
 };
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
@@ -174,9 +174,8 @@ impl Render for KeyExportPopover {
                                                 .child(
                                                     button("do-export")
                                                         .child(icon_text(
-                                                            "cloud-download".into(),
-                                                            tr!("SECURITY_KEY_BACKUP_EXPORT")
-                                                                .into(),
+                                                            "cloud-download",
+                                                            tr!("SECURITY_KEY_BACKUP_EXPORT"),
                                                         ))
                                                         .on_click(cx.listener(
                                                             move |this, _, _, cx| {

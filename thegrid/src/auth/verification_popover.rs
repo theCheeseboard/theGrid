@@ -342,8 +342,8 @@ impl Render for VerificationPopover {
                                             .child(
                                                 button("verification-popover-ok")
                                                     .child(icon_text(
-                                                        "dialog-ok".into(),
-                                                        tr!("CLOSE", "Close").into(),
+                                                        "dialog-ok",
+                                                        tr!("CLOSE", "Close"),
                                                     ))
                                                     .on_click(cx.listener(|this, _, _, cx| {
                                                         this.clear_verification_request();
@@ -412,10 +412,7 @@ impl Render for VerificationPopover {
                                     .child(
                                         div().flex().flex_col().gap(px(8.)).child(reason).child(
                                             button("verification-popover-ok")
-                                                .child(icon_text(
-                                                    "dialog-ok".into(),
-                                                    tr!("CLOSE").into(),
-                                                ))
+                                                .child(icon_text("dialog-ok", tr!("CLOSE")))
                                                 .on_click(cx.listener(|this, _, _, cx| {
                                                     this.clear_verification_request();
                                                     cx.notify()

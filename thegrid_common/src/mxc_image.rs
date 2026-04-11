@@ -95,7 +95,7 @@ impl RenderOnce for MxcImage {
                     let fallback_image = fallback_image.fallback_image();
                     david.bg(fallback_image.color).child(fallback_image.content)
                 } else {
-                    david.bg(rgba(0x00000064)).child(icon("exception".into()))
+                    david.bg(rgba(0x00000064)).child(icon("exception"))
                 }
                 .flex()
                 .items_center()

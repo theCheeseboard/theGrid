@@ -341,10 +341,7 @@ impl Render for RoomMembers {
                                     .child(subtitle(tr!("ACTIONS", "Actions")))
                                     .child(
                                         button("invite-button")
-                                            .child(icon_text(
-                                                "user".into(),
-                                                tr!("INVITE_ACTION").into(),
-                                            ))
+                                            .child(icon_text("user", tr!("INVITE_ACTION")))
                                             .on_click(cx.listener(|this, _, _, cx| {
                                                 this.invite_popover.update(
                                                     cx,

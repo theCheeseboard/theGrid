@@ -1,6 +1,6 @@
 use contemporary::components::icon::icon;
 use gpui::prelude::FluentBuilder;
-use gpui::{AnyElement, App, IntoElement, ParentElement, RenderOnce, Styled, Window, div, px};
+use gpui::{div, px, AnyElement, App, IntoElement, ParentElement, RenderOnce, Styled, Window};
 
 #[derive(IntoElement)]
 pub struct StateChangeElement {
@@ -30,9 +30,7 @@ impl RenderOnce for StateChangeElement {
                     .min_w(px(40.))
                     .mx(px(2.))
                     .child(div().flex_grow())
-                    .when_some(self.icon, |david, icon_name| {
-                        david.child(icon(icon_name.into()))
-                    }),
+                    .when_some(self.icon, |david, icon_name| david.child(icon(icon_name))),
             )
             .child(div().w_full().max_w_full().child(self.text))
             .into_any_element()

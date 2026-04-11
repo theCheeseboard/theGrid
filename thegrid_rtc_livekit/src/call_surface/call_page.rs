@@ -219,20 +219,17 @@ impl Render for CallPage {
                             david.child(
                                 interstitial()
                                     .flex_grow()
-                                    .icon("media-playback-pause".into())
-                                    .title(tr!("CALL_ON_HOLD", "This call is on hold").into())
-                                    .message(
-                                        tr!(
-                                            "CALL_ON_HOLD_MESSAGE",
-                                            "Take the call off hold to continue talking"
-                                        )
-                                        .into(),
-                                    )
+                                    .icon("media-playback-pause")
+                                    .title(tr!("CALL_ON_HOLD", "This call is on hold"))
+                                    .message(tr!(
+                                        "CALL_ON_HOLD_MESSAGE",
+                                        "Take the call off hold to continue talking"
+                                    ))
                                     .child(
                                         button("resume-call")
                                             .child(icon_text(
-                                                "call-start".into(),
-                                                tr!("CALL_TAKE_OFF_HOLD", "Take off hold").into(),
+                                                "call-start",
+                                                tr!("CALL_TAKE_OFF_HOLD", "Take off hold"),
                                             ))
                                             .on_click(cx.listener(|this, _, _, cx| {
                                                 let call = this.call.clone();
@@ -406,12 +403,12 @@ impl Render for CallPage {
                                 CallState::Ended => div().flex_grow().into_any_element(),
                                 CallState::Error(error) => interstitial()
                                     .flex_grow()
-                                    .icon("call-start".into())
-                                    .title(
-                                        tr!("CALL_CONNECTION_ERROR", "Unable to connect the call")
-                                            .into(),
-                                    )
-                                    .message(error.to_string().into())
+                                    .icon("call-start")
+                                    .title(tr!(
+                                        "CALL_CONNECTION_ERROR",
+                                        "Unable to connect the call"
+                                    ))
+                                    .message(error.to_string())
                                     .into_any_element(),
                             })
                         },
@@ -437,9 +434,7 @@ impl Render for CallPage {
                                                 david.child(
                                                     button("screenshare")
                                                         .p(px(16.))
-                                                        .child(
-                                                            icon("video-display".into()).size(24.),
-                                                        )
+                                                        .child(icon("video-display").size(24.))
                                                         .checked_when(
                                                             call.active_screenshare().is_some(),
                                                         )
@@ -453,7 +448,7 @@ impl Render for CallPage {
                                             .child(
                                                 button("camera")
                                                     .p(px(16.))
-                                                    .child(icon("camera-photo".into()).size(24.))
+                                                    .child(icon("camera-photo").size(24.))
                                                     .checked_when(call.active_camera().is_some())
                                                     .on_click(cx.listener(
                                                         move |this, _, window, cx| {
@@ -483,14 +478,11 @@ impl Render for CallPage {
                                                 button("deaf")
                                                     .p(px(16.))
                                                     .child(
-                                                        icon(
-                                                            if *deaf.read(cx) {
-                                                                "headphones"
-                                                            } else {
-                                                                "headphones"
-                                                            }
-                                                            .into(),
-                                                        )
+                                                        icon(if *deaf.read(cx) {
+                                                            "headphones"
+                                                        } else {
+                                                            "headphones"
+                                                        })
                                                         .size(24.),
                                                     )
                                                     .checked_when(*deaf.read(cx))
@@ -503,14 +495,11 @@ impl Render for CallPage {
                                                 button("mute")
                                                     .p(px(16.))
                                                     .child(
-                                                        icon(
-                                                            if *mute.read(cx) {
-                                                                "mic-off"
-                                                            } else {
-                                                                "mic-on"
-                                                            }
-                                                            .into(),
-                                                        )
+                                                        icon(if *mute.read(cx) {
+                                                            "mic-off"
+                                                        } else {
+                                                            "mic-on"
+                                                        })
                                                         .size(24.),
                                                     )
                                                     .checked_when(*mute.read(cx))
@@ -524,7 +513,7 @@ impl Render for CallPage {
                                         button("hangup-call")
                                             .p(px(16.))
                                             .destructive()
-                                            .child(icon("call-stop".into()).size(24.))
+                                            .child(icon("call-stop").size(24.))
                                             .on_click(cx.listener(move |this, _, window, cx| {
                                                 this.call.update(cx, |call, cx| {
                                                     call.end_call(cx);
@@ -545,8 +534,8 @@ impl Render for CallPage {
                                     david.child(
                                         button("overview-button")
                                             .child(icon_text(
-                                                "view-grid".into(),
-                                                tr!("CALL_OVERVIEW", "Back to Overview").into(),
+                                                "view-grid",
+                                                tr!("CALL_OVERVIEW", "Back to Overview"),
                                             ))
                                             .on_click(cx.listener(|this, _, window, cx| {
                                                 this.return_to_overview(window, cx)
@@ -762,9 +751,7 @@ impl RenderOnce for CallMemberDisplay {
                                                 .to_string(),
                                         )
                                         .child(div().flex_grow())
-                                        .when(is_muted, |david| {
-                                            david.child(icon("mic-off".into()))
-                                        }),
+                                        .when(is_muted, |david| david.child(icon("mic-off"))),
                                 ),
                         ),
                     )

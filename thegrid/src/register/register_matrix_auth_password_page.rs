@@ -9,7 +9,7 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::{MaskMode, TextField};
 use contemporary::styling::theme::ThemeStorage;
 use gpui::{
-    AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window, div, px,
+    div, px, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window,
 };
 pub struct RegisterMatrixAuthPasswordPage {
     register_surface: Entity<RegisterSurface>,
@@ -97,7 +97,7 @@ impl Render for RegisterMatrixAuthPasswordPage {
                             .child(self.confirm_password_field.clone().into_any_element())
                             .child(
                                 button("next")
-                                    .child(icon_text("go-next".into(), tr!("NEXT", "Next").into()))
+                                    .child(icon_text("go-next", tr!("NEXT", "Next")))
                                     .on_click(cx.listener(|this, _, window, cx| {})),
                             ),
                     ),

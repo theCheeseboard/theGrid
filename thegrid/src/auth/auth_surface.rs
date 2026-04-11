@@ -747,10 +747,7 @@ impl AuthSurface {
                                 .child(self.username_field.clone().into_any_element())
                                 .child(
                                     button("advanced-login-popover-login")
-                                        .child(icon_text(
-                                            "dialog-ok".into(),
-                                            tr!("AUTH_LOG_IN").into(),
-                                        ))
+                                        .child(icon_text("dialog-ok", tr!("AUTH_LOG_IN")))
                                         .on_click(cx.listener(|this, _, window, cx| {
                                             this.trigger_advanced_login(window, cx);
                                         })),
@@ -811,10 +808,7 @@ impl AuthSurface {
                                 ))
                                 .child(
                                     button("login-popover-connection-error-ok")
-                                        .child(icon_text(
-                                            "dialog-ok".into(),
-                                            tr!("SORRY", "Sorry").into(),
-                                        ))
+                                        .child(icon_text("dialog-ok", tr!("SORRY", "Sorry")))
                                         .on_click(cx.listener(|this, _, _, cx| {
                                             this.state = AuthState::Idle;
                                             cx.notify()
@@ -849,8 +843,8 @@ impl AuthSurface {
                                             div().flex().child(div().flex_grow()).child(
                                                 button("log_in_button")
                                                     .child(icon_text(
-                                                        "arrow-right".into(),
-                                                        tr!("AUTH_LOG_IN").into(),
+                                                        "arrow-right",
+                                                        tr!("AUTH_LOG_IN"),
                                                     ))
                                                     .on_click(cx.listener(|this, _, _, cx| {
                                                         this.login_password_clicked(cx);
@@ -904,19 +898,17 @@ impl AuthSurface {
                                                     .into(),
                                                 ))
                                                 .child(icon_text(
-                                                    "arrow-right".into(),
+                                                    "arrow-right",
                                                     match &sso_provider {
                                                         None => tr!(
                                                             "AUTH_SSO_BUTTON",
                                                             "Log in with SSO"
-                                                        )
-                                                        .into(),
+                                                        ),
                                                         Some(sso_provider) => tr!(
                                                             "AUTH_SSO_BUTTON_GENERIC",
                                                             "Log in with {{sso_provider}}",
                                                             sso_provider = sso_provider.name
-                                                        )
-                                                        .into(),
+                                                        ),
                                                     },
                                                 ))
                                                 .on_click(cx.listener(move |this, _, _, cx| {
@@ -1001,10 +993,7 @@ impl AuthSurface {
                                     .child(
                                         div().flex().child(div().flex_grow()).child(
                                             button("log_in_button")
-                                                .child(icon_text(
-                                                    "arrow-right".into(),
-                                                    tr!("AUTH_LOG_IN").into(),
-                                                ))
+                                                .child(icon_text("arrow-right", tr!("AUTH_LOG_IN")))
                                                 .on_click(cx.listener(|this, _, window, cx| {
                                                     let base64_encoded_token = this
                                                         .token_field
@@ -1055,8 +1044,8 @@ impl AuthSurface {
                                 .child(
                                     button("continue-oauth-button")
                                         .child(icon_text(
-                                            "arrow-right".into(),
-                                            tr!("AUTH_OAUTH_BUTTON", "Continue in Browser").into(),
+                                            "arrow-right",
+                                            tr!("AUTH_OAUTH_BUTTON", "Continue in Browser"),
                                         ))
                                         .on_click(cx.listener(move |this, _, _, cx| {
                                             let AuthState::OAuthContinueInBrowserPrompt(url, _) =
@@ -1082,10 +1071,7 @@ impl AuthSurface {
                                 .child(
                                     div().flex().child(div().flex_grow()).child(
                                         button("oauth_log_in_button")
-                                            .child(icon_text(
-                                                "arrow-right".into(),
-                                                tr!("AUTH_LOG_IN").into(),
-                                            ))
+                                            .child(icon_text("arrow-right", tr!("AUTH_LOG_IN")))
                                             .on_click(cx.listener(|this, _, window, cx| {
                                                 let base64_encoded_state =
                                                     this.token_field.read(cx).text().to_string();
@@ -1218,8 +1204,8 @@ impl Render for AuthSurface {
                                     .child(
                                         button("log_in_button")
                                             .child(icon_text(
-                                                "arrow-right".into(),
-                                                tr!("AUTH_LOG_IN", "Log In").into(),
+                                                "arrow-right",
+                                                tr!("AUTH_LOG_IN", "Log In"),
                                             ))
                                             .on_click(cx.listener(|this, _, window, cx| {
                                                 this.login_clicked(window, cx);

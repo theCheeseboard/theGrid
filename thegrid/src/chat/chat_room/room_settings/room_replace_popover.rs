@@ -235,7 +235,7 @@ impl Render for RoomReplacePopover {
                                                         )
                                                         .child(
                                                             button("change-room-version")
-                                                                .child(icon("arrow-down".into()))
+                                                                .child(icon("arrow-down"))
                                                                 .with_menu(room_versions_menu),
                                                         ),
                                                 )
@@ -243,8 +243,8 @@ impl Render for RoomReplacePopover {
                                                 .child(
                                                     button("replace-room-ok")
                                                         .child(icon_text(
-                                                            "im-room".into(),
-                                                            tr!("ROOM_REPLACE").into(),
+                                                            "im-room",
+                                                            tr!("ROOM_REPLACE"),
                                                         ))
                                                         .on_click(cx.listener(|this, _, _, cx| {
                                                             this.state =
@@ -317,8 +317,8 @@ impl Render for RoomReplacePopover {
                                                     button("replace-room-ok")
                                                         .destructive()
                                                         .child(icon_text(
-                                                            "im-room".into(),
-                                                            tr!("ROOM_REPLACE").into(),
+                                                            "im-room",
+                                                            tr!("ROOM_REPLACE"),
                                                         ))
                                                         .on_click(cx.listener(
                                                             |this, _, window, cx| {

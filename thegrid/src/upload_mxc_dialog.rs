@@ -7,9 +7,9 @@ use contemporary::components::progress_bar::progress_bar;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, img, px, App, AsyncApp, AsyncWindowContext,
-    ClickEvent, InteractiveElement, IntoElement, ObjectFit, ParentElement, PathPromptOptions, RenderImage,
-    RenderOnce, SharedString, Styled, StyledImage, Window,
+    div, img, px, App, AsyncApp, AsyncWindowContext, ClickEvent,
+    InteractiveElement, IntoElement, ObjectFit, ParentElement, PathPromptOptions, RenderImage, RenderOnce,
+    SharedString, Styled, StyledImage, Window,
 };
 use image::{Frame, ImageReader, Pixel, RgbaImage};
 use matrix_sdk::ruma::OwnedMxcUri;
@@ -158,8 +158,8 @@ impl RenderOnce for UploadMxcDialog {
                                 .child(
                                     button("upload-button")
                                         .child(icon_text(
-                                            "document-open".into(),
-                                            tr!("UPLOAD_MXC_BROWSE_BUTTON", "Browse...").into(),
+                                            "document-open",
+                                            tr!("UPLOAD_MXC_BROWSE_BUTTON", "Browse..."),
                                         ))
                                         .on_click(browse_handler),
                                 ),
@@ -180,8 +180,8 @@ impl RenderOnce for UploadMxcDialog {
                         .child(
                             button("upload-button")
                                 .child(icon_text(
-                                    "document-open".into(),
-                                    tr!("UPLOAD_MXC_CHANGE_BUTTON", "Pick another image...").into(),
+                                    "document-open",
+                                    tr!("UPLOAD_MXC_CHANGE_BUTTON", "Pick another image..."),
                                 ))
                                 .on_click(browse_handler),
                         )

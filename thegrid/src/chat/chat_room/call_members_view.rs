@@ -1,9 +1,6 @@
 use cntp_i18n::{tr, trn};
-use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
-use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
-use contemporary::components::layer::layer;
 use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
 use gpui::{
@@ -66,10 +63,7 @@ impl RenderOnce for CallMembersView {
                     )
                     .child(
                         button("join-call")
-                            .child(icon_text(
-                                "call-start".into(),
-                                tr!("JOIN_CALL", "Join Call").into(),
-                            ))
+                            .child(icon_text("call-start", tr!("JOIN_CALL", "Join Call")))
                             .on_click(self.start_call),
                     ),
             )

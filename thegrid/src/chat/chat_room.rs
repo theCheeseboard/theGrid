@@ -22,7 +22,7 @@ use crate::chat::join_room::create_room_popover::CreateRoomPopover;
 use crate::chat::join_room::create_space_popover::CreateSpacePopover;
 use cntp_i18n::tr;
 use contemporary::components::button::button;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::pager::lift_animation::LiftAnimation;
@@ -30,9 +30,9 @@ use contemporary::components::pager::pager;
 use contemporary::components::spinner::spinner;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AnimationExt, App, AppContext, BorrowAppContext, Context, Entity, InteractiveElement,
-    IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled, VisualContext, Window,
-    div, px,
+    div, px, AnimationExt, App, AppContext, BorrowAppContext, Context,
+    Entity, InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled,
+    VisualContext, Window,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use smol::stream::StreamExt;
@@ -264,7 +264,7 @@ impl Render for ChatRoom {
                                 .child(
                                     button("call-start")
                                         .flat()
-                                        .child(icon("call-start".into()))
+                                        .child(icon("call-start"))
                                         .on_click(cx.listener(move |this, _, window, cx| {
                                             this.start_call(window, cx);
                                         })),
@@ -272,7 +272,7 @@ impl Render for ChatRoom {
                                 .child(
                                     button("room-settings-button")
                                         .flat()
-                                        .child(icon("configure".into()))
+                                        .child(icon("configure"))
                                         .on_click(cx.listener(|this, _, _, cx| {
                                             this.current_page = ChatRoomPage::Settings;
                                             cx.notify()
@@ -301,13 +301,10 @@ impl Render for ChatRoom {
             .child(
                 dialog_box("microphone-access")
                     .visible(self.microphone_access_dialog)
-                    .title(
-                        tr!(
-                            "PERMISSION_MICROPHONE_DENIED_TITLE",
-                            "Unable to access the microphone"
-                        )
-                        .into(),
-                    )
+                    .title(tr!(
+                        "PERMISSION_MICROPHONE_DENIED_TITLE",
+                        "Unable to access the microphone"
+                    ))
                     .content(tr!(
                         "PERMISSION_MICROPHONE_DENIED_CONTENT",
                         "theGrid needs access to your microphone. Check your privacy settings \

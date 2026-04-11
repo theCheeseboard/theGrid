@@ -3,7 +3,7 @@ use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::timeline_view::reply_fragment::reply_fragment;
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::{tr, trn};
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
@@ -11,11 +11,11 @@ use contemporary::components::layer::layer;
 use contemporary::components::toast::Toast;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AppContext, AsyncApp, AsyncWindowContext, Context, Entity, InteractiveElement, IntoElement,
-    ParentElement, Point, Render, Styled, WeakEntity, Window, anchored, deferred, div, px,
+    anchored, deferred, div, px, AppContext, AsyncApp, AsyncWindowContext,
+    Context, Entity, InteractiveElement, IntoElement, ParentElement, Point, Render, Styled, WeakEntity, Window,
 };
-use matrix_sdk::RoomState;
 use matrix_sdk::ruma::events::room::tombstone::RoomTombstoneEventContent;
+use matrix_sdk::RoomState;
 use matrix_sdk_ui::timeline::TimelineItemContent;
 use thegrid_common::session::room_cache::RoomJoinEvent;
 use thegrid_common::session::session_manager::SessionManager;
@@ -196,9 +196,8 @@ impl ChatBar {
                                     button("view-replaced-room-button")
                                         .when(joining, |david| david.disabled())
                                         .child(icon_text(
-                                            "arrow-right".into(),
-                                            tr!("ROOM_TOMBSTONED_NAVIGATE", "Go to new room")
-                                                .into(),
+                                            "arrow-right",
+                                            tr!("ROOM_TOMBSTONED_NAVIGATE", "Go to new room"),
                                         ))
                                         .on_click(enter_tombstoned_room),
                                 ),
@@ -245,7 +244,7 @@ impl Render for ChatBar {
                     .flex()
                     .child(
                         button("attach_button")
-                            .child(icon("mail-attachment".into()))
+                            .child(icon("mail-attachment"))
                             .flat()
                             .on_click(cx.listener(move |this, _, window, cx| {
                                 this.open_room.update(cx, |open_room, cx| {
@@ -273,7 +272,7 @@ impl Render for ChatBar {
                     )))
                     .child(
                         button("send_button")
-                            .child(icon("mail-send".into()))
+                            .child(icon("mail-send"))
                             .on_click(cx.listener(move |this, _, window, cx| {
                                 this.open_room.update(cx, |open_room, cx| {
                                     open_room.send_pending_message(window, cx);

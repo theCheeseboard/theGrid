@@ -486,7 +486,7 @@ impl RoomSettings {
                                         .child(div().flex_grow())
                                         .child(
                                             button("overflow-menu")
-                                                .child(icon("application-menu".into()))
+                                                .child(icon("application-menu"))
                                                 .when(*loading.read(cx), |david| {
                                                     david.disabled()
                                                 })
@@ -502,8 +502,8 @@ impl RoomSettings {
                     .child(
                         button("add-alias")
                             .child(icon_text(
-                                "list-add".into(),
-                                tr!("ROOM_ALIAS_ADD", "Add Alias").into(),
+                                "list-add",
+                                tr!("ROOM_ALIAS_ADD", "Add Alias"),
                             ))
                             .on_click(cx.listener(|this, _, _, cx| {
                                 this.add_alias_open = true;
@@ -518,7 +518,7 @@ impl RoomSettings {
                 dialog_box("add-alias")
                     .visible(self.add_alias_open)
                     .processing(*loading.read(cx))
-                    .title(tr!("ROOM_ALIAS_ADD").into())
+                    .title(tr!("ROOM_ALIAS_ADD"))
                     .content(
                         div()
                             .flex()
@@ -554,7 +554,7 @@ impl RoomSettings {
                     )
                     .button(
                         button("add-alias")
-                            .child(icon_text("list-add".into(), tr!("ROOM_ALIAS_ADD").into()))
+                            .child(icon_text("list-add", tr!("ROOM_ALIAS_ADD")))
                             .on_click(cx.listener({
                                 let loading = loading.clone();
                                 let server_name = server_name.clone();
@@ -622,7 +622,7 @@ impl RoomSettings {
             ))
             .child(
                 button("room-replace-button")
-                    .child(icon_text("im-room".into(), tr!("ROOM_REPLACE").into()))
+                    .child(icon_text("im-room", tr!("ROOM_REPLACE")))
                     .on_click({
                         let replace_popover = replace_popover.clone();
                         move |_, _, cx| {
@@ -749,8 +749,8 @@ impl Render for RoomSettings {
                                     .child(
                                         button("room-change-display-name")
                                             .child(icon_text(
-                                                "edit-rename".into(),
-                                                tr!("ROOM_CHANGE_NAME", "Change Name").into(),
+                                                "edit-rename",
+                                                tr!("ROOM_CHANGE_NAME", "Change Name"),
                                             ))
                                             .on_click(cx.listener(move |this, _, _, cx| {
                                                 this.new_name_text_field.update(
@@ -766,8 +766,8 @@ impl Render for RoomSettings {
                                     .child(
                                         button("room-change-profile-picture")
                                             .child(icon_text(
-                                                "edit-rename".into(),
-                                                tr!("ROOM_CHANGE_PICTURE", "Change Picture").into(),
+                                                "edit-rename",
+                                                tr!("ROOM_CHANGE_PICTURE", "Change Picture"),
                                             ))
                                             .on_click(cx.listener(move |this, _, _, cx| {
                                                 this.edit_room_image_open = true;
@@ -777,8 +777,8 @@ impl Render for RoomSettings {
                                     .child(
                                         button("room-view-members")
                                             .child(icon_text(
-                                                "user".into(),
-                                                tr!("ROOM_VIEW_MEMBERS", "Manage Members").into(),
+                                                "user",
+                                                tr!("ROOM_VIEW_MEMBERS", "Manage Members"),
                                             ))
                                             .on_click(cx.listener(|this, event, window, cx| {
                                                 (this.on_members_click)(event, window, cx);
@@ -790,12 +790,11 @@ impl Render for RoomSettings {
                                             david.child(
                                                 button("room-encryption-enable")
                                                     .child(icon_text(
-                                                        "padlock".into(),
+                                                        "padlock",
                                                         tr!(
                                                             "ROOM_ENCRYPTION_ENABLE",
                                                             "Enable Encryption"
-                                                        )
-                                                        .into(),
+                                                        ),
                                                     ))
                                                     .on_click(cx.listener(|this, _, _, cx| {
                                                         this.enable_encryption_open = true;
@@ -848,7 +847,7 @@ impl Render for RoomSettings {
                                             })
                                             .child(
                                                 button("change-room-access")
-                                                    .child(icon("arrow-down".into()))
+                                                    .child(icon("arrow-down"))
                                                     .with_menu(vec![
                                                         ContextMenuItem::menu_item()
                                                             .label(tr!("ROOM_ACCESS_INVITE_ONLY"))
@@ -916,7 +915,7 @@ impl Render for RoomSettings {
                 dialog_box("edit-room-name")
                     .visible(self.edit_room_name_open)
                     .processing(self.busy)
-                    .title(tr!("ROOM_CHANGE_NAME").into())
+                    .title(tr!("ROOM_CHANGE_NAME"))
                     .content(
                         div()
                             .flex()
@@ -945,10 +944,7 @@ impl Render for RoomSettings {
                     )
                     .button(
                         button("change-room_name-button")
-                            .child(icon_text(
-                                "dialog-ok".into(),
-                                tr!("ROOM_CHANGE_NAME").into(),
-                            ))
+                            .child(icon_text("dialog-ok", tr!("ROOM_CHANGE_NAME")))
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 let room = room_2.clone();
                                 let new_display_name =
@@ -1031,7 +1027,7 @@ impl Render for RoomSettings {
                 dialog_box("enable-encryption")
                     .visible(self.enable_encryption_open)
                     .processing(self.busy)
-                    .title(tr!("ROOM_ENCRYPTION_ENABLE").into())
+                    .title(tr!("ROOM_ENCRYPTION_ENABLE"))
                     .content(tr!(
                         "ROOM_ENCRYPTION_ENABLE_DESCRIPTION",
                         "By enabling encryption, you will prevent anyone joining the room \
@@ -1050,10 +1046,7 @@ impl Render for RoomSettings {
                     .button(
                         button("encryption-enable-button")
                             .destructive()
-                            .child(icon_text(
-                                "dialog-ok".into(),
-                                tr!("ROOM_ENCRYPTION_ENABLE").into(),
-                            ))
+                            .child(icon_text("dialog-ok", tr!("ROOM_ENCRYPTION_ENABLE")))
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 let room = room_3.clone();
 

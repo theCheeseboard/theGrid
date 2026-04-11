@@ -1,9 +1,9 @@
-use crate::{LivekitCall, TrackType};
 use crate::webcam::Webcam;
+use crate::{LivekitCall, TrackType};
 use cntp_i18n::tr;
-use contemporary::components::button::{ButtonMenuOpenPolicy, button};
+use contemporary::components::button::{button, ButtonMenuOpenPolicy};
 use contemporary::components::context_menu::ContextMenuItem;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -12,8 +12,8 @@ use contemporary::permissions::{
 };
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AppContext, Context, Entity, IntoElement, ObjectFit, ParentElement, Render, Styled,
-    StyledImage, Window, div, img, px,
+    div, img, px, AppContext, Context, Entity, IntoElement, ObjectFit,
+    ParentElement, Render, Styled, StyledImage, Window,
 };
 use nokhwa::utils::CameraInfo;
 use nokhwa::{native_api_backend, query};
@@ -97,7 +97,7 @@ impl Render for WebcamStartDialog {
         let grant_status = Permissions::grant_status(PermissionType::Camera);
         dialog_box("webcam-start")
             .visible(self.visible)
-            .title(tr!("WEBCAM_START_TITLE", "Turn on Camera").into())
+            .title(tr!("WEBCAM_START_TITLE", "Turn on Camera"))
             .content(
                 div()
                     .flex()
@@ -164,12 +164,11 @@ impl Render for WebcamStartDialog {
                                                                             .flex_grow()
                                                                             .size_full()
                                                                             .child(icon_text(
-                                                                                "exception".into(),
+                                                                                "exception",
                                                                                 tr!(
                                                                                     "CAMERA_SETUP_\
                                                                                     CAMERA_ERROR",
-                                                                                )
-                                                                                .into(),
+                                                                                ),
                                                                             )),
                                                                     )
                                                                 },
@@ -217,7 +216,7 @@ impl Render for WebcamStartDialog {
 
                                 david.child(
                                     button("camera-selection-button")
-                                        .child(icon("arrow-down".into()))
+                                        .child(icon("arrow-down"))
                                         .with_menu_open_policy(ButtonMenuOpenPolicy::AnyClick)
                                         .with_menu(camera_menu),
                                 )
@@ -231,8 +230,8 @@ impl Render for WebcamStartDialog {
             .button(
                 button("start-button")
                     .child(icon_text(
-                        "camera-photo".into(),
-                        tr!("WEBCAM_START_BUTTON", "Turn on Camera").into(),
+                        "camera-photo",
+                        tr!("WEBCAM_START_BUTTON", "Turn on Camera"),
                     ))
                     .when(
                         self.active_camera

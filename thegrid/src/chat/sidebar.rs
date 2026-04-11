@@ -20,17 +20,14 @@ use contemporary::components::layer::layer;
 use contemporary::components::pager::pager;
 use contemporary::components::pager::slide_horizontal_animation::SlideHorizontalAnimation;
 use contemporary::styling::theme::{Theme, VariableColor};
-use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, App, AppContext, AsyncApp, BorrowAppContext, ClickEvent, Context,
+    div, px, App, AppContext, BorrowAppContext, Context,
     Entity, InteractiveElement, IntoElement, ListAlignment, ListState, ParentElement,
     Render, RenderOnce, StatefulInteractiveElement, Styled, Window,
 };
-use gpui_tokio::Tokio;
 use matrix_sdk::encryption::recovery::RecoveryState;
 use matrix_sdk::encryption::VerificationState;
-use matrix_sdk::ruma::events::key::verification::VerificationMethod;
 use matrix_sdk::ruma::room_id;
 use std::rc::Rc;
 use thegrid_common::mxc_image::{mxc_image, SizePolicy};
@@ -316,12 +313,12 @@ impl RenderOnce for SidebarAlert {
                                             .child(
                                                 button("verification-request-accept")
                                                     .child(icon_text(
-                                                        "dialog-ok".into(),
+                                                        "dialog-ok",
                                                         tr!(
                                                             "INCOMING_VERIFICATION_ACCEPT",
                                                             "Verify Now"
                                                         )
-                                                            .into(),
+                                                            ,
                                                     ))
                                                     .on_click({
                                                         let verification_request_entity = verification_request_entity.clone();
@@ -347,12 +344,12 @@ impl RenderOnce for SidebarAlert {
                                             .child(
                                                 button("verification-request-decline")
                                                     .child(icon_text(
-                                                        "dialog-cancel".into(),
+                                                        "dialog-cancel",
                                                         tr!(
                                                             "INCOMING_VERIFICATION_DECLINE",
                                                             "Don't Verify"
                                                         )
-                                                            .into(),
+                                                            ,
                                                     ))
                                                     .on_click({
                                                         let verification_request_entity = verification_request_entity.clone();
@@ -390,8 +387,8 @@ impl RenderOnce for SidebarAlert {
                                         .child(
                                             button("setup-now")
                                                 .child(icon_text(
-                                                    "configure".into(),
-                                                    tr!("SETUP_RECOVERY_NOW", "Set up now").into(),
+                                                    "configure",
+                                                    tr!("SETUP_RECOVERY_NOW", "Set up now"),
                                                 ))
                                                 .on_click(move |_, _, cx| {
                                                     recovery_key_reset_popover.update(
@@ -429,11 +426,11 @@ impl RenderOnce for SidebarAlert {
                                         .child(
                                             button("verify-recovery")
                                                 .child(icon_text(
-                                                    "visibility".into(),
+                                                    "visibility",
                                                     tr!(
                                                         "VERIFY_SESSION_RECOVERY_KEY",
                                                     )
-                                                        .into(),
+                                                        ,
                                                 ))
                                                 .on_click(move |_, _, cx| {
                                                     recovery_passphrase_popover.update(
@@ -477,12 +474,12 @@ impl RenderOnce for SidebarAlert {
                                                 david.child(
                                                     button("verify-now")
                                                         .child(icon_text(
-                                                            "edit-copy".into(),
+                                                            "edit-copy",
                                                             tr!(
                                                             "VERIFY_SESSION_OTHER_DEVICE",
                                                             "Verify with another verified device"
                                                         )
-                                                                .into(),
+                                                                ,
                                                         ))
                                                         .on_click(move |_, _, cx| {
                                                             verification_popover.update(
@@ -500,12 +497,12 @@ impl RenderOnce for SidebarAlert {
                                             .child(
                                                 button("verify-recovery")
                                                     .child(icon_text(
-                                                        "visibility".into(),
+                                                        "visibility",
                                                         tr!(
                                                         "VERIFY_SESSION_RECOVERY_KEY",
                                                         "Enter Recovery Key"
                                                     )
-                                                            .into(),
+                                                            ,
                                                     ))
                                                     .on_click(move |_, _, cx| {
                                                         recovery_passphrase_popover.update(
@@ -522,11 +519,11 @@ impl RenderOnce for SidebarAlert {
                                                 button("reset-crypto")
                                                     .destructive()
                                                     .child(icon_text(
-                                                        "help-contents".into(),
+                                                        "help-contents",
                                                         tr!(
                                                             "VERIFY_SESSION_RESET_CRYPTO",
                                                             "I lost my verification methods"
-                                                        ).into(),
+                                                        ),
                                                     ))
                                                     .on_click({
                                                         let reset_dialog_open = reset_dialog_open.clone();
@@ -544,7 +541,7 @@ impl RenderOnce for SidebarAlert {
                                 tr!(
                                     "VERIFY_SESSION_RESET_CRYPTO_DIALOG_TITLE",
                                     "Encryption Setup Recovery"
-                                ).into()
+                                )
                             )
                             .content(
                                 tr!(
@@ -565,8 +562,8 @@ impl RenderOnce for SidebarAlert {
                             button("do-reset-crypto")
                                 .destructive()
                                 .child(icon_text(
-                                    "view-refresh".into(),
-                                    tr!("SECURITY_IDENTITY_RESET").into(),
+                                    "view-refresh",
+                                    tr!("SECURITY_IDENTITY_RESET"),
                                 ))
                                 .on_click(move |_, window, cx| {
                                     reset_dialog_open.write(cx, false);
@@ -611,12 +608,12 @@ impl RenderOnce for SidebarAlert {
                                         .child(
                                             button("verify-now")
                                                 .child(icon_text(
-                                                    "phone".into(),
+                                                    "phone",
                                                     tr!(
                                                         "UNVERIFIED_DEVICES_VIEW_DEVICES",
                                                         "View Devices"
                                                     )
-                                                        .into(),
+                                                        ,
                                                 ))
                                                 .on_click(move |_, window, cx| {
                                                     if let Some(handler) = handler.clone() {

@@ -12,12 +12,11 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, uniform_list, App, AppContext, AsyncApp, AsyncWindowContext, Context,
+    div, px, uniform_list, App, AppContext, AsyncWindowContext, Context,
     ElementId, Entity, InteractiveElement, IntoElement, ListSizingBehavior, ParentElement, Render, Styled, WeakEntity,
     Window,
 };
 use matrix_sdk::ruma::{OwnedUserId, UserId};
-use matrix_sdk::Error;
 use std::ops::Range;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
@@ -211,9 +210,9 @@ impl Render for IgnoredUsersSettings {
                                 button("ignore-user-button")
                                     .when(self.processing, |david| david.disabled())
                                     .child(icon_text(
-                                        "im-ban-user".into(),
+                                        "im-ban-user",
                                         tr!("IGNORED_USERS_ADD_BUTTON", "Add to ignore list")
-                                            .into(),
+                                            ,
                                     ))
                                     .on_click(cx.listener(|this, _, window, cx| {
                                         this.ignore_user(window, cx)
@@ -262,7 +261,7 @@ impl Render for IgnoredUsersSettings {
                                                                 button("delete")
                                                                     .destructive()
                                                                     .child(icon(
-                                                                        "list-remove".into(),
+                                                                        "list-remove",
                                                                     ))
                                                                     .when(
                                                                         this.processing,

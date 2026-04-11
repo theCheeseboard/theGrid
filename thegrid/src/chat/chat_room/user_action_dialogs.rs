@@ -1,21 +1,21 @@
 use cntp_i18n::tr;
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::checkbox::radio_button;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AsyncApp, ClickEvent, Context, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
-    div, px,
+    div, px, AsyncApp, ClickEvent, Context, IntoElement, ParentElement, Render, Styled,
+    WeakEntity, Window,
 };
 use log::error;
-use matrix_sdk::Room;
 use matrix_sdk::room::{RoomMember, RoomMemberRole};
-use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::ruma::events::room::power_levels::UserPowerLevel;
+use matrix_sdk::ruma::OwnedRoomId;
+use matrix_sdk::Room;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 
@@ -220,7 +220,7 @@ impl Render for UserActionDialogs {
                             self.current_user.as_ref().unwrap().normalized_power_level();
 
                         david
-                            .title(tr!("POWER_LEVEL_UPDATE_TITLE", "Update Power Level").into())
+                            .title(tr!("POWER_LEVEL_UPDATE_TITLE", "Update Power Level"))
                             .content(
                                 div()
                                     .flex()
@@ -360,8 +360,8 @@ impl Render for UserActionDialogs {
                             .button(
                                 button("set-power-level")
                                     .child(icon_text(
-                                        "dialog-ok".into(),
-                                        tr!("POWER_LEVEL_UPDATE_ACTION", "Set Power Level").into(),
+                                        "dialog-ok",
+                                        tr!("POWER_LEVEL_UPDATE_ACTION", "Set Power Level"),
                                     ))
                                     .on_click(cx.listener(move |this, _, window, cx| {
                                         this.update_power_level(new_power_level_value, window, cx);
@@ -388,7 +388,7 @@ impl Render for UserActionDialogs {
                         let theme = cx.global::<Theme>();
 
                         david
-                            .title(tr!("KICK_TITLE", "Kick").into())
+                            .title(tr!("KICK_TITLE", "Kick"))
                             .content(
                                 div().flex().flex_col().gap(px(4.)).child(
                                     div()
@@ -420,10 +420,7 @@ impl Render for UserActionDialogs {
                             .button(
                                 button("kick")
                                     .destructive()
-                                    .child(icon_text(
-                                        "im-kick-user".into(),
-                                        tr!("KICK_ACTION", "Kick").into(),
-                                    ))
+                                    .child(icon_text("im-kick-user", tr!("KICK_ACTION", "Kick")))
                                     .on_click(cx.listener(move |this, _, window, cx| {
                                         let reason = reason_field.read(cx).text().to_string();
                                         this.action_user(reason, window, cx);
@@ -450,7 +447,7 @@ impl Render for UserActionDialogs {
                         let theme = cx.global::<Theme>();
 
                         david
-                            .title(tr!("BAN_TITLE", "Ban").into())
+                            .title(tr!("BAN_TITLE", "Ban"))
                             .content(
                                 div().flex().flex_col().gap(px(4.)).child(
                                     div()
@@ -482,10 +479,7 @@ impl Render for UserActionDialogs {
                             .button(
                                 button("ban")
                                     .destructive()
-                                    .child(icon_text(
-                                        "im-ban-user".into(),
-                                        tr!("BAN_ACTION", "Ban").into(),
-                                    ))
+                                    .child(icon_text("im-ban-user", tr!("BAN_ACTION", "Ban")))
                                     .on_click(cx.listener(move |this, _, window, cx| {
                                         let reason = reason_field.read(cx).text().to_string();
                                         this.action_user(reason, window, cx);
@@ -512,7 +506,7 @@ impl Render for UserActionDialogs {
                         let theme = cx.global::<Theme>();
 
                         david
-                            .title(tr!("UNBAN_TITLE", "Lift Ban").into())
+                            .title(tr!("UNBAN_TITLE", "Lift Ban"))
                             .content(
                                 div().flex().flex_col().gap(px(4.)).child(
                                     div()
@@ -544,10 +538,7 @@ impl Render for UserActionDialogs {
                             )
                             .button(
                                 button("unban")
-                                    .child(icon_text(
-                                        "user".into(),
-                                        tr!("UNBAN_ACTION", "Lift Ban").into(),
-                                    ))
+                                    .child(icon_text("user", tr!("UNBAN_ACTION", "Lift Ban")))
                                     .on_click(cx.listener(move |this, _, window, cx| {
                                         let reason = reason_field.read(cx).text().to_string();
                                         this.action_user(reason, window, cx);

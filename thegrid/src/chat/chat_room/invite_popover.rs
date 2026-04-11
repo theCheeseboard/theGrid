@@ -16,8 +16,8 @@ use contemporary::components::text_field::TextField;
 use contemporary::components::toast::Toast;
 use contemporary::styling::theme::Theme;
 use gpui::{
-    AppContext, AsyncApp, AsyncWindowContext, Context, Entity, IntoElement, ParentElement, Render,
-    Styled, WeakEntity, Window, div, px,
+    div, px, AppContext, AsyncWindowContext, Context, Entity, IntoElement,
+    ParentElement, Render, Styled, WeakEntity, Window,
 };
 use matrix_sdk::ruma::{OwnedRoomId, OwnedUserId, UserId};
 use thegrid_common::session::session_manager::SessionManager;
@@ -194,9 +194,8 @@ impl Render for InvitePopover {
                                                 .child(
                                                     button("do-invite-out")
                                                         .child(icon_text(
-                                                            "user".into(),
-                                                            tr!("INVITE_ACTION", "Invite to room")
-                                                                .into(),
+                                                            "user",
+                                                            tr!("INVITE_ACTION", "Invite to room"),
                                                         ))
                                                         .on_click(cx.listener(
                                                             move |this, _, window, cx| {

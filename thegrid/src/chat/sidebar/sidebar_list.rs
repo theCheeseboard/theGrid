@@ -11,7 +11,6 @@ use gpui::{
     div, list, px, App, ElementId, Entity, InteractiveElement, IntoElement,
     ListState, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window,
 };
-use matrix_sdk::event_handler;
 use matrix_sdk::ruma::OwnedRoomId;
 use std::rc::Rc;
 use thegrid_common::mxc_image::{mxc_image, SizePolicy};
@@ -87,7 +86,7 @@ impl RenderOnce for SidebarList {
                         .flex()
                         .w_full()
                         .items_center()
-                        .child(icon("list-add".into()))
+                        .child(icon("list-add"))
                         .child(tr!("SIDEBAR_CREATE_JOIN", "Create or Join"))
                         .when(!invited_rooms.is_empty(), |david| {
                             david.child(
@@ -124,7 +123,7 @@ impl RenderOnce for SidebarList {
                     .flex()
                     .w_full()
                     .items_center()
-                    .child(icon("map-globe".into()))
+                    .child(icon("map-globe"))
                     .child(tr!("SIDEBAR_DIRECTORY", "Room Directory"))
                     .on_click({
                         let event_handler = event_handler.clone();

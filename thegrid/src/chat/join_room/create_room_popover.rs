@@ -1,8 +1,8 @@
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::tr;
 use contemporary::components::admonition::AdmonitionSeverity;
-use contemporary::components::button::{ButtonMenuOpenPolicy, button};
-use contemporary::components::checkbox::{CheckState, CheckedChangeEvent, checkbox, radio_button};
+use contemporary::components::button::{button, ButtonMenuOpenPolicy};
+use contemporary::components::checkbox::{checkbox, radio_button, CheckState, CheckedChangeEvent};
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::context_menu::ContextMenuItem;
 use contemporary::components::grandstand::grandstand;
@@ -14,22 +14,22 @@ use contemporary::components::pager::slide_horizontal_animation::SlideHorizontal
 use contemporary::components::popover::popover;
 use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
-use contemporary::components::switch::{SwitchChangeEvent, switch};
+use contemporary::components::switch::{switch, SwitchChangeEvent};
 use contemporary::components::text_field::TextField;
 use contemporary::components::toast::Toast;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AppContext, AsyncApp, AsyncWindowContext, Context, Entity, IntoElement, ParentElement, Render,
-    Styled, WeakEntity, Window, div, px,
+    div, px, AppContext, AsyncApp, AsyncWindowContext, Context, Entity, IntoElement,
+    ParentElement, Render, Styled, WeakEntity, Window,
 };
-use matrix_sdk::ruma::api::client::room::Visibility;
 use matrix_sdk::ruma::api::client::room::create_room::v3::{CreationContent, Request};
+use matrix_sdk::ruma::api::client::room::Visibility;
 use matrix_sdk::ruma::room::{AllowRule, JoinRule, Restricted, RoomMembership};
 use matrix_sdk::ruma::serde::Raw;
 use matrix_sdk::{Error, Room};
 use matrix_sdk_ui::spaces::SpaceRoom;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 
@@ -181,9 +181,10 @@ impl CreateRoomPopover {
                             .spawn_tokio(async move {
                                 space_service.add_child_to_space(child, parent).await
                             })
-                            .await {
-                                log::error!("Failed to add child room to space: {}", e);
-                            }
+                            .await
+                        {
+                            log::error!("Failed to add child room to space: {}", e);
+                        }
                     }
 
                     let _ = weak_this.update(cx, |this, cx| {
@@ -290,7 +291,7 @@ impl CreateRoomPopover {
                                         );
 
                                         button("space-selection-button")
-                                            .child(icon("arrow-down".into()))
+                                            .child(icon("arrow-down"))
                                             .with_menu_open_policy(ButtonMenuOpenPolicy::AnyClick)
                                             .with_menu(space_menu)
                                     }),
@@ -387,10 +388,7 @@ impl CreateRoomPopover {
                         )
                         .child(
                             button("do-create")
-                                .child(icon_text(
-                                    "list-add".into(),
-                                    tr!("CREATE_ROOM", "Create Room").into(),
-                                ))
+                                .child(icon_text("list-add", tr!("CREATE_ROOM", "Create Room")))
                                 .on_click(cx.listener(move |this, _, window, cx| {
                                     this.create_room(window, cx)
                                 })),

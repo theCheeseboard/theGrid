@@ -1,5 +1,4 @@
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::sidebar::SidebarPage;
 use async_channel::Sender;
 use cntp_i18n::{tr, trn};
 use contemporary::components::admonition::{admonition, AdmonitionSeverity};
@@ -16,9 +15,9 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, list, px, rgb, AnyElement, AppContext, AsyncApp,
-    AsyncWindowContext, Context, Element, Entity, InteractiveElement, IntoElement,
-    ListAlignment, ListOffset, ListScrollEvent, ListState, ParentElement, Render, Styled, WeakEntity, Window,
+    div, list, px, AnyElement, AppContext,
+    AsyncApp, Context, Entity, InteractiveElement, IntoElement,
+    ListAlignment, ListScrollEvent, ListState, ParentElement, Render, Styled, WeakEntity, Window,
 };
 use imbl::Vector;
 use matrix_sdk::room_directory_search::{RoomDescription, RoomDirectorySearch};
@@ -26,7 +25,6 @@ use matrix_sdk::ruma::room::JoinRuleKind;
 use matrix_sdk::ruma::{OwnedRoomId, OwnedRoomOrAliasId};
 use matrix_sdk::stream::StreamExt;
 use matrix_sdk::{Error, OwnedServerName, Room, RoomState};
-use std::collections::HashSet;
 use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::room_cache::RoomJoinEvent;
 use thegrid_common::session::session_manager::SessionManager;
@@ -336,12 +334,12 @@ impl RoomDirectory {
                                         .child(div().flex_grow())
                                         .child(skeleton("count-skeleton").w(px(100.)))
                                         .child(skeleton("alias-skeleton").w(px(150.)))
-                                        .child(skeleton("join-skeleton").child(
-                                            button("join-button").child(icon_text(
-                                                "list-add".into(),
-                                                tr!("JOIN_ROOM").into(),
-                                            )),
-                                        )),
+                                        .child(
+                                            skeleton("join-skeleton").child(
+                                                button("join-button")
+                                                    .child(icon_text("list-add", tr!("JOIN_ROOM"))),
+                                            ),
+                                        ),
                                 ),
                         ),
                 )
@@ -432,8 +430,8 @@ impl RoomDirectory {
                                             let room_id = room.room_id().to_owned();
                                             button("view-button")
                                                 .child(icon_text(
-                                                    "go-next".into(),
-                                                    tr!("VIEW_ROOM", "View Room").into(),
+                                                    "go-next",
+                                                    tr!("VIEW_ROOM", "View Room"),
                                                 ))
                                                 .on_click(cx.listener(
                                                     move |this, _, window, cx| {
@@ -444,18 +442,15 @@ impl RoomDirectory {
                                         JoinButtonType::Knock => button("join-button")
                                             .when(joining_room, |button| button.disabled())
                                             .child(icon_text(
-                                                "list-add".into(),
-                                                tr!("KNOCK_ON_ROOM", "Knock").into(),
+                                                "list-add",
+                                                tr!("KNOCK_ON_ROOM", "Knock"),
                                             ))
                                             .on_click(cx.listener(move |this, _, window, cx| {
                                                 this.join_room(room_id.clone(), true, window, cx);
                                             })),
                                         JoinButtonType::Join => button("join-button")
                                             .when(joining_room, |button| button.disabled())
-                                            .child(icon_text(
-                                                "list-add".into(),
-                                                tr!("JOIN_ROOM").into(),
-                                            ))
+                                            .child(icon_text("list-add", tr!("JOIN_ROOM")))
                                             .on_click(cx.listener(move |this, _, window, cx| {
                                                 this.join_room(room_id.clone(), false, window, cx);
                                             })),

@@ -236,12 +236,11 @@ impl DeactivateSurface {
                                     .child(
                                         button("deactivate-with-no-delete")
                                             .child(icon_text(
-                                                "arrow-right".into(),
+                                                "arrow-right",
                                                 tr!(
                                                     "ACCOUNT_DEACTIVATE_ONLY",
                                                     "Deactivate Account Only"
-                                                )
-                                                .into(),
+                                                ),
                                             ))
                                             .on_click(cx.listener(|this, _, _, cx| {
                                                 this.select_deactivate_method(false, cx);
@@ -262,13 +261,12 @@ impl DeactivateSurface {
                                     .child(
                                         button("deactivate-with-delete")
                                             .child(icon_text(
-                                                "arrow-right".into(),
+                                                "arrow-right",
                                                 tr!(
                                                     "ACCOUNT_DEACTIVATE_AND_DELETE",
                                                     "Deactivate Account \
                                                                     and Hide Messages"
-                                                )
-                                                .into(),
+                                                ),
                                             ))
                                             .on_click(cx.listener(|this, _, _, cx| {
                                                 this.select_deactivate_method(true, cx);
@@ -347,10 +345,7 @@ impl DeactivateSurface {
                             .child(
                                 button("deactivate-button")
                                     .destructive()
-                                    .child(icon_text(
-                                        "list-remove".into(),
-                                        tr!("ACCOUNT_DEACTIVATE").into(),
-                                    ))
+                                    .child(icon_text("list-remove", tr!("ACCOUNT_DEACTIVATE")))
                                     .on_click(cx.listener(|this, _, window, cx| {
                                         let matrix_id = OwnedUserId::try_from(
                                             this.matrix_id_field.read(cx).text(),
@@ -420,7 +415,7 @@ impl DeactivateSurface {
                             ))
                             .child(
                                 button("deactivate-ok")
-                                    .child(icon_text("dialog-ok".into(), tr!("DONE").into()))
+                                    .child(icon_text("dialog-ok", tr!("DONE")))
                                     .on_click(cx.listener(|this, _, window, cx| {
                                         // Pop twice to get back to
                                         // home page

@@ -172,23 +172,24 @@ impl Render for SpaceSidebarPage {
                 |david| {
                     david.child(
                         interstitial()
-                            .icon("im-room".into())
-                            .title(tr!("SPACE_SIDEBAR_NO_ROOMS", "No joined rooms").into())
+                            .icon("im-room")
+                            .title(tr!("SPACE_SIDEBAR_NO_ROOMS", "No joined rooms"))
                             .message(tr!(
                                 "SPACE_SIDEBAR_NO_ROOMS_MESSAGE",
                                 "You haven't joined any rooms in this space. Check out the lobby \
                                 to find rooms to join!"
-                            ).into())
+                            ))
                             .child(
                                 button("open-lobby")
                                     .child(icon_text(
-                                        "map-globe".into(),
-                                        tr!("SPACE_SIDEBAR_OPEN_LOBBY", "Open Lobby").into(),
+                                        "map-globe",
+                                        tr!("SPACE_SIDEBAR_OPEN_LOBBY", "Open Lobby"),
                                     ))
                                     .on_click(cx.listener(|this, _, window, cx| {
                                         this.change_room(this.room_id.clone(), window, cx);
                                     })),
-                            ).flex_grow(),
+                            )
+                            .flex_grow(),
                     )
                 },
             )

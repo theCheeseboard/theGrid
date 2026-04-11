@@ -62,12 +62,11 @@ impl RenderOnce for VerificationReciporicatePage {
                                     .child(
                                         button("verification-popover-ack")
                                             .child(icon_text(
-                                                "dialog-ok".into(),
+                                                "dialog-ok",
                                                 tr!(
                                                     "VERIFICATION_POPOVER_RECIPORICATE_ACK",
                                                     "The QR code was scanned successfully"
-                                                )
-                                                .into(),
+                                                ),
                                             ))
                                             .on_click({
                                                 let qr_state = qr_state.clone();
@@ -87,12 +86,11 @@ impl RenderOnce for VerificationReciporicatePage {
                                     .child(
                                         button("verification-popover-nak")
                                             .child(icon_text(
-                                                "dialog-cancel".into(),
+                                                "dialog-cancel",
                                                 tr!(
                                                     "VERIFICATION_POPOVER_RECIPORICATE_NAK",
                                                     "The QR code was not scanned successfully"
-                                                )
-                                                .into(),
+                                                ),
                                             ))
                                             .on_click({
                                                 let qr_state = qr_state.clone();

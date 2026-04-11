@@ -7,7 +7,6 @@ use gpui::{
     AsyncApp, Context, IntoElement, ParentElement, Render, SharedString, WeakEntity, Window,
 };
 use matrix_sdk::authentication::oauth::AccountManagementActionFull;
-use matrix_sdk::ruma::html::RemoveReplyFallback::No;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 use url::Url;
@@ -137,12 +136,11 @@ impl Render for OAuthManagementPageRedirectDialog {
             .button(
                 button("proceed-button")
                     .child(icon_text(
-                        "dialog-ok".into(),
+                        "dialog-ok",
                         tr!(
                             "OAUTH_MANAGEMENT_PAGE_REDIRECT_DIALOG_CONTINUE",
                             "Continue in Browser"
-                        )
-                        .into(),
+                        ),
                     ))
                     .when_none(&self.continue_url, |david| david.disabled())
                     .on_click(cx.listener(|this, _, _, cx| {

@@ -174,8 +174,8 @@ impl Render for DevicesSettings {
                                             div().flex().child(div().flex_grow()).child(
                                                 button("setup-now")
                                                     .child(icon_text(
-                                                        "configure".into(),
-                                                        tr!("SETUP_RECOVERY_NOW").into(),
+                                                        "configure",
+                                                        tr!("SETUP_RECOVERY_NOW"),
                                                     ))
                                                     .on_click(cx.listener(
                                                         move |this, _, _, cx| {
@@ -215,8 +215,8 @@ impl Render for DevicesSettings {
                                             div().flex().child(div().flex_grow()).child(
                                                 button("verify-now")
                                                     .child(icon_text(
-                                                        "edit-copy".into(),
-                                                        tr!("VERIFY_SESSION_OTHER_DEVICE").into(),
+                                                        "edit-copy",
+                                                        tr!("VERIFY_SESSION_OTHER_DEVICE"),
                                                     ))
                                                     .on_click(cx.listener(
                                                         move |this, _, _, cx| {
@@ -295,7 +295,7 @@ impl Render for DevicesSettings {
             .child(
                 dialog_box("log-out-confirm")
                     .visible(self.log_out_confirm_dialog_visible)
-                    .title(tr!("DEVICES_LOG_OUT_TITLE", "Forcibly log device out?").into())
+                    .title(tr!("DEVICES_LOG_OUT_TITLE", "Forcibly log device out?"))
                     .content_text_informational(
                         tr!(
                             "DEVICES_LOG_OUT_TEXT",
@@ -305,14 +305,12 @@ impl Render for DevicesSettings {
                                 .as_ref()
                                 .map(|device_id| device_id.clone().to_string())
                                 .unwrap_or_default()
-                        )
-                        .into(),
+                        ),
                         tr!(
                             "DEVICES_LOG_OUT_INFORMATION",
                             "The device won't be able to receive or send any messages, and if \
                             it was verified, it will no longer be verified."
-                        )
-                        .into(),
+                        ),
                     )
                     .standard_button(
                         StandardButton::Cancel,
@@ -325,8 +323,8 @@ impl Render for DevicesSettings {
                         button("log-out-force")
                             .destructive()
                             .child(icon_text(
-                                "system-log-out".into(),
-                                tr!("DEVICES_LOG_OUT_ACTION", "Forcibly log out").into(),
+                                "system-log-out",
+                                tr!("DEVICES_LOG_OUT_ACTION", "Forcibly log out"),
                             ))
                             .on_click(cx.listener(|this, _, _, cx| {
                                 this.confirm_log_out_device(None, cx);
@@ -433,10 +431,7 @@ impl RenderOnce for DeviceItem {
                         david.when_some(verify_device, |david, verify_device| {
                             david.child(
                                 button("verify-device-button")
-                                    .child(icon_text(
-                                        "dialog-ok".into(),
-                                        tr!("DEVICE_VERIFY", "Verify").into(),
-                                    ))
+                                    .child(icon_text("dialog-ok", tr!("DEVICE_VERIFY", "Verify")))
                                     .on_click(move |_, window, cx| verify_device(&(), window, cx)),
                             )
                         })
@@ -444,7 +439,7 @@ impl RenderOnce for DeviceItem {
                     .child(
                         button("log-out-device-button")
                             .destructive()
-                            .child(icon("system-log-out".into()))
+                            .child(icon("system-log-out"))
                             .on_click(move |_, window, cx| erase_device(&(), window, cx)),
                     ),
             )

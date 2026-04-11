@@ -157,8 +157,8 @@ impl RenderOnce for SasLayer {
                     .child(
                         button("verification-popover-ok")
                             .child(icon_text(
-                                "arrow-right".into(),
-                                tr!("VERIFICATION_POPOVER_SAS", "Compare Emoji").into(),
+                                "arrow-right",
+                                tr!("VERIFICATION_POPOVER_SAS", "Compare Emoji"),
                             ))
                             .on_click({
                                 let verification_request = self.verification_request;

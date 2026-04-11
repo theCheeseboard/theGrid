@@ -136,8 +136,8 @@ impl RenderOnce for LogoutPopover {
                                         .child(
                                             button("do-log-out")
                                                 .child(icon_text(
-                                                    "system-log-out".into(),
-                                                    tr!("LOG_OUT", "Log out now").into(),
+                                                    "system-log-out",
+                                                    tr!("LOG_OUT", "Log out now"),
                                                 ))
                                                 .destructive()
                                                 .on_click(move |_, window, cx| {

@@ -184,7 +184,7 @@ fn mane() {
         })
         .detach();
 
-        let default_window_options = contemporary_window_options(cx, "theGrid".into());
+        let default_window_options = contemporary_window_options(cx, "theGrid");
         register_actions(cx);
         cx.open_window(
             WindowOptions {

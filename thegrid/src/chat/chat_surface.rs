@@ -61,7 +61,7 @@ impl ChatSurface {
                         MenuItem::action(tr!("ACCOUNT_ACCOUNT_SWITCHER"), AccountSwitcher),
                         MenuItem::action(tr!("ACCOUNT_LOG_OUT"), LogOut),
                     ],
-                    disabled: false
+                    disabled: false,
                 },
             ),
             main_chat_surface: MainChatSurface::new(cx, displayed_room.clone(), on_surface_change),
@@ -121,19 +121,17 @@ impl Render for ChatSurface {
                         ClientError::None => div().into_any_element(),
                         ClientError::Terminal(terminal_error) => interstitial()
                             .size_full()
-                            .icon("network-disconnect".into())
-                            .title(
-                                tr!("MAIN_CHAT_ERROR_TERMINAL", "Disconnected from Matrix").into(),
-                            )
-                            .message(terminal_error.description().into())
+                            .icon("network-disconnect")
+                            .title(tr!("MAIN_CHAT_ERROR_TERMINAL", "Disconnected from Matrix"))
+                            .message(terminal_error.description())
                             .when_else(
                                 terminal_error.should_logout(),
                                 |david| {
                                     david.child(
                                         button("log-out-button")
                                             .child(icon_text(
-                                                "system-log-out".into(),
-                                                tr!("ACCOUNT_LOG_OUT").into(),
+                                                "system-log-out",
+                                                tr!("ACCOUNT_LOG_OUT"),
                                             ))
                                             .on_click(cx.listener(|_, _, _, cx| {
                                                 cx.update_global::<SessionManager, ()>(
@@ -165,9 +163,8 @@ impl Render for ChatSurface {
                                     david.child(
                                         button("log-out-button")
                                             .child(icon_text(
-                                                "system-switch-user".into(),
-                                                tr!("ACCOUNT_SWITCHER_ERROR", "Account Switcher")
-                                                    .into(),
+                                                "system-switch-user",
+                                                tr!("ACCOUNT_SWITCHER_ERROR", "Account Switcher"),
                                             ))
                                             .on_click(cx.listener(|_, _, _, cx| {
                                                 cx.update_global::<SessionManager, ()>(

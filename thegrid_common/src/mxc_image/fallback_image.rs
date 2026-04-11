@@ -29,7 +29,7 @@ impl FallbackImage {
 
         FallbackImageData {
             color,
-            content: icon(icon_name.into())
+            content: icon(icon_name)
                 .foreground(foreground.into())
                 .into_any_element(),
         }

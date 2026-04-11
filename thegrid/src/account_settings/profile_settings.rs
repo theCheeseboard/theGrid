@@ -11,12 +11,12 @@ use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, rgb, App, AppContext, AsyncApp, BorrowAppContext, Context,
-    Entity, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
+    div, px, App, AppContext, AsyncApp, Context, Entity,
+    IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
 };
 use matrix_sdk::authentication::oauth::AccountManagementActionFull;
 use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::AccountManagementAction;
-use matrix_sdk::{AuthApi, OwnedServerName};
+use matrix_sdk::AuthApi;
 use std::rc::Rc;
 use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
@@ -221,8 +221,8 @@ impl Render for ProfileSettings {
                                         .child(
                                             button("account-manage")
                                                 .child(icon_text(
-                                                    "configure".into(),
-                                                    tr!("PROFILE_MANAGE_ACCOUNT").into(),
+                                                    "configure",
+                                                    tr!("PROFILE_MANAGE_ACCOUNT"),
                                                 ))
                                                 .on_click(cx.listener(
                                                     move |this, _, window, cx| {
@@ -249,12 +249,11 @@ impl Render for ProfileSettings {
                                     .child(
                                         button("profile-change-display-name")
                                             .child(icon_text(
-                                                "edit-rename".into(),
+                                                "edit-rename",
                                                 tr!(
                                                     "PROFILE_CHANGE_DISPLAY_NAME",
                                                     "Change Display Name"
-                                                )
-                                                .into(),
+                                                ),
                                             ))
                                             .on_click(cx.listener(move |this, _, _, cx| {
                                                 this.new_display_name_text_field.update(
@@ -267,16 +266,15 @@ impl Render for ProfileSettings {
                                                 cx.notify()
                                             })),
                                     )
-                                    .child(
-                                        button("profile-change-profile-picture").child(icon_text(
-                                            "edit-rename".into(),
+                                    .child(button("profile-change-profile-picture").child(
+                                        icon_text(
+                                            "edit-rename",
                                             tr!(
                                                 "PROFILE_CHANGE_PROFILE_PICTURE",
                                                 "Change Profile Picture"
-                                            )
-                                            .into(),
-                                        )),
-                                    ),
+                                            ),
+                                        ),
+                                    )),
                             ),
                     )
                     .when(
@@ -310,12 +308,11 @@ impl Render for ProfileSettings {
                                             .child(
                                                 button("profile-deactivate")
                                                     .child(icon_text(
-                                                        "list-remove".into(),
+                                                        "list-remove",
                                                         tr!(
                                                             "PROFILE_DEACTIVATE",
                                                             "Deactivate Account"
-                                                        )
-                                                        .into(),
+                                                        ),
                                                     ))
                                                     .destructive()
                                                     .on_click(cx.listener(
@@ -334,7 +331,7 @@ impl Render for ProfileSettings {
             .child(
                 dialog_box("edit-display-name")
                     .visible(self.edit_display_name_open)
-                    .title(tr!("PROFILE_CHANGE_DISPLAY_NAME").into())
+                    .title(tr!("PROFILE_CHANGE_DISPLAY_NAME"))
                     .content(
                         div()
                             .flex()
@@ -356,10 +353,7 @@ impl Render for ProfileSettings {
                     )
                     .button(
                         button("change-profile-picture-button")
-                            .child(icon_text(
-                                "dialog-ok".into(),
-                                tr!("PROFILE_CHANGE_DISPLAY_NAME").into(),
-                            ))
+                            .child(icon_text("dialog-ok", tr!("PROFILE_CHANGE_DISPLAY_NAME")))
                             .on_click(cx.listener(|this, _, _, cx| {
                                 let new_display_name =
                                     this.new_display_name_text_field.read(cx).text().to_string();

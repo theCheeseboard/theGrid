@@ -163,10 +163,7 @@ impl Render for JoinRoom {
                                     .rounded(theme.border_radius)
                                     .child(
                                         button("create-room")
-                                            .child(icon_text(
-                                                "list-add".into(),
-                                                tr!("CREATE_ROOM").into(),
-                                            ))
+                                            .child(icon_text("list-add", tr!("CREATE_ROOM")))
                                             .on_click(cx.listener(|this, _, _, cx| {
                                                 this.create_room_popover.update(
                                                     cx,
@@ -180,8 +177,8 @@ impl Render for JoinRoom {
                                     .child(
                                         button("create-space")
                                             .child(icon_text(
-                                                "list-add".into(),
-                                                tr!("CREATE_SPACE", "Create Space").into(),
+                                                "list-add",
+                                                tr!("CREATE_SPACE", "Create Space"),
                                             ))
                                             .on_click(cx.listener(|this, _, _, cx| {
                                                 this.create_space_popover.update(
@@ -196,8 +193,8 @@ impl Render for JoinRoom {
                                     .child(
                                         button("direct-join-room")
                                             .child(icon_text(
-                                                "list-add".into(),
-                                                tr!("DIRECT_JOIN_ROOM", "Join a room").into(),
+                                                "list-add",
+                                                tr!("DIRECT_JOIN_ROOM", "Join a room"),
                                             ))
                                             .on_click(cx.listener(|this, _, _, cx| {
                                                 this.direct_join_room_popover.update(
@@ -371,10 +368,7 @@ impl RenderOnce for Invitation {
                     .flex()
                     .child(
                         button("invite-reject")
-                            .child(icon_text(
-                                "edit-delete".into(),
-                                tr!("INVITE_DECLINE", "Decline").into(),
-                            ))
+                            .child(icon_text("edit-delete", tr!("INVITE_DECLINE", "Decline")))
                             .destructive()
                             .when(processing, |david| david.disabled())
                             .on_click(move |_, _, cx| {
@@ -383,10 +377,7 @@ impl RenderOnce for Invitation {
                     )
                     .child(
                         button("invite-accept")
-                            .child(icon_text(
-                                "dialog-ok".into(),
-                                tr!("INVITE_ACCEPT", "Accept").into(),
-                            ))
+                            .child(icon_text("dialog-ok", tr!("INVITE_ACCEPT", "Accept")))
                             .when(processing, |david| david.disabled())
                             .on_click(move |_, window, cx| {
                                 Self::accept_invite(
@@ -404,7 +395,7 @@ impl RenderOnce for Invitation {
                     .render_as_deferred(true)
                     .visible(*decline_dialog_box_open.read(cx))
                     .processing(processing)
-                    .title(tr!("INVITE_DECLINE_TITLE", "Decline Pending Invitation").into())
+                    .title(tr!("INVITE_DECLINE_TITLE", "Decline Pending Invitation"))
                     .when_none(&inviter, |david| {
                         david.content(tr!("INVITE_DECLINE_CONFIRMATION", "Decline the invite?"))
                     })
@@ -447,10 +438,7 @@ impl RenderOnce for Invitation {
                     })
                     .button(
                         button("decline-button")
-                            .child(icon_text(
-                                "edit-delete".into(),
-                                tr!("INVITE_DECLINE", "Decline").into(),
-                            ))
+                            .child(icon_text("edit-delete", tr!("INVITE_DECLINE", "Decline")))
                             .destructive()
                             .on_click(move |_, _, cx| {
                                 Self::reject_invite(

@@ -304,8 +304,8 @@ impl Render for IdentityResetSurface {
                                                 button("reset-crypto-identity-button")
                                                     .destructive()
                                                     .child(icon_text(
-                                                        "view-refresh".into(),
-                                                        tr!("SECURITY_IDENTITY_RESET").into(),
+                                                        "view-refresh",
+                                                        tr!("SECURITY_IDENTITY_RESET"),
                                                     ))
                                                     .on_click(cx.listener(
                                                         |this, _, window, cx| {
@@ -363,8 +363,8 @@ impl Render for IdentityResetSurface {
                                                 .child(
                                                     button("reset-crypto-identity-ok")
                                                         .child(icon_text(
-                                                            "dialog-ok".into(),
-                                                            tr!("DONE", "Done").into(),
+                                                            "dialog-ok",
+                                                            tr!("DONE", "Done"),
                                                         ))
                                                         .on_click(cx.listener(
                                                             |this, _, window, cx| {
@@ -397,7 +397,7 @@ impl Render for IdentityResetSurface {
                                 david.child(
                                     dialog_box("oauth")
                                         .visible(true)
-                                        .title(tr!("AUTH_REQUIRED").into())
+                                        .title(tr!("AUTH_REQUIRED"))
                                         .content(
                                             div()
                                                 .flex()
@@ -406,8 +406,8 @@ impl Render for IdentityResetSurface {
                                                 .child(
                                                     button("open-browser-button")
                                                         .child(icon_text(
-                                                            "text-html".into(),
-                                                            tr!("UIAA_BROWSER_OPEN").into(),
+                                                            "text-html",
+                                                            tr!("UIAA_BROWSER_OPEN"),
                                                         ))
                                                         .on_click(cx.listener({
                                                             let oauth_step_completed =
@@ -432,8 +432,8 @@ impl Render for IdentityResetSurface {
                                                     david.disabled()
                                                 })
                                                 .child(icon_text(
-                                                    "dialog-ok".into(),
-                                                    tr!("AUTH_REQUIRED_BROWSER_GO").into(),
+                                                    "dialog-ok",
+                                                    tr!("AUTH_REQUIRED_BROWSER_GO"),
                                                 ))
                                                 .on_click(cx.listener(move |this, _, _, cx| {
                                                     this.continue_handle(None, cx);

@@ -1,6 +1,6 @@
 use crate::chat::chat_room::open_room::OpenRoom;
 use cntp_i18n::tr;
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::icon::icon;
 use contemporary::components::layer::layer;
@@ -8,8 +8,8 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, Entity, InteractiveElement, IntoElement, ParentElement, Render, RenderOnce,
-    StatefulInteractiveElement, Styled, Window, div, px, relative,
+    div, px, relative, App, Entity, InteractiveElement,
+    IntoElement, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window,
 };
 
 #[derive(IntoElement)]
@@ -65,7 +65,7 @@ impl RenderOnce for AttachmentsView {
                                                 .child(
                                                     button("delete-button")
                                                         .flat()
-                                                        .child(icon("edit-delete".into()))
+                                                        .child(icon("edit-delete"))
                                                         .on_click(move |_, _, cx| {
                                                             open_room.update(
                                                                 cx,

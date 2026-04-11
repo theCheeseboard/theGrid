@@ -275,29 +275,26 @@ impl Render for RecoveryKeyResetPopover {
                                                 button("do-import")
                                                     .child(match self.recovery_state {
                                                         RecoveryState::Enabled => icon_text(
-                                                            "edit-rename".into(),
+                                                            "edit-rename",
                                                             tr!(
                                                                 "SECURITY_RECOVERY_KEY_CHANGE",
                                                                 "Change Recovery Key"
-                                                            )
-                                                            .into(),
+                                                            ),
                                                         ),
                                                         RecoveryState::Unknown
                                                         | RecoveryState::Disabled => icon_text(
-                                                            "configure".into(),
+                                                            "configure",
                                                             tr!(
                                                                 "SECURITY_RECOVERY_KEY_SETUP",
                                                                 "Set up Recovery Key"
-                                                            )
-                                                            .into(),
+                                                            ),
                                                         ),
                                                         RecoveryState::Incomplete => icon_text(
-                                                            "edit-rename".into(),
+                                                            "edit-rename",
                                                             tr!(
                                                                 "SECURITY_RECOVERY_KEY_RESET",
                                                                 "Reset Recovery Key"
-                                                            )
-                                                            .into(),
+                                                            ),
                                                         ),
                                                     })
                                                     .on_click(cx.listener(
@@ -380,7 +377,7 @@ impl Render for RecoveryKeyResetPopover {
                                                         .child(
                                                             button("copy-recovery-key")
                                                                 .flat()
-                                                                .child(icon("edit-copy".into()))
+                                                                .child(icon("edit-copy"))
                                                                 .on_click(move |_, _, cx| {
                                                                     cx.write_to_clipboard(
                                                                         ClipboardItem::new_string(
@@ -407,10 +404,7 @@ impl Render for RecoveryKeyResetPopover {
                                             )
                                             .child(
                                                 button("finish")
-                                                    .child(icon_text(
-                                                        "dialog-ok".into(),
-                                                        tr!("DONE").into(),
-                                                    ))
+                                                    .child(icon_text("dialog-ok", tr!("DONE")))
                                                     .on_click(cx.listener(
                                                         move |this, _, _, cx| {
                                                             this.visible = false;

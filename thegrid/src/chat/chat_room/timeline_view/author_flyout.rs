@@ -345,8 +345,8 @@ impl RenderOnce for AuthorFlyout {
                                             david.child(
                                                 button("invite-button")
                                                     .child(icon_text(
-                                                        "user".into(),
-                                                        tr!("INVITE_USER", "Invite").into(),
+                                                        "user",
+                                                        tr!("INVITE_USER", "Invite"),
                                                     ))
                                                     .on_click(move |_, window, cx| {
                                                         let room = room_4.clone();
@@ -374,12 +374,11 @@ impl RenderOnce for AuthorFlyout {
                                             david.child(
                                                 button("retract-invite-button")
                                                     .child(icon_text(
-                                                        "im-kick-user".into(),
+                                                        "im-kick-user",
                                                         tr!(
                                                             "RETRACT_INVITE_USER",
                                                             "Retract Invite"
-                                                        )
-                                                        .into(),
+                                                        ),
                                                     ))
                                                     .destructive()
                                                     .on_click(move |_, window, cx| {
@@ -411,8 +410,8 @@ impl RenderOnce for AuthorFlyout {
                                                 button("kick-button")
                                                     .destructive()
                                                     .child(icon_text(
-                                                        "im-kick-user".into(),
-                                                        tr!("KICK", "Kick").into(),
+                                                        "im-kick-user",
+                                                        tr!("KICK", "Kick"),
                                                     ))
                                                     .on_click(move |_, window, cx| {
                                                         on_close_3(
@@ -437,8 +436,8 @@ impl RenderOnce for AuthorFlyout {
                                                 button("ban-button")
                                                     .destructive()
                                                     .child(icon_text(
-                                                        "im-ban-user".into(),
-                                                        tr!("BAN", "Ban").into(),
+                                                        "im-ban-user",
+                                                        tr!("BAN", "Ban"),
                                                     ))
                                                     .on_click(move |_, window, cx| {
                                                         on_close_4(
@@ -462,8 +461,8 @@ impl RenderOnce for AuthorFlyout {
                                             david.child(
                                                 button("unban-button")
                                                     .child(icon_text(
-                                                        "user".into(),
-                                                        tr!("UNBAN", "Lift Ban").into(),
+                                                        "user",
+                                                        tr!("UNBAN", "Lift Ban"),
                                                     ))
                                                     .on_click(move |_, window, cx| {
                                                         on_close_7(
@@ -496,7 +495,7 @@ impl RenderOnce for AuthorFlyout {
                                     .child(
                                         button("send-button")
                                             .child(icon_text(
-                                                "mail-send".into(),
+                                                "mail-send",
                                                 match current_dm_room {
                                                     None => {
                                                         tr!(
@@ -507,8 +506,7 @@ impl RenderOnce for AuthorFlyout {
                                                     Some(_) => {
                                                         tr!("DIRECT_MESSAGE_SEND", "Send")
                                                     }
-                                                }
-                                                .into(),
+                                                },
                                             ))
                                             .on_click(move |_, window, cx| {
                                                 let message = direct_message_box_2

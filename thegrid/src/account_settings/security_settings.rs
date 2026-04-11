@@ -138,8 +138,8 @@ impl Render for SecuritySettings {
                                             div().flex().child(div().flex_grow()).child(
                                                 button("setup-now")
                                                     .child(icon_text(
-                                                        "configure".into(),
-                                                        tr!("SETUP_RECOVERY_NOW").into(),
+                                                        "configure",
+                                                        tr!("SETUP_RECOVERY_NOW"),
                                                     ))
                                                     .on_click(cx.listener(
                                                         move |this, _, _, cx| {
@@ -174,8 +174,8 @@ impl Render for SecuritySettings {
                                                 div().flex().child(div().flex_grow()).child(
                                                     button("verify-recovery")
                                                         .child(icon_text(
-                                                            "visibility".into(),
-                                                            tr!("VERIFY_SESSION_RECOVERY_KEY",).into(),
+                                                            "visibility",
+                                                            tr!("VERIFY_SESSION_RECOVERY_KEY",),
                                                         ))
                                                         .on_click(cx.listener(
                                                             move |this, _, _, cx| {
@@ -214,29 +214,29 @@ impl Render for SecuritySettings {
                                             button("key-setup")
                                                 .child(match recovery_state {
                                                     RecoveryState::Enabled => icon_text(
-                                                        "edit-rename".into(),
+                                                        "edit-rename",
                                                         tr!(
                                                             "SECURITY_RECOVERY_KEY_CHANGE",
                                                             "Change Recovery Key"
                                                         )
-                                                            .into(),
+                                                            ,
                                                     ),
                                                     RecoveryState::Unknown
                                                     | RecoveryState::Disabled => icon_text(
-                                                        "configure".into(),
+                                                        "configure",
                                                         tr!(
                                                             "SECURITY_RECOVERY_KEY_SETUP",
                                                             "Set up Recovery Key"
                                                         )
-                                                            .into(),
+                                                            ,
                                                     ),
                                                     RecoveryState::Incomplete => icon_text(
-                                                        "edit-rename".into(),
+                                                        "edit-rename",
                                                         tr!(
                                                             "SECURITY_RECOVERY_KEY_RESET",
                                                             "Reset Recovery Key"
                                                         )
-                                                            .into(),
+                                                            ,
                                                     ),
                                                 })
                                                 .on_click(cx.listener(|this, _, _, cx| {
@@ -275,12 +275,12 @@ impl Render for SecuritySettings {
                                     .child(
                                         button("key-backup")
                                             .child(icon_text(
-                                                "cloud-download".into(),
+                                                "cloud-download",
                                                 tr!(
                                                     "SECURITY_KEY_BACKUP_EXPORT",
                                                     "Export Encryption Keys"
                                                 )
-                                                    .into(),
+                                                    ,
                                             ))
                                             .on_click(cx.listener(|this, _, _, cx| {
                                                 this.key_export_popover.update(
@@ -295,12 +295,12 @@ impl Render for SecuritySettings {
                                     .child(
                                         button("profile-change-profile-picture")
                                             .child(icon_text(
-                                                "cloud-upload".into(),
+                                                "cloud-upload",
                                                 tr!(
                                                     "SECURITY_KEY_BACKUP_IMPORT",
                                                     "Import Encryption Keys"
                                                 )
-                                                    .into(),
+                                                    ,
                                             ))
                                             .on_click(cx.listener(|this, _, _, cx| {
                                                 this.start_import(cx);
@@ -339,12 +339,12 @@ impl Render for SecuritySettings {
                                     .child(
                                         button("key-reset")
                                             .child(icon_text(
-                                                "view-refresh".into(),
+                                                "view-refresh",
                                                 tr!(
                                                     "SECURITY_IDENTITY_RESET",
                                                     "Reset Cryptographic Identity"
                                                 )
-                                                    .into(),
+                                                    ,
                                             ))
                                             .destructive()
                                             .on_click(cx.listener(Self::open_crypto_reset_page)),

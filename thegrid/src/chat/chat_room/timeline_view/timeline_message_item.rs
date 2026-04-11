@@ -214,22 +214,21 @@ pub fn msgtype_to_message_line<'a>(
                                     .as_ref()
                                     .and_then(|file_info| file_info.mimetype.clone())
                                     .map(|mimetype| mimetype.replace("/", "-"))
-                                    .unwrap_or("application-octet-stream".into())
-                                    .into(),
+                                    .unwrap_or("application-octet-stream".into()),
                             )
                             .size(24.),
                         )
                         .child(file.filename().to_string())
                         .child(match media_file.media_state {
                             MediaState::Idle | MediaState::Failed => button("download-button")
-                                .child(icon("cloud-download".into()))
+                                .child(icon("cloud-download"))
                                 .on_click(move |_, _, cx| {
                                     download_file(file.clone(), media_file_entity.clone(), cx);
                                 })
                                 .into_any_element(),
                             MediaState::Loading => spinner().size(px(16.)).into_any_element(),
                             MediaState::Loaded(_) => button("open-button")
-                                .child(icon("document-open".into()))
+                                .child(icon("document-open"))
                                 .with_menu(vec![
                                     ContextMenuItem::separator()
                                         .label(tr!(

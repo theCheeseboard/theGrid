@@ -4,18 +4,18 @@ use crate::actions::{
 use crate::auth::logout_popover::logout_popover;
 use crate::chat::chat_room::ChatRoom;
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::join_room::JoinRoom;
 use crate::chat::join_room::create_room_popover::CreateRoomPopover;
 use crate::chat::join_room::create_space_popover::CreateSpacePopover;
 use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
+use crate::chat::join_room::JoinRoom;
 use crate::chat::room_directory::RoomDirectory;
 use crate::chat::sidebar::Sidebar;
 use cntp_i18n::{i18n_manager, tr};
 use contemporary::application::Details;
 use contemporary::components::interstitial::interstitial;
 use gpui::{
-    App, AppContext, BorrowAppContext, Context, Entity, FocusHandle, InteractiveElement,
-    IntoElement, ParentElement, Render, Styled, Window, div, px,
+    div, px, App, AppContext, BorrowAppContext, Context, Entity,
+    FocusHandle, InteractiveElement, IntoElement, ParentElement, Render, Styled, Window,
 };
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
@@ -219,24 +219,18 @@ impl Render for MainChatSurface {
                         div()
                             .child(match &self.displayed_room.read(cx) {
                                 DisplayedRoom::None => interstitial()
-                                    .title(
-                                        tr!(
-                                            "NO_DISPLAYED_ROOM_TITLE",
-                                            "Welcome to {{application_name}}",
-                                            application_name = details
-                                                .generatable
-                                                .application_name
-                                                .resolve_languages_or_default(&locale.messages)
-                                        )
-                                        .into(),
-                                    )
-                                    .message(
-                                        tr!(
-                                            "NO_DISPLAYED_ROOM_MESSAGE",
-                                            "Choose a room to start chatting!"
-                                        )
-                                        .into(),
-                                    )
+                                    .title(tr!(
+                                        "NO_DISPLAYED_ROOM_TITLE",
+                                        "Welcome to {{application_name}}",
+                                        application_name = details
+                                            .generatable
+                                            .application_name
+                                            .resolve_languages_or_default(&locale.messages)
+                                    ))
+                                    .message(tr!(
+                                        "NO_DISPLAYED_ROOM_MESSAGE",
+                                        "Choose a room to start chatting!"
+                                    ))
                                     .size_full()
                                     .into_any_element(),
                                 DisplayedRoom::Room(_) => {

@@ -2,7 +2,7 @@ use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::Sidebar;
 use cntp_i18n::tr;
 use contemporary::components::button::button;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
@@ -10,9 +10,8 @@ use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, Context, ElementId, Entity, InteractiveElement, IntoElement,
-    ListAlignment, ListState, ParentElement, Render, StatefulInteractiveElement, Styled,
-    WeakEntity, Window, div, list, px,
+    div, list, px, App, AppContext, Context, ElementId, Entity,
+    InteractiveElement, IntoElement, ListAlignment, ListState, ParentElement, Render, StatefulInteractiveElement, Styled, Window,
 };
 use matrix_sdk::{OwnedServerName, ServerName};
 use thegrid_common::session::session_manager::SessionManager;
@@ -112,7 +111,7 @@ impl Render for DirectorySidebarPage {
                                             .p(px(2.))
                                             .gap(px(4.))
                                             .rounded(theme.border_radius)
-                                            .child(icon("list-add".into()))
+                                            .child(icon("list-add"))
                                             .child(tr!(
                                                 "ROOM_DIRECTORY_OTHER_SERVER",
                                                 "Another server..."
@@ -152,10 +151,11 @@ impl Render for DirectorySidebarPage {
                                                 }),
                                                 |david| david.bg(theme.button_background),
                                             )
-                                            .child(icon(
-                                                if i == 0 { "default" } else { "drive-harddisk" }
-                                                    .into(),
-                                            ))
+                                            .child(icon(if i == 0 {
+                                                "default"
+                                            } else {
+                                                "drive-harddisk"
+                                            }))
                                             .child(server.to_string())
                                             .on_click(cx.listener(move |this, _, window, cx| {
                                                 this.change_server(server.clone(), window, cx);
@@ -173,7 +173,7 @@ impl Render for DirectorySidebarPage {
             .child(
                 dialog_box("directory-homeserver-dialog")
                     .visible(self.add_dialog_visible)
-                    .title(tr!("ROOM_DIRECTORY_ADD_SERVER", "Browse another server").into())
+                    .title(tr!("ROOM_DIRECTORY_ADD_SERVER", "Browse another server"))
                     .content(
                         div()
                             .flex()
@@ -197,9 +197,8 @@ impl Render for DirectorySidebarPage {
                     .button(
                         button("add-server-button")
                             .child(icon_text(
-                                "dialog-ok".into(),
-                                tr!("ROOM_DIRECTORY_BROWSE_BUTTON", "Browse Server Directory")
-                                    .into(),
+                                "dialog-ok",
+                                tr!("ROOM_DIRECTORY_BROWSE_BUTTON", "Browse Server Directory"),
                             ))
                             .on_click(cx.listener(|this, _, window, cx| {
                                 let homeserver = this.new_homeserver_text_field.read(cx).text();

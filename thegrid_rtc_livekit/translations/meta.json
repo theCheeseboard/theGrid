@@ -1,73 +1,73 @@
 {
   "ACTIVE_CALL": {
     "context": "active_call_sidebar_alert.rs",
-    "definedIn": "src/active_call_sidebar_alert.rs:76",
+    "definedIn": "src/active_call_sidebar_alert.rs:75",
     "plural": false,
     "description": null
   },
   "ACTIVE_CALL_CONTENT": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:727",
+    "definedIn": "src/call_surface/call_start_page.rs:725",
     "plural": true,
     "description": null
   },
   "AUDIO_DEVICE_NONE": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:451",
+    "definedIn": "src/call_surface/call_start_page.rs:449",
     "plural": false,
     "description": null
   },
   "AUDIO_SETUP": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:310",
+    "definedIn": "src/call_surface/call_start_page.rs:308",
     "plural": false,
     "description": null
   },
   "AUDIO_SETUP_CAMERA_UNAVAILABLE": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:156",
+    "definedIn": "src/call_surface/call_start_page.rs:155",
     "plural": false,
     "description": null
   },
   "AUDIO_SETUP_ENABLE_MIC": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:391",
+    "definedIn": "src/call_surface/call_start_page.rs:389",
     "plural": false,
     "description": null
   },
   "AUDIO_SETUP_INPUT": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:428",
+    "definedIn": "src/call_surface/call_start_page.rs:426",
     "plural": false,
     "description": null
   },
   "AUDIO_SETUP_MIC_UNAVAILABLE": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:414",
+    "definedIn": "src/call_surface/call_start_page.rs:412",
     "plural": false,
     "description": null
   },
   "AUDIO_SETUP_OUTPUT": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:314",
+    "definedIn": "src/call_surface/call_start_page.rs:312",
     "plural": false,
     "description": null
   },
   "CALLS_ON_HOLD": {
     "context": "active_call_sidebar_alert.rs",
-    "definedIn": "src/active_call_sidebar_alert.rs:216",
+    "definedIn": "src/active_call_sidebar_alert.rs:213",
     "plural": false,
     "description": null
   },
   "CALL_CONNECTING": {
     "context": "active_call_sidebar_alert.rs",
-    "definedIn": "src/active_call_sidebar_alert.rs:91",
+    "definedIn": "src/active_call_sidebar_alert.rs:90",
     "plural": false,
     "description": null
   },
   "CALL_CONNECTION_ERROR": {
     "context": "call_page.rs",
-    "definedIn": "src/call_surface/call_page.rs:411",
+    "definedIn": "src/call_surface/call_page.rs:408",
     "plural": false,
     "description": null
   },
@@ -121,37 +121,37 @@
   },
   "CALL_HOLD_NOTIFICATION": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:756",
+    "definedIn": "src/call_surface/call_start_page.rs:753",
     "plural": false,
     "description": null
   },
   "CALL_JOIN_BUTTON": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:739",
+    "definedIn": "src/call_surface/call_start_page.rs:737",
     "plural": false,
     "description": null
   },
   "CALL_JOIN_GRANDSTAND": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:601",
+    "definedIn": "src/call_surface/call_start_page.rs:599",
     "plural": false,
     "description": null
   },
   "CALL_JOIN_LIVEKIT_SERVER_ADVICE": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:646",
+    "definedIn": "src/call_surface/call_start_page.rs:644",
     "plural": false,
     "description": null
   },
   "CALL_JOIN_NO_FOCUS": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:660",
+    "definedIn": "src/call_surface/call_start_page.rs:658",
     "plural": false,
     "description": null
   },
   "CALL_JOIN_PROCESSING": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:653",
+    "definedIn": "src/call_surface/call_start_page.rs:651",
     "plural": false,
     "description": null
   },
@@ -163,73 +163,73 @@
   },
   "CALL_ON_HOLD_MESSAGE": {
     "context": "call_page.rs",
-    "definedIn": "src/call_surface/call_page.rs:226",
+    "definedIn": "src/call_surface/call_page.rs:225",
     "plural": false,
     "description": null
   },
   "CALL_OVERVIEW": {
     "context": "call_page.rs",
-    "definedIn": "src/call_surface/call_page.rs:549",
+    "definedIn": "src/call_surface/call_page.rs:538",
     "plural": false,
     "description": null
   },
   "CALL_RETURN": {
     "context": "active_call_sidebar_alert.rs",
-    "definedIn": "src/active_call_sidebar_alert.rs:129",
+    "definedIn": "src/active_call_sidebar_alert.rs:128",
     "plural": false,
     "description": null
   },
   "CALL_TAKE_OFF_HOLD": {
     "context": "call_page.rs",
-    "definedIn": "src/call_surface/call_page.rs:235",
+    "definedIn": "src/call_surface/call_page.rs:232",
     "plural": false,
     "description": null
   },
   "CAMERA_SETUP": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:128",
+    "definedIn": "src/call_surface/call_start_page.rs:127",
     "plural": false,
     "description": null
   },
   "CAMERA_SETUP_CAMERA_ERROR": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:230",
+    "definedIn": "src/call_surface/call_start_page.rs:229",
     "plural": false,
     "description": null
   },
   "CAMERA_SETUP_ENABLE": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:144",
+    "definedIn": "src/call_surface/call_start_page.rs:143",
     "plural": false,
     "description": null
   },
   "CAMERA_SETUP_NO_CAMERA": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:289",
+    "definedIn": "src/call_surface/call_start_page.rs:287",
     "plural": false,
     "description": null
   },
   "JOIN_CALL": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:626",
+    "definedIn": "src/call_surface/call_start_page.rs:624",
     "plural": false,
     "description": null
   },
   "MIC_SETUP": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:375",
+    "definedIn": "src/call_surface/call_start_page.rs:373",
     "plural": false,
     "description": null
   },
   "WEBCAM_START_BUTTON": {
     "context": "webcam_start_dialog.rs",
-    "definedIn": "src/call_surface/call_page/webcam_start_dialog.rs:235",
+    "definedIn": "src/call_surface/call_page/webcam_start_dialog.rs:234",
     "plural": false,
     "description": null
   },
   "WEBCAM_START_CAMERA_SELECTION": {
     "context": "webcam_start_dialog.rs",
-    "definedIn": "src/call_surface/call_page/webcam_start_dialog.rs:198",
+    "definedIn": "src/call_surface/call_page/webcam_start_dialog.rs:197",
     "plural": false,
     "description": null
   },

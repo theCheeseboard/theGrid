@@ -231,13 +231,12 @@ impl RenderOnce for StandardRoomElement {
             .child(match self.render_as {
                 StandardRoomElementType::Room => display_name.clone().into_any_element(),
                 StandardRoomElementType::Space => icon_text(
-                    "map-globe".into(),
+                    "map-globe",
                     tr!(
                         "SPACE_LOBBY",
                         "{{space}} Lobby",
                         space = display_name.clone()
-                    )
-                    .into(),
+                    ),
                 )
                 .into_any_element(),
             })
@@ -279,26 +278,23 @@ impl RenderOnce for StandardRoomElement {
                         CurrentDialogBox::None => false,
                         CurrentDialogBox::LeaveRoom(busy) => busy,
                     })
-                    .title(tr!("ROOM_LEAVE").into())
+                    .title(tr!("ROOM_LEAVE"))
                     .content_text_informational(
                         tr!(
                             "LEAVE_ROOM_TEXT",
                             "Do you want to leave {{room}}?",
                             room:Quote=display_name
-                        )
-                        .into(),
+                        ),
                         if room.inner.is_public().unwrap_or(false) {
                             tr!(
                                 "LEAVE_ROOM_INFORMATIONAL_PUBLIC",
                                 "You can rejoin this room later."
                             )
-                            .into()
                         } else {
                             tr!(
                                 "LEAVE_ROOM_INFORMATIONAL_NOT_PUBLIC",
                                 "You may not be able to rejoin this room unless you are re-invited."
                             )
-                            .into()
                         },
                     )
                     .standard_button(StandardButton::Cancel, move |_, _, cx| {
@@ -307,7 +303,7 @@ impl RenderOnce for StandardRoomElement {
                     .button(
                         button("leave-room-button")
                             .destructive()
-                            .child(icon_text("system-log-out".into(), tr!("ROOM_LEAVE").into()))
+                            .child(icon_text("system-log-out", tr!("ROOM_LEAVE")))
                             .on_click(move |_, _, cx| {
                                 let current_dialog_box = current_dialog_box_3.clone();
                                 let matrix_room = matrix_room.clone();

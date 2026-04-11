@@ -9,9 +9,8 @@ use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
     div, px, App, BorrowAppContext, ElementId, InteractiveElement, IntoElement,
-    ParentElement, Render, RenderOnce, Styled, Window,
+    ParentElement, RenderOnce, Styled, Window,
 };
-use matrix_sdk::room::RoomMember;
 use std::rc::Rc;
 use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
@@ -115,7 +114,7 @@ impl RenderOnce for ActiveCallSidebarAlert {
                                 },
                             ))
                             .when_some(call_error, |david, err| {
-                                david.child(icon_text("exception".into(), err.to_string().into()))
+                                david.child(icon_text("exception", err.to_string()))
                             })
                             .child(
                                 div()
@@ -125,8 +124,8 @@ impl RenderOnce for ActiveCallSidebarAlert {
                                     .child(
                                         button("return-to-call")
                                             .child(icon_text(
-                                                "call-start".into(),
-                                                tr!("CALL_RETURN", "Return to call").into(),
+                                                "call-start",
+                                                tr!("CALL_RETURN", "Return to call"),
                                             ))
                                             .on_click(move |_, window, cx| {
                                                 on_surface_change(
@@ -145,14 +144,11 @@ impl RenderOnce for ActiveCallSidebarAlert {
                                     )
                                     .child(
                                         button("deaf")
-                                            .child(icon(
-                                                if *deaf.read(cx) {
-                                                    "headphones"
-                                                } else {
-                                                    "headphones"
-                                                }
-                                                .into(),
-                                            ))
+                                            .child(icon(if *deaf.read(cx) {
+                                                "headphones"
+                                            } else {
+                                                "headphones"
+                                            }))
                                             .checked_when(*deaf.read(cx))
                                             .on_click(move |_, _, cx| {
                                                 let deafened = *deaf.read(cx);
@@ -161,10 +157,11 @@ impl RenderOnce for ActiveCallSidebarAlert {
                                     )
                                     .child(
                                         button("mute")
-                                            .child(icon(
-                                                if *mute.read(cx) { "mic-off" } else { "mic-on" }
-                                                    .into(),
-                                            ))
+                                            .child(icon(if *mute.read(cx) {
+                                                "mic-off"
+                                            } else {
+                                                "mic-on"
+                                            }))
                                             .checked_when(*mute.read(cx))
                                             .on_click(move |_, _, cx| {
                                                 let muted = *mute.read(cx);
@@ -176,7 +173,7 @@ impl RenderOnce for ActiveCallSidebarAlert {
                                         |david| {
                                             david.child(
                                                 button("call-off-hold")
-                                                    .child(icon("media-playback-start".into()))
+                                                    .child(icon("media-playback-start"))
                                                     .on_click(|_, _, cx| {
                                                         let call_manager =
                                                             cx.global::<LivekitCallManager>();
@@ -193,7 +190,7 @@ impl RenderOnce for ActiveCallSidebarAlert {
                                             david.child(
                                                 button("call-end")
                                                     .destructive()
-                                                    .child(icon("call-stop".into()))
+                                                    .child(icon("call-stop"))
                                                     .on_click(|_, _, cx| {
                                                         let call_manager =
                                                             cx.global::<LivekitCallManager>();
@@ -237,7 +234,7 @@ impl RenderOnce for ActiveCallSidebarAlert {
                                         .child(div().flex_grow())
                                         .child(
                                             button("switch-button")
-                                                .child(icon("call-start".into()))
+                                                .child(icon("call-start"))
                                                 .on_click(move |_, _, cx| {
                                                     cx.update_global::<LivekitCallManager, _>(
                                                         |call_manager, cx| {
@@ -285,15 +282,15 @@ impl RenderOnce for CallMemberState {
             .child(div().flex_grow())
             .when(
                 matches!(self.call_member.screenshare_state, StreamState::On(_)),
-                |david| david.child(icon("video-display".into())),
+                |david| david.child(icon("video-display")),
             )
             .when(
                 matches!(self.call_member.camera_state, StreamState::On(_)),
-                |david| david.child(icon("camera-photo".into())),
+                |david| david.child(icon("camera-photo")),
             )
             .when(
                 matches!(self.call_member.mic_state, StreamState::Off),
-                |david| david.child(icon("mic-off".into())),
+                |david| david.child(icon("mic-off")),
             )
     }
 }

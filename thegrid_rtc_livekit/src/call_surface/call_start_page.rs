@@ -17,9 +17,8 @@ use cpal::traits::{DeviceTrait, HostTrait};
 use cpal::Device;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, img, px, rgb, AppContext, BorrowAppContext,
-    Context, Entity, IntoElement, ObjectFit, ParentElement, Render,
-    Styled, StyledImage, Window,
+    div, img, px, rgb, AppContext, BorrowAppContext, Context, Entity,
+    IntoElement, ObjectFit, ParentElement, Render, Styled, StyledImage, Window,
 };
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::OwnedRoomId;
@@ -140,8 +139,8 @@ impl CallStartPage {
                             david.p(px(8.)).child(
                                 button("camera-on")
                                     .child(icon_text(
-                                        "camera-photo".into(),
-                                        tr!("CAMERA_SETUP_ENABLE", "Turn on camera").into(),
+                                        "camera-photo",
+                                        tr!("CAMERA_SETUP_ENABLE", "Turn on camera"),
                                     ))
                                     .on_click(cx.listener(|this, _, window, cx| {
                                         this.turn_on_camera(None, window, cx);
@@ -225,14 +224,13 @@ impl CallStartPage {
                                                                 .flex_grow()
                                                                 .size_full()
                                                                 .child(icon_text(
-                                                                    "exception".into(),
+                                                                    "exception",
                                                                     tr!(
                                                                         "CAMERA_SETUP_\
                                                                         CAMERA_ERROR",
                                                                         "Unable to access \
                                                                         the camera"
-                                                                    )
-                                                                    .into(),
+                                                                    ),
                                                                 )),
                                                         )
                                                     }),
@@ -253,7 +251,7 @@ impl CallStartPage {
                                                     )
                                                     .child(
                                                         button("camera-off-button")
-                                                            .child(icon("window-close".into()))
+                                                            .child(icon("window-close"))
                                                             .destructive()
                                                             .on_click(cx.listener(
                                                                 |this, _, _, cx| {
@@ -274,8 +272,8 @@ impl CallStartPage {
                                             david.p(px(8.)).child(
                                                 button("camera-on")
                                                     .child(icon_text(
-                                                        "camera-photo".into(),
-                                                        tr!("CAMERA_SETUP_ENABLE").into(),
+                                                        "camera-photo",
+                                                        tr!("CAMERA_SETUP_ENABLE"),
                                                     ))
                                                     .on_click(cx.listener(
                                                         |this, _, window, cx| {
@@ -387,8 +385,8 @@ impl CallStartPage {
                             .child(
                                 button("mic-request-permission")
                                     .child(icon_text(
-                                        "audio-input-microphone".into(),
-                                        tr!("AUDIO_SETUP_ENABLE_MIC", "Turn on mic").into(),
+                                        "audio-input-microphone",
+                                        tr!("AUDIO_SETUP_ENABLE_MIC", "Turn on mic"),
                                     ))
                                     .on_click(cx.listener(|this, _, window, cx| {
                                         this.request_permission(
@@ -735,8 +733,8 @@ impl Render for CallStartPage {
                                     .child(
                                         button("join-call")
                                             .child(icon_text(
-                                                "call-start".into(),
-                                                tr!("CALL_JOIN_BUTTON", "Join Call").into(),
+                                                "call-start",
+                                                tr!("CALL_JOIN_BUTTON", "Join Call"),
                                             ))
                                             .when(
                                                 !matches!(focus_url, FocusUrl::Url(_)),
@@ -749,16 +747,13 @@ impl Render for CallStartPage {
                                     ),
                             )
                             .when(in_other_call, |david| {
-                                david.child(
-                                    div().flex().justify_end().child(icon_text(
-                                        "media-playback-pause".into(),
-                                        tr!(
-                                            "CALL_HOLD_NOTIFICATION",
-                                            "Your current call will be placed on hold"
-                                        )
-                                        .into(),
-                                    )),
-                                )
+                                david.child(div().flex().justify_end().child(icon_text(
+                                    "media-playback-pause",
+                                    tr!(
+                                        "CALL_HOLD_NOTIFICATION",
+                                        "Your current call will be placed on hold"
+                                    ),
+                                )))
                             }),
                     ),
             )

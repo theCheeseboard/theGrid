@@ -1,7 +1,7 @@
 use crate::call_manager::LivekitCallManager;
 use cntp_i18n::tr;
 use contemporary::components::button::button;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::icon_text::icon_text;
 use gpui::{App, Context, IntoElement, ParentElement, Render, Window};
 
@@ -63,8 +63,8 @@ impl Render for CallDisconnectConfirmationDialog {
                 button("end-call")
                     .destructive()
                     .child(icon_text(
-                        "call-stop".into(),
-                        tr!("CALL_DISCONNECT_HANG_UP", "Hang up and continue").into(),
+                        "call-stop",
+                        tr!("CALL_DISCONNECT_HANG_UP", "Hang up and continue"),
                     ))
                     .on_click(cx.listener(|this, _, window, cx| {
                         let call_manager = cx.global::<LivekitCallManager>();

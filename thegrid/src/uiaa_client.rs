@@ -1,18 +1,18 @@
 use cntp_i18n::tr;
 use contemporary::components::button::button;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::text_field::{MaskMode, TextField};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled,
-    WeakEntity, Window, div, px,
+    div, px, App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement,
+    Render, Styled, WeakEntity, Window,
 };
-use matrix_sdk::ruma::api::OutgoingRequest;
 use matrix_sdk::ruma::api::auth_scheme::SendAccessToken;
 use matrix_sdk::ruma::api::client::uiaa::{
     AuthData, AuthType, FallbackAcknowledgement, Password, UiaaInfo, UserIdentifier,
 };
+use matrix_sdk::ruma::api::OutgoingRequest;
 use std::borrow::Cow;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
@@ -180,7 +180,7 @@ impl Render for UiaaClient {
                 let text_field_clone = text_field.clone();
                 dialog_box("uiaa-dialog")
                     .visible(true)
-                    .title(tr!("AUTH_REQUIRED").into())
+                    .title(tr!("AUTH_REQUIRED"))
                     .content(
                         div()
                             .flex()
@@ -200,10 +200,7 @@ impl Render for UiaaClient {
                     )
                     .button(
                         button("continue-button")
-                            .child(icon_text(
-                                "dialog-ok".into(),
-                                tr!("AUTH_REQUIRED_BROWSER_GO").into(),
-                            ))
+                            .child(icon_text("dialog-ok", tr!("AUTH_REQUIRED_BROWSER_GO")))
                             .when(!self.uiaa_step_completed, |david| david.disabled())
                             .on_click(cx.listener(move |this, _, window, cx| {
                                 let password = text_field_clone.read(cx).text();
@@ -223,7 +220,7 @@ impl Render for UiaaClient {
                 let url = url.clone();
                 dialog_box("uiaa-dialog")
                     .visible(true)
-                    .title(tr!("AUTH_REQUIRED", "Authentication Required").into())
+                    .title(tr!("AUTH_REQUIRED", "Authentication Required"))
                     .content(
                         div()
                             .flex()
@@ -235,8 +232,8 @@ impl Render for UiaaClient {
                             .child(
                                 button("open-browser-button")
                                     .child(icon_text(
-                                        "text-html".into(),
-                                        tr!("UIAA_BROWSER_OPEN", "Open Web Browser").into(),
+                                        "text-html",
+                                        tr!("UIAA_BROWSER_OPEN", "Open Web Browser"),
                                     ))
                                     .on_click(cx.listener(move |this, _, _, cx| {
                                         cx.open_url(url.as_str());
@@ -253,8 +250,8 @@ impl Render for UiaaClient {
                     .button(
                         button("continue-button")
                             .child(icon_text(
-                                "dialog-ok".into(),
-                                tr!("AUTH_REQUIRED_BROWSER_GO", "Continue").into(),
+                                "dialog-ok",
+                                tr!("AUTH_REQUIRED_BROWSER_GO", "Continue"),
                             ))
                             .when(!self.uiaa_step_completed, |david| david.disabled())
                             .on_click(cx.listener(move |this, _, window, cx| {
@@ -271,7 +268,7 @@ impl Render for UiaaClient {
             }
             CurrentStep::Error => dialog_box("uiaa-dialog")
                 .visible(true)
-                .title(tr!("AUTH_REQUIRED").into())
+                .title(tr!("AUTH_REQUIRED"))
                 .content(tr!(
                     "UIAA_ERROR",
                     "There was a problem authenticating with the homeserver."

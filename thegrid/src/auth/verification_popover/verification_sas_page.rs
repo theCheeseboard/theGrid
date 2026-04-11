@@ -9,7 +9,6 @@ use gpui::{
     div, px, App, AsyncApp, ClickEvent, Entity, InteractiveElement, IntoElement,
     ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window,
 };
-use std::fmt::format;
 use std::rc::Rc;
 use thegrid_common::sas_emoji::SasEmoji;
 use thegrid_common::session::verification_requests_cache::VerificationRequestDetails;
@@ -96,9 +95,8 @@ impl RenderOnce for VerificationSasPage {
                                                 .child(
                                                     button("verification-popover-ok")
                                                         .child(icon_text(
-                                                            "dialog-ok".into(),
-                                                            tr!("EMOJI_MATCH", "The emoji match")
-                                                                .into(),
+                                                            "dialog-ok",
+                                                            tr!("EMOJI_MATCH", "The emoji match"),
                                                         ))
                                                         .on_click(move |_, _, cx| {
                                                             let sas_state = sas_state_clone.clone();
@@ -115,12 +113,11 @@ impl RenderOnce for VerificationSasPage {
                                                 .child(
                                                     button("verification-popover-not-ok")
                                                         .child(icon_text(
-                                                            "dialog-cancel".into(),
+                                                            "dialog-cancel",
                                                             tr!(
                                                                 "EMOJI_NO_MATCH",
                                                                 "The emoji do not match"
-                                                            )
-                                                            .into(),
+                                                            ),
                                                         ))
                                                         .on_click(move |_, _, cx| {
                                                             let sas_state =
@@ -174,12 +171,11 @@ impl RenderOnce for VerificationSasPage {
                                                 .child(
                                                     button("verification-popover-ok")
                                                         .child(icon_text(
-                                                            "dialog-ok".into(),
+                                                            "dialog-ok",
                                                             tr!(
                                                                 "NUMBERS_MATCH",
                                                                 "The numbers match"
-                                                            )
-                                                            .into(),
+                                                            ),
                                                         ))
                                                         .on_click(move |_, _, cx| {
                                                             let sas_state = sas_state_clone.clone();
@@ -196,12 +192,11 @@ impl RenderOnce for VerificationSasPage {
                                                 .child(
                                                     button("verification-popover-not-ok")
                                                         .child(icon_text(
-                                                            "dialog-cancel".into(),
+                                                            "dialog-cancel",
                                                             tr!(
                                                                 "NUMBERS_NO_MATCH",
                                                                 "The numbers do not match"
-                                                            )
-                                                            .into(),
+                                                            ),
                                                         ))
                                                         .on_click(move |_, _, cx| {
                                                             let sas_state =

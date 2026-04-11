@@ -5,7 +5,6 @@ use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
-use contemporary::components::pager::fade_animation::FadeAnimation;
 use contemporary::components::pager::pager;
 use contemporary::components::pager::slide_horizontal_animation::SlideHorizontalAnimation;
 use contemporary::components::popover::popover;
@@ -213,9 +212,8 @@ impl Render for RecoveryPassphrasePopover {
                                             .child(
                                                 button("verification-popover-ok")
                                                     .child(icon_text(
-                                                        "dialog-ok".into(),
-                                                        tr!("RECOVER_ACCOUNT", "Recover Account")
-                                                            .into(),
+                                                        "dialog-ok",
+                                                        tr!("RECOVER_ACCOUNT", "Recover Account"),
                                                     ))
                                                     .on_click(cx.listener(|this, _, _, cx| {
                                                         this.perform_recovery(cx)
@@ -271,10 +269,7 @@ impl Render for RecoveryPassphrasePopover {
                                             ))
                                             .child(
                                                 button("recovery-passphrase-popover-ok")
-                                                    .child(icon_text(
-                                                        "dialog-ok".into(),
-                                                        tr!("CLOSE").into(),
-                                                    ))
+                                                    .child(icon_text("dialog-ok", tr!("CLOSE")))
                                                     .on_click(cx.listener(|this, _, _, cx| {
                                                         this.visible = false;
                                                         this.recovery_state = RecoveryState::Idle;
@@ -331,10 +326,7 @@ impl Render for RecoveryPassphrasePopover {
                                             ))
                                             .child(
                                                 button("recovery-passphrase-popover-ok")
-                                                    .child(icon_text(
-                                                        "dialog-ok".into(),
-                                                        tr!("SORRY").into(),
-                                                    ))
+                                                    .child(icon_text("dialog-ok", tr!("SORRY")))
                                                     .on_click(cx.listener(|this, _, _, cx| {
                                                         this.visible = false;
                                                         this.recovery_state = RecoveryState::Idle;
