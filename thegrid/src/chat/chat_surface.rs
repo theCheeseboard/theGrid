@@ -3,6 +3,7 @@ use crate::actions::{
 };
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::main_chat_surface::MainChatSurface;
+use crate::chat::new_account_onboarding::new_account_onboarding;
 use cntp_i18n::tr;
 use contemporary::application::Details;
 use contemporary::components::application_menu::ApplicationMenu;
@@ -86,7 +87,11 @@ impl Render for ChatSurface {
                         match session_manager.error() {
                             ClientError::None | ClientError::Recoverable(_) => {
                                 if session_manager.client().is_some() {
-                                    1
+                                    if session_manager.is_new_account() {
+                                        3
+                                    } else {
+                                        1
+                                    }
                                 } else {
                                     0
                                 }
@@ -179,6 +184,7 @@ impl Render for ChatSurface {
                             .into_any_element(),
                         ClientError::Recoverable(_) => div().into_any_element(),
                     })
+                    .page(new_account_onboarding().into_any_element())
                     .size_full(),
                 )
                 .application_menu(self.application_menu.clone()),

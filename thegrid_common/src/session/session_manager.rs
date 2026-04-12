@@ -52,6 +52,7 @@ pub struct SessionManager {
     current_client_error: ClientError,
     secrets_cache: RefCell<HashMap<Uuid, DatabaseSecret>>,
     sso_login_entity: WeakEntity<Option<SsoLogin>>,
+    is_new_account: bool,
 }
 
 pub enum SessionSecretPurpose {
@@ -243,6 +244,14 @@ impl SessionManager {
 
         client.event_cache().subscribe()?;
 
+        // Check if the account has cross-signing keys
+        // If not, assume this is a new account
+        let user_identity = client
+            .encryption()
+            .request_user_identity(client.user_id().unwrap())
+            .await?;
+        info!("User identity: {:?}", user_identity);
+
         let (tx_notification, rx_notification) = async_channel::bounded(1);
 
         let client_clone = client.clone();
@@ -348,6 +357,7 @@ impl SessionManager {
         cx.update_global::<Self, ()>(|session_manager, cx| {
             session_manager.current_caches = Some(Caches::new(&client, cx));
             session_manager.current_session_client = Some(cx.new(|_| client));
+            session_manager.is_new_account = user_identity.is_none();
         });
 
         Ok(())
@@ -431,6 +441,14 @@ impl SessionManager {
             .capability_cache
             .clone()
     }
+
+    pub fn is_new_account(&self) -> bool {
+        self.is_new_account
+    }
+
+    pub fn clear_new_account_flag(&mut self) {
+        self.is_new_account = false;
+    }
 }
 
 impl Global for SessionManager {}
@@ -443,6 +461,7 @@ pub fn setup_session_manager(cx: &mut App) {
         current_client_error: ClientError::None,
         secrets_cache: RefCell::new(HashMap::new()),
         sso_login_entity: WeakEntity::new_invalid(),
+        is_new_account: false,
     });
 }
 
