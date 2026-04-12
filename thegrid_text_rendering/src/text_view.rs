@@ -1,3 +1,4 @@
+use std::fmt::{Debug, Formatter};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -11,15 +12,44 @@ use crate::{node, TextViewStyle};
 use gpui::prelude::FluentBuilder;
 use gpui::{
     div, px, AnyElement, App, AppContext, Bounds, ClipboardItem, Context, Element,
-    ElementId, Entity, EntityId, FocusHandle, GlobalElementId, InspectorElementId
-    , InteractiveElement, IntoElement, LayoutId, ListState, MouseDownEvent, MouseMoveEvent,
-    MouseUpEvent, ParentElement, Pixels, Point, Refineable, RenderOnce, SharedString, Size, StyleRefinement,
-    Styled, Window,
+    ElementId, Entity, EntityId, FocusHandle, GlobalElementId, InspectorElementId,
+    InteractiveElement, IntoElement, LayoutId, ListState, MouseDownEvent, MouseMoveEvent, MouseUpEvent,
+    ParentElement, Pixels, Point, Refineable, RenderOnce, SharedString, Size, StyleRefinement, Styled, Window,
 };
 use smol::stream::StreamExt;
 use smol::Timer;
 
 const CONTEXT: &'static str = "TextView";
+
+pub struct LinkClickedEvent {
+    pub url: SharedString,
+    pub bounds: Bounds<Pixels>,
+}
+
+#[derive(Clone)]
+pub struct Events {
+    pub on_link_clicked: Arc<dyn Fn(&LinkClickedEvent, &mut Window, &mut App) + Send + Sync>,
+}
+
+impl Default for Events {
+    fn default() -> Self {
+        Self {
+            on_link_clicked: Arc::new(|_, _, _| {}),
+        }
+    }
+}
+
+impl Debug for Events {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Events").finish()
+    }
+}
+
+impl PartialEq for Events {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.on_link_clicked, &other.on_link_clicked)
+    }
+}
 
 pub(crate) fn init(cx: &mut App) {
     cx.bind_keys(vec![
@@ -86,6 +116,7 @@ pub struct TextView {
     state: Entity<TextViewState>,
     style: StyleRefinement,
     selectable: bool,
+    events: Events,
 }
 
 #[derive(PartialEq)]
@@ -116,6 +147,7 @@ struct UpdateFuture {
     timer: Timer,
     rx: Pin<Box<smol::channel::Receiver<Update>>>,
     tx_result: smol::channel::Sender<Result<ParsedContent, SharedString>>,
+    events: Events,
     delay: Duration,
 }
 
@@ -127,6 +159,7 @@ impl UpdateFuture {
         highlight_theme: Arc<HighlightTheme>,
         rx: smol::channel::Receiver<Update>,
         tx_result: smol::channel::Sender<Result<ParsedContent, SharedString>>,
+        events: &Events,
         delay: Duration,
     ) -> Self {
         Self {
@@ -137,6 +170,7 @@ impl UpdateFuture {
             timer: Timer::never(),
             rx: Box::pin(rx),
             tx_result,
+            events: events.clone(),
             delay,
         }
     }
@@ -176,6 +210,7 @@ impl Future for UpdateFuture {
                         self.type_,
                         &self.current_text,
                         self.current_style.clone(),
+                        &self.events,
                         &self.highlight_theme,
                     );
                     _ = self.tx_result.try_send(res);
@@ -403,6 +438,7 @@ impl TextView {
             init_state: Some(init_state),
             style: StyleRefinement::default(),
             state,
+            events: Default::default(),
             selectable: false,
         }
     }
@@ -431,6 +467,7 @@ impl TextView {
             init_state: Some(init_state),
             style: StyleRefinement::default(),
             state,
+            events: Default::default(),
             selectable: false,
         }
     }
@@ -475,6 +512,14 @@ impl TextView {
 
         cx.write_to_clipboard(ClipboardItem::new_string(selected_text.trim().to_string()));
     }
+
+    pub fn on_link_clicked(
+        mut self,
+        handler: impl Fn(&LinkClickedEvent, &mut Window, &mut App) + 'static + Send + Sync,
+    ) -> Self {
+        self.events.on_link_clicked = Arc::new(handler);
+        self
+    }
 }
 
 impl IntoElement for TextView {
@@ -516,7 +561,8 @@ impl Element for TextView {
             let (tx, rx) = smol::channel::unbounded::<Update>();
             let (tx_result, rx_result) =
                 smol::channel::unbounded::<Result<ParsedContent, SharedString>>();
-            let parsed_result = parse_content(type_, &text, style.clone(), &highlight_theme);
+            let parsed_result =
+                parse_content(type_, &text, style.clone(), &self.events, &highlight_theme);
 
             self.state.update(cx, {
                 let tx = tx.clone();
@@ -555,6 +601,7 @@ impl Element for TextView {
                 highlight_theme,
                 rx,
                 tx_result,
+                &self.events,
                 Duration::from_millis(200),
             ))
             .detach();
@@ -701,10 +748,12 @@ fn parse_content(
     type_: TextViewType,
     text: &str,
     style: TextViewStyle,
+    events: &Events,
     highlight_theme: &HighlightTheme,
 ) -> Result<ParsedContent, SharedString> {
     let mut node_cx = NodeContext {
         style: style.clone(),
+        events: events.clone(),
         ..NodeContext::default()
     };
 

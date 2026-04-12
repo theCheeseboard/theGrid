@@ -1,19 +1,23 @@
 use crate::chat::chat_room::timeline_view::message_error_item::message_error_item;
 use crate::chat::chat_room::timeline_view::reply_fragment::reply_fragment_in_reply_to;
 use cntp_i18n::{i18n_manager, tr, Quote, I18N_MANAGER};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::context_menu::ContextMenuItem;
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::icon::icon;
+use contemporary::components::icon_text::icon_text;
+use contemporary::components::layer::layer;
 use contemporary::components::spinner::spinner;
-use contemporary::styling::theme::{Theme, ThemeStorage};
+use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use directories::UserDirs;
 use gpui::prelude::FluentBuilder;
 use gpui::{
     canvas, div, point, px, rgba, AnyElement, App, AsyncApp,
-    BorrowAppContext, Entity, IntoElement, ParentElement, Path, RenderOnce, Styled, Window,
+    BorrowAppContext, ClipboardItem, Entity, IntoElement, ParentElement, Path, RenderOnce, Styled, Window,
 };
 use matrix_sdk::ruma::events::room::message::{
-    FileMessageEventContent, FormattedBody, MessageType,
+    FileMessageEventContent, FormattedBody, MessageFormat, MessageType,
 };
 use matrix_sdk::ruma::OwnedUserId;
 use matrix_sdk_ui::timeline::{MsgLikeContent, MsgLikeKind, Profile, TimelineDetails};
@@ -22,6 +26,7 @@ use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::media_cache::{MediaCacheEntry, MediaFile, MediaState};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_text_rendering::TextView;
+use tracing::info;
 
 #[derive(IntoElement)]
 pub struct TimelineMessageItem {
@@ -288,14 +293,26 @@ fn text_message(
     window: &mut Window,
     cx: &mut App,
 ) -> AnyElement {
+    let current_link_confirmation = window.use_state(cx, |_, _| None);
+
     let body = match &formatted {
-        None => body.clone().into_any_element(),
-        Some(formatted) => {
-            TextView::html("html-text", formatted.body.clone(), window, cx).into_any_element()
-        }
+        Some(FormattedBody {
+            format: MessageFormat::Html,
+            body,
+        }) => TextView::html("html-text", body.clone(), window, cx)
+            .on_link_clicked({
+                let current_link_confirmation = current_link_confirmation.clone();
+                move |event, _, cx| {
+                    info!("Link clicked: {}", event.url);
+                    current_link_confirmation.write(cx, Some(event.url.clone()));
+                }
+            })
+            .into_any_element(),
+        _ => body.clone().into_any_element(),
     };
 
     let theme = cx.global::<Theme>();
+    let current_link = current_link_confirmation.read(cx).clone();
     div()
         .flex()
         .w_full()
@@ -311,6 +328,78 @@ fn text_message(
                 )
                 .rounded(theme.border_radius)
                 .child(body),
+        )
+        .child(
+            dialog_box("link-open-confirmation")
+                .render_as_deferred(true)
+                .visible(current_link.is_some())
+                .title(tr!("LINK_OPEN_CONFIRMATION", "Visit Link"))
+                .content(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap(px(4.))
+                        .child(tr!(
+                            "LINK_OPEN_CONFIRMATION_PROMPT",
+                            "Visit the following link?"
+                        ))
+                        .child(
+                            layer()
+                                .flex()
+                                .items_center()
+                                .p(px(4.))
+                                .gap(px(4.))
+                                .child(
+                                    div()
+                                        .flex_grow()
+                                        .child(current_link.unwrap_or_default().to_string()),
+                                )
+                                .child(
+                                    button("copy-link")
+                                        .flat()
+                                        .child(icon("edit-copy"))
+                                        .on_click({
+                                            let current_link_confirmation =
+                                                current_link_confirmation.clone();
+                                            move |_, _, cx| {
+                                                if let Some(link) =
+                                                    current_link_confirmation.read(cx).clone()
+                                                {
+                                                    cx.write_to_clipboard(
+                                                        ClipboardItem::new_string(link.to_string()),
+                                                    )
+                                                }
+                                            }
+                                        }),
+                                ),
+                        )
+                        .child(div().text_color(theme.foreground.disabled()).child(tr!(
+                            "LINK_OPEN_CONFIRMATION_WARNING",
+                            "Make sure it's a place you trust; the web can be scary!"
+                        ))),
+                )
+                .standard_button(StandardButton::Cancel, {
+                    let current_link_confirmation = current_link_confirmation.clone();
+                    move |_, _, cx| {
+                        current_link_confirmation.write(cx, None);
+                    }
+                })
+                .button(
+                    button("link-open-button")
+                        .child(icon_text("dialog-ok", tr!("LINK_OPEN", "Visit Link")))
+                        .on_click({
+                            let current_link_confirmation = current_link_confirmation.clone();
+                            move |_, _, cx| {
+                                current_link_confirmation.update(cx, |current_link, cx| {
+                                    if let Some(link) = current_link {
+                                        cx.open_url(link);
+                                    }
+                                    *current_link = None;
+                                    cx.notify()
+                                })
+                            }
+                        }),
+                ),
         )
         .into_any_element()
 }

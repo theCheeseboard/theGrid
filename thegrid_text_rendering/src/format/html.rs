@@ -5,13 +5,13 @@ use std::collections::HashMap;
 use std::ops::Range;
 use std::rc::Rc;
 
-use crate::node;
 use crate::node::{
     ImageNode, InlineNode, LinkMark, NodeContext, Paragraph, Table, TableRow, TextMark,
 };
-use gpui::{DefiniteLength, SharedString, px, relative};
+use crate::{node, Events};
+use gpui::{px, relative, DefiniteLength, SharedString};
 use html5ever::tendril::TendrilSink;
-use html5ever::{LocalName, ParseOpts, local_name, parse_document};
+use html5ever::{local_name, parse_document, LocalName, ParseOpts};
 use markup5ever_rcdom::{Node, NodeData, RcDom};
 
 const BLOCK_ELEMENTS: [&str; 35] = [
@@ -69,7 +69,10 @@ pub(crate) fn parse(source: &str, cx: &mut NodeContext) -> Result<node::Node, Sh
         .read_from(&mut cursor)
         .map_err(|e| SharedString::from(format!("{:?}", e)))?;
 
-    let mut paragraph = Paragraph::default();
+    let mut paragraph = Paragraph {
+        events: cx.events.clone(),
+        ..Paragraph::default()
+    };
     // NOTE: The outer paragraph is not used.
     let node: node::Node =
         parse_node(&dom.document, &mut paragraph, cx).unwrap_or(node::Node::Unknown);
@@ -169,7 +172,7 @@ fn attr_width_height(
     (width, height)
 }
 
-fn parse_table_row(table: &mut Table, node: &Rc<Node>) {
+fn parse_table_row(table: &mut Table, node: &Rc<Node>, events: &Events) {
     let mut row = TableRow::default();
     let mut count = 0;
     for child in node.children.borrow().iter() {
@@ -184,7 +187,7 @@ fn parse_table_row(table: &mut Table, node: &Rc<Node>) {
                 }
 
                 count += 1;
-                parse_table_cell(&mut row, child, attrs);
+                parse_table_cell(&mut row, child, attrs, events);
             }
             _ => {}
         }
@@ -199,10 +202,11 @@ fn parse_table_cell(
     row: &mut node::TableRow,
     node: &Rc<Node>,
     attrs: &RefCell<Vec<html5ever::Attribute>>,
+    events: &Events,
 ) {
     let mut paragraph = Paragraph::default();
     for child in node.children.borrow().iter() {
-        parse_paragraph(&mut paragraph, child);
+        parse_paragraph(&mut paragraph, child, events);
     }
     let width = attr_width_height(attrs).0;
     let table_cell = node::TableCell {
@@ -235,6 +239,7 @@ fn trim_text(text: &str) -> String {
 fn parse_paragraph(
     paragraph: &mut Paragraph,
     node: &Rc<Node>,
+    events: &Events,
 ) -> (String, Vec<(Range<usize>, TextMark)>) {
     let mut text = String::new();
     let mut marks = vec![];
@@ -257,49 +262,54 @@ fn parse_paragraph(
         NodeData::Text { contents } => {
             let part = &contents.borrow();
             text.push_str(&part);
-            paragraph.push_str(&text);
+            paragraph.push_str(&text, events);
         }
         NodeData::Element { name, attrs, .. } => match name.local {
             local_name!("em") | local_name!("i") => {
                 let mut child_paragraph = Paragraph::default();
                 for child in node.children.borrow().iter() {
-                    let (child_text, child_marks) = parse_paragraph(&mut child_paragraph, &child);
+                    let (child_text, child_marks) =
+                        parse_paragraph(&mut child_paragraph, &child, events);
                     merge_child_text(&mut text, &mut marks, &child_text, &child_marks);
                 }
                 marks.push((0..text.len(), TextMark::default().italic()));
-                paragraph.push(InlineNode::new(&text).marks(marks.clone()));
+                paragraph.push(InlineNode::new(&text, events).marks(marks.clone()));
             }
             local_name!("strong") | local_name!("b") => {
                 let mut child_paragraph = Paragraph::default();
                 for child in node.children.borrow().iter() {
-                    let (child_text, child_marks) = parse_paragraph(&mut child_paragraph, &child);
+                    let (child_text, child_marks) =
+                        parse_paragraph(&mut child_paragraph, &child, events);
                     merge_child_text(&mut text, &mut marks, &child_text, &child_marks);
                 }
                 marks.push((0..text.len(), TextMark::default().bold()));
-                paragraph.push(InlineNode::new(&text).marks(marks.clone()));
+                paragraph.push(InlineNode::new(&text, events).marks(marks.clone()));
             }
             local_name!("del") | local_name!("s") => {
                 let mut child_paragraph = Paragraph::default();
                 for child in node.children.borrow().iter() {
-                    let (child_text, child_marks) = parse_paragraph(&mut child_paragraph, &child);
+                    let (child_text, child_marks) =
+                        parse_paragraph(&mut child_paragraph, &child, events);
                     merge_child_text(&mut text, &mut marks, &child_text, &child_marks);
                 }
                 marks.push((0..text.len(), TextMark::default().strikethrough()));
-                paragraph.push(InlineNode::new(&text).marks(marks.clone()));
+                paragraph.push(InlineNode::new(&text, events).marks(marks.clone()));
             }
             local_name!("code") => {
                 let mut child_paragraph = Paragraph::default();
                 for child in node.children.borrow().iter() {
-                    let (child_text, child_marks) = parse_paragraph(&mut child_paragraph, &child);
+                    let (child_text, child_marks) =
+                        parse_paragraph(&mut child_paragraph, &child, events);
                     merge_child_text(&mut text, &mut marks, &child_text, &child_marks);
                 }
                 marks.push((0..text.len(), TextMark::default().code()));
-                paragraph.push(InlineNode::new(&text).marks(marks.clone()));
+                paragraph.push(InlineNode::new(&text, events).marks(marks.clone()));
             }
             local_name!("a") => {
                 let mut child_paragraph = Paragraph::default();
                 for child in node.children.borrow().iter() {
-                    let (child_text, child_marks) = parse_paragraph(&mut child_paragraph, &child);
+                    let (child_text, child_marks) =
+                        parse_paragraph(&mut child_paragraph, &child, events);
                     merge_child_text(&mut text, &mut marks, &child_text, &child_marks);
                 }
 
@@ -313,7 +323,7 @@ fn parse_paragraph(
                         ..Default::default()
                     }),
                 ));
-                paragraph.push(InlineNode::new(&text).marks(marks.clone()));
+                paragraph.push(InlineNode::new(&text, events).marks(marks.clone()));
             }
             local_name!("img") => {
                 let Some(src) = attr_value(attrs, local_name!("src")) else {
@@ -327,32 +337,37 @@ fn parse_paragraph(
                 let title = attr_value(attrs, local_name!("title"));
                 let (width, height) = attr_width_height(attrs);
 
-                paragraph.push_image(ImageNode {
-                    url: src.into(),
-                    link: None,
-                    alt: alt.map(Into::into),
-                    width,
-                    height,
-                    title: title.map(Into::into),
-                });
+                paragraph.push_image(
+                    ImageNode {
+                        url: src.into(),
+                        link: None,
+                        alt: alt.map(Into::into),
+                        width,
+                        height,
+                        title: title.map(Into::into),
+                    },
+                    events,
+                );
             }
             _ => {
                 // All unknown tags to as text
                 let mut child_paragraph = Paragraph::default();
                 for child in node.children.borrow().iter() {
-                    let (child_text, child_marks) = parse_paragraph(&mut child_paragraph, &child);
+                    let (child_text, child_marks) =
+                        parse_paragraph(&mut child_paragraph, &child, events);
                     merge_child_text(&mut text, &mut marks, &child_text, &child_marks);
                 }
-                paragraph.push(InlineNode::new(&text).marks(marks.clone()));
+                paragraph.push(InlineNode::new(&text, events).marks(marks.clone()));
             }
         },
         _ => {
             let mut child_paragraph = Paragraph::default();
             for child in node.children.borrow().iter() {
-                let (child_text, child_marks) = parse_paragraph(&mut child_paragraph, &child);
+                let (child_text, child_marks) =
+                    parse_paragraph(&mut child_paragraph, &child, events);
                 merge_child_text(&mut text, &mut marks, &child_text, &child_marks);
             }
-            paragraph.push(InlineNode::new(&text).marks(marks.clone()));
+            paragraph.push(InlineNode::new(&text, events).marks(marks.clone()));
         }
     }
 
@@ -368,7 +383,7 @@ fn parse_node(
         NodeData::Text { ref contents } => {
             let text = contents.borrow().to_string();
             if text.len() > 0 {
-                paragraph.push_str(&text);
+                paragraph.push_str(&text, &cx.events);
             }
 
             None
@@ -398,7 +413,7 @@ fn parse_node(
 
                 let mut paragraph = Paragraph::default();
                 for child in node.children.borrow().iter() {
-                    parse_paragraph(&mut paragraph, child);
+                    parse_paragraph(&mut paragraph, child, &cx.events);
                 }
 
                 let heading = node::Node::Heading {
@@ -429,14 +444,17 @@ fn parse_node(
                 let (width, height) = attr_width_height(&attrs);
 
                 let mut paragraph = Paragraph::default();
-                paragraph.push_image(ImageNode {
-                    url: src.into(),
-                    link: None,
-                    title: title.map(Into::into),
-                    alt: alt.map(Into::into),
-                    width,
-                    height,
-                });
+                paragraph.push_image(
+                    ImageNode {
+                        url: src.into(),
+                        link: None,
+                        title: title.map(Into::into),
+                        alt: alt.map(Into::into),
+                        width,
+                        height,
+                    },
+                    &cx.events,
+                );
 
                 if children.len() > 0 {
                     children.push(node::Node::Paragraph(paragraph));
@@ -492,11 +510,11 @@ fn parse_node(
                                 || name.local == local_name!("thead") =>
                         {
                             for sub_child in child.children.borrow().iter() {
-                                parse_table_row(&mut table, &sub_child);
+                                parse_table_row(&mut table, &sub_child, &cx.events);
                             }
                         }
                         _ => {
-                            parse_table_row(&mut table, &child);
+                            parse_table_row(&mut table, &child, &cx.events);
                         }
                     }
                 }
@@ -544,7 +562,7 @@ fn parse_node(
                     }
                 } else {
                     // Others to as Inline
-                    parse_paragraph(paragraph, node);
+                    parse_paragraph(paragraph, node, &cx.events);
 
                     if paragraph.is_image() {
                         Some(node::Node::Paragraph(paragraph.take()))

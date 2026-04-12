@@ -1,15 +1,17 @@
-use super::{TextViewStyle, utils::list_item_prefix};
+use super::{utils::list_item_prefix, Events, LinkClickedEvent, TextViewStyle};
 use crate::highlighter::{HighlightTheme, SyntaxHighlighter};
 use crate::inline::{Inline, InlineState};
 use contemporary::styling::theme::Theme;
 use gpui::{
-    AnyElement, App, DefiniteLength, Div, Element, ElementId, FontStyle, FontWeight, Half,
-    HighlightStyle, InteractiveElement as _, IntoElement, Length, ListState, ObjectFit,
-    ParentElement, Refineable, SharedString, SharedUri, StatefulInteractiveElement, Styled,
-    StyledImage as _, Window, div, img, prelude::FluentBuilder as _, px, relative, rems, rgb,
+    div, img, prelude::FluentBuilder as _, px, relative, rems, rgb, AnyElement, App,
+    DefiniteLength, Div, Element, ElementId, FontStyle, FontWeight,
+    Half, HighlightStyle, InteractiveElement as _, IntoElement, Length, ListState,
+    ObjectFit, ParentElement, Refineable, SharedString, SharedUri, StatefulInteractiveElement, Styled, StyledImage as _, Window,
 };
 use markdown::mdast;
 use ropey::Rope;
+use std::fmt::{Debug, Formatter};
+use std::rc::Rc;
 use std::{
     collections::HashMap,
     ops::Range,
@@ -112,6 +114,8 @@ pub(crate) struct InlineNode {
     /// The text styles, each tuple contains the range of the text and the style.
     pub(crate) marks: Vec<(Range<usize>, TextMark)>,
 
+    events: Events,
+
     state: Arc<Mutex<InlineState>>,
 }
 
@@ -122,17 +126,18 @@ impl PartialEq for InlineNode {
 }
 
 impl InlineNode {
-    pub(crate) fn new(text: impl Into<SharedString>) -> Self {
+    pub(crate) fn new(text: impl Into<SharedString>, events: &Events) -> Self {
         Self {
             text: text.into(),
             image: None,
             marks: vec![],
             state: Arc::new(Mutex::new(InlineState::default())),
+            events: events.clone(),
         }
     }
 
-    pub(crate) fn image(image: ImageNode) -> Self {
-        let mut this = Self::new("");
+    pub(crate) fn image(image: ImageNode, events: &Events) -> Self {
+        let mut this = Self::new("", events);
         this.image = Some(image);
         this
     }
@@ -156,6 +161,8 @@ pub(crate) struct Paragraph {
     /// The key is the identifier, the value is the url.
     pub(super) link_refs: HashMap<SharedString, SharedString>,
 
+    pub(super) events: Events,
+
     pub(crate) state: Arc<Mutex<InlineState>>,
 }
 
@@ -168,12 +175,13 @@ impl PartialEq for Paragraph {
 }
 
 impl Paragraph {
-    pub(crate) fn new(text: String) -> Self {
+    pub(crate) fn new(text: String, events: &Events) -> Self {
         Self {
             span: None,
-            children: vec![InlineNode::new(&text)],
+            children: vec![InlineNode::new(&text, events)],
             link_refs: HashMap::new(),
             state: Arc::new(Mutex::new(InlineState::default())),
+            events: events.clone(),
         }
     }
 
@@ -249,6 +257,7 @@ impl Paragraph {
                 children: vec![],
                 link_refs: Default::default(),
                 state: Arc::new(Mutex::new(InlineState::default())),
+                events: Default::default(),
             },
         )
     }
@@ -261,9 +270,10 @@ impl Paragraph {
         self.span = Some(span);
     }
 
-    pub(crate) fn push_str(&mut self, text: &str) {
+    pub(crate) fn push_str(&mut self, text: &str, events: &Events) {
         self.children.push(
-            InlineNode::new(text.to_string()).marks(vec![(0..text.len(), TextMark::default())]),
+            InlineNode::new(text.to_string(), events)
+                .marks(vec![(0..text.len(), TextMark::default())]),
         );
     }
 
@@ -271,8 +281,8 @@ impl Paragraph {
         self.children.push(text);
     }
 
-    pub(crate) fn push_image(&mut self, image: ImageNode) {
-        self.children.push(InlineNode::image(image));
+    pub(crate) fn push_image(&mut self, image: ImageNode, events: &Events) {
+        self.children.push(InlineNode::image(image, events));
     }
 
     pub(crate) fn is_empty(&self) -> bool {
@@ -301,6 +311,8 @@ pub(crate) struct CodeBlock {
     lang: Option<SharedString>,
     styles: Vec<(Range<usize>, HighlightStyle)>,
     state: Arc<Mutex<InlineState>>,
+
+    events: Events,
 }
 
 impl PartialEq for CodeBlock {
@@ -315,6 +327,7 @@ impl CodeBlock {
         lang: Option<SharedString>,
         _: &TextViewStyle,
         highlight_theme: &HighlightTheme,
+        events: &Events,
     ) -> Self {
         let mut styles = vec![];
         if let Some(lang) = &lang {
@@ -330,6 +343,7 @@ impl CodeBlock {
             lang,
             styles,
             state,
+            events: events.clone(),
         }
     }
 
@@ -372,6 +386,7 @@ impl CodeBlock {
                         self.state.clone(),
                         vec![],
                         self.styles.clone(),
+                        &self.events,
                     )),
             );
         david.style().refine(&style.code_block);
@@ -384,6 +399,8 @@ impl CodeBlock {
 pub(crate) struct NodeContext {
     pub(crate) link_refs: HashMap<SharedString, LinkMark>,
     pub(crate) style: TextViewStyle,
+
+    pub(crate) events: Events,
 }
 
 impl NodeContext {
@@ -568,6 +585,7 @@ impl Paragraph {
                             inline_node.state.clone(),
                             links.clone(),
                             highlights.clone(),
+                            &inline_node.events,
                         )
                         .into_any_element(),
                     );
@@ -648,8 +666,10 @@ impl Paragraph {
         // Add the last text node
         if text.len() > 0 {
             self.state.lock().unwrap().set_text(text.into());
-            child_nodes
-                .push(Inline::new(ix, self.state.clone(), links, highlights).into_any_element());
+            child_nodes.push(
+                Inline::new(ix, self.state.clone(), links, highlights, &self.events)
+                    .into_any_element(),
+            );
         }
 
         div().id(span.unwrap_or_default()).children(child_nodes)

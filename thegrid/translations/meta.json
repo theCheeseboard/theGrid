@@ -739,19 +739,19 @@
   },
   "FILE_OPEN": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:241",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:246",
     "plural": false,
     "description": null
   },
   "FILE_OPEN_MENU_HEADER": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:235",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:240",
     "plural": false,
     "description": null
   },
   "FILE_SAVE_AS": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:256",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:261",
     "plural": false,
     "description": null
   },
@@ -1247,6 +1247,30 @@
     "plural": false,
     "description": null
   },
+  "LINK_OPEN": {
+    "context": "timeline_message_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:389",
+    "plural": false,
+    "description": null
+  },
+  "LINK_OPEN_CONFIRMATION": {
+    "context": "timeline_message_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:336",
+    "plural": false,
+    "description": null
+  },
+  "LINK_OPEN_CONFIRMATION_PROMPT": {
+    "context": "timeline_message_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:343",
+    "plural": false,
+    "description": null
+  },
+  "LINK_OPEN_CONFIRMATION_WARNING": {
+    "context": "timeline_message_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:377",
+    "plural": false,
+    "description": null
+  },
   "LOG_OUT": {
     "context": "logout_popover.rs",
     "definedIn": "src/auth/logout_popover.rs:140",
@@ -1339,13 +1363,13 @@
   },
   "MESSAGE_UNABLE_TO_DECRYPT": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:70",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:75",
     "plural": false,
     "description": null
   },
   "MESSAGE_UNSUPPORTED": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:277",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:282",
     "plural": false,
     "description": null
   },

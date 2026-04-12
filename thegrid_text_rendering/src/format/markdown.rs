@@ -3,11 +3,11 @@ use crate::node::{
     CodeBlock, ImageNode, InlineNode, LinkMark, NodeContext, Paragraph, Span, Table, TableRow,
     TextMark,
 };
-use crate::{TextViewStyle, node};
+use crate::{node, Events, TextViewStyle};
 use gpui::SharedString;
 use markdown::{
-    ParseOptions,
     mdast::{self, Node},
+    ParseOptions,
 };
 
 /// Parse Markdown into a tree of nodes.
@@ -66,7 +66,7 @@ fn parse_paragraph(paragraph: &mut Paragraph, node: &mdast::Node, cx: &mut NodeC
         }
         Node::Text(val) => {
             text = val.value.clone();
-            paragraph.push_str(&val.value)
+            paragraph.push_str(&val.value, &cx.events)
         }
         Node::Emphasis(val) => {
             let mut child_paragraph = Paragraph::default();
@@ -74,7 +74,8 @@ fn parse_paragraph(paragraph: &mut Paragraph, node: &mdast::Node, cx: &mut NodeC
                 text.push_str(&parse_paragraph(&mut child_paragraph, &child, cx));
             }
             paragraph.push(
-                InlineNode::new(&text).marks(vec![(0..text.len(), TextMark::default().italic())]),
+                InlineNode::new(&text, &cx.events)
+                    .marks(vec![(0..text.len(), TextMark::default().italic())]),
             );
         }
         Node::Strong(val) => {
@@ -83,7 +84,8 @@ fn parse_paragraph(paragraph: &mut Paragraph, node: &mdast::Node, cx: &mut NodeC
                 text.push_str(&parse_paragraph(&mut child_paragraph, &child, cx));
             }
             paragraph.push(
-                InlineNode::new(&text).marks(vec![(0..text.len(), TextMark::default().bold())]),
+                InlineNode::new(&text, &cx.events)
+                    .marks(vec![(0..text.len(), TextMark::default().bold())]),
             );
         }
         Node::Delete(val) => {
@@ -92,14 +94,15 @@ fn parse_paragraph(paragraph: &mut Paragraph, node: &mdast::Node, cx: &mut NodeC
                 text.push_str(&parse_paragraph(&mut child_paragraph, &child, cx));
             }
             paragraph.push(
-                InlineNode::new(&text)
+                InlineNode::new(&text, &cx.events)
                     .marks(vec![(0..text.len(), TextMark::default().strikethrough())]),
             );
         }
         Node::InlineCode(val) => {
             text = val.value.clone();
             paragraph.push(
-                InlineNode::new(&text).marks(vec![(0..text.len(), TextMark::default().code())]),
+                InlineNode::new(&text, &cx.events)
+                    .marks(vec![(0..text.len(), TextMark::default().code())]),
             );
         }
         Node::Link(val) => {
@@ -133,29 +136,35 @@ fn parse_paragraph(paragraph: &mut Paragraph, node: &mdast::Node, cx: &mut NodeC
             paragraph.merge(child_paragraph);
         }
         Node::Image(raw) => {
-            paragraph.push_image(ImageNode {
-                url: raw.url.clone().into(),
-                title: raw.title.clone().map(|t| t.into()),
-                alt: Some(raw.alt.clone().into()),
-                ..Default::default()
-            });
+            paragraph.push_image(
+                ImageNode {
+                    url: raw.url.clone().into(),
+                    title: raw.title.clone().map(|t| t.into()),
+                    alt: Some(raw.alt.clone().into()),
+                    ..Default::default()
+                },
+                &cx.events,
+            );
         }
         Node::InlineMath(raw) => {
             text = raw.value.clone();
             paragraph.push(
-                InlineNode::new(&text).marks(vec![(0..text.len(), TextMark::default().code())]),
+                InlineNode::new(&text, &cx.events)
+                    .marks(vec![(0..text.len(), TextMark::default().code())]),
             );
         }
         Node::MdxTextExpression(raw) => {
             text = raw.value.clone();
-            paragraph
-                .push(InlineNode::new(&text).marks(vec![(0..text.len(), TextMark::default())]));
+            paragraph.push(
+                InlineNode::new(&text, &cx.events)
+                    .marks(vec![(0..text.len(), TextMark::default())]),
+            );
         }
         Node::Html(val) => match super::html::parse(&val.value, cx) {
             Ok(el) => {
                 if el.is_break() {
                     text = "\n".to_owned();
-                    paragraph.push(InlineNode::new(&text));
+                    paragraph.push(InlineNode::new(&text, &cx.events));
                 } else {
                     if cfg!(debug_assertions) {
                         tracing::warn!("unsupported inline html tag: {:#?}", el);
@@ -172,7 +181,7 @@ fn parse_paragraph(paragraph: &mut Paragraph, node: &mdast::Node, cx: &mut NodeC
         },
         Node::FootnoteReference(foot) => {
             let prefix = format!("[{}]", foot.identifier);
-            paragraph.push(InlineNode::new(&prefix).marks(vec![(
+            paragraph.push(InlineNode::new(&prefix, &cx.events).marks(vec![(
                 0..prefix.len(),
                 TextMark {
                     italic: true,
@@ -193,7 +202,7 @@ fn parse_paragraph(paragraph: &mut Paragraph, node: &mdast::Node, cx: &mut NodeC
                 identifier: Some(link.identifier.clone().into()),
             };
 
-            paragraph.push(InlineNode::new(&child_text).marks(vec![(
+            paragraph.push(InlineNode::new(&child_text, &cx.events).marks(vec![(
                 0..child_text.len(),
                 TextMark {
                     link: Some(link_mark),
@@ -271,6 +280,7 @@ fn ast_to_node(
             raw.lang.map(|s| s.into()),
             style,
             highlight_theme,
+            &cx.events,
         )),
         Node::Heading(val) => {
             let mut paragraph = Paragraph::default();
@@ -288,6 +298,7 @@ fn ast_to_node(
             None,
             style,
             highlight_theme,
+            &cx.events,
         )),
         Node::Html(val) => match super::html::parse(&val.value, cx) {
             Ok(el) => el,
@@ -296,7 +307,7 @@ fn ast_to_node(
                     tracing::warn!("error parsing html: {:#?}", err);
                 }
 
-                node::Node::Paragraph(Paragraph::new(val.value))
+                node::Node::Paragraph(Paragraph::new(val.value, &cx.events))
             }
         },
         Node::MdxFlowExpression(val) => node::Node::CodeBlock(CodeBlock::new(
@@ -304,18 +315,21 @@ fn ast_to_node(
             Some("mdx".into()),
             style,
             highlight_theme,
+            &cx.events,
         )),
         Node::Yaml(val) => node::Node::CodeBlock(CodeBlock::new(
             val.value.into(),
             Some("yml".into()),
             style,
             highlight_theme,
+            &cx.events,
         )),
         Node::Toml(val) => node::Node::CodeBlock(CodeBlock::new(
             val.value.into(),
             Some("toml".into()),
             style,
             highlight_theme,
+            &cx.events,
         )),
         Node::MdxJsxTextElement(val) => {
             let mut paragraph = Paragraph::default();
@@ -351,7 +365,7 @@ fn ast_to_node(
         Node::FootnoteDefinition(def) => {
             let mut paragraph = Paragraph::default();
             let prefix = format!("[{}]: ", def.identifier);
-            paragraph.push(InlineNode::new(&prefix).marks(vec![(
+            paragraph.push(InlineNode::new(&prefix, &cx.events).marks(vec![(
                 0..prefix.len(),
                 TextMark {
                     italic: true,
