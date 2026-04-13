@@ -1,5 +1,5 @@
-use crate::background_rgb_yuv_thread::BackgroundRgbYuvThread;
 use crate::ScreenShareStartEvent;
+use crate::background_rgb_yuv_thread::BackgroundRgbYuvThread;
 use gpui::{App, AppContext, AsyncWindowContext, RenderImage, Window};
 use image::{Frame, RgbaImage};
 use raw_window_handle::{HasWindowHandle, RawWindowHandle};
@@ -8,7 +8,6 @@ use std::ffi::c_void;
 use std::slice;
 use std::sync::Arc;
 use thegrid_common::outbound_track::{OutboundTrack, RawVideoFrame};
-use windows::core::{Interface, Ref};
 use windows::Foundation::TypedEventHandler;
 use windows::Graphics::Capture::{
     Direct3D11CaptureFramePool, GraphicsCaptureItem, GraphicsCapturePicker,
@@ -18,9 +17,9 @@ use windows::Graphics::DirectX::DirectXPixelFormat;
 use windows::Win32::Foundation::HWND;
 use windows::Win32::Graphics::Direct3D::D3D_DRIVER_TYPE_HARDWARE;
 use windows::Win32::Graphics::Direct3D11::{
-    D3D11CreateDevice, ID3D11Resource, D3D11_BOX,
-    D3D11_CPU_ACCESS_READ, D3D11_CREATE_DEVICE_BGRA_SUPPORT, D3D11_CREATE_DEVICE_VIDEO_SUPPORT, D3D11_MAPPED_SUBRESOURCE,
-    D3D11_MAP_READ, D3D11_SDK_VERSION, D3D11_TEXTURE2D_DESC, D3D11_USAGE_STAGING,
+    D3D11_BOX, D3D11_CPU_ACCESS_READ, D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+    D3D11_CREATE_DEVICE_VIDEO_SUPPORT, D3D11_MAP_READ, D3D11_MAPPED_SUBRESOURCE, D3D11_SDK_VERSION,
+    D3D11_TEXTURE2D_DESC, D3D11_USAGE_STAGING, D3D11CreateDevice, ID3D11Resource,
 };
 use windows::Win32::Graphics::Dxgi::Common::{DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_SAMPLE_DESC};
 use windows::Win32::Graphics::Dxgi::{IDXGIDevice, IDXGISurface};
@@ -28,6 +27,7 @@ use windows::Win32::System::WinRT::Direct3D11::{
     CreateDirect3D11DeviceFromDXGIDevice, IDirect3DDxgiInterfaceAccess,
 };
 use windows::Win32::UI::Shell::IInitializeWithWindow;
+use windows::core::{Interface, Ref};
 
 enum InternalMessage {
     RenderedStreamData {
@@ -213,11 +213,9 @@ pub fn start_screen_share_session(
             session.SetIsBorderRequired(true).unwrap();
             session.StartCapture().unwrap();
 
-            let Ok(outbound_track) = cx.new(|cx| {
+            let outbound_track = cx.new(|cx| {
                 OutboundTrack::new_combined((size.Width as u32, size.Height as u32), 48000, 2, cx)
-            }) else {
-                return;
-            };
+            });
 
             let weak_outbound_track = outbound_track.downgrade();
             if cx
