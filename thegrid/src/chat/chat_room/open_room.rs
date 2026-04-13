@@ -318,7 +318,7 @@ impl OpenRoom {
 
     pub fn attach_from_disk(&mut self, path: PathBuf, cx: &mut Context<Self>) {
         let can_send_message = self.current_user.as_ref().is_some_and(|current_user| {
-            current_user.can_send_message(MessageLikeEventType::Message)
+            current_user.can_send_message(MessageLikeEventType::RoomMessage)
         });
         if !can_send_message {
             return;

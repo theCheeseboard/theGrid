@@ -229,7 +229,7 @@ impl Render for ChatBar {
             return self.render_tombstone_content(cx).into_any_element();
         }
         let can_send_message = open_room.current_user.as_ref().is_some_and(|current_user| {
-            current_user.can_send_message(MessageLikeEventType::Message)
+            current_user.can_send_message(MessageLikeEventType::RoomMessage)
         });
 
         let window_size = window.viewport_size();
