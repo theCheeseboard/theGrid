@@ -48,7 +48,8 @@ jobs:
             libxcomposite-dev \
             libglib2.0-dev \
             libdbus-1-dev \
-            libpipewire-0.3-dev
+            libpipewire-0.3-dev \
+            libfontconfig-dev
           rustup update
           rustup default 1.93
       - uses: Swatinem/rust-cache@v2
