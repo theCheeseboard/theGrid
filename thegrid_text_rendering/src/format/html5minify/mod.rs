@@ -708,7 +708,7 @@ fn is_ascii_whitespace(c: char) -> bool {
 }
 
 fn preserve_whitespace(name: &str) -> bool {
-    matches!(name, "pre" | "textarea")
+    matches!(name, "pre" | "textarea" | "code")
 }
 
 fn contains_code(name: &str) -> bool {

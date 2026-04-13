@@ -331,7 +331,7 @@ impl CodeBlock {
     ) -> Self {
         let mut styles = vec![];
         if let Some(lang) = &lang {
-            let mut highlighter = SyntaxHighlighter::new(&lang);
+            let mut highlighter = SyntaxHighlighter::new(lang);
             highlighter.update(None, &Rope::from_str(code.as_str()));
             styles = highlighter.styles(&(0..code.len()), highlight_theme);
         };
@@ -376,10 +376,8 @@ impl CodeBlock {
             .child(
                 div()
                     .id("codeblock")
-                    .p_3()
                     .rounded(theme.border_radius)
-                    .font_family("Menlo, Monaco, Consolas, monospace")
-                    .text_size(rems(0.875))
+                    .font_family(theme.monospaced_font_family.clone())
                     .relative()
                     .child(Inline::new(
                         "code",

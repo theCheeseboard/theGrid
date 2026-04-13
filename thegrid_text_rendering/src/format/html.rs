@@ -5,14 +5,16 @@ use std::collections::HashMap;
 use std::ops::Range;
 use std::rc::Rc;
 
+use crate::highlighter::HighlightTheme;
 use crate::node::{
-    ImageNode, InlineNode, LinkMark, NodeContext, Paragraph, Table, TableRow, TextMark,
+    CodeBlock, ImageNode, InlineNode, LinkMark, NodeContext, Paragraph, Table, TableRow, TextMark,
 };
-use crate::{node, Events};
+use crate::{node, Events, TextViewStyle};
 use gpui::{px, relative, DefiniteLength, SharedString};
 use html5ever::tendril::TendrilSink;
-use html5ever::{local_name, parse_document, LocalName, ParseOpts};
+use html5ever::{local_name, parse_document, LocalName, ParseOpts, QualName};
 use markup5ever_rcdom::{Node, NodeData, RcDom};
+use tracing::info;
 
 const BLOCK_ELEMENTS: [&str; 35] = [
     "html",
@@ -265,6 +267,9 @@ fn parse_paragraph(
             paragraph.push_str(&text, events);
         }
         NodeData::Element { name, attrs, .. } => match name.local {
+            local_name!("br") => {
+                paragraph.push(InlineNode::new("\n", events).marks(marks.clone()));
+            }
             local_name!("em") | local_name!("i") => {
                 let mut child_paragraph = Paragraph::default();
                 for child in node.children.borrow().iter() {
@@ -532,6 +537,9 @@ fn parse_node(
                 let children = consume_children_nodes(node, paragraph, cx);
                 Some(node::Node::Blockquote { children })
             }
+            local_name!("pre") if extract_codeblock(node, cx).is_some() => {
+                Some(node::Node::CodeBlock(extract_codeblock(node, cx).unwrap()))
+            }
             local_name!("style") | local_name!("script") => None,
             _ => {
                 if IGNORED_ELEMENTS.contains(&name.local.trim()) {
@@ -583,6 +591,55 @@ fn parse_node(
         | NodeData::Comment { .. }
         | NodeData::ProcessingInstruction { .. } => None,
     }
+}
+
+fn extract_codeblock(node: &Rc<Node>, cx: &mut NodeContext) -> Option<CodeBlock> {
+    let children = node.children.borrow();
+    let children: Vec<_> = children.iter().collect();
+    if children.len() != 1 {
+        return None;
+    }
+    let child = children.first().unwrap();
+    let NodeData::Element {
+        name: QualName {
+            local: local_name!("code"),
+            ..
+        },
+        attrs,
+        ..
+    } = &child.data
+    else {
+        return None;
+    };
+
+    let language_name = attr_value(attrs, local_name!("class")).and_then(|class| {
+        class
+            .strip_prefix("language-")
+            .map(|str| SharedString::from(str.to_string()))
+    });
+
+    info!("{:?}", child);
+
+    let mut paragraph = Paragraph::default();
+    parse_paragraph(&mut paragraph, child, &cx.events);
+    let code = paragraph
+        .children
+        .iter()
+        .fold(String::new(), |string, child| {
+            let mut string = string.clone();
+            string += &child.text;
+            string
+        })
+        .trim_end_matches(|c: char| c.is_whitespace())
+        .to_string();
+
+    Some(CodeBlock::new(
+        code.into(),
+        language_name,
+        &cx.style,
+        &HighlightTheme::default(),
+        &cx.events,
+    ))
 }
 
 fn consume_children_nodes(

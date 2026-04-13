@@ -2,7 +2,7 @@ use crate::cursor::Selection;
 use crate::global_state::GlobalState;
 use crate::node::LinkMark;
 use crate::{Events, LinkClickedEvent};
-use contemporary::styling::theme::Theme;
+use contemporary::styling::theme::{Theme, ThemeStorage};
 use gpui::{
     point, px, quad, App, BorderStyle, Bounds, CursorStyle, Edges, Element,
     ElementId, GlobalElementId, Half, HighlightStyle, Hitbox, HitboxBehavior,
@@ -252,6 +252,7 @@ impl Element for Inline {
         window: &mut Window,
         cx: &mut App,
     ) -> (LayoutId, Self::RequestLayoutState) {
+        let theme = cx.theme();
         let text_style = window.text_style();
 
         let mut runs = Vec::new();
@@ -260,7 +261,19 @@ impl Element for Inline {
             if ix < range.start {
                 runs.push(text_style.clone().to_run(range.start - ix));
             }
-            runs.push(text_style.clone().highlight(*highlight).to_run(range.len()));
+
+            let text_style = if highlight
+                .background_color
+                .is_some_and(|background| background == theme.layer_background.into())
+            {
+                let mut text_style = text_style.clone();
+                text_style.font_family = theme.monospaced_font_family.clone().into();
+                text_style
+            } else {
+                text_style.clone()
+            };
+
+            runs.push(text_style.highlight(*highlight).to_run(range.len()));
             ix = range.end;
         }
         if ix < self.text.len() {
@@ -368,7 +381,7 @@ impl Element for Inline {
                         on_link_clicked(
                             &LinkClickedEvent {
                                 url: link.url.clone(),
-                                bounds
+                                bounds,
                             },
                             window,
                             cx,
