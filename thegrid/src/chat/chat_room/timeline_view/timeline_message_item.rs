@@ -345,7 +345,7 @@ fn text_message(
         Some(FormattedBody {
             format: MessageFormat::Html,
             body,
-        }) => TextView::html("html-text", body.clone(), window, cx)
+        }) => TextView::html("html-text", format!("<body>{body}</body>"), window, cx)
             .on_link_clicked({
                 let current_link_confirmation = current_link_confirmation.clone();
                 let author_flyout_information = author_flyout_information_entity.clone();

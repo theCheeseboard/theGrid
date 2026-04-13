@@ -1020,14 +1020,14 @@
     "description": null
   },
   "JOIN_ERROR_TEXT": {
-    "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:278",
+    "context": "space_lobby_content.rs",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:127",
     "plural": false,
     "description": null
   },
   "JOIN_ERROR_TITLE": {
-    "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:275",
+    "context": "space_lobby_content.rs",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:124",
     "plural": false,
     "description": null
   },
@@ -2040,8 +2040,8 @@
     "description": null
   },
   "ROOM_DIRECTORY_MEMBER_COUNT": {
-    "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:417",
+    "context": "space_lobby_content.rs",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:259",
     "plural": true,
     "description": null
   },
@@ -2508,20 +2508,20 @@
     "description": null
   },
   "SECURITY_RECOVERY_KEY_CHANGE": {
-    "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:219",
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:280",
     "plural": false,
     "description": null
   },
   "SECURITY_RECOVERY_KEY_RESET": {
-    "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:236",
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:295",
     "plural": false,
     "description": null
   },
   "SECURITY_RECOVERY_KEY_SETUP": {
-    "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:228",
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:288",
     "plural": false,
     "description": null
   },

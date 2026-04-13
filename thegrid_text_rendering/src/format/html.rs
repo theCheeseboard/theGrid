@@ -550,7 +550,10 @@ fn parse_node(
                     // Inner of the block element -- The "Inner text of block element"
                     for child in node.children.borrow().iter() {
                         if let Some(child_node) = parse_node(child, paragraph, cx) {
-                            children.push(child_node);
+                            children.push(child_node.clone());
+                            if let node::Node::Break { .. } = child_node {
+                                consume_paragraph(&mut children, paragraph);
+                            }
                         }
                     }
                     consume_paragraph(&mut children, paragraph);
