@@ -1,7 +1,7 @@
 use super::{utils::list_item_prefix, Events, LinkClickedEvent, TextViewStyle};
 use crate::highlighter::{HighlightTheme, SyntaxHighlighter};
 use crate::inline::{Inline, InlineState};
-use contemporary::styling::theme::Theme;
+use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use gpui::{black, div, img, prelude::FluentBuilder as _, px, relative, rems, rgb, AnyElement, App, DefiniteLength, Div, Element, ElementId, FontStyle, FontWeight, Half, HighlightStyle, InteractiveElement as _, IntoElement, Length, ListState, ObjectFit, ParentElement, Refineable, SharedString, SharedUri, StatefulInteractiveElement, Styled, StyledImage as _, Window};
 use markdown::mdast;
 use ropey::Rope;
@@ -252,7 +252,7 @@ impl Paragraph {
                 children: vec![],
                 link_refs: Default::default(),
                 state: Arc::new(Mutex::new(InlineState::default())),
-                events: Default::default(),
+                events: self.events.clone(),
             },
         )
     }
@@ -1189,27 +1189,30 @@ impl Node {
                     .child(children.render(node_cx, window, cx))
                     .into_any_element()
             }
-            Node::Blockquote { children } => div()
-                .w_full()
-                .pb(mb)
-                .child(
-                    div()
-                        .id("blockquote")
-                        .w_full()
-                        // TODO: Blockquote colours
-                        // .text_color(cx.theme().muted_foreground)
-                        .border_l_3()
-                        // .border_color(cx.theme().secondary_active)
-                        .px_4()
-                        .children({
-                            let children_len = children.len();
-                            children.into_iter().enumerate().map(move |(index, c)| {
-                                let is_last = index == children_len - 1;
-                                c.render_block(options.is_last(is_last), node_cx, window, cx)
-                            })
-                        }),
-                )
-                .into_any_element(),
+            Node::Blockquote { children } => {
+                let theme = cx.theme();
+                
+                div()
+                    .w_full()
+                    .pb(mb)
+                    .child(
+                        div()
+                            .id("blockquote")
+                            .w_full()
+                            .text_color(theme.foreground.disabled())
+                            .border_l_3()
+                            .border_color(theme.layer_background)
+                            .px_4()
+                            .children({
+                                let children_len = children.len();
+                                children.into_iter().enumerate().map(move |(index, c)| {
+                                    let is_last = index == children_len - 1;
+                                    c.render_block(options.is_last(is_last), node_cx, window, cx)
+                                })
+                            }),
+                    )
+                    .into_any_element()
+            },
             Node::List { children, ordered } => div()
                 .flex()
                 .flex_col()
