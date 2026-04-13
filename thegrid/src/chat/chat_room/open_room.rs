@@ -16,8 +16,8 @@ use matrix_sdk::ruma::api::client::room::aliases::v3::Response;
 use matrix_sdk::ruma::events::room::canonical_alias::RoomCanonicalAliasEventContent;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::events::tag::Tags;
-use matrix_sdk::ruma::events::{room, Mentions, MessageLikeEventType};
-use matrix_sdk::ruma::{api, OwnedRoomAliasId, OwnedRoomId, UserId};
+use matrix_sdk::ruma::events::{Mentions, MessageLikeEventType, room};
+use matrix_sdk::ruma::{OwnedRoomAliasId, OwnedRoomId, UserId, api};
 use matrix_sdk::{Error, HttpError, Room};
 use matrix_sdk_ui::timeline::{AttachmentConfig, AttachmentSource, EventTimelineItem, RoomExt};
 use mime2ext::mime2ext;
@@ -58,7 +58,7 @@ impl OpenRoom {
     ) -> Self {
         let this_entity = cx.entity();
         let weak_this = cx.weak_entity();
-        let chat_bar = cx.new(|cx| ChatBar::new(this_entity, cx));
+        let chat_bar = cx.new(|cx| ChatBar::new(this_entity, displayed_room.clone(), cx));
 
         let enter_press_listener = cx.listener(|this: &mut Self, _, window, cx| {
             this.send_pending_message(window, cx);

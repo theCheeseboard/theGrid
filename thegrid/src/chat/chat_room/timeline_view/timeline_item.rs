@@ -1,6 +1,6 @@
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::timeline_view::author_flyout::{
-    author_flyout, AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener,
+    AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener, author_flyout,
 };
 use crate::chat::chat_room::timeline_view::membership_change_item::membership_change_item;
 use crate::chat::chat_room::timeline_view::message_error_item::message_error_item;
@@ -14,11 +14,11 @@ use chrono::{DateTime, Local};
 use cntp_i18n::tr;
 use contemporary::components::anchorer::WithAnchorer;
 use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
-use contemporary::styling::theme::{variable_transparent, Theme, VariableColor};
+use contemporary::styling::theme::{Theme, VariableColor, variable_transparent};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, App, AsyncApp, ElementId, Entity, InteractiveElement, IntoElement,
-    ParentElement, RenderOnce, StatefulInteractiveElement, Styled, WeakEntity, Window,
+    App, AsyncApp, ElementId, Entity, InteractiveElement, IntoElement, ParentElement, RenderOnce,
+    StatefulInteractiveElement, Styled, WeakEntity, Window, div, px,
 };
 use matrix_sdk::room::RoomMember;
 use matrix_sdk_ui::timeline::{
@@ -27,7 +27,7 @@ use matrix_sdk_ui::timeline::{
 };
 use std::rc::Rc;
 use std::sync::Arc;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::tokio_helper::TokioHelper;
 
 #[derive(IntoElement)]
@@ -137,6 +137,9 @@ impl TimelineItem {
                         msg.clone(),
                         event.sender_profile().clone(),
                         event.sender().to_owned(),
+                        self.open_room.clone(),
+                        self.displayed_room.clone(),
+                        self.on_user_action.clone(),
                     )
                     .into_any_element()
                 }

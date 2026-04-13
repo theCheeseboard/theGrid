@@ -1,10 +1,15 @@
+use crate::chat::chat_room::open_room::OpenRoom;
+use crate::chat::chat_room::timeline_view::author_flyout::{
+    AuthorFlyoutUserActionListener, author_flyout,
+};
 use crate::chat::chat_room::timeline_view::message_error_item::message_error_item;
 use crate::chat::chat_room::timeline_view::reply_fragment::reply_fragment_in_reply_to;
-use cntp_i18n::{i18n_manager, tr, Quote, I18N_MANAGER};
-use contemporary::components::admonition::{admonition, AdmonitionSeverity};
+use crate::chat::displayed_room::DisplayedRoom;
+use cntp_i18n::{I18N_MANAGER, Quote, i18n_manager, tr};
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::context_menu::ContextMenuItem;
-use contemporary::components::dialog_box::{dialog_box, StandardButton};
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -13,18 +18,23 @@ use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use directories::UserDirs;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    canvas, div, point, px, rgba, AnyElement, App, AsyncApp,
-    BorrowAppContext, ClipboardItem, Entity, IntoElement, ParentElement, Path, RenderOnce, Styled, Window,
+    AnyElement, App, AppContext, AsyncApp, BorrowAppContext, Bounds, ClipboardItem, Entity,
+    IntoElement, ParentElement, Path, Pixels, RenderOnce, Styled, Window, canvas, div, point, px,
+    rgba,
 };
+use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::events::room::message::{
     FileMessageEventContent, FormattedBody, MessageFormat, MessageType,
 };
-use matrix_sdk::ruma::OwnedUserId;
+use matrix_sdk::ruma::matrix_uri::MatrixId;
+use matrix_sdk::ruma::{MatrixToUri, OwnedUserId, UserId};
 use matrix_sdk_ui::timeline::{MsgLikeContent, MsgLikeKind, Profile, TimelineDetails};
 use std::fs::copy;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use std::rc::Rc;
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::media_cache::{MediaCacheEntry, MediaFile, MediaState};
 use thegrid_common::session::session_manager::SessionManager;
+use thegrid_common::tokio_helper::TokioHelper;
 use thegrid_text_rendering::TextView;
 use tracing::info;
 
@@ -33,17 +43,26 @@ pub struct TimelineMessageItem {
     content: MsgLikeContent,
     sender_profile: TimelineDetails<Profile>,
     sender: OwnedUserId,
+    room: Entity<OpenRoom>,
+    displayed_room: Entity<DisplayedRoom>,
+    on_user_action: Rc<Box<AuthorFlyoutUserActionListener>>,
 }
 
 pub fn timeline_message_item(
     content: MsgLikeContent,
     sender_profile: TimelineDetails<Profile>,
     sender: OwnedUserId,
+    room: Entity<OpenRoom>,
+    displayed_room: Entity<DisplayedRoom>,
+    on_user_action: Rc<Box<AuthorFlyoutUserActionListener>>,
 ) -> TimelineMessageItem {
     TimelineMessageItem {
         content,
         sender_profile,
         sender,
+        room,
+        displayed_room,
+        on_user_action,
     }
 }
 
@@ -59,7 +78,12 @@ impl RenderOnce for TimelineMessageItem {
             .flex()
             .flex_col()
             .when_some(self.content.in_reply_to, |david, reply_details| {
-                david.child(reply_fragment_in_reply_to(reply_details))
+                david.child(reply_fragment_in_reply_to(
+                    reply_details,
+                    self.room.clone(),
+                    self.displayed_room.clone(),
+                    self.on_user_action.clone(),
+                ))
             })
             .child(match self.content.kind {
                 MsgLikeKind::Message(message) => div().child(msgtype_to_message_line(
@@ -67,6 +91,9 @@ impl RenderOnce for TimelineMessageItem {
                     self.sender,
                     self.sender_profile,
                     false,
+                    self.room,
+                    self.displayed_room,
+                    self.on_user_action,
                     window,
                     cx,
                 )),
@@ -108,6 +135,9 @@ pub fn msgtype_to_message_line<'a>(
     sender: OwnedUserId,
     sender_profile: TimelineDetails<Profile>,
     as_reply: bool,
+    room: Entity<OpenRoom>,
+    displayed_room: Entity<DisplayedRoom>,
+    on_user_action: Rc<Box<AuthorFlyoutUserActionListener>>,
     window: &mut Window,
     cx: &mut App,
 ) -> impl IntoElement + 'a {
@@ -170,6 +200,9 @@ pub fn msgtype_to_message_line<'a>(
         MessageType::Text(text) => div()
             .child(text_message(
                 as_reply,
+                room,
+                displayed_room,
+                on_user_action,
                 &text.body,
                 &text.formatted,
                 window,
@@ -183,6 +216,9 @@ pub fn msgtype_to_message_line<'a>(
                 .font_family(theme.monospaced_font_family.clone())
                 .child(text_message(
                     as_reply,
+                    room,
+                    displayed_room,
+                    on_user_action,
                     &notice.body,
                     &notice.formatted,
                     window,
@@ -286,14 +322,24 @@ pub fn msgtype_to_message_line<'a>(
     }
 }
 
+#[derive(Clone)]
+struct AuthorFlyoutInformation {
+    bounds: Bounds<Pixels>,
+    author: Entity<Option<RoomMember>>,
+}
+
 fn text_message(
     as_reply: bool,
+    room: Entity<OpenRoom>,
+    displayed_room: Entity<DisplayedRoom>,
+    on_user_action: Rc<Box<AuthorFlyoutUserActionListener>>,
     body: &String,
     formatted: &Option<FormattedBody>,
     window: &mut Window,
     cx: &mut App,
 ) -> AnyElement {
     let current_link_confirmation = window.use_state(cx, |_, _| None);
+    let author_flyout_information_entity = window.use_state(cx, |_, _| None);
 
     let body = match &formatted {
         Some(FormattedBody {
@@ -302,9 +348,46 @@ fn text_message(
         }) => TextView::html("html-text", body.clone(), window, cx)
             .on_link_clicked({
                 let current_link_confirmation = current_link_confirmation.clone();
+                let author_flyout_information = author_flyout_information_entity.clone();
+                let room = room.clone();
                 move |event, _, cx| {
                     info!("Link clicked: {}", event.url);
-                    current_link_confirmation.write(cx, Some(event.url.clone()));
+                    if let Ok(uri) = MatrixToUri::parse(&event.url) {
+                        match uri.id() {
+                            MatrixId::User(user_id) => {
+                                let author = cx.new(|_| None);
+
+                                let room = room.read(cx).room.clone().unwrap();
+                                cx.spawn({
+                                    let author = author.clone();
+                                    let user_id = user_id.clone();
+                                    async move |cx: &mut AsyncApp| {
+                                        if let Ok(room_member) = cx
+                                            .spawn_tokio(
+                                                async move { room.get_member(&user_id).await },
+                                            )
+                                            .await
+                                        {
+                                            author.write(cx, room_member)
+                                        }
+                                    }
+                                })
+                                .detach();
+
+                                author_flyout_information.write(
+                                    cx,
+                                    Some(AuthorFlyoutInformation {
+                                        bounds: event.bounds,
+                                        author,
+                                    }),
+                                );
+                            }
+                            _ => {}
+                        }
+                    } else {
+                        // Ask the user if they want to go to this link
+                        current_link_confirmation.write(cx, Some(event.url.clone()));
+                    }
                 }
             })
             .into_any_element(),
@@ -313,6 +396,7 @@ fn text_message(
 
     let theme = cx.global::<Theme>();
     let current_link = current_link_confirmation.read(cx).clone();
+    let author_flyout_information = author_flyout_information_entity.read(cx).as_ref();
     div()
         .flex()
         .w_full()
@@ -401,6 +485,25 @@ fn text_message(
                         }),
                 ),
         )
+        .child(author_flyout(
+            author_flyout_information
+                .map(|author_flyout_information| author_flyout_information.bounds)
+                .unwrap_or_default(),
+            author_flyout_information.is_some(),
+            author_flyout_information
+                .map(|author_flyout_information| author_flyout_information.author.clone())
+                .clone()
+                .unwrap_or_else(|| cx.new(|_| None)),
+            room,
+            displayed_room,
+            {
+                let author_flyout_information_entity = author_flyout_information_entity.clone();
+                move |_, _, cx| {
+                    author_flyout_information_entity.write(cx, None);
+                }
+            },
+            move |event, window, cx| on_user_action(event, window, cx),
+        ))
         .into_any_element()
 }
 

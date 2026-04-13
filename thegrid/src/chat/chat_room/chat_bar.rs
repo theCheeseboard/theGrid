@@ -1,9 +1,10 @@
 use crate::auth::emoji_flyout::EmojiFlyout;
 use crate::chat::chat_room::open_room::OpenRoom;
+use crate::chat::chat_room::timeline_view::author_flyout::AuthorFlyoutUserActionListener;
 use crate::chat::chat_room::timeline_view::reply_fragment::reply_fragment;
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::{tr, trn};
-use contemporary::components::admonition::{admonition, AdmonitionSeverity};
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
@@ -12,26 +13,33 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    anchored, deferred, div, px, AppContext, AsyncApp, AsyncWindowContext,
-    Context, Entity, InteractiveElement, IntoElement, ParentElement, Point, Render, Styled, WeakEntity, Window,
+    AppContext, AsyncApp, AsyncWindowContext, Context, Entity, InteractiveElement, IntoElement,
+    ParentElement, Point, Render, Styled, WeakEntity, Window, anchored, deferred, div, px,
 };
-use matrix_sdk::ruma::events::room::tombstone::RoomTombstoneEventContent;
-use matrix_sdk::ruma::events::MessageLikeEventType;
 use matrix_sdk::RoomState;
+use matrix_sdk::ruma::events::MessageLikeEventType;
+use matrix_sdk::ruma::events::room::tombstone::RoomTombstoneEventContent;
 use matrix_sdk_ui::timeline::TimelineItemContent;
+use std::rc::Rc;
 use thegrid_common::session::room_cache::RoomJoinEvent;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct ChatBar {
     open_room: Entity<OpenRoom>,
+    displayed_room: Entity<DisplayedRoom>,
     emoji_flyout: Option<Entity<EmojiFlyout>>,
 }
 
 impl ChatBar {
-    pub fn new(open_room: Entity<OpenRoom>, cx: &mut Context<Self>) -> Self {
+    pub fn new(
+        open_room: Entity<OpenRoom>,
+        displayed_room: Entity<DisplayedRoom>,
+        cx: &mut Context<Self>,
+    ) -> Self {
         Self {
             open_room,
+            displayed_room,
             emoji_flyout: None,
         }
     }
@@ -241,6 +249,9 @@ impl Render for ChatBar {
                     pending_reply.content().clone(),
                     pending_reply.sender_profile().clone(),
                     pending_reply.sender().to_owned(),
+                    self.open_room.clone(),
+                    self.displayed_room.clone(),
+                    Rc::new(Box::new(|_, _, _| {})),
                 )))
             })
             .child(
