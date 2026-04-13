@@ -1,9 +1,11 @@
-use crate::highlighter::{Language, languages};
+use crate::highlighter::{languages, Language};
 use contemporary::styling::theme::Theme;
+use gpui::private::serde_json;
 use gpui::{App, FontWeight, HighlightStyle, Hsla, SharedString};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
+use std::cell::LazyCell;
 use std::{
     collections::HashMap,
     ops::Deref,
@@ -447,12 +449,17 @@ impl Deref for HighlightTheme {
     }
 }
 
+static QTC_DARK_THEME: LazyLock<Arc<HighlightTheme>> =
+    LazyLock::new(|| Arc::new(serde_json::from_str(include_str!("themes/qtc-dark.json")).unwrap()));
+
 impl HighlightTheme {
     pub fn default() -> Arc<Self> {
-        Arc::new(Self {
-            name: "default".to_string(),
-            style: Default::default(),
-        })
+        // Arc::new(Self {
+        //     name: "default".to_string(),
+        //     style: Default::default(),
+        // })
+
+        QTC_DARK_THEME.clone()
     }
     // pub fn default_dark() -> Arc<Self> {
     //     DEFAULT_THEME_COLORS[&ThemeMode::Dark].1.clone()

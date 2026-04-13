@@ -2,12 +2,7 @@ use super::{utils::list_item_prefix, Events, LinkClickedEvent, TextViewStyle};
 use crate::highlighter::{HighlightTheme, SyntaxHighlighter};
 use crate::inline::{Inline, InlineState};
 use contemporary::styling::theme::Theme;
-use gpui::{
-    div, img, prelude::FluentBuilder as _, px, relative, rems, rgb, AnyElement, App,
-    DefiniteLength, Div, Element, ElementId, FontStyle, FontWeight,
-    Half, HighlightStyle, InteractiveElement as _, IntoElement, Length, ListState,
-    ObjectFit, ParentElement, Refineable, SharedString, SharedUri, StatefulInteractiveElement, Styled, StyledImage as _, Window,
-};
+use gpui::{black, div, img, prelude::FluentBuilder as _, px, relative, rems, rgb, AnyElement, App, DefiniteLength, Div, Element, ElementId, FontStyle, FontWeight, Half, HighlightStyle, InteractiveElement as _, IntoElement, Length, ListState, ObjectFit, ParentElement, Refineable, SharedString, SharedUri, StatefulInteractiveElement, Styled, StyledImage as _, Window};
 use markdown::mdast;
 use ropey::Rope;
 use std::fmt::{Debug, Formatter};
@@ -376,16 +371,30 @@ impl CodeBlock {
             .child(
                 div()
                     .id("codeblock")
+                    .flex()
+                    .flex_col()
+                    .p(px(4.))
+                    .bg(black())
                     .rounded(theme.border_radius)
-                    .font_family(theme.monospaced_font_family.clone())
-                    .relative()
-                    .child(Inline::new(
-                        "code",
-                        self.state.clone(),
-                        vec![],
-                        self.styles.clone(),
-                        &self.events,
-                    )),
+                    .child(
+                        div()
+                            .font_family(theme.monospaced_font_family.clone())
+                            .relative()
+                            .child(Inline::new(
+                                "code",
+                                self.state.clone(),
+                                vec![],
+                                self.styles.clone(),
+                                &self.events,
+                            )),
+                    )
+                    .child(
+                        div()
+                            .flex()
+                            .border_t(px(1.))
+                            .border_color(theme.border_color)
+                            .child(self.lang.clone().unwrap_or_default()),
+                    ),
             );
         david.style().refine(&style.code_block);
         david.into_any_element()
