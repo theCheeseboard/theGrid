@@ -215,14 +215,19 @@ impl RenderOnce for AuthorFlyout {
 
                     let membership = room_member.membership().clone();
                     let joined = membership == MembershipState::Join;
-                    let me = self.room.read(cx).current_user.clone().unwrap();
-                    let can_invite = me.can_invite() && membership == MembershipState::Leave;
-                    let can_retract_invite = me.can_kick() && membership == MembershipState::Invite;
-                    let can_ban =
-                        me.can_ban() && me.power_level() > room_member.power_level() && joined;
-                    let can_kick =
-                        me.can_kick() && me.power_level() > room_member.power_level() && joined;
-                    let can_unban = me.can_ban() && membership == MembershipState::Ban;
+                    let me = self.room.read(cx).current_user.as_ref();
+                    let can_invite = me.is_some_and(|me| me.can_invite())
+                        && membership == MembershipState::Leave;
+                    let can_retract_invite =
+                        me.is_some_and(|me| me.can_kick()) && membership == MembershipState::Invite;
+                    let can_ban = me.is_some_and(|me| {
+                        me.can_ban() && me.power_level() > room_member.power_level()
+                    }) && joined;
+                    let can_kick = me.is_some_and(|me| {
+                        me.can_kick() && me.power_level() > room_member.power_level()
+                    }) && joined;
+                    let can_unban =
+                        me.is_some_and(|me| me.can_ban()) && membership == MembershipState::Ban;
                     let is_ignored = room_member.is_ignored();
 
                     let theme = cx.global::<Theme>();
