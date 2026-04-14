@@ -1,16 +1,16 @@
-use cntp_i18n::{tr, Quote};
+use cntp_i18n::{Quote, tr};
 use contemporary::components::button::button;
 use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
-use contemporary::components::dialog_box::{dialog_box, StandardButton};
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::icon_text::icon_text;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, App, AsyncApp, ClickEvent, ClipboardItem, Entity, FontWeight,
-    InteractiveElement, IntoElement, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window,
+    App, AsyncApp, ClickEvent, ClipboardItem, Entity, FontWeight, InteractiveElement, IntoElement,
+    ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window, div, px,
 };
-use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::RoomMemberships;
+use matrix_sdk::ruma::OwnedRoomId;
 use std::collections::HashMap;
 use std::rc::Rc;
 use thegrid_common::session::room_cache::CachedRoom;

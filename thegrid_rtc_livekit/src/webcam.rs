@@ -1,7 +1,7 @@
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{AppContext, AsyncApp, Context, Entity, RenderImage, WeakEntity};
-use image::{imageops, Frame, RgbaImage};
+use image::{Frame, RgbaImage, imageops};
 use log::error;
 use nokhwa::pixel_format::YuyvFormat;
 use nokhwa::utils::{CameraInfo, FrameFormat, RequestedFormat, RequestedFormatType, Resolution};
@@ -10,7 +10,7 @@ use smallvec::smallvec;
 use std::sync::Arc;
 use std::thread;
 use thegrid_common::outbound_track::{OutboundTrack, RawVideoFrame};
-use yuv::{yuyv422_to_bgra, YuvPackedImage, YuvRange, YuvStandardMatrix};
+use yuv::{YuvPackedImage, YuvRange, YuvStandardMatrix, yuyv422_to_bgra};
 
 pub struct Webcam {
     camera_info: CameraInfo,

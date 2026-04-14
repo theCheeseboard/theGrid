@@ -30,7 +30,8 @@ impl ScreenShareManager {
     pub fn new(cx: &mut App) -> Self {
         Self {
             #[cfg(target_os = "linux")]
-            xdg_portal_screenshare_manager: cx.new(|cx| xdg_portal::XdgPortalScreenshareManager::new(cx)),
+            xdg_portal_screenshare_manager: cx
+                .new(|cx| xdg_portal::XdgPortalScreenshareManager::new(cx)),
         }
     }
 

@@ -4,7 +4,7 @@ use matrix_sdk::ruma::OwnedRoomId;
 #[derive(Clone)]
 pub enum AccountSettingsDeepLink {
     Profile,
-    Devices
+    Devices,
 }
 
 #[derive(Clone)]

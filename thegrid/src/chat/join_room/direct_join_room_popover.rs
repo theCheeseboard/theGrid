@@ -1,6 +1,6 @@
 use cntp_i18n::tr;
 use contemporary::components::button::button;
-use contemporary::components::checkbox::{checkbox, radio_button, CheckState, CheckedChangeEvent};
+use contemporary::components::checkbox::{CheckState, CheckedChangeEvent, checkbox, radio_button};
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
@@ -13,11 +13,11 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::TextField;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render,
-    Styled, WeakEntity, Window,
+    AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled, WeakEntity,
+    Window, div, px,
 };
-use matrix_sdk::ruma::api::client::room::create_room::v3::{CreationContent, Request};
 use matrix_sdk::ruma::api::client::room::Visibility;
+use matrix_sdk::ruma::api::client::room::create_room::v3::{CreationContent, Request};
 use matrix_sdk::ruma::matrix_uri::MatrixId;
 use matrix_sdk::ruma::serde::Raw;
 use matrix_sdk::ruma::{MatrixToUri, OwnedRoomOrAliasId};

@@ -1,9 +1,9 @@
 use crate::webcam::Webcam;
 use crate::{LivekitCall, TrackType};
 use cntp_i18n::tr;
-use contemporary::components::button::{button, ButtonMenuOpenPolicy};
+use contemporary::components::button::{ButtonMenuOpenPolicy, button};
 use contemporary::components::context_menu::ContextMenuItem;
-use contemporary::components::dialog_box::{dialog_box, StandardButton};
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -12,8 +12,8 @@ use contemporary::permissions::{
 };
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, img, px, AppContext, Context, Entity, IntoElement, ObjectFit,
-    ParentElement, Render, Styled, StyledImage, Window,
+    AppContext, Context, Entity, IntoElement, ObjectFit, ParentElement, Render, Styled,
+    StyledImage, Window, div, img, px,
 };
 use nokhwa::utils::CameraInfo;
 use nokhwa::{native_api_backend, query};

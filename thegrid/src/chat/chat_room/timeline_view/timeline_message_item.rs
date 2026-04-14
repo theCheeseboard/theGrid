@@ -7,6 +7,7 @@ use crate::chat::chat_room::timeline_view::reply_fragment::reply_fragment_in_rep
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::{I18N_MANAGER, Quote, i18n_manager, tr};
 use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::anchorer::WithAnchorer;
 use contemporary::components::button::button;
 use contemporary::components::context_menu::ContextMenuItem;
 use contemporary::components::dialog_box::{StandardButton, dialog_box};
@@ -189,14 +190,46 @@ pub fn msgtype_to_message_line<'a>(
                     .child(div().p(px(2.)).italic().child(emote.body.clone())),
             )
             .into_any_element(),
-        MessageType::Image(image) => div()
-            .child(
-                mxc_image(image.source.clone())
-                    .min_w(px(100.))
-                    .min_h(px(30.))
-                    .size_policy(SizePolicy::Constrain(500., 500.)),
-            )
-            .into_any_element(),
+        MessageType::Image(image) => {
+            let aspect_ratio = if let Some(image_info) = image.info.as_ref()
+                && let Some(width) = image_info.width
+                && let Some(height) = image_info.height
+            {
+                Some(i64::from(width) as f32 / i64::from(height) as f32)
+            } else {
+                None
+            };
+
+            let bounds = window.use_state(cx, |_, _| None);
+
+            div()
+                .with_anchorer({
+                    let bounds_entity = bounds.clone();
+                    move |david, bounds, _, cx| {
+                        bounds_entity.write(cx, Some(bounds));
+
+                        david
+                    }
+                })
+                .when_some(bounds.read(cx).clone(), |david, bounds| {
+                    let width = bounds.size.width.as_f32().min(500.);
+                    let height = width / aspect_ratio.unwrap_or(1.);
+
+                    david.child(
+                        div()
+                            .child(
+                                mxc_image(image.source.clone())
+                                    .size_policy(SizePolicy::Constrain(width, height)),
+                            )
+                            .when_else(
+                                aspect_ratio.is_some(),
+                                |david| david.w(px(width)).h(px(height)),
+                                |david| david.min_w(px(100.)).min_h(px(30.)),
+                            ),
+                    )
+                })
+                .into_any_element()
+        }
         MessageType::Text(text) => div()
             .child(text_message(
                 as_reply,

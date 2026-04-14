@@ -8,8 +8,8 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, img, px, App, ClickEvent, Entity, InteractiveElement,
-    IntoElement, ParentElement, RenderImage, RenderOnce, StatefulInteractiveElement, Styled, Window,
+    App, ClickEvent, Entity, InteractiveElement, IntoElement, ParentElement, RenderImage,
+    RenderOnce, StatefulInteractiveElement, Styled, Window, div, img, px,
 };
 use image::{Frame, Rgba};
 use matrix_sdk::encryption::verification::QrVerification;

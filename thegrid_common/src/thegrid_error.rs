@@ -7,7 +7,9 @@ pub struct TheGridError {
 
 impl TheGridError {
     pub fn new(message: &str) -> Self {
-        Self { message: message.to_string() }
+        Self {
+            message: message.to_string(),
+        }
     }
 }
 

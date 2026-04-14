@@ -1,15 +1,15 @@
 use cntp_i18n::tr;
 use contemporary::components::button::button;
-use contemporary::components::dialog_box::{dialog_box, StandardButton};
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::progress_bar::progress_bar;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, img, px, App, AsyncApp, AsyncWindowContext, ClickEvent,
-    InteractiveElement, IntoElement, ObjectFit, ParentElement, PathPromptOptions, RenderImage, RenderOnce,
-    SharedString, Styled, StyledImage, Window,
+    App, AsyncApp, AsyncWindowContext, ClickEvent, InteractiveElement, IntoElement, ObjectFit,
+    ParentElement, PathPromptOptions, RenderImage, RenderOnce, SharedString, Styled, StyledImage,
+    Window, div, img, px,
 };
 use image::{Frame, ImageReader, Pixel, RgbaImage};
 use matrix_sdk::ruma::OwnedMxcUri;

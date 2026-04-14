@@ -5,9 +5,9 @@ use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
 use cntp_i18n::tr;
 use contemporary::components::admonition::AdmonitionSeverity;
 use contemporary::components::button::button;
-use contemporary::components::checkbox::{checkbox, CheckState};
+use contemporary::components::checkbox::{CheckState, checkbox};
 use contemporary::components::constrainer::constrainer;
-use contemporary::components::dialog_box::{dialog_box, StandardButton};
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -16,12 +16,12 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, list, px, App, AsyncApp, Context, Element, Entity,
-    InteractiveElement, IntoElement, ListAlignment, ListSizingBehavior, ListState, ParentElement, Render, RenderOnce,
-    Styled, Subscription, Window,
+    App, AsyncApp, Context, Element, Entity, InteractiveElement, IntoElement, ListAlignment,
+    ListSizingBehavior, ListState, ParentElement, Render, RenderOnce, Styled, Subscription, Window,
+    div, list, px,
 };
 use matrix_sdk::room::RoomMember;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::room_cache::{CachedRoom, RoomJoinEvent};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;

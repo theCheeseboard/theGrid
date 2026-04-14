@@ -18,14 +18,14 @@ use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::{MaskMode, TextField};
 use contemporary::surface::surface;
+use gpui::LineFragment::Text;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::private::anyhow;
-use gpui::LineFragment::Text;
 use gpui::{
-    div, img, px, App, AppContext, AsyncApp, BorrowAppContext, Context,
-    ElementId, Entity, ImageSource, InteractiveElement, IntoElement, ParentElement, Render,
-    Resource, SharedString, Styled, WeakEntity, Window,
+    App, AppContext, AsyncApp, BorrowAppContext, Context, ElementId, Entity, ImageSource,
+    InteractiveElement, IntoElement, ParentElement, Render, Resource, SharedString, Styled,
+    WeakEntity, Window, div, img, px,
 };
 use gpui_tokio::Tokio;
 use keyring::default::default_credential_builder;
@@ -40,7 +40,7 @@ use matrix_sdk::encryption::CrossSigningStatus;
 use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::AuthorizationServerMetadata;
 use matrix_sdk::ruma::api::client::session::get_login_types::v3::{IdentityProvider, LoginType};
 use matrix_sdk::ruma::serde::Raw;
-use matrix_sdk::ruma::{user_id, DeviceId, OwnedUserId};
+use matrix_sdk::ruma::{DeviceId, OwnedUserId, user_id};
 use matrix_sdk::{Client, ClientBuildError};
 use smol::future::FutureExt;
 use std::iter;

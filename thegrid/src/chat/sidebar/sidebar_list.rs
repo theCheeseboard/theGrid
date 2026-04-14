@@ -8,12 +8,12 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, list, px, App, ElementId, Entity, InteractiveElement, IntoElement,
-    ListState, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window,
+    App, ElementId, Entity, InteractiveElement, IntoElement, ListState, ParentElement, RenderOnce,
+    StatefulInteractiveElement, Styled, Window, div, list, px,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::room_cache::CachedRoom;
 use thegrid_common::session::session_manager::SessionManager;
 

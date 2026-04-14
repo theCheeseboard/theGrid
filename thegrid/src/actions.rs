@@ -1,4 +1,4 @@
-use gpui::{App, actions, KeyBinding};
+use gpui::{App, KeyBinding, actions};
 
 actions!(
     thegrid,

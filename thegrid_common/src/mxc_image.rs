@@ -4,11 +4,12 @@ use crate::mxc_image::fallback_image::{FallbackImage, IntoFallbackImage};
 use crate::session::media_cache::{MediaCacheEntry, MediaState};
 use crate::session::session_manager::SessionManager;
 use contemporary::components::icon::icon;
-use contemporary::components::skeleton::{skeleton, SkeletonExt};
+use contemporary::components::skeleton::{SkeletonExt, skeleton};
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, img, px, rgba, App, BorrowAppContext, ElementId, IntoElement, ParentElement, Pixels, Refineable, RenderOnce, StyleRefinement, Styled, Window
+    App, BorrowAppContext, ElementId, IntoElement, ParentElement, Pixels, Refineable, RenderOnce,
+    StyleRefinement, Styled, Window, div, img, px, rgba,
 };
 
 #[derive(IntoElement)]
@@ -47,7 +48,13 @@ impl MxcImage {
     }
 
     pub fn fixed_square(self, size: Pixels) -> Self {
-        self.w(size).min_w(size).max_w(size).h(size).min_h(size).max_h(size).overflow_hidden()
+        self.w(size)
+            .min_w(size)
+            .max_w(size)
+            .h(size)
+            .min_h(size)
+            .max_h(size)
+            .overflow_hidden()
     }
 }
 

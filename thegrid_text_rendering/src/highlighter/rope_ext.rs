@@ -1,6 +1,6 @@
-use std::ops::Range;
 use lsp_types::Position;
 use ropey::{LineType, Rope, RopeSlice};
+use std::ops::Range;
 use sum_tree::Bias;
 use tree_sitter::Point;
 

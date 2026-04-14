@@ -4,15 +4,15 @@ use contemporary::components::layer::layer;
 use contemporary::styling::theme::{ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, uniform_list, App, AsyncApp, Context, InteractiveElement,
-    IntoElement, ParentElement, RenderOnce, ScrollStrategy, StatefulInteractiveElement,
-    Styled, UniformListScrollHandle, WeakEntity, Window,
+    App, AsyncApp, Context, InteractiveElement, IntoElement, ParentElement, RenderOnce,
+    ScrollStrategy, StatefulInteractiveElement, Styled, UniformListScrollHandle, WeakEntity,
+    Window, div, px, uniform_list,
 };
 use matrix_sdk::RoomMemberships;
 use std::cmp::Ordering;
 use std::ops::Range;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct ApplyAutcompleteEvent {

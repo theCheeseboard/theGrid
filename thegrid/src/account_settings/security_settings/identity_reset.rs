@@ -2,7 +2,7 @@ use crate::uiaa_client::{CancelAuthenticationEvent, SendAuthDataEvent, UiaaClien
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
-use contemporary::components::dialog_box::{dialog_box, StandardButton};
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -16,17 +16,17 @@ use contemporary::surface::surface;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, App, AppContext, AsyncApp, AsyncWindowContext, Context, Entity,
-    IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
+    App, AppContext, AsyncApp, AsyncWindowContext, Context, Entity, IntoElement, ParentElement,
+    Render, Styled, WeakEntity, Window, div, px,
 };
-use matrix_sdk::encryption::recovery::{IdentityResetHandle, RecoveryError};
 use matrix_sdk::encryption::CrossSigningResetAuthType;
+use matrix_sdk::encryption::recovery::{IdentityResetHandle, RecoveryError};
 use matrix_sdk::ruma::api::client::uiaa::AuthData;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use thegrid_common::tokio_helper::TokioHelper;
-use tracing::{error, Id};
+use tracing::{Id, error};
 
 pub struct IdentityResetSurface {
     state: IdentityResetState,

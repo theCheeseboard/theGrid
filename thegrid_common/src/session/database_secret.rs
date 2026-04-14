@@ -1,10 +1,10 @@
-use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
 use gpui::private::anyhow;
 use keyring::Credential;
+use matrix_sdk::SessionMeta;
 use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::authentication::oauth::{ClientId, OAuthSession, UserSession};
-use matrix_sdk::SessionMeta;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize)]

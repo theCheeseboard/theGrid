@@ -607,7 +607,7 @@
   },
   "CREATE_SUBSPACE": {
     "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:390",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:389",
     "plural": false,
     "description": null
   },
@@ -739,19 +739,19 @@
   },
   "FILE_OPEN": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:282",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:315",
     "plural": false,
     "description": null
   },
   "FILE_OPEN_MENU_HEADER": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:276",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:309",
     "plural": false,
     "description": null
   },
   "FILE_SAVE_AS": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:297",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:330",
     "plural": false,
     "description": null
   },
@@ -1021,13 +1021,13 @@
   },
   "JOIN_ERROR_TEXT": {
     "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:127",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:126",
     "plural": false,
     "description": null
   },
   "JOIN_ERROR_TITLE": {
     "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:124",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:123",
     "plural": false,
     "description": null
   },
@@ -1249,25 +1249,25 @@
   },
   "LINK_OPEN": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:473",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:506",
     "plural": false,
     "description": null
   },
   "LINK_OPEN_CONFIRMATION": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:420",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:453",
     "plural": false,
     "description": null
   },
   "LINK_OPEN_CONFIRMATION_PROMPT": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:427",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:460",
     "plural": false,
     "description": null
   },
   "LINK_OPEN_CONFIRMATION_WARNING": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:461",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:494",
     "plural": false,
     "description": null
   },
@@ -1363,13 +1363,13 @@
   },
   "MESSAGE_UNABLE_TO_DECRYPT": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:102",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:103",
     "plural": false,
     "description": null
   },
   "MESSAGE_UNSUPPORTED": {
     "context": "timeline_message_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:318",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_message_item.rs:351",
     "plural": false,
     "description": null
   },
@@ -2041,7 +2041,7 @@
   },
   "ROOM_DIRECTORY_MEMBER_COUNT": {
     "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:259",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:258",
     "plural": true,
     "description": null
   },
@@ -2605,7 +2605,7 @@
   },
   "SPACE_LOBBY_INTRO": {
     "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:348",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:347",
     "plural": false,
     "description": null
   },

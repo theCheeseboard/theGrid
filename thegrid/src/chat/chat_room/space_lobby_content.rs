@@ -13,16 +13,15 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, list, px, AnyElement, Context,
-    Entity, InteractiveElement, IntoElement, ListAlignment, ListScrollEvent, ListState, ParentElement,
-    Render, Styled, Window,
+    AnyElement, Context, Entity, InteractiveElement, IntoElement, ListAlignment, ListScrollEvent,
+    ListState, ParentElement, Render, Styled, Window, div, list, px,
 };
-use matrix_sdk::ruma::room::JoinRuleSummary;
 use matrix_sdk::ruma::OwnedRoomId;
+use matrix_sdk::ruma::room::JoinRuleSummary;
 use matrix_sdk::{Room, RoomState};
-use matrix_sdk_ui::spaces::room_list::SpaceRoomListPaginationState;
 use matrix_sdk_ui::spaces::SpaceRoom;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use matrix_sdk_ui::spaces::room_list::SpaceRoomListPaginationState;
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::room_cache::RoomJoinEvent;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::session::spaces_cache::SpaceRoomListEntity;

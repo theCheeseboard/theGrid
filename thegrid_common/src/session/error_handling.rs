@@ -1,7 +1,7 @@
 use cntp_i18n::{I18nString, tr};
 use matrix_sdk::ruma::api::client::error::{ErrorBody, ErrorKind};
 use matrix_sdk::ruma::api::error::FromHttpResponseError;
-use matrix_sdk::{HttpError, RumaApiError, reqwest, RefreshTokenError};
+use matrix_sdk::{HttpError, RefreshTokenError, RumaApiError, reqwest};
 
 #[derive(Clone, Copy)]
 pub enum ClientError {
@@ -32,7 +32,9 @@ pub fn handle_error(error: &matrix_sdk::Error) -> ClientError {
                 _ => ClientError::Terminal(TerminalClientError::UnknownError),
             },
             HttpError::Reqwest(reqwest_error) => handle_reqwest_error(reqwest_error),
-            HttpError::RefreshToken(RefreshTokenError::OAuth(_)) => ClientError::Terminal(TerminalClientError::UnknownToken),
+            HttpError::RefreshToken(RefreshTokenError::OAuth(_)) => {
+                ClientError::Terminal(TerminalClientError::UnknownToken)
+            }
             _ => ClientError::Terminal(TerminalClientError::UnknownError),
         },
         _ => ClientError::Terminal(TerminalClientError::UnknownError),

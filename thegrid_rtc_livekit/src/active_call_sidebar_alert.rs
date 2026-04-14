@@ -1,18 +1,18 @@
 use crate::call_manager::LivekitCallManager;
 use crate::{CallMember, CallState, StreamState};
 use cntp_i18n::tr;
-use contemporary::components::admonition::{admonition, AdmonitionSeverity};
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, App, BorrowAppContext, ElementId, InteractiveElement, IntoElement,
-    ParentElement, RenderOnce, Styled, Window,
+    App, BorrowAppContext, ElementId, InteractiveElement, IntoElement, ParentElement, RenderOnce,
+    Styled, Window, div, px,
 };
 use std::rc::Rc;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{
     MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,

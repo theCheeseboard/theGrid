@@ -1,5 +1,5 @@
 use contemporary::components::icon::icon;
-use gpui::{black, rgb, white, AnyElement, Hsla, IntoElement};
+use gpui::{AnyElement, Hsla, IntoElement, black, rgb, white};
 use image::EncodableLayout;
 use matrix_sdk::ruma::{OwnedRoomId, OwnedUserId, RoomId, UserId};
 use rustc_hash::FxHasher;
