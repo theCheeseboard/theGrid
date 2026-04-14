@@ -716,7 +716,7 @@ impl Render for CallStartPage {
                                                                         member.user_id(),
                                                                     )
                                                                     .rounded(theme.border_radius)
-                                                                    .size(px(16.))
+                                                                    .fixed_square(px(16.))
                                                                     .size_policy(SizePolicy::Fit),
                                                             )
                                                         },

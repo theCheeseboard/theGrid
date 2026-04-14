@@ -689,7 +689,7 @@ impl Render for RoomSettings {
                                 mxc_image(room.avatar_url())
                                     .fallback_image(room.room_id())
                                     .rounded(theme.border_radius)
-                                    .size(px(48.))
+                                    .fixed_square(px(48.))
                                     .size_policy(SizePolicy::Fit),
                             )
                             .child(

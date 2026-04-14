@@ -184,7 +184,7 @@ impl Render for ProfileSettings {
                                 mxc_image(account.avatar_url())
                                     .fallback_image(client.user_id().unwrap())
                                     .rounded(theme.border_radius)
-                                    .size(px(48.))
+                                    .fixed_square(px(48.))
                                     .size_policy(SizePolicy::Fit),
                             )
                             .child(

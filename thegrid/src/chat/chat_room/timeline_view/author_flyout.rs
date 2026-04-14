@@ -236,7 +236,7 @@ impl RenderOnce for AuthorFlyout {
                         .child(
                             mxc_image(room_member.avatar_url().map(|url| url.to_owned()))
                                 .fallback_image(room_member.user_id())
-                                .size(px(128.))
+                                .fixed_square(px(128.))
                                 .size_policy(SizePolicy::Fit)
                                 .rounded(theme.border_radius),
                         )

@@ -34,7 +34,7 @@ impl RenderOnce for RoomHead {
                     .child(
                         mxc_image(room.inner.avatar_url())
                             .fallback_image(room.inner.room_id())
-                            .size(px(128.))
+                            .fixed_square(px(128.))
                             .size_policy(SizePolicy::Fit),
                     )
                     .child(

@@ -689,7 +689,7 @@ impl RenderOnce for CallMemberDisplay {
                                     mxc_image(call_member.room_member.avatar_url())
                                         .fallback_image(call_member.room_member.user_id())
                                         .rounded(theme.border_radius)
-                                        .size(profile_picture_size)
+                                        .fixed_square(profile_picture_size)
                                         .size_policy(SizePolicy::Fit)
                                         .when(connecting, |david| david.opacity(0.5)),
                                 )

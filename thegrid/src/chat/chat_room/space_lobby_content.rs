@@ -231,7 +231,7 @@ impl SpaceLobbyContent {
                         mxc_image(space_room.avatar_url.clone())
                             .fallback_image(&space_room.room_id)
                             .rounded(theme.border_radius)
-                            .size(px(40.))
+                            .fixed_square(px(40.))
                             .size_policy(SizePolicy::Fit),
                     )
                     .child(
@@ -342,7 +342,7 @@ impl Render for SpaceLobbyContent {
                         mxc_image(room.avatar_url())
                             .fallback_image(room.room_id())
                             .rounded(theme.border_radius)
-                            .size(px(150.))
+                            .fixed_square(px(150.))
                             .size_policy(SizePolicy::Fit),
                     )
                     .child(tr!("SPACE_LOBBY_INTRO", "Welcome to the lobby"))

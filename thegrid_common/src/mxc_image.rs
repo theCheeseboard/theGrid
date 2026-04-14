@@ -8,8 +8,7 @@ use contemporary::components::skeleton::{skeleton, SkeletonExt};
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, img, px, rgba, App, BorrowAppContext, ElementId,
-    IntoElement, ParentElement, Refineable, RenderOnce, StyleRefinement, Styled, Window,
+    div, img, px, rgba, App, BorrowAppContext, ElementId, IntoElement, ParentElement, Pixels, Refineable, RenderOnce, StyleRefinement, Styled, Window
 };
 
 #[derive(IntoElement)]
@@ -45,6 +44,10 @@ impl MxcImage {
     pub fn fallback_image(mut self, fallback_image: impl IntoFallbackImage) -> Self {
         self.fallback_image = Some(fallback_image.fallback_image());
         self
+    }
+
+    pub fn fixed_square(self, size: Pixels) -> Self {
+        self.w(size).min_w(size).max_w(size).h(size).min_h(size).max_h(size).overflow_hidden()
     }
 }
 

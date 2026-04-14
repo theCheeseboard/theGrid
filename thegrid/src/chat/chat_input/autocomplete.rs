@@ -109,7 +109,7 @@ impl RenderOnce for AutocompleteList {
                                             mxc_image(avatar_url)
                                                 .fallback_image(user_id.clone())
                                                 .rounded(theme.border_radius)
-                                                .size(px(32.))
+                                                .fixed_square(px(32.))
                                                 .size_policy(SizePolicy::Fit),
                                         )
                                         .child(

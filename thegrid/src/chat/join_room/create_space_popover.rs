@@ -207,7 +207,7 @@ impl CreateSpacePopover {
                                         david.child(
                                             mxc_image(space.avatar_url.clone())
                                                 .fallback_image(&space.room_id)
-                                                .size(px(32.))
+                                                .fixed_square(px(32.))
                                                 .size_policy(SizePolicy::Fit)
                                                 .rounded(theme.border_radius),
                                         )

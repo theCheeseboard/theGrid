@@ -263,7 +263,7 @@ impl TimelineItem {
                                         _ => None,
                                     })
                                     .fallback_image(event.sender())
-                                    .size(px(40.))
+                                    .fixed_square(px(40.))
                                     .size_policy(SizePolicy::Fit)
                                     .rounded(theme.border_radius),
                                 )

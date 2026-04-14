@@ -166,7 +166,7 @@ impl RoomMembers {
                 mxc_image(member.avatar_url().map(|url| url.to_owned()))
                     .fallback_image(member.user_id())
                     .rounded(theme.border_radius)
-                    .size(px(40.))
+                    .fixed_square(px(40.))
                     .size_policy(SizePolicy::Fit),
             )
             .child(

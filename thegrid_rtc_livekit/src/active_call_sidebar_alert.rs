@@ -274,7 +274,7 @@ impl RenderOnce for CallMemberState {
             .child(
                 mxc_image(room_member.avatar_url().map(|url| url.to_owned()))
                     .fallback_image(room_member.user_id())
-                    .size(px(16.))
+                    .fixed_square(px(16.))
                     .size_policy(SizePolicy::Fit)
                     .rounded(theme.border_radius),
             )

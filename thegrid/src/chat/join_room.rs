@@ -338,7 +338,7 @@ impl RenderOnce for Invitation {
                     })
                 }))
                 .rounded(theme.border_radius)
-                .size(px(40.))
+                .fixed_square(px(40.))
                 .size_policy(SizePolicy::Fit),
             )
             .child(
