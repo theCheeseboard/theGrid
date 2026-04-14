@@ -141,7 +141,7 @@ impl SpaceRoomListEntity {
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 loop {
-                    let Some(diffs) = stream.next().await else {
+                    let Some(diffs) = tokio::task::unconstrained(stream.next()).await else {
                         return;
                     };
 

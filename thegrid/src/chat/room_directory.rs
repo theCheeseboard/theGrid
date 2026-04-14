@@ -196,7 +196,7 @@ impl RoomDirectory {
 
                 let weak_this_2 = weak_this.clone();
                 cx.spawn(async move |cx: &mut AsyncApp| {
-                    while let Some(diffs) = updates.next().await {
+                    while let Some(diffs) = tokio::task::unconstrained(updates.next()).await {
                         if weak_this_2
                             .update(cx, |this, cx| {
                                 for diff in diffs {
