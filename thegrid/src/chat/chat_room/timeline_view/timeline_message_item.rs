@@ -190,6 +190,9 @@ pub fn msgtype_to_message_line<'a>(
                     .child(div().p(px(2.)).italic().child(emote.body.clone())),
             )
             .into_any_element(),
+        MessageType::Image(image) if as_reply => {
+            div().child(icon_text("image-png", image.body.clone())).into_any_element()
+        }
         MessageType::Image(image) => {
             let aspect_ratio = if let Some(image_info) = image.info.as_ref()
                 && let Some(width) = image_info.width
