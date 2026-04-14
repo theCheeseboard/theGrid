@@ -1,5 +1,5 @@
 use cntp_i18n::tr;
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
@@ -14,11 +14,11 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::{MaskMode, TextField};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, ClipboardItem, Context, Entity, IntoElement, ParentElement, Render,
-    Styled, WeakEntity, Window, div, px,
+    div, px, App, AppContext, AsyncApp, ClipboardItem, Context, Entity, IntoElement,
+    ParentElement, Render, Styled, WeakEntity, Window,
 };
-use matrix_sdk::encryption::RoomKeyImportError;
 use matrix_sdk::encryption::recovery::{RecoveryError, RecoveryState};
+use matrix_sdk::encryption::RoomKeyImportError;
 use std::path::PathBuf;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;

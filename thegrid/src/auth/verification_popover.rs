@@ -18,19 +18,19 @@ use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, ClickEvent, Context, Element, Entity, IntoElement, ParentElement,
-    Render, Styled, WeakEntity, Window, div, px,
+    div, px, App, AppContext, AsyncApp, ClickEvent, Context, Element, Entity,
+    IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
 };
-use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::encryption::identities::Device;
 use matrix_sdk::encryption::verification::VerificationRequestState;
+use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::ruma::events::key::verification::cancel::CancelCode;
 use matrix_sdk_crypto::{CancelInfo, QrVerificationState};
 use std::rc::Rc;
 use thegrid_common::sas_emoji::SasEmoji;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::session::verification_requests_cache::{
-    SUPPORTED_VERIFICATION_METHODS, VerificationRequestDetails,
+    VerificationRequestDetails, SUPPORTED_VERIFICATION_METHODS,
 };
 use thegrid_common::tokio_helper::TokioHelper;
 

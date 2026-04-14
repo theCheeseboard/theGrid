@@ -15,16 +15,16 @@ use contemporary::lerp::Lerpable;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    Along, App, AppContext, Axis, BorrowAppContext, Bounds, Context, ElementId, Entity,
-    InteractiveElement, IntoElement, ObjectFit, ParentElement, Pixels, Point, Render, RenderOnce,
-    StatefulInteractiveElement, Styled, StyledImage, Window, anchored, div, img, px, rgb,
+    anchored, div, img, px, rgb, Along, App, AppContext, Axis,
+    BorrowAppContext, Bounds, Context, ElementId, Entity, InteractiveElement, IntoElement, ObjectFit,
+    ParentElement, Pixels, Point, Render, RenderOnce, StatefulInteractiveElement, Styled, StyledImage, Window,
 };
 use matrix_sdk::ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId};
 use std::collections::HashMap;
 use std::iter;
 use std::rc::Rc;
 use std::time::Instant;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use thegrid_screen_share::{PickerRequired, ScreenShareManager, ScreenShareStartEvent};
@@ -689,10 +689,8 @@ impl RenderOnce for CallMemberDisplay {
                                     mxc_image(call_member.room_member.avatar_url())
                                         .fallback_image(call_member.room_member.user_id())
                                         .rounded(theme.border_radius)
-                                        .size_policy(SizePolicy::Constrain(
-                                            profile_picture_size.as_f32(),
-                                            profile_picture_size.as_f32(),
-                                        ))
+                                        .size(profile_picture_size)
+                                        .size_policy(SizePolicy::Fit)
                                         .when(connecting, |david| david.opacity(0.5)),
                                 )
                         }

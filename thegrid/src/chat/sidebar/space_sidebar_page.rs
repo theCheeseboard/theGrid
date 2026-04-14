@@ -1,6 +1,6 @@
 use crate::chat::chat_room::invite_popover::InvitePopover;
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::sidebar::sidebar_list::{SidebarItem, SidebarListEvent, sidebar_list};
+use crate::chat::sidebar::sidebar_list::{sidebar_list, SidebarItem, SidebarListEvent};
 use crate::chat::sidebar::standard_room_element::InviteEvent;
 use crate::chat::sidebar::{Sidebar, SidebarPage};
 use cntp_i18n::tr;
@@ -10,8 +10,8 @@ use contemporary::components::icon_text::icon_text;
 use contemporary::components::interstitial::interstitial;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AppContext, Context, Entity, IntoElement, ListAlignment, ListState, ParentElement, Render,
-    Styled, Window, div, px,
+    div, px, AppContext, Context, Entity, IntoElement, ListAlignment, ListState,
+    ParentElement, Render, Styled, Window,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use thegrid_common::session::room_cache::RoomCategory;

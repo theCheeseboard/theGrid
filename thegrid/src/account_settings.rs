@@ -20,8 +20,8 @@ use contemporary::styling::theme::Theme;
 use contemporary::surface::surface;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, Context, Entity, InteractiveElement, IntoElement, ParentElement, Render,
-    StatefulInteractiveElement, Styled, Window, div, px, uniform_list,
+    div, px, uniform_list, App, AppContext, Context, Entity, InteractiveElement,
+    IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled, Window,
 };
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;

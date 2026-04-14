@@ -4,15 +4,15 @@ use contemporary::components::layer::layer;
 use contemporary::styling::theme::{ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, Context, InteractiveElement, IntoElement, ParentElement, RenderOnce,
-    ScrollStrategy, StatefulInteractiveElement, Styled, UniformListScrollHandle, WeakEntity,
-    Window, div, px, uniform_list,
+    div, px, uniform_list, App, AsyncApp, Context, InteractiveElement,
+    IntoElement, ParentElement, RenderOnce, ScrollStrategy, StatefulInteractiveElement,
+    Styled, UniformListScrollHandle, WeakEntity, Window,
 };
 use matrix_sdk::RoomMemberships;
 use std::cmp::Ordering;
 use std::ops::Range;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct ApplyAutcompleteEvent {
@@ -109,7 +109,8 @@ impl RenderOnce for AutocompleteList {
                                             mxc_image(avatar_url)
                                                 .fallback_image(user_id.clone())
                                                 .rounded(theme.border_radius)
-                                                .size_policy(SizePolicy::Constrain(32., 32.)),
+                                                .size(px(32.))
+                                                .size_policy(SizePolicy::Fit),
                                         )
                                         .child(
                                             div().flex().flex_col().child(display_name).child(

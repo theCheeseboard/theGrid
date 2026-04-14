@@ -1,4 +1,4 @@
-use crate::highlighter::{Language, languages};
+use crate::highlighter::{languages, Language};
 use contemporary::styling::theme::Theme;
 use gpui::private::serde_json;
 use gpui::{App, FontWeight, HighlightStyle, Hsla, SharedString};

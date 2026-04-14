@@ -9,7 +9,7 @@ use crate::account_settings::security_settings::recovery_key_reset_popover::Reco
 use crate::auth::oauth_management_page_redirect_dialog::OAuthManagementPageRedirectDialog;
 use crate::auth::recovery_passphrase_popover::RecoveryPassphrasePopover;
 use cntp_i18n::tr;
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
@@ -19,11 +19,11 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, ClickEvent, Context, Entity, IntoElement, ParentElement,
-    PathPromptOptions, Render, Styled, Window, div, px,
+    div, px, App, AppContext, AsyncApp, ClickEvent, Context, Entity,
+    IntoElement, ParentElement, PathPromptOptions, Render, Styled, Window,
 };
-use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::encryption::recovery::RecoveryState;
+use matrix_sdk::encryption::VerificationState;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{

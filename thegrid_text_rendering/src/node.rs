@@ -1,14 +1,8 @@
-use super::{Events, LinkClickedEvent, TextViewStyle, utils::list_item_prefix};
+use super::{utils::list_item_prefix, Events, LinkClickedEvent, TextViewStyle};
 use crate::highlighter::{HighlightTheme, SyntaxHighlighter};
 use crate::inline::{Inline, InlineState};
 use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
-use gpui::{
-    AnyElement, App, DefiniteLength, Div, Element, ElementId, FontStyle, FontWeight, Half,
-    HighlightStyle, InteractiveElement as _, IntoElement, Length, ListState, ObjectFit,
-    ParentElement, Refineable, SharedString, SharedUri, StatefulInteractiveElement, Styled,
-    StyledImage as _, Window, black, div, img, prelude::FluentBuilder as _, px, relative, rems,
-    rgb,
-};
+use gpui::{black, div, img, prelude::FluentBuilder as _, px, relative, rems, rgb, AnyElement, App, DefiniteLength, Div, Element, ElementId, FontStyle, FontWeight, Half, HighlightStyle, InteractiveElement as _, IntoElement, Length, ListState, ObjectFit, ParentElement, Refineable, SharedString, SharedUri, StatefulInteractiveElement, Styled, StyledImage as _, Window};
 use markdown::mdast;
 use ropey::Rope;
 use std::fmt::{Debug, Formatter};
@@ -1197,7 +1191,7 @@ impl Node {
             }
             Node::Blockquote { children } => {
                 let theme = cx.theme();
-
+                
                 div()
                     .w_full()
                     .pb(mb)
@@ -1218,7 +1212,7 @@ impl Node {
                             }),
                     )
                     .into_any_element()
-            }
+            },
             Node::List { children, ordered } => div()
                 .flex()
                 .flex_col()

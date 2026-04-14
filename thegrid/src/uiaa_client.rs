@@ -1,18 +1,18 @@
 use cntp_i18n::tr;
 use contemporary::components::button::button;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::text_field::{MaskMode, TextField};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled,
-    WeakEntity, Window, div, px,
+    div, px, App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement,
+    Render, Styled, WeakEntity, Window,
 };
-use matrix_sdk::ruma::api::OutgoingRequest;
 use matrix_sdk::ruma::api::auth_scheme::SendAccessToken;
 use matrix_sdk::ruma::api::client::uiaa::{
     AuthData, AuthType, FallbackAcknowledgement, Password, UiaaInfo, UserIdentifier,
 };
+use matrix_sdk::ruma::api::OutgoingRequest;
 use std::borrow::Cow;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;

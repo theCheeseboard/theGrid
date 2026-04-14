@@ -1,5 +1,5 @@
+use std::rc::Rc;
 use crate::chat::chat_room::open_room::OpenRoom;
-use crate::chat::chat_room::timeline_view::author_flyout::AuthorFlyoutUserActionListener;
 use crate::chat::chat_room::timeline_view::timeline_message_item::msgtype_to_message_line;
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::tr;
@@ -9,7 +9,7 @@ use matrix_sdk::ruma::OwnedUserId;
 use matrix_sdk_ui::timeline::{
     InReplyToDetails, MsgLikeKind, Profile, TimelineDetails, TimelineItemContent,
 };
-use std::rc::Rc;
+use crate::chat::chat_room::timeline_view::author_flyout::AuthorFlyoutUserActionListener;
 
 #[derive(IntoElement)]
 pub struct ReplyFragment {

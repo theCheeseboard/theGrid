@@ -2,7 +2,7 @@ use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::Sidebar;
 use cntp_i18n::tr;
 use contemporary::components::button::button;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
@@ -10,8 +10,8 @@ use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, Context, ElementId, Entity, InteractiveElement, IntoElement, ListAlignment,
-    ListState, ParentElement, Render, StatefulInteractiveElement, Styled, Window, div, list, px,
+    div, list, px, App, AppContext, Context, ElementId, Entity,
+    InteractiveElement, IntoElement, ListAlignment, ListState, ParentElement, Render, StatefulInteractiveElement, Styled, Window,
 };
 use matrix_sdk::{OwnedServerName, ServerName};
 use thegrid_common::session::session_manager::SessionManager;

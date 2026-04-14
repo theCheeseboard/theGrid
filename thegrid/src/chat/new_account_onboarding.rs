@@ -10,8 +10,8 @@ use contemporary::components::spinner::spinner;
 use contemporary::components::toast::Toast;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::{
-    App, AsyncApp, AsyncWindowContext, Entity, IntoElement, ParentElement, RenderOnce, Styled,
-    TextAlign, Window, div, px,
+    div, px, App, AsyncApp, AsyncWindowContext, Entity, IntoElement, ParentElement,
+    RenderOnce, Styled, TextAlign, Window,
 };
 use matrix_sdk::ruma::api::client::uiaa::AuthData;
 use thegrid_common::session::session_manager::SessionManager;

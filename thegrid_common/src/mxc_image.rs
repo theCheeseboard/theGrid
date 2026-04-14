@@ -4,12 +4,12 @@ use crate::mxc_image::fallback_image::{FallbackImage, IntoFallbackImage};
 use crate::session::media_cache::{MediaCacheEntry, MediaState};
 use crate::session::session_manager::SessionManager;
 use contemporary::components::icon::icon;
-use contemporary::components::skeleton::{SkeletonExt, skeleton};
+use contemporary::components::skeleton::{skeleton, SkeletonExt};
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, BorrowAppContext, ElementId, IntoElement, ObjectFit, ParentElement, Refineable,
-    RenderOnce, StyleRefinement, Styled, StyledImage, Window, div, img, px, rgba,
+    div, img, px, rgba, App, BorrowAppContext, ElementId,
+    IntoElement, ParentElement, Refineable, RenderOnce, StyleRefinement, Styled, Window,
 };
 
 #[derive(IntoElement)]
@@ -100,59 +100,45 @@ impl RenderOnce for MxcImage {
                 .flex()
                 .items_center()
                 .justify_center()
-                .when_some(
-                    match self.size_policy {
-                        SizePolicy::Constrain(width, height) => Some((width, height)),
-                        _ => None,
-                    },
-                    |david, (width, height)| david.w(px(width)).h(px(height)),
-                )
             })
             .when_some(image, |david, image| {
-                david
-                    .child(
-                        img(image.clone())
-                            .when_some(self.style.corner_radii.top_left, |david, radius| {
-                                david.rounded_tl(radius)
-                            })
-                            .when_some(self.style.corner_radii.top_right, |david, radius| {
-                                david.rounded_tr(radius)
-                            })
-                            .when_some(self.style.corner_radii.bottom_left, |david, radius| {
-                                david.rounded_bl(radius)
-                            })
-                            .when_some(self.style.corner_radii.bottom_right, |david, radius| {
-                                david.rounded_br(radius)
-                            })
-                            .when(self.size_policy == SizePolicy::Fit, |img| img.size_full())
-                            .when_some(
-                                match self.size_policy {
-                                    SizePolicy::Constrain(width, height) => Some((width, height)),
-                                    _ => None,
-                                },
-                                |img, (width, height)| {
-                                    img.w(px(width))
-                                        .max_w(px(width))
-                                        .h(px(height))
-                                        .max_h(px(height))
-                                        .object_fit(ObjectFit::Contain)
-                                },
-                            ),
-                    )
-                    .when_some(
-                        match self.size_policy {
-                            SizePolicy::Constrain(width, height) => Some((width, height)),
-                            _ => None,
-                        },
-                        |david, (width, height)| {
-                            david
-                                .w(px(width))
-                                .max_w(px(width))
-                                .h(px(height))
-                                .max_h(px(height))
-                                .overflow_hidden()
-                        },
-                    )
+                david.child(
+                    img(image.clone())
+                        .when_some(self.style.corner_radii.top_left, |david, radius| {
+                            david.rounded_tl(radius)
+                        })
+                        .when_some(self.style.corner_radii.top_right, |david, radius| {
+                            david.rounded_tr(radius)
+                        })
+                        .when_some(self.style.corner_radii.bottom_left, |david, radius| {
+                            david.rounded_bl(radius)
+                        })
+                        .when_some(self.style.corner_radii.bottom_right, |david, radius| {
+                            david.rounded_br(radius)
+                        })
+                        .when(self.size_policy == SizePolicy::Fit, |img| img.size_full())
+                        .when_some(
+                            match self.size_policy {
+                                SizePolicy::Constrain(width, height) => Some((width, height)),
+                                _ => None,
+                            },
+                            |img, dimensions| {
+                                let image_dimensions = image.size(0);
+
+                                let mut width = image_dimensions.width.0 as f32;
+                                let mut height = image_dimensions.height.0 as f32;
+                                if width > dimensions.0 {
+                                    height = height * dimensions.0 / width;
+                                    width = dimensions.0;
+                                }
+                                if height > dimensions.1 {
+                                    width = width * dimensions.1 / height;
+                                    height = dimensions.1;
+                                }
+                                img.w(px(width)).h(px(height))
+                            },
+                        ),
+                )
             });
         david.style().refine(&self.style);
         david

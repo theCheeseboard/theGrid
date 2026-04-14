@@ -1,8 +1,8 @@
 use crate::tokio_helper::TokioHelper;
 use gpui::http_client::anyhow;
 use gpui::{AsyncApp, Context, WeakEntity};
-use matrix_sdk::Client;
 use matrix_sdk::ruma::events::ignored_user_list::IgnoredUserListEventContent;
+use matrix_sdk::Client;
 
 pub struct IgnoredUsersCache {
     ignore_user_list: Vec<String>,

@@ -4,10 +4,10 @@ use crate::node::LinkMark;
 use crate::{Events, LinkClickedEvent};
 use contemporary::styling::theme::{Theme, ThemeStorage};
 use gpui::{
-    App, BorderStyle, Bounds, CursorStyle, Edges, Element, ElementId, GlobalElementId, Half,
-    HighlightStyle, Hitbox, HitboxBehavior, InspectorElementId, IntoElement, LayoutId,
-    MouseMoveEvent, MouseUpEvent, Pixels, Point, SharedString, StyledText, TextLayout, Window,
-    point, px, quad,
+    point, px, quad, App, BorderStyle, Bounds, CursorStyle, Edges, Element,
+    ElementId, GlobalElementId, Half, HighlightStyle, Hitbox, HitboxBehavior,
+    InspectorElementId, IntoElement, LayoutId, MouseMoveEvent, MouseUpEvent, Pixels, Point, SharedString,
+    StyledText, TextLayout, Window,
 };
 use std::{
     ops::Range,
@@ -431,7 +431,7 @@ fn point_in_text_selection(
 #[cfg(test)]
 mod tests {
     use super::point_in_text_selection;
-    use gpui::{Bounds, point, px, size};
+    use gpui::{point, px, size, Bounds};
 
     #[test]
     fn test_point_in_text_selection() {

@@ -1,9 +1,9 @@
 use crate::tokio_helper::TokioHelper;
 use gpui::{App, AppContext, AsyncApp, Entity, WeakEntity};
 use matrix_sdk::encryption::VerificationState;
-use matrix_sdk::ruma::OwnedMxcUri;
 use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::AccountManagementAction;
 use matrix_sdk::ruma::events::room::member::SyncRoomMemberEvent;
+use matrix_sdk::ruma::OwnedMxcUri;
 use matrix_sdk::{AuthApi, Client, Room};
 
 pub struct AccountCache {

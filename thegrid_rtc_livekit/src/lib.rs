@@ -9,15 +9,15 @@ mod mic;
 mod webcam;
 
 use crate::call_manager::LivekitCallManager;
-use crate::focus::{FocusUrlError, get_focus_url};
+use crate::focus::{get_focus_url, FocusUrlError};
 use crate::mic::open_mic;
 use crate::webcam::Webcam;
-use async_ringbuf::AsyncHeapRb;
 use async_ringbuf::consumer::AsyncConsumer;
+use async_ringbuf::AsyncHeapRb;
 use cancellation_token::CancellationTokenSource;
-use cntp_i18n::{I18N_MANAGER, tr, tr_load};
-use cpal::Host;
+use cntp_i18n::{tr, tr_load, I18N_MANAGER};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::Host;
 use gpui::http_client::anyhow;
 use gpui::private::{anyhow, serde_json};
 use gpui::{
@@ -57,7 +57,7 @@ use matrix_sdk::ruma::exports::serde_json::json;
 use matrix_sdk::ruma::serde::Raw;
 use matrix_sdk::ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId, RoomId, UserId};
 use matrix_sdk::stream::StreamExt;
-use matrix_sdk::{HttpError, reqwest};
+use matrix_sdk::{reqwest, HttpError};
 use nokhwa::utils::FrameFormat;
 use reqwest::header;
 use ringbuffer::RingBuffer;
@@ -75,9 +75,9 @@ use thegrid_common::sfx;
 use thegrid_common::sfx::SoundEffect;
 use thegrid_common::tokio_helper::TokioHelper;
 use yuv::{
-    BufferStoreMut, YuvChromaSubsampling, YuvPackedImage, YuvPackedImageMut, YuvPlanarImage,
-    YuvPlanarImageMut, YuvRange, YuvStandardMatrix, yuv420_to_bgra, yuv420_to_rgba,
-    yuv422_to_uyvy422, yuyv422_to_yuv422,
+    yuv420_to_bgra, yuv420_to_rgba, yuv422_to_uyvy422, yuyv422_to_yuv422, BufferStoreMut,
+    YuvChromaSubsampling, YuvPackedImage, YuvPackedImageMut, YuvPlanarImage, YuvPlanarImageMut,
+    YuvRange, YuvStandardMatrix,
 };
 
 pub fn setup_thegrid_rtc_livekit() {

@@ -8,12 +8,12 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, ElementId, Entity, InteractiveElement, IntoElement, ListState, ParentElement, RenderOnce,
-    StatefulInteractiveElement, Styled, Window, div, list, px,
+    div, list, px, App, ElementId, Entity, InteractiveElement, IntoElement,
+    ListState, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::room_cache::CachedRoom;
 use thegrid_common::session::session_manager::SessionManager;
 
@@ -187,7 +187,8 @@ impl RenderOnce for SidebarList {
                         .child(
                             mxc_image(room.inner.avatar_url())
                                 .fallback_image(room.inner.room_id())
-                                .size_policy(SizePolicy::Constrain(32., 32.))
+                                .size(px(32.))
+                                .size_policy(SizePolicy::Fit)
                                 .rounded(theme.border_radius),
                         )
                         .child(

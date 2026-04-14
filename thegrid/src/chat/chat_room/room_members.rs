@@ -1,7 +1,7 @@
 use crate::chat::chat_room::invite_popover::InvitePopover;
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::timeline_view::author_flyout::{
-    AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener, author_flyout,
+    author_flyout, AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener,
 };
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::tr;
@@ -14,17 +14,17 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AnyElement, App, AppContext, AsyncApp, ClickEvent, Context, Entity, InteractiveElement,
-    IntoElement, ListAlignment, ListState, ParentElement, Render, StatefulInteractiveElement,
-    Styled, WeakEntity, Window, div, list, px,
+    div, list, px, AnyElement, App, AppContext, AsyncApp, ClickEvent,
+    Context, Entity, InteractiveElement, IntoElement, ListAlignment, ListState,
+    ParentElement, Render, StatefulInteractiveElement, Styled, WeakEntity, Window,
 };
-use matrix_sdk::RoomMemberships;
 use matrix_sdk::room::{RoomMember, RoomMemberRole};
 use matrix_sdk::ruma::events::room::member::MembershipState;
 use matrix_sdk::ruma::events::room::power_levels::UserPowerLevel;
+use matrix_sdk::RoomMemberships;
 use std::cmp::Reverse;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct RoomMembers {
@@ -166,7 +166,8 @@ impl RoomMembers {
                 mxc_image(member.avatar_url().map(|url| url.to_owned()))
                     .fallback_image(member.user_id())
                     .rounded(theme.border_radius)
-                    .size_policy(SizePolicy::Constrain(40., 40.)),
+                    .size(px(40.))
+                    .size_policy(SizePolicy::Fit),
             )
             .child(
                 div()

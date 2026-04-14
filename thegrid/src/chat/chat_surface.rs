@@ -17,8 +17,8 @@ use contemporary::styling::theme::Theme;
 use contemporary::surface::surface;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, BorrowAppContext, Context, Entity, InteractiveElement, IntoElement, Menu,
-    MenuItem, ParentElement, Render, Styled, Window, div, px,
+    div, px, App, AppContext, BorrowAppContext, Context, Entity, InteractiveElement,
+    IntoElement, Menu, MenuItem, ParentElement, Render, Styled, Window,
 };
 use std::fs::remove_dir_all;
 use thegrid_common::session::error_handling::ClientError;

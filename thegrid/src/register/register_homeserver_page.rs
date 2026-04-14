@@ -10,7 +10,7 @@ use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window, div, px,
+    div, px, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window,
 };
 use matrix_sdk::OwnedServerName;
 

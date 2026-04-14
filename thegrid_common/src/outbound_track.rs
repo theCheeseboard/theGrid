@@ -1,7 +1,7 @@
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{Context, RenderImage};
-use image::{Frame, RgbaImage, imageops};
+use image::{imageops, Frame, RgbaImage};
 use libwebrtc::prelude::{I422Buffer, VideoRotation};
 use log::error;
 use ringbuffer::{AllocRingBuffer, RingBuffer};
@@ -9,8 +9,8 @@ use smallvec::smallvec;
 use std::cell::RefCell;
 use std::sync::Arc;
 use yuv::{
-    BufferStoreMut, YuvConversionMode, YuvPackedImage, YuvPlanarImage, YuvPlanarImageMut, YuvRange,
-    YuvStandardMatrix, bgra_to_yuv422, rgb_to_yuv422, yuyv422_to_bgra, yuyv422_to_yuv422,
+    bgra_to_yuv422, rgb_to_yuv422, yuyv422_to_bgra, yuyv422_to_yuv422, BufferStoreMut, YuvConversionMode,
+    YuvPackedImage, YuvPlanarImage, YuvPlanarImageMut, YuvRange, YuvStandardMatrix,
 };
 
 pub struct OutboundTrack {

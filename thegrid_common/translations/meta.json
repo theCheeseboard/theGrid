@@ -55,31 +55,31 @@
   },
   "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE": {
     "context": "error_handling.rs",
-    "definedIn": "src/session/error_handling.rs:93",
+    "definedIn": "src/session/error_handling.rs:91",
     "plural": false,
     "description": null
   },
   "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE_DESCRIPTION": {
     "context": "error_handling.rs",
-    "definedIn": "src/session/error_handling.rs:104",
+    "definedIn": "src/session/error_handling.rs:102",
     "plural": false,
     "description": null
   },
   "TERMINAL_ERROR_SECRET_FAILURE": {
     "context": "error_handling.rs",
-    "definedIn": "src/session/error_handling.rs:69",
+    "definedIn": "src/session/error_handling.rs:67",
     "plural": false,
     "description": null
   },
   "TERMINAL_ERROR_UNKNOWN_ERROR": {
     "context": "error_handling.rs",
-    "definedIn": "src/session/error_handling.rs:74",
+    "definedIn": "src/session/error_handling.rs:72",
     "plural": false,
     "description": null
   },
   "TERMINAL_ERROR_UNKNOWN_TOKEN": {
     "context": "error_handling.rs",
-    "definedIn": "src/session/error_handling.rs:65",
+    "definedIn": "src/session/error_handling.rs:63",
     "plural": false,
     "description": null
   },

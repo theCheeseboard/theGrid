@@ -6,8 +6,8 @@ use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::subtitle::subtitle;
 use gpui::{
-    App, AsyncApp, ClickEvent, Entity, InteractiveElement, IntoElement, ParentElement, RenderOnce,
-    StatefulInteractiveElement, Styled, Window, div, px,
+    div, px, App, AsyncApp, ClickEvent, Entity, InteractiveElement, IntoElement,
+    ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window,
 };
 use std::rc::Rc;
 use thegrid_common::sas_emoji::SasEmoji;

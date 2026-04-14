@@ -1,12 +1,12 @@
 use crate::chat::chat_room::timeline_view::state_change_element::state_change_element;
-use cntp_i18n::{Quote, tr};
-use gpui::{App, IntoElement, RenderOnce, Window, div};
-use matrix_sdk::ruma::OwnedUserId;
+use cntp_i18n::{tr, Quote};
+use gpui::{div, App, IntoElement, RenderOnce, Window};
 use matrix_sdk::ruma::events::room::history_visibility::HistoryVisibility;
 use matrix_sdk::ruma::events::room::join_rules::RoomJoinRulesEventContent;
 use matrix_sdk::ruma::events::room::name::RoomNameEventContent;
 use matrix_sdk::ruma::events::{FullStateEventContent, StateEventType};
 use matrix_sdk::ruma::room::JoinRule;
+use matrix_sdk::ruma::OwnedUserId;
 use matrix_sdk_ui::timeline::{
     AnyOtherFullStateEventContent, OtherState, Profile, TimelineDetails,
 };

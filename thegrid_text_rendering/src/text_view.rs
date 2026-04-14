@@ -8,16 +8,16 @@ use std::time::Duration;
 use crate::global_state::GlobalState;
 use crate::highlighter::HighlightTheme;
 use crate::node::NodeContext;
-use crate::{TextViewStyle, node};
+use crate::{node, TextViewStyle};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AnyElement, App, AppContext, Bounds, ClipboardItem, Context, Element, ElementId, Entity,
-    EntityId, FocusHandle, GlobalElementId, InspectorElementId, InteractiveElement, IntoElement,
-    LayoutId, ListState, MouseDownEvent, MouseMoveEvent, MouseUpEvent, ParentElement, Pixels,
-    Point, Refineable, RenderOnce, SharedString, Size, StyleRefinement, Styled, Window, div, px,
+    div, px, AnyElement, App, AppContext, Bounds, ClipboardItem, Context, Element,
+    ElementId, Entity, EntityId, FocusHandle, GlobalElementId, InspectorElementId,
+    InteractiveElement, IntoElement, LayoutId, ListState, MouseDownEvent, MouseMoveEvent, MouseUpEvent,
+    ParentElement, Pixels, Point, Refineable, RenderOnce, SharedString, Size, StyleRefinement, Styled, Window,
 };
-use smol::Timer;
 use smol::stream::StreamExt;
+use smol::Timer;
 
 const CONTEXT: &'static str = "TextView";
 
@@ -793,7 +793,7 @@ fn selection_bounds(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use gpui::{Bounds, point, px, size};
+    use gpui::{point, px, size, Bounds};
 
     #[test]
     fn test_text_view_state_selection_bounds() {

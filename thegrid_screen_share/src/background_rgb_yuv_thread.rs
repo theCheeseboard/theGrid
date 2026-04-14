@@ -6,8 +6,8 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use thegrid_common::outbound_track::RawVideoFrame;
 use yuv::{
-    BufferStoreMut, YuvConversionMode, YuvPlanarImageMut, YuvRange, YuvStandardMatrix,
-    bgra_to_yuv422,
+    bgra_to_yuv422, BufferStoreMut, YuvConversionMode, YuvPlanarImageMut, YuvRange,
+    YuvStandardMatrix,
 };
 
 pub struct BackgroundRgbYuvThread {
@@ -33,7 +33,7 @@ impl BackgroundRgbYuvThread {
                 let rgb_data_lock = rgb_data.lock().unwrap();
                 let (rgb_data, width, height, render_image) = rgb_data_lock.clone();
                 drop(rgb_data_lock);
-
+                
                 if old_resolution != (width, height) {
                     buffer = Some(I422Buffer::new(width, height));
                 }

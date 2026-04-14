@@ -1,6 +1,6 @@
 use cntp_i18n::tr;
 use contemporary::application::Details;
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
@@ -10,8 +10,8 @@ use contemporary::components::popover::popover;
 use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use gpui::{
-    App, AppContext, AsyncApp, BorrowAppContext, Entity, IntoElement, ParentElement, RenderOnce,
-    Styled, Window, div, px,
+    div, px, App, AppContext, AsyncApp, BorrowAppContext, Entity, IntoElement,
+    ParentElement, RenderOnce, Styled, Window,
 };
 use std::fs::remove_dir_all;
 use thegrid_common::session::session_manager::SessionManager;

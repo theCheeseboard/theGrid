@@ -1,8 +1,8 @@
-use crate::TrackType;
 use crate::call_manager::{FocusUrl, LivekitCallManager};
 use crate::webcam::Webcam;
+use crate::TrackType;
 use cntp_i18n::{tr, trn};
-use contemporary::components::button::{ButtonMenuOpenPolicy, button};
+use contemporary::components::button::{button, ButtonMenuOpenPolicy};
 use contemporary::components::context_menu::ContextMenuItem;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
@@ -13,12 +13,12 @@ use contemporary::permissions::{
     GrantStatus, PermissionRequestCompleteEvent, PermissionType, Permissions,
 };
 use contemporary::styling::theme::ThemeStorage;
-use cpal::Device;
 use cpal::traits::{DeviceTrait, HostTrait};
+use cpal::Device;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AppContext, BorrowAppContext, Context, Entity, IntoElement, ObjectFit, ParentElement, Render,
-    Styled, StyledImage, Window, div, img, px, rgb,
+    div, img, px, rgb, AppContext, BorrowAppContext, Context, Entity,
+    IntoElement, ObjectFit, ParentElement, Render, Styled, StyledImage, Window,
 };
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::OwnedRoomId;
@@ -26,7 +26,7 @@ use nokhwa::utils::CameraInfo;
 use nokhwa::{native_api_backend, query};
 use std::collections::HashMap;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::room::active_call_participants::track_active_call_participants;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::SurfaceChangeHandler;
@@ -716,11 +716,8 @@ impl Render for CallStartPage {
                                                                         member.user_id(),
                                                                     )
                                                                     .rounded(theme.border_radius)
-                                                                    .size_policy(
-                                                                        SizePolicy::Constrain(
-                                                                            16., 16.,
-                                                                        ),
-                                                                    ),
+                                                                    .size(px(16.))
+                                                                    .size_policy(SizePolicy::Fit),
                                                             )
                                                         },
                                                     )

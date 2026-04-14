@@ -4,18 +4,18 @@ use crate::actions::{
 use crate::auth::logout_popover::logout_popover;
 use crate::chat::chat_room::ChatRoom;
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::join_room::JoinRoom;
 use crate::chat::join_room::create_room_popover::CreateRoomPopover;
 use crate::chat::join_room::create_space_popover::CreateSpacePopover;
 use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
+use crate::chat::join_room::JoinRoom;
 use crate::chat::room_directory::RoomDirectory;
 use crate::chat::sidebar::Sidebar;
 use cntp_i18n::{i18n_manager, tr};
 use contemporary::application::Details;
 use contemporary::components::interstitial::interstitial;
 use gpui::{
-    App, AppContext, BorrowAppContext, Context, Entity, FocusHandle, InteractiveElement,
-    IntoElement, ParentElement, Render, Styled, Window, div, px,
+    div, px, App, AppContext, BorrowAppContext, Context, Entity,
+    FocusHandle, InteractiveElement, IntoElement, ParentElement, Render, Styled, Window,
 };
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;

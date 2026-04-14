@@ -9,7 +9,7 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::{MaskMode, TextField};
 use contemporary::styling::theme::ThemeStorage;
 use gpui::{
-    AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window, div, px,
+    div, px, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window,
 };
 pub struct RegisterMatrixAuthPasswordPage {
     register_surface: Entity<RegisterSurface>,

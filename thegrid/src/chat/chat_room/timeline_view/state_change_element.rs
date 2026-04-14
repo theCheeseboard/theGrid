@@ -1,6 +1,6 @@
 use contemporary::components::icon::icon;
 use gpui::prelude::FluentBuilder;
-use gpui::{AnyElement, App, IntoElement, ParentElement, RenderOnce, Styled, Window, div, px};
+use gpui::{div, px, AnyElement, App, IntoElement, ParentElement, RenderOnce, Styled, Window};
 
 #[derive(IntoElement)]
 pub struct StateChangeElement {

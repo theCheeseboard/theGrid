@@ -1,7 +1,7 @@
 use gpui::{AsyncApp, Context, WeakEntity};
 use imbl::Vector;
-use matrix_sdk_ui::Timeline as MatrixUiTimeline;
 use matrix_sdk_ui::timeline::TimelineItem;
+use matrix_sdk_ui::Timeline as MatrixUiTimeline;
 use smol::stream::StreamExt;
 use std::sync::Arc;
 

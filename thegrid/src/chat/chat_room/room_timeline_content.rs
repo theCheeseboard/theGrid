@@ -1,15 +1,15 @@
 use crate::chat::chat_room::attachments_view::AttachmentsView;
 use crate::chat::chat_room::call_members_view::CallMembersView;
 use crate::chat::chat_room::open_room::OpenRoom;
-use crate::chat::chat_room::timeline_view::TimelineView;
 use crate::chat::chat_room::timeline_view::author_flyout::AuthorFlyoutUserActionEvent;
+use crate::chat::chat_room::timeline_view::TimelineView;
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::tr;
 use contemporary::components::admonition::admonition;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, Context, Entity, ExternalPaths, InteractiveElement, IntoElement,
-    ParentElement, Render, Styled, Window, div, px,
+    div, px, App, AppContext, Context, Entity, ExternalPaths,
+    InteractiveElement, IntoElement, ParentElement, Render, Styled, Window,
 };
 use matrix_sdk::ruma::events::tag::TagName;
 use std::rc::Rc;
