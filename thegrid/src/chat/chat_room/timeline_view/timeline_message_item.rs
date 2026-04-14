@@ -154,8 +154,7 @@ pub fn msgtype_to_message_line<'a>(
                 |david, profile| {
                     david.child(
                         mxc_image(profile.avatar_url.clone())
-                            .size(px(24.))
-                            .size_policy(SizePolicy::Fit)
+                            .size_policy(SizePolicy::Constrain(24., 24.))
                             .rounded(theme.border_radius)
                             .fallback_image(sender)
                             .mr(px(2.)),

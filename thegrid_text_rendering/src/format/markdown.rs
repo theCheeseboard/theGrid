@@ -3,11 +3,11 @@ use crate::node::{
     CodeBlock, ImageNode, InlineNode, LinkMark, NodeContext, Paragraph, Span, Table, TableRow,
     TextMark,
 };
-use crate::{node, Events, TextViewStyle};
+use crate::{Events, TextViewStyle, node};
 use gpui::SharedString;
 use markdown::{
-    mdast::{self, Node},
     ParseOptions,
+    mdast::{self, Node},
 };
 
 /// Parse Markdown into a tree of nodes.

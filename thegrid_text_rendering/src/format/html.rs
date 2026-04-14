@@ -9,10 +9,10 @@ use crate::highlighter::HighlightTheme;
 use crate::node::{
     CodeBlock, ImageNode, InlineNode, LinkMark, NodeContext, Paragraph, Table, TableRow, TextMark,
 };
-use crate::{node, Events, TextViewStyle};
-use gpui::{px, relative, DefiniteLength, SharedString};
+use crate::{Events, TextViewStyle, node};
+use gpui::{DefiniteLength, SharedString, px, relative};
 use html5ever::tendril::TendrilSink;
-use html5ever::{local_name, parse_document, LocalName, ParseOpts, QualName};
+use html5ever::{LocalName, ParseOpts, QualName, local_name, parse_document};
 use markup5ever_rcdom::{Node, NodeData, RcDom};
 use tracing::info;
 

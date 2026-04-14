@@ -1,7 +1,7 @@
 use crate::chat::displayed_room::DisplayedRoom;
 use async_channel::Sender;
 use cntp_i18n::{tr, trn};
-use contemporary::components::admonition::{admonition, AdmonitionSeverity};
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
@@ -15,9 +15,9 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, list, px, AnyElement, AppContext, AsyncApp, Context,
-    Entity, InteractiveElement, IntoElement, ListAlignment, ListScrollEvent, ListState, ParentElement, Render,
-    Styled, WeakEntity, Window,
+    AnyElement, AppContext, AsyncApp, Context, Entity, InteractiveElement, IntoElement,
+    ListAlignment, ListScrollEvent, ListState, ParentElement, Render, Styled, WeakEntity, Window,
+    div, list, px,
 };
 use imbl::Vector;
 use log::error;
@@ -26,7 +26,7 @@ use matrix_sdk::ruma::room::JoinRuleKind;
 use matrix_sdk::ruma::{OwnedRoomId, OwnedRoomOrAliasId};
 use matrix_sdk::stream::StreamExt;
 use matrix_sdk::{Error, OwnedServerName, Room, RoomState};
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::room_cache::RoomJoinEvent;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
@@ -389,8 +389,7 @@ impl RoomDirectory {
                         mxc_image(room_description.avatar_url.clone())
                             .fallback_image(&room_description.room_id)
                             .rounded(theme.border_radius)
-                            .size(px(40.))
-                            .size_policy(SizePolicy::Fit),
+                            .size_policy(SizePolicy::Constrain(40., 40.)),
                     )
                     .child(
                         div()

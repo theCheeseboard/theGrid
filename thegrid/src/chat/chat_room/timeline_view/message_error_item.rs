@@ -1,6 +1,6 @@
 use contemporary::components::icon::icon;
 use contemporary::styling::theme::{ThemeStorage, VariableColor};
-use gpui::{div, px, App, IntoElement, ParentElement, SharedString, Styled};
+use gpui::{App, IntoElement, ParentElement, SharedString, Styled, div, px};
 
 pub fn message_error_item(
     icon_name: impl Into<SharedString>,

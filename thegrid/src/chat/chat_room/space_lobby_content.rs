@@ -13,16 +13,15 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, list, px, AnyElement, Context,
-    Entity, InteractiveElement, IntoElement, ListAlignment, ListScrollEvent, ListState, ParentElement,
-    Render, Styled, Window,
+    AnyElement, Context, Entity, InteractiveElement, IntoElement, ListAlignment, ListScrollEvent,
+    ListState, ParentElement, Render, Styled, Window, div, list, px,
 };
-use matrix_sdk::ruma::room::JoinRuleSummary;
 use matrix_sdk::ruma::OwnedRoomId;
+use matrix_sdk::ruma::room::JoinRuleSummary;
 use matrix_sdk::{Room, RoomState};
-use matrix_sdk_ui::spaces::room_list::SpaceRoomListPaginationState;
 use matrix_sdk_ui::spaces::SpaceRoom;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use matrix_sdk_ui::spaces::room_list::SpaceRoomListPaginationState;
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::room_cache::RoomJoinEvent;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::session::spaces_cache::SpaceRoomListEntity;
@@ -231,8 +230,7 @@ impl SpaceLobbyContent {
                         mxc_image(space_room.avatar_url.clone())
                             .fallback_image(&space_room.room_id)
                             .rounded(theme.border_radius)
-                            .size(px(40.))
-                            .size_policy(SizePolicy::Fit),
+                            .size_policy(SizePolicy::Constrain(40., 40.)),
                     )
                     .child(
                         div()
@@ -342,8 +340,7 @@ impl Render for SpaceLobbyContent {
                         mxc_image(room.avatar_url())
                             .fallback_image(room.room_id())
                             .rounded(theme.border_radius)
-                            .size(px(150.))
-                            .size_policy(SizePolicy::Fit),
+                            .size_policy(SizePolicy::Constrain(150., 150.)),
                     )
                     .child(tr!("SPACE_LOBBY_INTRO", "Welcome to the lobby"))
                     .child(

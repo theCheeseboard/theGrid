@@ -16,8 +16,8 @@ use contemporary::components::text_field::TextField;
 use contemporary::components::toast::Toast;
 use contemporary::styling::theme::Theme;
 use gpui::{
-    div, px, AppContext, AsyncWindowContext, Context, Entity, IntoElement,
-    ParentElement, Render, Styled, WeakEntity, Window,
+    AppContext, AsyncWindowContext, Context, Entity, IntoElement, ParentElement, Render, Styled,
+    WeakEntity, Window, div, px,
 };
 use matrix_sdk::ruma::{OwnedRoomId, OwnedUserId, UserId};
 use thegrid_common::session::session_manager::SessionManager;

@@ -14,20 +14,20 @@ mod uiaa_client;
 mod upload_mxc_dialog;
 
 use crate::actions::{
-    register_actions, AccountSettings, AccountSwitcher, CreateRoom, CreateSpace, DirectJoinRoom,
-    LogOut,
+    AccountSettings, AccountSwitcher, CreateRoom, CreateSpace, DirectJoinRoom, LogOut,
+    register_actions,
 };
 use crate::chat::chat_input::bind_chat_input_keys;
 use crate::main_window::MainWindow;
-use cntp_i18n::{tr, tr_load, I18N_MANAGER};
+use cntp_i18n::{I18N_MANAGER, tr, tr_load};
 use cntp_icon_tool_macros::application_icon;
-use contemporary::application::{new_contemporary_application, ApplicationLink, Details, License};
+use contemporary::application::{ApplicationLink, Details, License, new_contemporary_application};
 use contemporary::macros::application_details;
 use contemporary::self_update::init_self_update;
-use contemporary::setup::{setup_contemporary, Contemporary, ContemporaryMenus};
+use contemporary::setup::{Contemporary, ContemporaryMenus, setup_contemporary};
 use contemporary::window::contemporary_window_options;
 use gpui::{
-    px, size, App, AsyncApp, Bounds, Menu, MenuItem, WeakEntity, WindowBounds, WindowOptions,
+    App, AsyncApp, Bounds, Menu, MenuItem, WeakEntity, WindowBounds, WindowOptions, px, size,
 };
 use smol_macros::main;
 use std::any::TypeId;
@@ -35,7 +35,7 @@ use std::cell::RefCell;
 use std::ptr;
 use std::rc::Rc;
 use std::str::FromStr;
-use thegrid_common::session::session_manager::{setup_session_manager, SessionManager};
+use thegrid_common::session::session_manager::{SessionManager, setup_session_manager};
 use thegrid_common::session::sso_login::SsoLogin;
 use thegrid_common::setup_thegrid_common;
 use thegrid_rtc_livekit::call_manager::setup_call_manager;

@@ -22,7 +22,7 @@ use crate::chat::join_room::create_room_popover::CreateRoomPopover;
 use crate::chat::join_room::create_space_popover::CreateSpacePopover;
 use cntp_i18n::tr;
 use contemporary::components::button::button;
-use contemporary::components::dialog_box::{dialog_box, StandardButton};
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::pager::lift_animation::LiftAnimation;
@@ -30,9 +30,9 @@ use contemporary::components::pager::pager;
 use contemporary::components::spinner::spinner;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, AnimationExt, App, AppContext, BorrowAppContext, Context,
-    Entity, InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled,
-    VisualContext, Window,
+    AnimationExt, App, AppContext, BorrowAppContext, Context, Entity, InteractiveElement,
+    IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled, VisualContext, Window,
+    div, px,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use smol::stream::StreamExt;

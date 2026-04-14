@@ -1,5 +1,5 @@
 use cntp_i18n::tr;
-use contemporary::components::admonition::{admonition, AdmonitionSeverity};
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
@@ -13,8 +13,8 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::{MaskMode, TextField};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement,
-    Render, Styled, WeakEntity, Window,
+    App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled,
+    WeakEntity, Window, div, px,
 };
 use matrix_sdk::encryption::recovery::RecoveryError;
 use matrix_sdk::encryption::recovery::RecoveryState::Enabled;

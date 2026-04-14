@@ -1,5 +1,5 @@
 use cntp_i18n::tr;
-use contemporary::components::admonition::{admonition, AdmonitionSeverity};
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::context_menu::ContextMenuItem;
@@ -15,8 +15,8 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::components::toast::Toast;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, App, AsyncApp, AsyncWindowContext, Context, IntoElement, ParentElement,
-    Render, Styled, WeakEntity, Window,
+    App, AsyncApp, AsyncWindowContext, Context, IntoElement, ParentElement, Render, Styled,
+    WeakEntity, Window, div, px,
 };
 use matrix_sdk::ruma::api::client::discovery::get_capabilities::v3::RoomVersionStability;
 use matrix_sdk::ruma::api::client::room::upgrade_room;

@@ -23,9 +23,9 @@ use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
 use contemporary::components::spinner::spinner;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, list, px, rgb, App, AsyncApp, Context, Element,
-    ElementId, Entity, InteractiveElement, IntoElement, ListAlignment, ListOffset,
-    ListScrollEvent, ListSizingBehavior, ListState, ParentElement, Render, Styled, Window,
+    App, AsyncApp, Context, Element, ElementId, Entity, InteractiveElement, IntoElement,
+    ListAlignment, ListOffset, ListScrollEvent, ListSizingBehavior, ListState, ParentElement,
+    Render, Styled, Window, div, list, px, rgb,
 };
 use image::open;
 use log::info;

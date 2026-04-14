@@ -5,12 +5,12 @@ use crate::chat::chat_room::room_settings::room_replace_popover::{
     RoomReplaceEvent, RoomReplacePopover,
 };
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::upload_mxc_dialog::{upload_mxc_dialog, UploadMxcAcceptEvent};
-use cntp_i18n::{tr, I18nString};
-use contemporary::components::button::{button, ButtonMenuOpenPolicy};
+use crate::upload_mxc_dialog::{UploadMxcAcceptEvent, upload_mxc_dialog};
+use cntp_i18n::{I18nString, tr};
+use contemporary::components::button::{ButtonMenuOpenPolicy, button};
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::context_menu::ContextMenuItem;
-use contemporary::components::dialog_box::{dialog_box, StandardButton};
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
@@ -22,15 +22,15 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, App, AppContext, AsyncApp, ClickEvent, Context, ElementId,
-    Entity, InteractiveElement, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
+    App, AppContext, AsyncApp, ClickEvent, Context, ElementId, Entity, InteractiveElement,
+    IntoElement, ParentElement, Render, Styled, WeakEntity, Window, div, px,
 };
 use matrix_sdk::ruma::api::client::room::Visibility;
 use matrix_sdk::ruma::events::room::avatar::ImageInfo;
 use matrix_sdk::ruma::room::JoinRule;
 use matrix_sdk::ruma::{OwnedRoomAliasId, RoomAliasId, UInt};
 use std::rc::Rc;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 
@@ -689,8 +689,7 @@ impl Render for RoomSettings {
                                 mxc_image(room.avatar_url())
                                     .fallback_image(room.room_id())
                                     .rounded(theme.border_radius)
-                                    .size(px(48.))
-                                    .size_policy(SizePolicy::Fit),
+                                    .size_policy(SizePolicy::Constrain(48., 48.)),
                             )
                             .child(
                                 div()

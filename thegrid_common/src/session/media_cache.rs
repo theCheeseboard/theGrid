@@ -5,8 +5,8 @@ use gpui::{App, AppContext, AsyncApp, Context, Entity, RenderImage, WeakEntity};
 use image::{Frame, ImageReader, Pixel, RgbaImage};
 use matrix_sdk::Client;
 use matrix_sdk::media::{MediaFileHandle, MediaFormat, MediaRequestParameters, UniqueKey};
-use matrix_sdk::ruma::{MxcUri, OwnedMxcUri};
 use matrix_sdk::ruma::events::room::MediaSource;
+use matrix_sdk::ruma::{MxcUri, OwnedMxcUri};
 use smallvec::smallvec;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -83,7 +83,6 @@ impl From<Option<&MxcUri>> for MediaCacheEntry {
         }
     }
 }
-
 
 impl PartialEq for MediaCacheEntry {
     fn eq(&self, other: &Self) -> bool {

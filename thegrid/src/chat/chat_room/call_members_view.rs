@@ -4,11 +4,11 @@ use contemporary::components::icon_text::icon_text;
 use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
 use gpui::{
-    div, px, relative, App, ClickEvent, InteractiveElement, IntoElement, ParentElement,
-    RenderOnce, Styled, Window,
+    App, ClickEvent, InteractiveElement, IntoElement, ParentElement, RenderOnce, Styled, Window,
+    div, px, relative,
 };
 use matrix_sdk::room::RoomMember;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 
 #[derive(IntoElement)]
 pub struct CallMembersView {
@@ -50,8 +50,7 @@ impl RenderOnce for CallMembersView {
                                     mxc_image(member.avatar_url())
                                         .fallback_image(member.user_id())
                                         .rounded(theme.border_radius)
-                                        .size(px(16.))
-                                        .size_policy(SizePolicy::Fit),
+                                        .size_policy(SizePolicy::Constrain(16., 16.)),
                                 )
                             })
                             .child(div().pl(px(4.)).child(trn!(

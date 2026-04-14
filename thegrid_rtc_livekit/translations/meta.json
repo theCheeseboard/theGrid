@@ -7,7 +7,7 @@
   },
   "ACTIVE_CALL_CONTENT": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:725",
+    "definedIn": "src/call_surface/call_start_page.rs:728",
     "plural": true,
     "description": null
   },
@@ -121,13 +121,13 @@
   },
   "CALL_HOLD_NOTIFICATION": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:753",
+    "definedIn": "src/call_surface/call_start_page.rs:756",
     "plural": false,
     "description": null
   },
   "CALL_JOIN_BUTTON": {
     "context": "call_start_page.rs",
-    "definedIn": "src/call_surface/call_start_page.rs:737",
+    "definedIn": "src/call_surface/call_start_page.rs:740",
     "plural": false,
     "description": null
   },

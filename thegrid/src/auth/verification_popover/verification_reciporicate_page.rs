@@ -6,8 +6,8 @@ use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::subtitle::subtitle;
 use gpui::{
-    div, px, App, AsyncApp, ClickEvent, Entity, IntoElement, ParentElement, RenderOnce, Styled,
-    Window,
+    App, AsyncApp, ClickEvent, Entity, IntoElement, ParentElement, RenderOnce, Styled, Window, div,
+    px,
 };
 use std::rc::Rc;
 use thegrid_common::session::verification_requests_cache::VerificationRequestDetails;

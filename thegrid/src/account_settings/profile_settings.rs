@@ -2,7 +2,7 @@ use crate::auth::oauth_management_page_redirect_dialog::OAuthManagementPageRedir
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
-use contemporary::components::dialog_box::{dialog_box, StandardButton};
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -11,14 +11,14 @@ use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, App, AppContext, AsyncApp, Context, Entity,
-    IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
+    App, AppContext, AsyncApp, Context, Entity, IntoElement, ParentElement, Render, Styled,
+    WeakEntity, Window, div, px,
 };
+use matrix_sdk::AuthApi;
 use matrix_sdk::authentication::oauth::AccountManagementActionFull;
 use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::AccountManagementAction;
-use matrix_sdk::AuthApi;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{
     MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
@@ -184,8 +184,7 @@ impl Render for ProfileSettings {
                                 mxc_image(account.avatar_url())
                                     .fallback_image(client.user_id().unwrap())
                                     .rounded(theme.border_radius)
-                                    .size(px(48.))
-                                    .size_policy(SizePolicy::Fit),
+                                    .size_policy(SizePolicy::Constrain(48., 48.)),
                             )
                             .child(
                                 div()

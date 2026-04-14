@@ -1,4 +1,4 @@
-use cntp_i18n::{tr_load, I18N_MANAGER};
+use cntp_i18n::{I18N_MANAGER, tr_load};
 
 pub mod mxc_image;
 pub mod outbound_track;

@@ -12,9 +12,9 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, uniform_list, App, AppContext, AsyncWindowContext, Context,
-    ElementId, Entity, InteractiveElement, IntoElement, ListSizingBehavior, ParentElement, Render, Styled, WeakEntity,
-    Window,
+    App, AppContext, AsyncWindowContext, Context, ElementId, Entity, InteractiveElement,
+    IntoElement, ListSizingBehavior, ParentElement, Render, Styled, WeakEntity, Window, div, px,
+    uniform_list,
 };
 use matrix_sdk::ruma::{OwnedUserId, UserId};
 use std::ops::Range;

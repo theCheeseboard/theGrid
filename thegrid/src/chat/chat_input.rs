@@ -1,19 +1,19 @@
 mod autocomplete;
 
 use crate::chat::chat_input::autocomplete::{
-    autocomplete_list, calculate_autocomplete, ApplyAutcompleteEvent,
+    ApplyAutcompleteEvent, autocomplete_list, calculate_autocomplete,
 };
 use crate::chat::chat_room::open_room::OpenRoom;
 use contemporary::components::anchorer::WithAnchorer;
 use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    actions, div, fill, point, px, relative, size, App,
-    AppContext, Bounds, ClipboardItem, Context, Element, ElementId,
-    ElementInputHandler, Entity, EntityInputHandler, FocusHandle, GlobalElementId, Hsla,
-    InspectorElementId, InteractiveElement, IntoElement, KeyBinding, LayoutId, MouseButton, MouseDownEvent, MouseMoveEvent,
-    MouseUpEvent, PaintQuad, ParentElement, Pixels, Point, Render, Rgba, ShapedLine,
-    Style, Styled, TextAlign, TextRun, UTF16Selection, UnderlineStyle, WeakEntity, Window,
+    App, AppContext, Bounds, ClipboardItem, Context, Element, ElementId, ElementInputHandler,
+    Entity, EntityInputHandler, FocusHandle, GlobalElementId, Hsla, InspectorElementId,
+    InteractiveElement, IntoElement, KeyBinding, LayoutId, MouseButton, MouseDownEvent,
+    MouseMoveEvent, MouseUpEvent, PaintQuad, ParentElement, Pixels, Point, Render, Rgba,
+    ShapedLine, Style, Styled, TextAlign, TextRun, UTF16Selection, UnderlineStyle, WeakEntity,
+    Window, actions, div, fill, point, px, relative, size,
 };
 use matrix_sdk::ruma::{OwnedMxcUri, OwnedUserId};
 use std::ops::{Add, Range};

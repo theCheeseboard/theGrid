@@ -6,17 +6,23 @@ pub enum SoundEffect {
     CallJoin,
     CallLeave,
     MuteOff,
-    MuteOn
+    MuteOn,
 }
 
 impl SoundEffect {
     pub fn play(&self) {
         match self {
-            SoundEffect::Notification => play_sound_effect(include_bytes!("../assets/sfx/notification.wav")),
-            SoundEffect::CallJoin => play_sound_effect(include_bytes!("../assets/sfx/call_join.ogg")),
-            SoundEffect::CallLeave => play_sound_effect(include_bytes!("../assets/sfx/call_leave.ogg")),
+            SoundEffect::Notification => {
+                play_sound_effect(include_bytes!("../assets/sfx/notification.wav"))
+            }
+            SoundEffect::CallJoin => {
+                play_sound_effect(include_bytes!("../assets/sfx/call_join.ogg"))
+            }
+            SoundEffect::CallLeave => {
+                play_sound_effect(include_bytes!("../assets/sfx/call_leave.ogg"))
+            }
             SoundEffect::MuteOff => play_sound_effect(include_bytes!("../assets/sfx/mute_off.ogg")),
-            SoundEffect::MuteOn => play_sound_effect(include_bytes!("../assets/sfx/mute_on.ogg"))
+            SoundEffect::MuteOn => play_sound_effect(include_bytes!("../assets/sfx/mute_on.ogg")),
         }
     }
 }
