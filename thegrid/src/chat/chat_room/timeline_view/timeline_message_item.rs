@@ -98,12 +98,21 @@ impl RenderOnce for TimelineMessageItem {
                     window,
                     cx,
                 )),
+                MsgLikeKind::Redacted => div().child(message_error_item(
+                    "edit-delete",
+                    tr!("MESSAGE_REDACTED", "Removed"),
+                    cx,
+                )),
                 MsgLikeKind::UnableToDecrypt(_) => div().child(message_error_item(
                     "exception",
                     tr!("MESSAGE_UNABLE_TO_DECRYPT", "Unable to decrypt"),
                     cx,
                 )),
-                _ => div(),
+                _ => div().child(message_error_item(
+                    "dialog-warning",
+                    tr!("MESSAGE_UNSUPPORTED"),
+                    cx,
+                )),
             })
             .when(!reactions.is_empty(), |david| {
                 david.child(reactions.iter().fold(

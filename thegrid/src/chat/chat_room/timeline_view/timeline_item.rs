@@ -21,9 +21,10 @@ use gpui::{
     StatefulInteractiveElement, Styled, WeakEntity, Window, div, px,
 };
 use matrix_sdk::room::RoomMember;
+use matrix_sdk::ruma::events::MessageLikeEventType;
 use matrix_sdk_ui::timeline::{
-    EventTimelineItem, TimelineDetails, TimelineItem as MatrixUiTimelineItem, TimelineItemContent,
-    TimelineItemKind, VirtualTimelineItem,
+    EventTimelineItem, MsgLikeKind, TimelineDetails, TimelineItem as MatrixUiTimelineItem,
+    TimelineItemContent, TimelineItemKind, VirtualTimelineItem,
 };
 use std::rc::Rc;
 use std::sync::Arc;
@@ -72,6 +73,7 @@ impl TimelineItem {
         let author_flyout_open_entity_2 = author_flyout_open_entity.clone();
 
         let open_room = &self.open_room;
+        let current_user = open_room.read(cx).current_user.clone();
 
         let author = event.sender();
         let previous_event_author =
@@ -121,11 +123,17 @@ impl TimelineItem {
                         ContextMenuItem::menu_item()
                             .label(tr!("MESSAGE_REPLY", "Reply"))
                             .icon("mail-reply-sender")
-                            .when(!event.can_be_replied_to(), |david| david.disabled())
+                            .when(
+                                !event.can_be_replied_to()
+                                    || current_user.as_ref().is_some_and(|user| {
+                                        !user.can_send_message(MessageLikeEventType::RoomMessage)
+                                    }),
+                                |david| david.disabled(),
+                            )
                             .on_triggered({
                                 let open_room = open_room.clone();
                                 let event = event.clone();
-                                move |_, window, cx| {
+                                move |_, _, cx| {
                                     open_room.update(cx, |open_room, cx| {
                                         open_room.set_pending_reply(Some(event.clone()), cx);
                                     });
@@ -133,6 +141,26 @@ impl TimelineItem {
                             })
                             .build(),
                     );
+                    if current_user.as_ref().is_some_and(|user| {
+                        (user.can_redact_own() && event.is_own()) || user.can_redact_other()
+                    }) && !matches!(msg.kind, MsgLikeKind::Redacted)
+                    {
+                        context_menu.push(
+                            ContextMenuItem::menu_item()
+                                .label(tr!("MESSAGE_REDACT", "Remove"))
+                                .icon("edit-delete")
+                                .on_triggered({
+                                    let open_room = open_room.clone();
+                                    let event = event.clone();
+                                    move |_, _, cx| {
+                                        open_room.update(cx, |open_room, cx| {
+                                            open_room.redact_event(&event.clone(), cx);
+                                        });
+                                    }
+                                })
+                                .build(),
+                        );
+                    }
                     timeline_message_item(
                         msg.clone(),
                         event.sender_profile().clone(),

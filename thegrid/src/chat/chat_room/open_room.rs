@@ -400,6 +400,19 @@ impl OpenRoom {
         cx.notify();
     }
 
+    pub fn redact_event(&mut self, event: &EventTimelineItem, cx: &mut Context<Self>) {
+        let timeline = self.timeline.clone().unwrap().read(cx).inner.clone();
+        let identifier = event.identifier().clone();
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                let _ = cx
+                    .spawn_tokio(async move { timeline.redact(&identifier, None).await })
+                    .await;
+            },
+        )
+        .detach();
+    }
+
     pub fn escape_press(&mut self, _: &mut Window, cx: &mut Context<Self>) {
         self.set_pending_reply(None, cx);
     }
