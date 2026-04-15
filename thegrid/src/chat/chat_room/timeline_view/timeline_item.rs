@@ -1,4 +1,4 @@
-use crate::chat::chat_input::ChatInput;
+use crate::chat::chat_input::{ChatInput, End};
 use crate::chat::chat_room::chat_bar::ChatBar;
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::timeline_view::author_flyout::{
@@ -19,10 +19,12 @@ use contemporary::components::button::button;
 use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
 use contemporary::components::icon::icon;
 use contemporary::components::layer::layer;
+use contemporary::components::tooltip::simple_tooltip;
 use contemporary::styling::theme::{Theme, VariableColor, variable_transparent};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    deferred, div, px, App, AsyncApp, ElementId, Entity, InteractiveElement, IntoElement, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, WeakEntity, Window
+    App, AsyncApp, ElementId, Entity, Focusable, InteractiveElement, IntoElement, ParentElement,
+    RenderOnce, StatefulInteractiveElement, Styled, WeakEntity, Window, deferred, div, px,
 };
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::room::edit::EditedContent;
@@ -202,12 +204,15 @@ impl TimelineItem {
                                         EditedContent::RoomMessage(
                                             match message.msgtype() {
                                                 MessageType::Notice(_) => {
-                                                    RoomMessageEventContentWithoutRelation::notice_markdown(edit.read(cx))
+                                                    RoomMessageEventContentWithoutRelation::
+                                                        notice_markdown(edit.read(cx))
                                                 }
                                                 MessageType::Text(_) => {
-                                                    RoomMessageEventContentWithoutRelation::text_markdown(edit.read(cx))
+                                                    RoomMessageEventContentWithoutRelation::
+                                                        text_markdown(edit.read(cx))
                                                 }
-                                                _ => RoomMessageEventContentWithoutRelation::new(message.msgtype().clone()),
+                                                _ => RoomMessageEventContentWithoutRelation::
+                                                        new(message.msgtype().clone()),
                                             }
                                         ),
                                         cx,
@@ -216,7 +221,7 @@ impl TimelineItem {
                                 editing.write(cx, false);
                             }
                         };
-                        let editor = window.use_state(cx, |_, cx| {
+                        let editor = window.use_state(cx, |window, cx| {
                             let mut chat_input = ChatInput::new(open_room.downgrade(), cx);
                             chat_input.set_text(initial_content);
                             chat_input.on_enter_press({
@@ -233,6 +238,8 @@ impl TimelineItem {
                                     edit.write(cx, chat_input.text().to_string());
                                 }
                             }));
+                            chat_input.end(&End, window, cx);
+                            chat_input.focus_handle(cx).focus(window, cx);
                             chat_input
                         });
                         layer()
@@ -252,7 +259,11 @@ impl TimelineItem {
                                             .on_click({
                                                 let editing = editing.clone();
                                                 move |_, _, cx| editing.write(cx, false)
-                                            }),
+                                            })
+                                            .tooltip(simple_tooltip(tr!(
+                                                "EDIT_CANCEL",
+                                                "Cancel Editing"
+                                            ))),
                                     )
                                     .child(
                                         button("edit-send-button")
@@ -260,7 +271,11 @@ impl TimelineItem {
                                             .on_click({
                                                 let complete_edit = complete_edit.clone();
                                                 move |_, _, cx| complete_edit(cx)
-                                            }),
+                                            })
+                                            .tooltip(simple_tooltip(tr!(
+                                                "EDIT_SUBMIT",
+                                                "Submit Edit"
+                                            ))),
                                     ),
                             )
                             .into_any_element()

@@ -9,7 +9,7 @@ use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
     App, AppContext, Bounds, ClipboardItem, Context, Element, ElementId, ElementInputHandler,
-    Entity, EntityInputHandler, FocusHandle, GlobalElementId, Hsla, InspectorElementId,
+    Entity, EntityInputHandler, FocusHandle, Focusable, GlobalElementId, Hsla, InspectorElementId,
     InteractiveElement, IntoElement, KeyBinding, LayoutId, MouseButton, MouseDownEvent,
     MouseMoveEvent, MouseUpEvent, PaintQuad, ParentElement, Pixels, Point, Render, Rgba,
     ShapedLine, Style, Styled, TextAlign, TextRun, UTF16Selection, UnderlineStyle, WeakEntity,
@@ -407,7 +407,7 @@ impl ChatInput {
         }
     }
 
-    pub fn up(&mut self, _: &Up, _: &mut Window, cx: &mut Context<Self>) {
+    pub fn up(&mut self, _: &Up, _: &mut Window, _: &mut Context<Self>) {
         if let AutocompleteState::Available {
             current_option,
             options,
@@ -418,7 +418,7 @@ impl ChatInput {
         }
     }
 
-    pub fn down(&mut self, _: &Down, _: &mut Window, cx: &mut Context<Self>) {
+    pub fn down(&mut self, _: &Down, _: &mut Window, _: &mut Context<Self>) {
         if let AutocompleteState::Available {
             current_option,
             options,
@@ -986,6 +986,12 @@ impl Element for ChatElement {
             input.last_layout = Some(prepaint.lines.clone());
             input.last_bounds = Some(bounds);
         });
+    }
+}
+
+impl Focusable for ChatInput {
+    fn focus_handle(&self, cx: &App) -> FocusHandle {
+        self.focus_handle.clone()
     }
 }
 

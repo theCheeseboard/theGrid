@@ -122,6 +122,8 @@
   "DIRECT_MESSAGE_SEND": "Send",
   "DONE": "Done",
   "EDITED_MESSAGE_INDICATOR": "(edited)",
+  "EDIT_CANCEL": "Cancel Editing",
+  "EDIT_SUBMIT": "Submit Edit",
   "EMOJI_MATCH": "The emoji match",
   "EMOJI_NO_MATCH": "The emoji do not match",
   "EVENT_REASON_NONE": "No reason was provided.",
