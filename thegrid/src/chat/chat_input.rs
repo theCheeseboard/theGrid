@@ -647,8 +647,10 @@ impl EntityInputHandler for ChatInput {
         self.selected_range = range.start + new_text.len()..range.start + new_text.len();
         self.marked_range.take();
 
-        if let Some(text_changed_listener) = &self.text_changed_listener {
-            text_changed_listener(&TextChangedEvent, window, cx);
+        if let Some(text_changed_listener) = self.text_changed_listener.clone() {
+            window.defer(cx, move |window, cx| {
+                text_changed_listener(&TextChangedEvent, window, cx);
+            });
         }
 
         self.update_autocomplete_state(cx);
@@ -682,8 +684,10 @@ impl EntityInputHandler for ChatInput {
             .map(|new_range| new_range.start + range.start..new_range.end + range.end)
             .unwrap_or_else(|| range.start + new_text.len()..range.start + new_text.len());
 
-        if let Some(text_changed_listener) = &self.text_changed_listener {
-            text_changed_listener(&TextChangedEvent, window, cx);
+        if let Some(text_changed_listener) = self.text_changed_listener.clone() {
+            window.defer(cx, move |window, cx| {
+                text_changed_listener(&TextChangedEvent, window, cx);
+            });
         }
 
         cx.notify();

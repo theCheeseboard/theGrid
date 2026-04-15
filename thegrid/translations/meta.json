@@ -265,7 +265,7 @@
   },
   "ATTACH_PROMPT": {
     "context": "open_room.rs",
-    "definedIn": "src/chat/chat_room/open_room.rs:270",
+    "definedIn": "src/chat/chat_room/open_room.rs:271",
     "plural": false,
     "description": null
   },
@@ -613,7 +613,7 @@
   },
   "DATE_DIVIDER": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:404",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:509",
     "plural": false,
     "description": null
   },
@@ -715,7 +715,7 @@
   },
   "EDITED_MESSAGE_INDICATOR": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:205",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:310",
     "plural": false,
     "description": null
   },
@@ -1345,19 +1345,25 @@
   },
   "MESSAGE_CONTEXT_MENU_TITLE": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:116",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:126",
     "plural": false,
     "description": null
   },
   "MESSAGE_CORRUPT": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:191",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:296",
+    "plural": false,
+    "description": null
+  },
+  "MESSAGE_EDIT": {
+    "context": "timeline_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:177",
     "plural": false,
     "description": null
   },
   "MESSAGE_REDACT": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:150",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:160",
     "plural": false,
     "description": null
   },
@@ -1369,7 +1375,7 @@
   },
   "MESSAGE_REPLY": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:124",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:134",
     "plural": false,
     "description": null
   },

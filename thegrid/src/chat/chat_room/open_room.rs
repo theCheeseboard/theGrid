@@ -12,6 +12,7 @@ use gpui::{
 };
 use log::error;
 use matrix_sdk::room::RoomMember;
+use matrix_sdk::room::edit::EditedContent;
 use matrix_sdk::ruma::api::client::room::aliases::v3::Response;
 use matrix_sdk::ruma::events::room::canonical_alias::RoomCanonicalAliasEventContent;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
@@ -403,13 +404,27 @@ impl OpenRoom {
     pub fn redact_event(&mut self, event: &EventTimelineItem, cx: &mut Context<Self>) {
         let timeline = self.timeline.clone().unwrap().read(cx).inner.clone();
         let identifier = event.identifier().clone();
-        cx.spawn(
-            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let _ = cx
-                    .spawn_tokio(async move { timeline.redact(&identifier, None).await })
-                    .await;
-            },
-        )
+        cx.spawn(async move |_: WeakEntity<Self>, cx: &mut AsyncApp| {
+            let _ = cx
+                .spawn_tokio(async move { timeline.redact(&identifier, None).await })
+                .await;
+        })
+        .detach();
+    }
+
+    pub fn edit_event(
+        &mut self,
+        event: &EventTimelineItem,
+        edit: EditedContent,
+        cx: &mut Context<Self>,
+    ) {
+        let timeline = self.timeline.clone().unwrap().read(cx).inner.clone();
+        let identifier = event.identifier().clone();
+        cx.spawn(async move |_: WeakEntity<Self>, cx: &mut AsyncApp| {
+            let _ = cx
+                .spawn_tokio(async move { timeline.edit(&identifier, edit).await })
+                .await;
+        })
         .detach();
     }
 

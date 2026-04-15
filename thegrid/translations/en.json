@@ -228,6 +228,7 @@
   "MENU_ROOMS": "Rooms",
   "MESSAGE_CONTEXT_MENU_TITLE": "For message from {{user}}",
   "MESSAGE_CORRUPT": "Corrupt Message",
+  "MESSAGE_EDIT": "Edit",
   "MESSAGE_REDACT": "Remove",
   "MESSAGE_REDACTED": "Removed",
   "MESSAGE_REPLY": "Reply",

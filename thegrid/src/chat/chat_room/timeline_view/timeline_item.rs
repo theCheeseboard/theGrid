@@ -1,3 +1,5 @@
+use crate::chat::chat_input::ChatInput;
+use crate::chat::chat_room::chat_bar::ChatBar;
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::timeline_view::author_flyout::{
     AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener, author_flyout,
@@ -13,15 +15,21 @@ use crate::chat::displayed_room::DisplayedRoom;
 use chrono::{DateTime, Local};
 use cntp_i18n::tr;
 use contemporary::components::anchorer::WithAnchorer;
+use contemporary::components::button::button;
 use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
+use contemporary::components::icon::icon;
+use contemporary::components::layer::layer;
 use contemporary::styling::theme::{Theme, VariableColor, variable_transparent};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, ElementId, Entity, InteractiveElement, IntoElement, ParentElement, RenderOnce,
-    StatefulInteractiveElement, Styled, WeakEntity, Window, div, px,
+    deferred, div, px, App, AsyncApp, ElementId, Entity, InteractiveElement, IntoElement, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, WeakEntity, Window
 };
 use matrix_sdk::room::RoomMember;
+use matrix_sdk::room::edit::EditedContent;
 use matrix_sdk::ruma::events::MessageLikeEventType;
+use matrix_sdk::ruma::events::room::message::{
+    MessageType, RoomMessageEventContentWithoutRelation,
+};
 use matrix_sdk_ui::timeline::{
     EventTimelineItem, MsgLikeKind, TimelineDetails, TimelineItem as MatrixUiTimelineItem,
     TimelineItemContent, TimelineItemKind, VirtualTimelineItem,
@@ -71,6 +79,8 @@ impl TimelineItem {
     ) -> impl IntoElement {
         let author_flyout_open_entity = window.use_state(cx, |_, _| false);
         let author_flyout_open_entity_2 = author_flyout_open_entity.clone();
+
+        let editing = window.use_state(cx, |_, _| false);
 
         let open_room = &self.open_room;
         let current_user = open_room.read(cx).current_user.clone();
@@ -161,15 +171,110 @@ impl TimelineItem {
                                 .build(),
                         );
                     }
-                    timeline_message_item(
-                        msg.clone(),
-                        event.sender_profile().clone(),
-                        event.sender().to_owned(),
-                        self.open_room.clone(),
-                        self.displayed_room.clone(),
-                        self.on_user_action.clone(),
-                    )
-                    .into_any_element()
+                    if event.is_own() && event.is_editable() {
+                        context_menu.push(
+                            ContextMenuItem::menu_item()
+                                .label(tr!("MESSAGE_EDIT", "Edit"))
+                                .icon("edit-rename")
+                                .on_triggered({
+                                    let editing = editing.clone();
+                                    move |_, _, cx| editing.write(cx, true)
+                                })
+                                .build(),
+                        );
+                    }
+
+                    if *editing.read(cx)
+                        && let MsgLikeKind::Message(message) = &msg.kind
+                    {
+                        let initial_content = message.body();
+                        let edit = window.use_state(cx, |_, _| initial_content.to_string());
+                        let complete_edit = {
+                            let open_room = open_room.clone();
+                            let event = event.clone();
+                            let edit = edit.clone();
+                            let editing = editing.clone();
+                            let message = message.clone();
+                            move |cx: &mut App| {
+                                open_room.update(cx, |open_room, cx| {
+                                    open_room.edit_event(
+                                        &event.clone(),
+                                        EditedContent::RoomMessage(
+                                            match message.msgtype() {
+                                                MessageType::Notice(_) => {
+                                                    RoomMessageEventContentWithoutRelation::notice_markdown(edit.read(cx))
+                                                }
+                                                MessageType::Text(_) => {
+                                                    RoomMessageEventContentWithoutRelation::text_markdown(edit.read(cx))
+                                                }
+                                                _ => RoomMessageEventContentWithoutRelation::new(message.msgtype().clone()),
+                                            }
+                                        ),
+                                        cx,
+                                    );
+                                });
+                                editing.write(cx, false);
+                            }
+                        };
+                        let editor = window.use_state(cx, |_, cx| {
+                            let mut chat_input = ChatInput::new(open_room.downgrade(), cx);
+                            chat_input.set_text(initial_content);
+                            chat_input.on_enter_press({
+                                let complete_edit = complete_edit.clone();
+                                move |_, _, cx| complete_edit(cx)
+                            });
+                            chat_input.on_escape_press({
+                                let editing = editing.clone();
+                                move |_, _, cx| editing.write(cx, false)
+                            });
+                            chat_input.on_text_changed(cx.listener({
+                                let edit = edit.clone();
+                                move |chat_input: &mut ChatInput, _, _, cx| {
+                                    edit.write(cx, chat_input.text().to_string());
+                                }
+                            }));
+                            chat_input
+                        });
+                        layer()
+                            .flex()
+                            .flex_col()
+                            .p(px(4.))
+                            .child(deferred(editor))
+                            .child(
+                                div()
+                                    .flex()
+                                    .gap(px(4.))
+                                    .child(div().flex_grow())
+                                    .child(
+                                        button("edit-cancel-button")
+                                            .child(icon("dialog-cancel"))
+                                            .flat()
+                                            .on_click({
+                                                let editing = editing.clone();
+                                                move |_, _, cx| editing.write(cx, false)
+                                            }),
+                                    )
+                                    .child(
+                                        button("edit-send-button")
+                                            .child(icon("dialog-ok"))
+                                            .on_click({
+                                                let complete_edit = complete_edit.clone();
+                                                move |_, _, cx| complete_edit(cx)
+                                            }),
+                                    ),
+                            )
+                            .into_any_element()
+                    } else {
+                        timeline_message_item(
+                            msg.clone(),
+                            event.sender_profile().clone(),
+                            event.sender().to_owned(),
+                            self.open_room.clone(),
+                            self.displayed_room.clone(),
+                            self.on_user_action.clone(),
+                        )
+                        .into_any_element()
+                    }
                 }
                 TimelineItemContent::MembershipChange(membership_change) => {
                     membership_change_item(membership_change.clone()).into_any_element()
