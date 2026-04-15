@@ -9,8 +9,11 @@ pub struct Timeline {
     pub inner: Arc<MatrixUiTimeline>,
     timeline_items: Vector<Arc<TimelineItem>>,
 
-    pub pagination_pending: bool,
+    pub back_pagination_pending: bool,
     pub pagination_at_top: bool,
+
+    pub forward_pagination_pending: bool,
+    pub pagination_at_bottom: bool,
 }
 
 impl Timeline {
@@ -52,8 +55,10 @@ impl Timeline {
         Self {
             inner: timeline_arc_2,
             timeline_items: Default::default(),
-            pagination_pending: false,
+            back_pagination_pending: false,
             pagination_at_top: false,
+            forward_pagination_pending: false,
+            pagination_at_bottom: false,
         }
     }
 

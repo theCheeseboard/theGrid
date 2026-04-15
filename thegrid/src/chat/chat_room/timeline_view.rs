@@ -11,7 +11,7 @@ mod state_event_item;
 mod timeline_item;
 mod timeline_message_item;
 
-use crate::chat::chat_room::open_room::OpenRoom;
+use crate::chat::chat_room::open_room::{OpenRoom, OpenRoomFocus, OpenRoomFocusReason};
 use crate::chat::chat_room::timeline::Timeline;
 use crate::chat::chat_room::timeline_view::author_flyout::{
     AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener,
@@ -19,7 +19,9 @@ use crate::chat::chat_room::timeline_view::author_flyout::{
 use crate::chat::chat_room::timeline_view::timeline_item::timeline_item;
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::tr;
+use contemporary::components::button::button;
 use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
+use contemporary::components::icon_text::icon_text;
 use contemporary::components::spinner::spinner;
 use gpui::prelude::FluentBuilder;
 use gpui::{
@@ -30,7 +32,7 @@ use gpui::{
 use image::open;
 use log::info;
 use matrix_sdk::ruma::api::client::receipt::create_receipt::v3::ReceiptType;
-use std::rc::Rc;
+use matrix_sdk_ui::timeline::TimelineFocus;
 use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct TimelineView {
@@ -56,14 +58,21 @@ impl TimelineView {
         let list_state = ListState::new(0, ListAlignment::Bottom, px(200.));
         list_state.set_scroll_handler(cx.listener(
             |this: &mut Self, event: &ListScrollEvent, _, cx| {
-                let this_entity = cx.entity();
                 this.open_room.update(cx, |open_room, cx| {
                     let Some(timeline_entity) = open_room.timeline.as_ref() else {
                         return;
                     };
                     let timeline = timeline_entity.read(cx);
                     let timeline_inner = timeline_entity.clone().read(cx).inner.clone();
-                    if event.visible_range.end == timeline.timeline_items().len() {
+                    let items_len = timeline.timeline_items().len();
+                    let pagination_at_bottom = timeline.pagination_at_bottom;
+                    if event.visible_range.start < 5 {
+                        open_room.paginate_backwards(cx);
+                    }
+                    if event.visible_range.end > items_len - 5 {
+                        open_room.paginate_forwards(cx);
+                    }
+                    if event.visible_range.end == items_len && pagination_at_bottom {
                         cx.spawn(async move |_, cx: &mut AsyncApp| {
                             let _ = cx
                                 .spawn_tokio(async move {
@@ -72,8 +81,6 @@ impl TimelineView {
                                 .await;
                         })
                         .detach();
-                    } else if event.visible_range.start < 5 {
-                        open_room.paginate_backwards(cx);
                     }
                 });
                 cx.notify();
@@ -110,8 +117,6 @@ impl TimelineView {
         let timeline_entity = timeline_entity.clone();
         let timeline = timeline_entity.read(cx);
 
-        info!("Updating timeline items");
-
         if timeline.timeline_items().len() != self.list_state.item_count() {
             let mut last_offset = self.list_state.logical_scroll_top();
             if let Some(new_items) = timeline
@@ -128,7 +133,7 @@ impl TimelineView {
 }
 
 impl Render for TimelineView {
-    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let open_room = self.open_room.read(cx);
         let Some(timeline_entity) = open_room.timeline.as_ref() else {
             return div().flex_grow().into_any_element();
@@ -136,7 +141,6 @@ impl Render for TimelineView {
         let is_paginating = open_room.pagination_pending(cx);
 
         let timeline_entity = timeline_entity.clone();
-        let room_id = open_room.room_id.clone();
 
         let open_room = self.open_room.clone();
 
@@ -149,41 +153,44 @@ impl Render for TimelineView {
             .child(
                 list(
                     self.list_state.clone(),
-                    cx.processor(move |this, i, window, cx| {
-                        let timeline = timeline_entity.read(cx);
-                        let timeline_items = timeline.timeline_items();
-                        let Some(item) = timeline_items.get(i).cloned() else {
-                            return div().into_any_element();
-                        };
+                    cx.processor({
+                        let open_room = open_room.clone();
+                        move |this, i, _, cx| {
+                            let timeline = timeline_entity.read(cx);
+                            let timeline_items = timeline.timeline_items();
+                            let Some(item) = timeline_items.get(i).cloned() else {
+                                return div().into_any_element();
+                            };
 
-                        let previous_item = if i == 0 {
-                            None
-                        } else {
-                            timeline_items.get(i - 1).cloned()
-                        };
+                            let previous_item = if i == 0 {
+                                None
+                            } else {
+                                timeline_items.get(i - 1).cloned()
+                            };
 
-                        div()
-                            .flex()
-                            .flex_col()
-                            .w_full()
-                            .overflow_hidden()
-                            .id(ElementId::Name(item.unique_id().0.clone().into()))
-                            .py(px(2.))
-                            .when(i == 0 && is_paginating, |david| {
-                                david.child(
-                                    div().flex().justify_center().pb(px(2.)).child(spinner()),
-                                )
-                            })
-                            .child(timeline_item(
-                                item,
-                                previous_item,
-                                open_room.clone(),
-                                this.displayed_room.clone(),
-                                cx.listener(|this, event, window, cx| {
-                                    (this.on_user_action)(event, window, cx)
-                                }),
-                            ))
-                            .into_any_element()
+                            div()
+                                .flex()
+                                .flex_col()
+                                .w_full()
+                                .overflow_hidden()
+                                .id(ElementId::Name(item.unique_id().0.clone().into()))
+                                .py(px(2.))
+                                .when(i == 0 && is_paginating, |david| {
+                                    david.child(
+                                        div().flex().justify_center().pb(px(2.)).child(spinner()),
+                                    )
+                                })
+                                .child(timeline_item(
+                                    item,
+                                    previous_item,
+                                    open_room.clone(),
+                                    this.displayed_room.clone(),
+                                    cx.listener(|this, event, window, cx| {
+                                        (this.on_user_action)(event, window, cx)
+                                    }),
+                                ))
+                                .into_any_element()
+                        }
                     }),
                 )
                 .size_full(),

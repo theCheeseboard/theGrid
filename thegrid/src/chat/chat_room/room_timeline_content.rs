@@ -1,17 +1,20 @@
 use crate::chat::chat_room::attachments_view::AttachmentsView;
 use crate::chat::chat_room::call_members_view::CallMembersView;
-use crate::chat::chat_room::open_room::OpenRoom;
+use crate::chat::chat_room::open_room::{OpenRoom, OpenRoomFocus, OpenRoomFocusReason};
 use crate::chat::chat_room::timeline_view::TimelineView;
 use crate::chat::chat_room::timeline_view::author_flyout::AuthorFlyoutUserActionEvent;
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::tr;
 use contemporary::components::admonition::admonition;
+use contemporary::components::button::button;
+use contemporary::components::icon_text::icon_text;
 use gpui::prelude::FluentBuilder;
 use gpui::{
     App, AppContext, Context, Entity, ExternalPaths, InteractiveElement, IntoElement,
     ParentElement, Render, Styled, Window, div, px,
 };
 use matrix_sdk::ruma::events::tag::TagName;
+use matrix_sdk_ui::timeline::TimelineFocus;
 use std::rc::Rc;
 use thegrid_common::surfaces::{
     MainWindowSurface, SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler,
@@ -61,8 +64,9 @@ impl RoomTimelineContent {
 }
 
 impl Render for RoomTimelineContent {
-    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let open_room = self.open_room.read(cx);
+        let focus = open_room.current_focus.clone();
         let call_members = open_room.active_call_users.read(cx).clone();
         let pending_attachments = &open_room.pending_attachments;
         let chat_bar = open_room.chat_bar.clone();
@@ -106,6 +110,38 @@ impl Render for RoomTimelineContent {
                     )
                 },
             )
+            .when(focus.reason == OpenRoomFocusReason::Reply, |david| {
+                david.child(
+                    div()
+                        .flex()
+                        .items_center()
+                        .child(
+                            div()
+                                .flex_grow()
+                                .child(tr!("FOCUS_REASON_REPLY", "Viewing a reply")),
+                        )
+                        .child(
+                            button("to-present-button")
+                                .child(icon_text("arrow-down", tr!("TO_PRESENT", "To Present")))
+                                .on_click({
+                                    let open_room = self.open_room.clone();
+                                    move |_, _, cx| {
+                                        open_room.update(cx, |open_room, cx| {
+                                            open_room.focus_timeline(
+                                                OpenRoomFocus {
+                                                    timeline_focus: TimelineFocus::Live {
+                                                        hide_threaded_events: false,
+                                                    },
+                                                    reason: OpenRoomFocusReason::None,
+                                                },
+                                                cx,
+                                            )
+                                        })
+                                    }
+                                }),
+                        ),
+                )
+            })
             .child(chat_bar)
             .child(
                 div()

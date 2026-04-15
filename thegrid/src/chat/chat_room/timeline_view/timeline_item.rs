@@ -1,6 +1,6 @@
 use crate::chat::chat_input::{ChatInput, End};
 use crate::chat::chat_room::chat_bar::ChatBar;
-use crate::chat::chat_room::open_room::OpenRoom;
+use crate::chat::chat_room::open_room::{OpenRoom, OpenRoomFocus};
 use crate::chat::chat_room::timeline_view::author_flyout::{
     AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener, author_flyout,
 };
@@ -33,8 +33,9 @@ use matrix_sdk::ruma::events::room::message::{
     MessageType, RoomMessageEventContentWithoutRelation,
 };
 use matrix_sdk_ui::timeline::{
-    EventTimelineItem, MsgLikeKind, TimelineDetails, TimelineItem as MatrixUiTimelineItem,
-    TimelineItemContent, TimelineItemKind, VirtualTimelineItem,
+    EventTimelineItem, MsgLikeKind, TimelineDetails, TimelineFocus,
+    TimelineItem as MatrixUiTimelineItem, TimelineItemContent, TimelineItemKind,
+    VirtualTimelineItem,
 };
 use std::rc::Rc;
 use std::sync::Arc;
@@ -85,7 +86,15 @@ impl TimelineItem {
         let editing = window.use_state(cx, |_, _| false);
 
         let open_room = &self.open_room;
-        let current_user = open_room.read(cx).current_user.clone();
+        let open_room_read = open_room.read(cx);
+        let current_user = open_room_read.current_user.clone();
+        let focused_event_id = match &open_room_read.current_focus {
+            OpenRoomFocus {
+                timeline_focus: TimelineFocus::Event { target, .. },
+                ..
+            } => Some(target.clone()),
+            _ => None,
+        };
 
         let author = event.sender();
         let previous_event_author =
@@ -342,6 +351,13 @@ impl TimelineItem {
         let mut background = variable_transparent();
         if event.is_highlighted() {
             background = theme.warning_accent_color.blend(background);
+        }
+        if focused_event_id.is_some_and(|focused_event_id| {
+            event
+                .event_id()
+                .is_some_and(|event_id| focused_event_id == event_id)
+        }) {
+            background = theme.info_accent_color.blend(background);
         }
         if *hovered.read(cx) {
             let mut layer = theme.layer_background;

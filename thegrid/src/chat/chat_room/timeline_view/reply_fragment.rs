@@ -1,13 +1,16 @@
-use crate::chat::chat_room::open_room::OpenRoom;
+use crate::chat::chat_room::open_room::{OpenRoom, OpenRoomFocus, OpenRoomFocusReason};
 use crate::chat::chat_room::timeline_view::author_flyout::AuthorFlyoutUserActionListener;
 use crate::chat::chat_room::timeline_view::timeline_message_item::msgtype_to_message_line;
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::tr;
 use contemporary::styling::theme::{ThemeStorage, VariableColor};
-use gpui::{App, Entity, IntoElement, ParentElement, RenderOnce, Styled, Window, div};
-use matrix_sdk::ruma::OwnedUserId;
+use gpui::{
+    App, Entity, InteractiveElement, IntoElement, ParentElement, RenderOnce,
+    StatefulInteractiveElement, Styled, Window, div, prelude::FluentBuilder,
+};
+use matrix_sdk::ruma::{OwnedEventId, OwnedUserId};
 use matrix_sdk_ui::timeline::{
-    InReplyToDetails, MsgLikeKind, Profile, TimelineDetails, TimelineItemContent,
+    InReplyToDetails, MsgLikeKind, Profile, TimelineDetails, TimelineFocus, TimelineItemContent,
 };
 use std::rc::Rc;
 
@@ -19,6 +22,7 @@ pub struct ReplyFragment {
     room: Entity<OpenRoom>,
     displayed_room: Entity<DisplayedRoom>,
     on_user_action: Rc<Box<AuthorFlyoutUserActionListener>>,
+    event_id: Option<OwnedEventId>,
 }
 
 pub fn reply_fragment(
@@ -36,6 +40,7 @@ pub fn reply_fragment(
         room,
         displayed_room,
         on_user_action,
+        event_id: None,
     }
 }
 
@@ -62,6 +67,7 @@ pub fn reply_fragment_in_reply_to(
         room,
         displayed_room,
         on_user_action,
+        event_id: Some(details.event_id),
     }
 }
 
@@ -69,6 +75,7 @@ impl RenderOnce for ReplyFragment {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let theme = cx.theme();
         div()
+            .id("reply_fragment")
             .flex()
             .text_color(theme.foreground.disabled())
             .text_size(theme.system_font_size * 0.8)
@@ -85,7 +92,7 @@ impl RenderOnce for ReplyFragment {
                                     self.sender.unwrap(),
                                     self.sender_profile.unwrap(),
                                     true,
-                                    self.room,
+                                    self.room.clone(),
                                     self.displayed_room,
                                     self.on_user_action,
                                     window,
@@ -99,6 +106,30 @@ impl RenderOnce for ReplyFragment {
                 }
                 .unwrap_or_else(|| {
                     tr!("REPLY_UNAVAILABLE", "Reply message could not be loaded").into_any_element()
+                })
+            })
+            .when_some(self.event_id, |david, event_id| {
+                david.cursor_pointer().on_click({
+                    let open_room = self.room.clone();
+                    let event_id = event_id.clone();
+                    move |_, _, cx| {
+                        open_room.update(cx, {
+                            let event_id = event_id.clone();
+                            move |open_room, cx| {
+                                open_room.focus_timeline(
+                                    OpenRoomFocus {
+                                        timeline_focus: TimelineFocus::Event {
+                                            target: event_id,
+                                            num_context_events: 0,
+                                            hide_threaded_events: false,
+                                        },
+                                        reason: OpenRoomFocusReason::Reply,
+                                    },
+                                    cx,
+                                );
+                            }
+                        })
+                    }
                 })
             })
     }

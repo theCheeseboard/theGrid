@@ -133,6 +133,7 @@
   "FILTERS": "Filters",
   "FIX_RECOVERY": "Recovery data corrupt",
   "FIX_RECOVERY_DESCRIPTION": "Your local recovery data is corrupt. Your recovery key is required to continue backing up your encryption keys.",
+  "FOCUS_REASON_REPLY": "Viewing a reply",
   "FOR_ROOM": "For {{room}}",
   "HEADS_UP": "Heads up!",
   "IDENTITY_RESET": "Reset Identity",
@@ -456,6 +457,7 @@
   "SPACE_SIDEBAR_SUBORDINATE_SPACES": "Subordinate Spaces",
   "TOMBSTONE_JOIN_ERROR_TEXT": "Unable to join {{room}}",
   "TOMBSTONE_JOIN_ERROR_TITLE": "Unable to join the replacement room",
+  "TO_PRESENT": "To Present",
   "TYPING_NOTIFICATION": {
     "one": "{{count}} user is typing...",
     "other": "{{count}} users are typing..."

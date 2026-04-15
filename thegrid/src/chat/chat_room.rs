@@ -11,7 +11,7 @@ mod timeline;
 mod timeline_view;
 mod user_action_dialogs;
 
-use crate::chat::chat_room::open_room::OpenRoom;
+use crate::chat::chat_room::open_room::{OpenRoom, OpenRoomFocus, OpenRoomFocusReason};
 use crate::chat::chat_room::room_members::RoomMembers;
 use crate::chat::chat_room::room_settings::RoomSettings;
 use crate::chat::chat_room::room_timeline_content::RoomTimelineContent;
@@ -25,6 +25,7 @@ use contemporary::components::button::button;
 use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
+use contemporary::components::icon_text::icon_text;
 use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
 use contemporary::components::spinner::spinner;
@@ -35,6 +36,7 @@ use gpui::{
     div, px,
 };
 use matrix_sdk::ruma::OwnedRoomId;
+use matrix_sdk_ui::timeline::TimelineFocus;
 use smol::stream::StreamExt;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
@@ -211,7 +213,7 @@ impl ChatRoom {
 impl Render for ChatRoom {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let session_manager = cx.global::<SessionManager>();
-        let Some(client) = session_manager.client() else {
+        if session_manager.client().is_none() {
             return div();
         };
 

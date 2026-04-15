@@ -20,7 +20,9 @@ use matrix_sdk::ruma::events::tag::Tags;
 use matrix_sdk::ruma::events::{Mentions, MessageLikeEventType, room};
 use matrix_sdk::ruma::{OwnedRoomAliasId, OwnedRoomId, UserId, api};
 use matrix_sdk::{Error, HttpError, Room};
-use matrix_sdk_ui::timeline::{AttachmentConfig, AttachmentSource, EventTimelineItem, RoomExt};
+use matrix_sdk_ui::timeline::{
+    AttachmentConfig, AttachmentSource, EventTimelineItem, RoomExt, TimelineFocus,
+};
 use mime2ext::mime2ext;
 use std::fs::read;
 use std::mem;
@@ -42,7 +44,20 @@ pub struct OpenRoom {
     pub timeline: Option<Entity<Timeline>>,
     pub tags: Tags,
     pub pending_reply: Option<EventTimelineItem>,
+    pub current_focus: OpenRoomFocus,
     local_aliases: Vec<OwnedRoomAliasId>,
+}
+
+#[derive(Clone)]
+pub struct OpenRoomFocus {
+    pub timeline_focus: TimelineFocus,
+    pub reason: OpenRoomFocusReason,
+}
+
+#[derive(Clone, PartialEq)]
+pub enum OpenRoomFocusReason {
+    None,
+    Reply,
 }
 
 pub struct PendingAttachment {
@@ -86,6 +101,13 @@ impl OpenRoom {
         let client = session_manager.client().unwrap();
         let client = client.read(cx);
 
+        let initial_focus = OpenRoomFocus {
+            timeline_focus: TimelineFocus::Live {
+                hide_threaded_events: false,
+            },
+            reason: OpenRoomFocusReason::None,
+        };
+
         let mut self_return = Self {
             room: None,
             room_id: room_id.clone(),
@@ -100,6 +122,7 @@ impl OpenRoom {
             tags: Default::default(),
             pending_reply: None,
             local_aliases: Vec::new(),
+            current_focus: initial_focus.clone(),
         };
 
         let Some(room) = client.get_room(&room_id) else {
@@ -108,36 +131,7 @@ impl OpenRoom {
         self_return.room = Some(room.clone());
 
         self_return.setup_acquire_own_user(cx);
-
-        let room_clone = room.clone();
-        cx.spawn(
-            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let timeline = cx
-                    .spawn_tokio(async move {
-                        room_clone
-                            .timeline_builder()
-                            .event_filter(event_filter)
-                            .build()
-                            .await
-                    })
-                    .await;
-
-                let Ok(timeline) = timeline else {
-                    return;
-                };
-
-                let _ = weak_this
-                    .update(cx, |this, cx| {
-                        let timeline_entity = cx.new(|cx| Timeline::new(timeline, cx));
-                        this.timeline = Some(timeline_entity.clone());
-                        cx.notify();
-
-                        this.paginate_backwards(cx);
-                    })
-                    .is_err();
-            },
-        )
-        .detach();
+        self_return.focus_timeline(initial_focus, cx);
 
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
@@ -157,15 +151,54 @@ impl OpenRoom {
         self_return
     }
 
+    pub fn focus_timeline(&mut self, focus: OpenRoomFocus, cx: &mut Context<Self>) {
+        let room_clone = self.room.clone().unwrap();
+        cx.spawn(
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                let timeline = cx
+                    .spawn_tokio({
+                        let focus = focus.timeline_focus.clone();
+                        async move {
+                            room_clone
+                                .timeline_builder()
+                                .event_filter(event_filter)
+                                .with_focus(focus)
+                                .build()
+                                .await
+                        }
+                    })
+                    .await;
+
+                let _ = if let Ok(timeline) = timeline {
+                    weak_this.update(cx, |this, cx| {
+                        let timeline_entity = cx.new(|cx| Timeline::new(timeline, cx));
+                        this.timeline = Some(timeline_entity.clone());
+                        this.current_focus = focus;
+                        cx.notify();
+
+                        this.paginate_backwards(cx);
+                        this.paginate_forwards(cx);
+                    })
+                } else {
+                    weak_this.update(cx, |this, cx| {
+                        this.timeline = None;
+                        cx.notify();
+                    })
+                };
+            },
+        )
+        .detach();
+    }
+
     pub fn paginate_backwards(&mut self, cx: &mut Context<Self>) {
         let weak_this = cx.weak_entity();
         if let Some(timeline) = self.timeline.as_ref() {
             timeline.update(cx, |timeline, cx| {
-                if timeline.pagination_pending || timeline.pagination_at_top {
+                if timeline.back_pagination_pending || timeline.pagination_at_top {
                     return;
                 }
 
-                timeline.pagination_pending = true;
+                timeline.back_pagination_pending = true;
 
                 let timeline = timeline.inner.clone();
                 cx.spawn(
@@ -179,7 +212,42 @@ impl OpenRoom {
                             });
                         let _ = weak_timeline.update(cx, |timeline, cx| {
                             timeline.pagination_at_top = pagination_at_top;
-                            timeline.pagination_pending = false;
+                            timeline.back_pagination_pending = false;
+                            cx.notify();
+                        });
+                        let _ = weak_this.update(cx, |this, cx| {
+                            cx.notify();
+                        });
+                    },
+                )
+                .detach();
+            });
+        }
+    }
+
+    pub fn paginate_forwards(&mut self, cx: &mut Context<Self>) {
+        let weak_this = cx.weak_entity();
+        if let Some(timeline) = self.timeline.as_ref() {
+            timeline.update(cx, |timeline, cx| {
+                if timeline.forward_pagination_pending || timeline.pagination_at_bottom {
+                    return;
+                }
+
+                timeline.forward_pagination_pending = true;
+
+                let timeline = timeline.inner.clone();
+                cx.spawn(
+                    async move |weak_timeline: WeakEntity<Timeline>, cx: &mut AsyncApp| {
+                        let pagination_at_bottom = cx
+                            .spawn_tokio(async move { timeline.paginate_backwards(50).await })
+                            .await
+                            .unwrap_or_else(|e| {
+                                error!("Failed to paginate backwards: {}", e);
+                                false
+                            });
+                        let _ = weak_timeline.update(cx, |timeline, cx| {
+                            timeline.pagination_at_bottom = pagination_at_bottom;
+                            timeline.forward_pagination_pending = false;
                             cx.notify();
                         });
                         let _ = weak_this.update(cx, |this, cx| {
@@ -450,7 +518,7 @@ impl OpenRoom {
     pub fn pagination_pending(&self, cx: &App) -> bool {
         match self.timeline.as_ref() {
             None => false,
-            Some(timeline) => timeline.read(cx).pagination_pending,
+            Some(timeline) => timeline.read(cx).back_pagination_pending,
         }
     }
 
