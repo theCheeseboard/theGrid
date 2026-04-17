@@ -2477,6 +2477,12 @@
     "plural": false,
     "description": null
   },
+  "SEARCH": {
+    "context": "emoji_flyout.rs",
+    "definedIn": "src/auth/emoji_flyout.rs:37",
+    "plural": false,
+    "description": null
+  },
   "SEARCH_PLACEHOLDER": {
     "context": "room_directory.rs",
     "definedIn": "src/chat/room_directory.rs:78",

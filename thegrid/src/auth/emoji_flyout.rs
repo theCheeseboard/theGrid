@@ -1,9 +1,11 @@
-use contemporary::components::button::button;
+use cntp_i18n::tr;
 use contemporary::components::layer::layer;
+use contemporary::components::{button::button, text_field::TextField};
 use contemporary::styling::theme::Theme;
-use emojis::Group;
+use emojis::{Emoji, Group};
+use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, Context, InteractiveElement, IntoElement, ParentElement, Render,
+    App, AppContext, Context, Entity, InteractiveElement, IntoElement, ParentElement, Render,
     StatefulInteractiveElement, Styled, Window, div, px,
 };
 use std::rc::Rc;
@@ -16,14 +18,36 @@ pub struct EmojiSelectedEvent {
 }
 
 pub struct EmojiFlyout {
+    search_field: Entity<TextField>,
     selected_group: Group,
+    visible_emoji: Vec<&'static Emoji>,
 
     emoji_selected_listener: Option<Rc<Box<EmojiSelectedListener>>>,
 }
 
 impl EmojiFlyout {
-    pub fn new(cx: &mut App) -> Self {
+    pub fn new(cx: &mut Context<Self>) -> Self {
+        let text_changed_listener = Rc::new(cx.listener(|this, _, _, cx| {
+            this.update_visible_emoji(cx);
+        }));
+
         Self {
+            search_field: cx.new(|cx| {
+                let mut text_field = TextField::new("search-field", cx);
+                text_field.set_placeholder(&tr!("SEARCH", "Search...").to_string().as_str());
+                text_field.on_text_changed({
+                    let text_changed_listener = text_changed_listener.clone();
+                    move |event, window, cx| {
+                        let event = event.clone();
+                        let text_changed_listener = text_changed_listener.clone();
+                        window.defer(cx, move |window, cx| {
+                            text_changed_listener(&event, window, cx)
+                        });
+                    }
+                });
+                text_field
+            }),
+            visible_emoji: Group::SmileysAndEmotion.emojis().collect(),
             selected_group: Group::SmileysAndEmotion,
             emoji_selected_listener: None,
         }
@@ -35,10 +59,26 @@ impl EmojiFlyout {
     ) {
         self.emoji_selected_listener = Some(Rc::new(Box::new(listener)));
     }
+
+    pub fn update_visible_emoji(&mut self, cx: &mut Context<Self>) {
+        let search_query = self.search_field.read(cx).text().to_lowercase();
+        if search_query.is_empty() {
+            self.visible_emoji = self.selected_group.emojis().collect();
+        } else {
+            self.visible_emoji = emojis::iter()
+                .filter(|emoji| {
+                    emoji
+                        .shortcodes()
+                        .any(|shortcode| shortcode.to_lowercase().contains(&search_query))
+                        || emoji.name().to_lowercase().contains(&search_query)
+                })
+                .collect();
+        }
+    }
 }
 
 impl Render for EmojiFlyout {
-    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.global::<Theme>();
 
         div()
@@ -51,30 +91,16 @@ impl Render for EmojiFlyout {
             .occlude()
             .flex()
             .flex_col()
+            .child(self.search_field.clone())
             .child(
-                Group::iter()
-                    .enumerate()
-                    .fold(layer().flex(), |layer, (i, group)| {
-                        layer.child(
-                            button(i)
-                                .flat()
-                                .child(group.emojis().next().unwrap().as_str())
-                                .checked_when(self.selected_group == group)
-                                .on_click(cx.listener(move |this, _, _, cx| {
-                                    this.selected_group = group;
-                                    cx.notify()
-                                })),
-                        )
-                    }),
-            )
-            .child(
-                self.selected_group.emojis().enumerate().fold(
+                self.visible_emoji.iter().enumerate().fold(
                     div()
                         .id("emoji-selection-area")
                         .overflow_y_scroll()
                         .grid()
                         .grid_cols(10),
                     |david, (i, emoji)| {
+                        let emoji = *emoji;
                         david.child(button(i).flat().child(emoji.as_str()).on_click(cx.listener(
                             move |this, _, window, cx| {
                                 if let Some(emoji_selected_listener) = &this.emoji_selected_listener
@@ -93,5 +119,24 @@ impl Render for EmojiFlyout {
                     },
                 ),
             )
+            .when(self.search_field.read(cx).text().is_empty(), |david| {
+                david.child(
+                    Group::iter()
+                        .enumerate()
+                        .fold(layer().flex(), |layer, (i, group)| {
+                            layer.child(
+                                button(i)
+                                    .flat()
+                                    .child(group.emojis().next().unwrap().as_str())
+                                    .checked_when(self.selected_group == group)
+                                    .on_click(cx.listener(move |this, _, _, cx| {
+                                        this.selected_group = group;
+                                        this.update_visible_emoji(cx);
+                                        cx.notify()
+                                    })),
+                            )
+                        }),
+                )
+            })
     }
 }
