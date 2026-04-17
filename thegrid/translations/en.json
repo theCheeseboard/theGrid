@@ -85,6 +85,7 @@
   "CHANGE_POWER_LEVEL": "Change...",
   "CHAT_BAR_NO_SEND_PERMISSION": "You do not have permission to send messages in this room.",
   "CLOSE": "Close",
+  "COPY": "Copy",
   "CREATE_JOIN_ROOM": "Create or Join Room",
   "CREATE_ROOM": "Create Room",
   "CREATE_ROOM_DESCRIPTION": "Create a room to chat in",

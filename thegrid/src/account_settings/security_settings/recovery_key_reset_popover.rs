@@ -12,6 +12,8 @@ use contemporary::components::popover::popover;
 use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::{MaskMode, TextField};
+use contemporary::components::tooltip::simple_tooltip;
+use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
     App, AppContext, AsyncApp, ClipboardItem, Context, Entity, IntoElement, ParentElement, Render,
@@ -143,6 +145,8 @@ impl RecoveryKeyResetPopover {
 
 impl Render for RecoveryKeyResetPopover {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let theme = cx.theme();
+
         popover("key-reset-popover")
             .visible(self.visible)
             .size_neg(100.)
@@ -283,7 +287,7 @@ impl Render for RecoveryKeyResetPopover {
                                                         ),
                                                         RecoveryState::Unknown
                                                         | RecoveryState::Disabled => icon_text(
-                                                            "configure",
+                                                            "dialog-ok",
                                                             tr!(
                                                                 "SECURITY_RECOVERY_KEY_SETUP",
                                                                 "Set up Recovery Key"
@@ -372,6 +376,11 @@ impl Render for RecoveryKeyResetPopover {
                                                         .child(
                                                             div()
                                                                 .flex_grow()
+                                                                .font_family(
+                                                                    theme
+                                                                        .monospaced_font_family
+                                                                        .clone(),
+                                                                )
                                                                 .child(recovery_key.clone()),
                                                         )
                                                         .child(
@@ -384,7 +393,10 @@ impl Render for RecoveryKeyResetPopover {
                                                                             recovery_key.clone(),
                                                                         ),
                                                                     )
-                                                                }),
+                                                                })
+                                                                .tooltip(simple_tooltip(tr!(
+                                                                    "COPY", "Copy"
+                                                                ))),
                                                         )
                                                         .into_any_element()
                                                 } else {

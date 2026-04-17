@@ -335,6 +335,7 @@ impl Render for DevicesSettings {
             )
             .child(self.uiaa_client.clone())
             .child(self.oauth_management_page_redirect_dialog.clone())
+            .child(self.recovery_key_reset_popover.clone())
     }
 }
 

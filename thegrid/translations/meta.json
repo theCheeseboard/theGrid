@@ -497,6 +497,12 @@
     "plural": false,
     "description": null
   },
+  "COPY": {
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:398",
+    "plural": false,
+    "description": null
+  },
   "CREATE_JOIN_ROOM": {
     "context": "join_room.rs",
     "definedIn": "src/chat/join_room.rs:111",
@@ -661,13 +667,13 @@
   },
   "DEVICE_LAST_ACTIVITY": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:376",
+    "definedIn": "src/account_settings/devices_settings.rs:377",
     "plural": false,
     "description": null
   },
   "DEVICE_VERIFY": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:434",
+    "definedIn": "src/account_settings/devices_settings.rs:435",
     "plural": false,
     "description": null
   },
@@ -799,7 +805,7 @@
   },
   "HEADS_UP": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:397",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:409",
     "plural": false,
     "description": null
   },
@@ -1063,13 +1069,13 @@
   },
   "KEY_CHANGE_DESCRIPTION": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:203",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:207",
     "plural": false,
     "description": null
   },
   "KEY_CHANGE_TITLE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:170",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:174",
     "plural": false,
     "description": null
   },
@@ -1141,73 +1147,73 @@
   },
   "KEY_RESET_COMPLETE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:350",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:354",
     "plural": false,
     "description": null
   },
   "KEY_RESET_DESCRIPTION": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:222",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:226",
     "plural": false,
     "description": null
   },
   "KEY_RESET_ERROR_MESSAGE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:258",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:262",
     "plural": false,
     "description": null
   },
   "KEY_RESET_ERROR_TITLE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:268",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:272",
     "plural": false,
     "description": null
   },
   "KEY_RESET_OK_DESCRIPTION": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:357",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:361",
     "plural": false,
     "description": null
   },
   "KEY_RESET_OPTIONS": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:192",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:196",
     "plural": false,
     "description": null
   },
   "KEY_RESET_PASSPHRASE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:234",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:238",
     "plural": false,
     "description": null
   },
   "KEY_RESET_PASSPHRASE_WARNING": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:245",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:249",
     "plural": false,
     "description": null
   },
   "KEY_RESET_TITLE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:176",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:180",
     "plural": false,
     "description": null
   },
   "KEY_RESET_WARNING": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:399",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:411",
     "plural": false,
     "description": null
   },
   "KEY_SETUP_DESCRIPTION": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:213",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:217",
     "plural": false,
     "description": null
   },
   "KEY_SETUP_TITLE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:173",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:177",
     "plural": false,
     "description": null
   },
@@ -1825,7 +1831,7 @@
   },
   "RECOVERY_PASSPHRASE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:53",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:55",
     "plural": false,
     "description": null
   },
@@ -2557,19 +2563,19 @@
   },
   "SECURITY_RECOVERY_KEY_CHANGE": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:280",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:284",
     "plural": false,
     "description": null
   },
   "SECURITY_RECOVERY_KEY_RESET": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:295",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:299",
     "plural": false,
     "description": null
   },
   "SECURITY_RECOVERY_KEY_SETUP": {
     "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:288",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:292",
     "plural": false,
     "description": null
   },
@@ -2833,7 +2839,7 @@
   },
   "UNVERIFIED_DEVICE_BADGE": {
     "context": "devices_settings.rs",
-    "definedIn": "src/account_settings/devices_settings.rs:414",
+    "definedIn": "src/account_settings/devices_settings.rs:415",
     "plural": false,
     "description": null
   },
