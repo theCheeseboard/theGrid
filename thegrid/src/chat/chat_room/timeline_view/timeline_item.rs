@@ -333,8 +333,7 @@ impl TimelineItem {
                     } else {
                         timeline_message_item(
                             msg.clone(),
-                            event.sender_profile().clone(),
-                            event.sender().to_owned(),
+                            event.clone(),
                             self.open_room.clone(),
                             self.displayed_room.clone(),
                             self.on_user_action.clone(),

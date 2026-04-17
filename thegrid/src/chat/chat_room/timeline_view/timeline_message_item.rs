@@ -20,8 +20,8 @@ use directories::UserDirs;
 use gpui::prelude::FluentBuilder;
 use gpui::{
     AnyElement, App, AppContext, AsyncApp, BorrowAppContext, Bounds, ClipboardItem, Entity,
-    IntoElement, ParentElement, Path, Pixels, RenderOnce, Styled, Window, canvas, div, point, px,
-    rgba,
+    InteractiveElement, IntoElement, ParentElement, Path, Pixels, RenderOnce,
+    StatefulInteractiveElement, Styled, Window, canvas, div, point, px, rgba,
 };
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::events::room::message::{
@@ -29,7 +29,9 @@ use matrix_sdk::ruma::events::room::message::{
 };
 use matrix_sdk::ruma::matrix_uri::MatrixId;
 use matrix_sdk::ruma::{MatrixToUri, OwnedUserId, UserId};
-use matrix_sdk_ui::timeline::{MsgLikeContent, MsgLikeKind, Profile, TimelineDetails};
+use matrix_sdk_ui::timeline::{
+    EventTimelineItem, MsgLikeContent, MsgLikeKind, Profile, TimelineDetails,
+};
 use std::fs::copy;
 use std::rc::Rc;
 use thegrid_common::mxc_image::{SizePolicy, mxc_image};
@@ -42,8 +44,7 @@ use tracing::info;
 #[derive(IntoElement)]
 pub struct TimelineMessageItem {
     content: MsgLikeContent,
-    sender_profile: TimelineDetails<Profile>,
-    sender: OwnedUserId,
+    event: EventTimelineItem,
     room: Entity<OpenRoom>,
     displayed_room: Entity<DisplayedRoom>,
     on_user_action: Rc<Box<AuthorFlyoutUserActionListener>>,
@@ -51,16 +52,14 @@ pub struct TimelineMessageItem {
 
 pub fn timeline_message_item(
     content: MsgLikeContent,
-    sender_profile: TimelineDetails<Profile>,
-    sender: OwnedUserId,
+    event: EventTimelineItem,
     room: Entity<OpenRoom>,
     displayed_room: Entity<DisplayedRoom>,
     on_user_action: Rc<Box<AuthorFlyoutUserActionListener>>,
 ) -> TimelineMessageItem {
     TimelineMessageItem {
         content,
-        sender_profile,
-        sender,
+        event,
         room,
         displayed_room,
         on_user_action,
@@ -71,10 +70,14 @@ impl RenderOnce for TimelineMessageItem {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let theme = cx.global::<Theme>().clone();
 
+        let sender_profile = self.event.sender_profile();
+        let sender = self.event.sender().to_owned();
+
         let session_manager = cx.global::<SessionManager>();
         let client = session_manager.client().unwrap().read(cx).clone();
 
         let reactions = self.content.reactions;
+        let open_room = self.room.clone();
         div()
             .flex()
             .flex_col()
@@ -89,8 +92,8 @@ impl RenderOnce for TimelineMessageItem {
             .child(match self.content.kind {
                 MsgLikeKind::Message(message) => div().child(msgtype_to_message_line(
                     message.msgtype(),
-                    self.sender,
-                    self.sender_profile,
+                    sender,
+                    sender_profile.clone(),
                     false,
                     self.room,
                     self.displayed_room,
@@ -120,6 +123,7 @@ impl RenderOnce for TimelineMessageItem {
                     |david, (reaction, reactees)| {
                         david.child(
                             div()
+                                .id(reaction.clone())
                                 .flex()
                                 .p(px(2.))
                                 .gap(px(2.))
@@ -131,6 +135,21 @@ impl RenderOnce for TimelineMessageItem {
                                     |david| david.bg(theme.layer_background),
                                 )
                                 .rounded(theme.border_radius)
+                                .cursor_pointer()
+                                .on_click({
+                                    let open_room = open_room.clone();
+                                    let reaction = reaction.clone();
+                                    let event = self.event.clone();
+                                    move |_, _, cx| {
+                                        open_room.update(cx, |open_room, cx| {
+                                            open_room.toggle_reaction_on_event(
+                                                &event,
+                                                reaction.clone(),
+                                                cx,
+                                            )
+                                        })
+                                    }
+                                })
                                 .child(reaction.clone())
                                 .child(i18n_manager!().locale.format_decimal(reactees.len())),
                         )
