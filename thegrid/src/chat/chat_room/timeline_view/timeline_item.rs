@@ -1,3 +1,4 @@
+use crate::auth::emoji_flyout::EmojiFlyout;
 use crate::chat::chat_input::{ChatInput, End};
 use crate::chat::chat_room::chat_bar::ChatBar;
 use crate::chat::chat_room::open_room::{OpenRoom, OpenRoomFocus};
@@ -17,6 +18,7 @@ use cntp_i18n::tr;
 use contemporary::components::anchorer::WithAnchorer;
 use contemporary::components::button::button;
 use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
+use contemporary::components::flyout::flyout;
 use contemporary::components::icon::icon;
 use contemporary::components::layer::layer;
 use contemporary::components::tooltip::simple_tooltip;
@@ -96,6 +98,31 @@ impl TimelineItem {
             _ => None,
         };
 
+        let emoji_flyout_visible = window.use_state(cx, |_, _| false);
+        let emoji_flyout = window.use_state(cx, {
+            let emoji_flyout_visible = emoji_flyout_visible.clone();
+            let open_room = open_room.clone();
+            let event = event.clone();
+            move |_, cx| {
+                let mut emoji_flyout = EmojiFlyout::new(cx);
+                emoji_flyout.set_emoji_selected_listener({
+                    let emoji_flyout_visible = emoji_flyout_visible.clone();
+                    let open_room = open_room.clone();
+                    move |emoji_selected_event, _, cx| {
+                        emoji_flyout_visible.write(cx, false);
+                        open_room.update(cx, |open_room, cx| {
+                            open_room.toggle_reaction_on_event(
+                                &event,
+                                emoji_selected_event.emoji.clone(),
+                                cx,
+                            )
+                        })
+                    }
+                });
+                emoji_flyout
+            }
+        });
+
         let author = event.sender();
         let previous_event_author =
             self.previous_timeline_item
@@ -138,6 +165,21 @@ impl TimelineItem {
                                 "For message from {{user}}",
                                 user:quote = sender
                             ))
+                            .build(),
+                    );
+                    context_menu.push(
+                        ContextMenuItem::menu_item()
+                            .label(tr!("MESSAGE_REACT", "Add Reaction"))
+                            .when(
+                                current_user.as_ref().is_some_and(|user| {
+                                    !user.can_send_message(MessageLikeEventType::Reaction)
+                                }),
+                                |david| david.disabled(),
+                            )
+                            .on_triggered({
+                                let emoji_flyout_visible = emoji_flyout_visible.clone();
+                                move |_, _, cx| emoji_flyout_visible.write(cx, true)
+                            })
                             .build(),
                     );
                     context_menu.push(
@@ -476,6 +518,19 @@ impl TimelineItem {
                     .when(!context_menu.is_empty(), |david| {
                         david.with_context_menu(context_menu)
                     })
+                    .with_anchorer({
+                        let emoji_flyout_visible = emoji_flyout_visible.clone();
+                        let emoji_flyout = emoji_flyout.clone();
+                        move |david, bounds, _, cx| {
+                            david.child(
+                                flyout(bounds)
+                                    .render_as_deferred(true)
+                                    .visible(*emoji_flyout_visible.read(cx))
+                                    .on_close(move |_, _, cx| emoji_flyout_visible.write(cx, false))
+                                    .child(emoji_flyout),
+                            )
+                        }
+                    })
                     .into_any_element()
             }
             TimelineRowType::MessageWithoutAuthor => div()
@@ -503,6 +558,19 @@ impl TimelineItem {
                 )
                 .when(!context_menu.is_empty(), |david| {
                     david.with_context_menu(context_menu)
+                })
+                .with_anchorer({
+                    let emoji_flyout_visible = emoji_flyout_visible.clone();
+                    let emoji_flyout = emoji_flyout.clone();
+                    move |david, bounds, _, cx| {
+                        david.child(
+                            flyout(bounds)
+                                .render_as_deferred(true)
+                                .visible(*emoji_flyout_visible.read(cx))
+                                .on_close(move |_, _, cx| emoji_flyout_visible.write(cx, false))
+                                .child(emoji_flyout),
+                        )
+                    }
                 })
                 .into_any_element(),
             TimelineRowType::State => div()

@@ -496,6 +496,22 @@ impl OpenRoom {
         .detach();
     }
 
+    pub fn toggle_reaction_on_event(
+        &mut self,
+        event: &EventTimelineItem,
+        reaction: String,
+        cx: &mut Context<Self>,
+    ) {
+        let timeline = self.timeline.clone().unwrap().read(cx).inner.clone();
+        let identifier = event.identifier().clone();
+        cx.spawn(async move |_: WeakEntity<Self>, cx: &mut AsyncApp| {
+            let _ = cx
+                .spawn_tokio(async move { timeline.toggle_reaction(&identifier, &reaction).await })
+                .await;
+        })
+        .detach();
+    }
+
     pub fn escape_press(&mut self, _: &mut Window, cx: &mut Context<Self>) {
         self.set_pending_reply(None, cx);
     }

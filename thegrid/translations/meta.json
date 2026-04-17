@@ -613,7 +613,7 @@
   },
   "DATE_DIVIDER": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:540",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:608",
     "plural": false,
     "description": null
   },
@@ -715,19 +715,19 @@
   },
   "EDITED_MESSAGE_INDICATOR": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:334",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:376",
     "plural": false,
     "description": null
   },
   "EDIT_CANCEL": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:273",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:315",
     "plural": false,
     "description": null
   },
   "EDIT_SUBMIT": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:285",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:327",
     "plural": false,
     "description": null
   },
@@ -1363,25 +1363,31 @@
   },
   "MESSAGE_CONTEXT_MENU_TITLE": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:137",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:164",
     "plural": false,
     "description": null
   },
   "MESSAGE_CORRUPT": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:320",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:362",
     "plural": false,
     "description": null
   },
   "MESSAGE_EDIT": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:188",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:230",
+    "plural": false,
+    "description": null
+  },
+  "MESSAGE_REACT": {
+    "context": "timeline_item.rs",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:172",
     "plural": false,
     "description": null
   },
   "MESSAGE_REDACT": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:171",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:213",
     "plural": false,
     "description": null
   },
@@ -1393,7 +1399,7 @@
   },
   "MESSAGE_REPLY": {
     "context": "timeline_item.rs",
-    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:145",
+    "definedIn": "src/chat/chat_room/timeline_view/timeline_item.rs:187",
     "plural": false,
     "description": null
   },
