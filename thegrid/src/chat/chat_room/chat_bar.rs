@@ -5,7 +5,9 @@ use crate::chat::chat_room::timeline_view::reply_fragment::reply_fragment;
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::{tr, trn};
 use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::anchorer::WithAnchorer;
 use contemporary::components::button::button;
+use contemporary::components::flyout::flyout;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -306,7 +308,24 @@ impl Render for ChatBar {
                                     emoji_flyout
                                 }));
                                 cx.notify()
-                            })),
+                            }))
+                            .when_some(self.emoji_flyout.clone(), {
+                                let close_listener = cx.listener(move |this, _, _, cx| {
+                                    this.emoji_flyout = None;
+                                    cx.notify()
+                                });
+                                move |david, emoji_flyout| {
+                                    david.with_anchorer(|david, bounds, _, _| {
+                                        david.child(
+                                            flyout(bounds)
+                                                .visible(true)
+                                                .anchor_bottom_right()
+                                                .on_close(close_listener)
+                                                .child(emoji_flyout),
+                                        )
+                                    })
+                                }
+                            }),
                     )
                     .child(
                         button("send_button")
@@ -317,32 +336,7 @@ impl Render for ChatBar {
                                     open_room.send_pending_message(window, cx);
                                 })
                             })),
-                    )
-                    .when_some(self.emoji_flyout.clone(), |david, emoji_flyout| {
-                        david.child(deferred(
-                            anchored().position(Point::new(px(0.), px(0.))).child(
-                                div()
-                                    .top_0()
-                                    .left_0()
-                                    .w(window_size.width - inset - inset)
-                                    .h(window_size.height - inset - inset)
-                                    .m(inset)
-                                    .occlude()
-                                    .on_any_mouse_down(cx.listener(move |this, _, _, cx| {
-                                        this.emoji_flyout = None;
-                                        cx.notify()
-                                    }))
-                                    .child(
-                                        anchored()
-                                            .position(Point::new(
-                                                window_size.width,
-                                                window_size.height,
-                                            ))
-                                            .child(emoji_flyout.into_any_element()),
-                                    ),
-                            ),
-                        ))
-                    }),
+                    ),
             )
             .child(
                 div().flex().child(match typing_users.len() {
