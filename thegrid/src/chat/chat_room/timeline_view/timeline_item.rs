@@ -523,7 +523,6 @@ impl TimelineItem {
                         move |david, bounds, _, cx| {
                             david.child(
                                 flyout(bounds)
-                                    .render_as_deferred(true)
                                     .visible(*emoji_flyout_visible.read(cx))
                                     .on_close(move |_, _, cx| emoji_flyout_visible.write(cx, false))
                                     .child(emoji_flyout),
@@ -564,7 +563,6 @@ impl TimelineItem {
                     move |david, bounds, _, cx| {
                         david.child(
                             flyout(bounds)
-                                .render_as_deferred(true)
                                 .visible(*emoji_flyout_visible.read(cx))
                                 .on_close(move |_, _, cx| emoji_flyout_visible.write(cx, false))
                                 .child(emoji_flyout),

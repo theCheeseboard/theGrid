@@ -392,7 +392,6 @@ impl RenderOnce for Invitation {
             )
             .child(
                 dialog_box("decline-dialog-box")
-                    .render_as_deferred(true)
                     .visible(*decline_dialog_box_open.read(cx))
                     .processing(processing)
                     .title(tr!("INVITE_DECLINE_TITLE", "Decline Pending Invitation"))

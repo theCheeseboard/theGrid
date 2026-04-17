@@ -479,7 +479,6 @@ fn text_message(
         )
         .child(
             dialog_box("link-open-confirmation")
-                .render_as_deferred(true)
                 .visible(current_link.is_some())
                 .title(tr!("LINK_OPEN_CONFIRMATION", "Visit Link"))
                 .content(

@@ -269,7 +269,6 @@ impl RenderOnce for StandardRoomElement {
             .with_context_menu(context_menu)
             .child(
                 dialog_box("leave-room-dialog-box")
-                    .render_as_deferred(true)
                     .visible(matches!(
                         current_dialog_box_value,
                         CurrentDialogBox::LeaveRoom(_)

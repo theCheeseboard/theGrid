@@ -163,7 +163,6 @@ impl RenderOnce for AuthorFlyout {
         let room_6 = room.clone();
 
         flyout(self.bounds)
-            .render_as_deferred(true)
             .visible(self.visible)
             .anchor_top_right()
             .child(match &self.author.read(cx) {
