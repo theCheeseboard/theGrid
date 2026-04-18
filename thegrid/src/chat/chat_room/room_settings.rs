@@ -5,12 +5,12 @@ use crate::chat::chat_room::room_settings::room_replace_popover::{
     RoomReplaceEvent, RoomReplacePopover,
 };
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::upload_mxc_dialog::{UploadMxcAcceptEvent, upload_mxc_dialog};
-use cntp_i18n::{I18nString, tr};
-use contemporary::components::button::{ButtonMenuOpenPolicy, button};
+use crate::upload_mxc_dialog::{upload_mxc_dialog, UploadMxcAcceptEvent};
+use cntp_i18n::{tr, I18nString};
+use contemporary::components::button::{button, ButtonMenuOpenPolicy};
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::context_menu::ContextMenuItem;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
@@ -22,8 +22,8 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, ClickEvent, Context, ElementId, Entity, InteractiveElement,
-    IntoElement, ParentElement, Render, Styled, WeakEntity, Window, div, px,
+    div, px, App, AppContext, AsyncApp, ClickEvent, Context, ElementId,
+    Entity, InteractiveElement, IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
 };
 use matrix_sdk::ruma::api::client::room::Visibility;
 use matrix_sdk::ruma::events::room::avatar::ImageInfo;
@@ -31,7 +31,7 @@ use matrix_sdk::ruma::events::{MessageLikeEventType, StateEventType};
 use matrix_sdk::ruma::room::JoinRule;
 use matrix_sdk::ruma::{OwnedRoomAliasId, RoomAliasId, UInt};
 use std::rc::Rc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 
@@ -40,8 +40,10 @@ pub struct RoomSettings {
     on_back_click: Rc<Box<dyn Fn(&ClickEvent, &mut Window, &mut App)>>,
     on_members_click: Rc<Box<dyn Fn(&ClickEvent, &mut Window, &mut App)>>,
     edit_room_name_open: bool,
+    edit_room_topic_open: bool,
     edit_room_image_open: bool,
     new_name_text_field: Entity<TextField>,
+    new_topic_text_field: Entity<TextField>,
     enable_encryption_open: bool,
     busy: bool,
     published_to_directory: bool,
@@ -92,8 +94,18 @@ impl RoomSettings {
                 );
                 text_field
             }),
+            new_topic_text_field: cx.new(|cx| {
+                let mut text_field = TextField::new("new-topic", cx);
+                text_field.set_placeholder(
+                    tr!("ROOM_TOPIC_PLACEHOLDER", "Room Topic")
+                        .to_string()
+                        .as_str(),
+                );
+                text_field
+            }),
 
             edit_room_name_open: false,
+            edit_room_topic_open: false,
             edit_room_image_open: false,
             enable_encryption_open: false,
             busy: false,
@@ -687,19 +699,17 @@ impl Render for RoomSettings {
         let Some(room) = open_room.room.as_ref() else {
             return div();
         };
+        let room = room.clone();
         let current_user = open_room.current_user.as_ref();
 
         let is_space = room.is_space();
-
-        let room = room.clone();
-        let room_2 = room.clone();
-        let room_3 = room.clone();
 
         let room_name = room
             .cached_display_name()
             .map(|name| name.to_string())
             .or_else(|| room.name())
             .unwrap_or_default();
+        let room_topic = room.topic().unwrap_or_default();
 
         div()
             .flex()
@@ -810,6 +820,29 @@ impl Render for RoomSettings {
                                                     },
                                                 );
                                                 this.edit_room_name_open = true;
+                                                cx.notify()
+                                            })),
+                                    )
+                                    .child(
+                                        button("room-change-topic")
+                                            .child(icon_text(
+                                                "edit-rename",
+                                                tr!("ROOM_CHANGE_TOPIC", "Change Topic"),
+                                            ))
+                                            .when(
+                                                current_user.is_some_and(|user| {
+                                                    !user.can_send_state(StateEventType::RoomTopic)
+                                                }),
+                                                |david| david.disabled(),
+                                            )
+                                            .on_click(cx.listener(move |this, _, _, cx| {
+                                                this.new_topic_text_field.update(
+                                                    cx,
+                                                    |text_field, _| {
+                                                        text_field.set_text(room_topic.as_str());
+                                                    },
+                                                );
+                                                this.edit_room_topic_open = true;
                                                 cx.notify()
                                             })),
                                     )
@@ -1017,35 +1050,41 @@ impl Render for RoomSettings {
                     .button(
                         button("change-room_name-button")
                             .child(icon_text("dialog-ok", tr!("ROOM_CHANGE_NAME")))
-                            .on_click(cx.listener(move |this, _, _, cx| {
-                                let room = room_2.clone();
-                                let new_display_name =
-                                    this.new_name_text_field.read(cx).text().to_string();
+                            .on_click(cx.listener({
+                                let room = room.clone();
+                                move |this, _, _, cx| {
+                                    let room = room.clone();
+                                    let new_display_name =
+                                        this.new_name_text_field.read(cx).text().to_string();
 
-                                this.busy = true;
-                                cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                                    if cx
-                                        .spawn_tokio(async move {
-                                            room.set_name(new_display_name.to_string()).await
-                                        })
-                                        .await
-                                        .is_err()
-                                    {
-                                        this.update(cx, |this, cx| {
-                                            // TODO: Show the error
-                                            this.busy = false;
-                                            cx.notify()
-                                        })
-                                    } else {
-                                        this.update(cx, |this, cx| {
-                                            this.edit_room_name_open = false;
-                                            this.busy = false;
-                                            cx.notify()
-                                        })
-                                    }
-                                })
-                                .detach();
-                                cx.notify()
+                                    this.busy = true;
+                                    cx.spawn(
+                                        async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                                            if cx
+                                                .spawn_tokio(async move {
+                                                    room.set_name(new_display_name.to_string())
+                                                        .await
+                                                })
+                                                .await
+                                                .is_err()
+                                            {
+                                                this.update(cx, |this, cx| {
+                                                    // TODO: Show the error
+                                                    this.busy = false;
+                                                    cx.notify()
+                                                })
+                                            } else {
+                                                this.update(cx, |this, cx| {
+                                                    this.edit_room_name_open = false;
+                                                    this.busy = false;
+                                                    cx.notify()
+                                                })
+                                            }
+                                        },
+                                    )
+                                    .detach();
+                                    cx.notify()
+                                }
                             })),
                     ),
             )
@@ -1096,6 +1135,78 @@ impl Render for RoomSettings {
                 }),
             ))
             .child(
+                dialog_box("edit-room-topic")
+                    .visible(self.edit_room_topic_open)
+                    .processing(self.busy)
+                    .title(tr!("ROOM_CHANGE_TOPIC"))
+                    .content(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .w(px(500.))
+                            .gap(px(12.))
+                            .child(if is_space {
+                                tr!(
+                                    "SPACE_CHANGE_TOPIC_DESCRIPTION",
+                                    "What do you want to set as the topic for this space?"
+                                )
+                            } else {
+                                tr!(
+                                    "ROOM_CHANGE_TOPIC_DESCRIPTION",
+                                    "What do you want to set as the topic for this room?"
+                                )
+                            })
+                            .child(self.new_topic_text_field.clone().into_any_element()),
+                    )
+                    .standard_button(
+                        StandardButton::Cancel,
+                        cx.listener(|this, _, _, cx| {
+                            this.edit_room_topic_open = false;
+                            cx.notify()
+                        }),
+                    )
+                    .button(
+                        button("change-room_topic-button")
+                            .child(icon_text("dialog-ok", tr!("ROOM_CHANGE_TOPIC")))
+                            .on_click(cx.listener({
+                                let room = room.clone();
+                                move |this, _, _, cx| {
+                                    let room = room.clone();
+                                    let new_topic =
+                                        this.new_topic_text_field.read(cx).text().to_string();
+
+                                    this.busy = true;
+                                    cx.spawn(
+                                        async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                                            if cx
+                                                .spawn_tokio(async move {
+                                                    room.set_room_topic(&new_topic.to_string())
+                                                        .await
+                                                })
+                                                .await
+                                                .is_err()
+                                            {
+                                                this.update(cx, |this, cx| {
+                                                    // TODO: Show the error
+                                                    this.busy = false;
+                                                    cx.notify()
+                                                })
+                                            } else {
+                                                this.update(cx, |this, cx| {
+                                                    this.edit_room_topic_open = false;
+                                                    this.busy = false;
+                                                    cx.notify()
+                                                })
+                                            }
+                                        },
+                                    )
+                                    .detach();
+                                    cx.notify()
+                                }
+                            })),
+                    ),
+            )
+            .child(
                 dialog_box("enable-encryption")
                     .visible(self.enable_encryption_open)
                     .processing(self.busy)
@@ -1119,31 +1230,37 @@ impl Render for RoomSettings {
                         button("encryption-enable-button")
                             .destructive()
                             .child(icon_text("dialog-ok", tr!("ROOM_ENCRYPTION_ENABLE")))
-                            .on_click(cx.listener(move |this, _, _, cx| {
-                                let room = room_3.clone();
-
-                                this.busy = true;
-                                cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                                    if cx
-                                        .spawn_tokio(async move { room.enable_encryption().await })
-                                        .await
-                                        .is_err()
-                                    {
-                                        this.update(cx, |this, cx| {
-                                            // TODO: Show the error
-                                            this.busy = false;
-                                            cx.notify()
-                                        })
-                                    } else {
-                                        this.update(cx, |this, cx| {
-                                            this.enable_encryption_open = false;
-                                            this.busy = false;
-                                            cx.notify()
-                                        })
-                                    }
-                                })
-                                .detach();
-                                cx.notify()
+                            .on_click(cx.listener({
+                                let room = room.clone();
+                                move |this, _, _, cx| {
+                                    let room = room.clone();
+                                    this.busy = true;
+                                    cx.spawn(
+                                        async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                                            if cx
+                                                .spawn_tokio(async move {
+                                                    room.enable_encryption().await
+                                                })
+                                                .await
+                                                .is_err()
+                                            {
+                                                this.update(cx, |this, cx| {
+                                                    // TODO: Show the error
+                                                    this.busy = false;
+                                                    cx.notify()
+                                                })
+                                            } else {
+                                                this.update(cx, |this, cx| {
+                                                    this.enable_encryption_open = false;
+                                                    this.busy = false;
+                                                    cx.notify()
+                                                })
+                                            }
+                                        },
+                                    )
+                                    .detach();
+                                    cx.notify()
+                                }
                             })),
                     ),
             )
