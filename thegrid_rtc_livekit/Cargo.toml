@@ -10,7 +10,7 @@ thegrid_common = { workspace = true }
 contemporary = { workspace = true }
 cntp_i18n = { workspace = true }
 livekit = { workspace = true }
-reqwest = { workspace = true }
+zed-reqwest = { workspace = true }
 serde = { version = "1.0.228", features = ["derive"] }
 log = "0.4.28"
 cpal = "0.17"

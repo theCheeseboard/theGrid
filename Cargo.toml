@@ -51,3 +51,9 @@ rustc-hash = "2"
 qrcode = { version = "0.14", features = ["image"] }
 rodio = "0.22"
 mimetype-detector = "0.3"
+zed-reqwest = { version = "0.12.15-zed", default-features = false, features = [
+    "json",
+    "macos-system-configuration",
+    "rustls-tls-webpki-roots",
+    "stream"
+] }

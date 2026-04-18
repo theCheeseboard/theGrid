@@ -207,7 +207,6 @@ impl LivekitCall {
             .read(cx)
             .inner
             .clone();
-        let room_id_clone = room_id.clone();
         let device_id = client.device_id().unwrap().to_owned();
 
         let rtc_foci = session_manager.rtc_foci().clone();
@@ -215,7 +214,9 @@ impl LivekitCall {
         let cancellation_source = CancellationTokenSource::new();
         let cancellation_token = cancellation_source.token();
 
-        cx.spawn(
+        cx.spawn({
+            let room_id = room_id.clone();
+
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 let room_clone = room.clone();
 
@@ -255,11 +256,18 @@ impl LivekitCall {
                 };
 
                 // Get the LiveKit JWT
-                let client = reqwest::Client::new();
-                let Ok(livekit_jwt_response) = client
-                    .post(format!("{}/sfu/get", service_url))
-                    .body(
-                        json!({
+                let client = zed_reqwest::Client::new();
+                let Ok(livekit_jwt_response) = cx
+                    .spawn_tokio({
+                        let client = client.clone();
+                        let device_id = device_id.clone();
+                        let room_id = room_id.clone();
+                        let service_url = format!("{}/sfu/get", service_url);
+                        async move {
+                            client
+                        .post(service_url)
+                        .body(
+                            json!({
                             "device_id": device_id.to_string(),
                             "openid_token": {
                                 "access_token": openid_token.access_token,
@@ -267,12 +275,15 @@ impl LivekitCall {
                                 "matrix_server_name": openid_token.matrix_server_name.to_string(),
                                 "token_type": openid_token.token_type.to_string()
                             },
-                            "room": room_id_clone
+                            "room": room_id
                         })
-                        .to_string(),
-                    )
-                    .header(header::CONTENT_TYPE, "application/json")
-                    .send()
+                                .to_string(),
+                        )
+                        .header(header::CONTENT_TYPE, "application/json")
+                        .send()
+                        .await
+                        }
+                    })
                     .await
                 else {
                     let _ = weak_this.update(cx, |this, cx| {
@@ -312,7 +323,7 @@ impl LivekitCall {
                                 device_id,
                                 ActiveFocus::Livekit(ActiveLivekitFocus::new()),
                                 vec![Focus::Livekit(LivekitFocus::new(
-                                    room_id_clone.to_string(),
+                                    room_id.to_string(),
                                     service_url,
                                 ))],
                                 None,
@@ -498,8 +509,8 @@ impl LivekitCall {
                 });
 
                 // TODO: Delay a disconnection message
-            },
-        )
+            }
+        })
         .detach();
 
         let cached_call_members = cx.new(|_| Vec::new());
