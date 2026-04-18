@@ -1,15 +1,15 @@
 use crate::auth::emoji_flyout::EmojiFlyout;
 use crate::chat::chat_input::{ChatInput, End};
-use crate::chat::chat_room::chat_bar::ChatBar;
 use crate::chat::chat_room::open_room::{OpenRoom, OpenRoomFocus};
 use crate::chat::chat_room::timeline_view::author_flyout::{
-    AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener, author_flyout,
+    author_flyout, AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener,
 };
 use crate::chat::chat_room::timeline_view::membership_change_item::membership_change_item;
 use crate::chat::chat_room::timeline_view::message_error_item::message_error_item;
 use crate::chat::chat_room::timeline_view::profile_change_item::profile_change_item;
 use crate::chat::chat_room::timeline_view::room_head::room_head;
 use crate::chat::chat_room::timeline_view::rtc_notification_item::rtc_notification_item;
+use crate::chat::chat_room::timeline_view::state_change_element::state_change_element;
 use crate::chat::chat_room::timeline_view::state_event_item::state_event_item;
 use crate::chat::chat_room::timeline_view::timeline_message_item::timeline_message_item;
 use crate::chat::displayed_room::DisplayedRoom;
@@ -22,26 +22,26 @@ use contemporary::components::flyout::flyout;
 use contemporary::components::icon::icon;
 use contemporary::components::layer::layer;
 use contemporary::components::tooltip::simple_tooltip;
-use contemporary::styling::theme::{Theme, VariableColor, variable_transparent};
+use contemporary::styling::theme::{variable_transparent, Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, ElementId, Entity, Focusable, InteractiveElement, IntoElement, ParentElement,
-    RenderOnce, StatefulInteractiveElement, Styled, WeakEntity, Window, deferred, div, px,
+    deferred, div, px, App, AsyncApp, ElementId, Entity, Focusable,
+    InteractiveElement, IntoElement, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, WeakEntity, Window,
 };
-use matrix_sdk::room::RoomMember;
 use matrix_sdk::room::edit::EditedContent;
-use matrix_sdk::ruma::events::MessageLikeEventType;
+use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::events::room::message::{
     MessageType, RoomMessageEventContentWithoutRelation,
 };
+use matrix_sdk::ruma::events::MessageLikeEventType;
 use matrix_sdk_ui::timeline::{
-    EventTimelineItem, MsgLikeKind, TimelineDetails, TimelineFocus,
+    EventTimelineItem, Message, MsgLikeContent, MsgLikeKind, TimelineDetails, TimelineFocus,
     TimelineItem as MatrixUiTimelineItem, TimelineItemContent, TimelineItemKind,
     VirtualTimelineItem,
 };
 use std::rc::Rc;
 use std::sync::Arc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::tokio_helper::TokioHelper;
 
 #[derive(IntoElement)]
@@ -156,6 +156,20 @@ impl TimelineItem {
             .flex()
             .flex_col()
             .child(match event.content() {
+                TimelineItemContent::MsgLike(MsgLikeContent {
+                    kind: MsgLikeKind::Message(message),
+                    ..
+                }) if matches!(message.msgtype(), MessageType::VerificationRequest(_)) => {
+                    state_change_element(
+                        Some("padlock".into()),
+                        tr!(
+                            "MESSAGE_KEY_VERIFICATION",
+                            "{{user}} requested key verification",
+                            user = event.sender().to_string()
+                        ),
+                    )
+                    .into_any_element()
+                }
                 TimelineItemContent::MsgLike(msg) => {
                     let sender = event.sender().to_string();
                     context_menu.push(
@@ -256,14 +270,14 @@ impl TimelineItem {
                                             match message.msgtype() {
                                                 MessageType::Notice(_) => {
                                                     RoomMessageEventContentWithoutRelation::
-                                                        notice_markdown(edit.read(cx))
+                                                    notice_markdown(edit.read(cx))
                                                 }
                                                 MessageType::Text(_) => {
                                                     RoomMessageEventContentWithoutRelation::
-                                                        text_markdown(edit.read(cx))
+                                                    text_markdown(edit.read(cx))
                                                 }
                                                 _ => RoomMessageEventContentWithoutRelation::
-                                                        new(message.msgtype().clone()),
+                                                new(message.msgtype().clone()),
                                             }
                                         ),
                                         cx,
@@ -621,13 +635,17 @@ impl RenderOnce for TimelineItem {
 
 fn is_state_event(content: &TimelineItemContent) -> bool {
     match content {
+        TimelineItemContent::MembershipChange(_)
+        | TimelineItemContent::ProfileChange(_)
+        | TimelineItemContent::OtherState(_) => true,
+        TimelineItemContent::MsgLike(MsgLikeContent {
+            kind: MsgLikeKind::Message(message),
+            ..
+        }) if matches!(message.msgtype(), MessageType::VerificationRequest(_)) => true,
         TimelineItemContent::MsgLike(_)
         | TimelineItemContent::FailedToParseMessageLike { .. }
         | TimelineItemContent::FailedToParseState { .. }
         | TimelineItemContent::CallInvite
         | TimelineItemContent::RtcNotification => false,
-        TimelineItemContent::MembershipChange(_)
-        | TimelineItemContent::ProfileChange(_)
-        | TimelineItemContent::OtherState(_) => true,
     }
 }

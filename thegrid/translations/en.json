@@ -233,6 +233,7 @@
   "MESSAGE_CONTEXT_MENU_TITLE": "For message from {{user}}",
   "MESSAGE_CORRUPT": "Corrupt Message",
   "MESSAGE_EDIT": "Edit",
+  "MESSAGE_KEY_VERIFICATION": "{{user}} requested key verification",
   "MESSAGE_REACT": "Add Reaction",
   "MESSAGE_REDACT": "Remove",
   "MESSAGE_REDACTED": "Removed",
