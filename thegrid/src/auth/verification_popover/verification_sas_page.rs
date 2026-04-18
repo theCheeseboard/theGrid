@@ -34,6 +34,9 @@ impl RenderOnce for VerificationSasPage {
             let sas_state_clone = sas_state.clone();
             let sas_state_clone_2 = sas_state.clone();
 
+            let peer = verification_request.peer_id.clone();
+            let is_self = verification_request.inner.is_self_verification();
+
             div()
                 .flex()
                 .flex_col()
@@ -61,11 +64,21 @@ impl RenderOnce for VerificationSasPage {
                                             "VERIFICATION_SAS_EMOJI",
                                             "Compare these emoji"
                                         )))
-                                        .child(tr!(
-                                            "VERIFICATION_SAS_EMOJI_DESCRIPTION",
-                                            "Check on the other device and ensure that these \
-                                            emoji are displayed, in the same order."
-                                        ))
+                                        .child(if is_self {
+                                            tr!(
+                                                "VERIFICATION_SAS_EMOJI_DESCRIPTION",
+                                                "Check on the other device and ensure that these \
+                                                emoji are displayed, in the same order."
+                                            )
+                                        } else {
+                                            tr!(
+                                                "VERIFICATION_SAS_PEER_EMOJI_DESCRIPTION",
+                                                "Using a different, trusted form of communication, \
+                                                check with {{peer}} and ensure that they see these \
+                                                emoji displayed, in the same order.",
+                                                peer:quote = peer
+                                            )
+                                        })
                                         .child(
                                             div()
                                                 .flex()
@@ -147,11 +160,21 @@ impl RenderOnce for VerificationSasPage {
                                             "VERIFICATION_SAS_DECIMAL",
                                             "Compare these numbers"
                                         )))
-                                        .child(tr!(
-                                            "VERIFICATION_SAS_DECIMAL_DESCRIPTION",
-                                            "Check on the other device and ensure that these \
-                                            numbers are displayed, in the same order."
-                                        ))
+                                        .child(if is_self {
+                                            tr!(
+                                                "VERIFICATION_SAS_DECIMAL_DESCRIPTION",
+                                                "Check on the other device and ensure that these \
+                                                numbers are displayed, in the same order."
+                                            )
+                                        } else {
+                                            tr!(
+                                                "VERIFICATION_SAS_PEER_DECIMAL_DESCRIPTION",
+                                                "Using a different, trusted form of communication, \
+                                                check with {{peer}} and ensure that they see these \
+                                                numbers displayed, in the same order.",
+                                                peer:quote = peer
+                                            )
+                                        })
                                         .child(
                                             div()
                                                 .flex()

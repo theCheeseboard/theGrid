@@ -18,19 +18,19 @@ use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, ClickEvent, Context, Element, Entity, IntoElement, ParentElement,
-    Render, Styled, WeakEntity, Window, div, px,
+    div, px, App, AppContext, AsyncApp, ClickEvent, Context, Element, Entity,
+    IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
 };
-use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::encryption::identities::Device;
 use matrix_sdk::encryption::verification::VerificationRequestState;
+use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::ruma::events::key::verification::cancel::CancelCode;
 use matrix_sdk_crypto::{CancelInfo, QrVerificationState};
 use std::rc::Rc;
 use thegrid_common::sas_emoji::SasEmoji;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::session::verification_requests_cache::{
-    SUPPORTED_VERIFICATION_METHODS, VerificationRequestDetails,
+    VerificationRequestDetails, SUPPORTED_VERIFICATION_METHODS,
 };
 use thegrid_common::tokio_helper::TokioHelper;
 
@@ -71,8 +71,9 @@ impl VerificationPopover {
             let verification_requests = verification_requests.downgrade();
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 if let Some(identity) = cx
-                    .spawn_tokio(async move {
-                        client.encryption().request_user_identity(&user_id).await
+                    .spawn_tokio({
+                        let user_id = user_id.clone();
+                        async move { client.encryption().request_user_identity(&user_id).await }
                     })
                     .await
                     .ok()
@@ -91,8 +92,11 @@ impl VerificationPopover {
                         let verification_request_clone = verification_request.clone();
                         let Ok(verification_request) =
                             verification_requests.update(cx, |requests, cx| {
-                                requests
-                                    .notify_new_verification_request(verification_request_clone, cx)
+                                requests.notify_new_verification_request(
+                                    verification_request_clone,
+                                    user_id,
+                                    cx,
+                                )
                             })
                         else {
                             return;
@@ -121,6 +125,13 @@ impl VerificationPopover {
 
         let session_manager = cx.global::<SessionManager>();
         let verification_requests = session_manager.verification_requests();
+        let user_id = session_manager
+            .client()
+            .unwrap()
+            .read(cx)
+            .user_id()
+            .unwrap()
+            .to_owned();
 
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
@@ -136,7 +147,11 @@ impl VerificationPopover {
                 {
                     let verification_request_clone = verification_request.clone();
                     let verification_request = verification_requests.update(cx, |requests, cx| {
-                        requests.notify_new_verification_request(verification_request_clone, cx)
+                        requests.notify_new_verification_request(
+                            verification_request_clone,
+                            user_id,
+                            cx,
+                        )
                     });
                     let _ = weak_this.update(cx, |this, cx| {
                         this.state =
@@ -210,6 +225,13 @@ impl Render for VerificationPopover {
         let verification_request = verification_request_entity
             .as_ref()
             .map(|verification_request| verification_request.read(cx).clone());
+
+        let peer = verification_request.as_ref().map(|verification_request| {
+            (
+                verification_request.inner.is_self_verification(),
+                verification_request.peer_id.clone(),
+            )
+        });
 
         popover("verification-popover")
             .visible(matches!(
@@ -334,11 +356,20 @@ impl Render for VerificationPopover {
                                             .flex()
                                             .flex_col()
                                             .gap(px(8.))
-                                            .child(tr!(
-                                                "VERIFICATION_POPOVER_OK_MESSAGE",
-                                                "Your device is now verified, and encryption \
-                                                 keys have been shared."
-                                            ))
+                                            .child(if let Some((is_self, peer)) = peer && !is_self {
+                                                tr!(
+                                                    "VERIFICATION_POPOVER_OK_PEER_MESSAGE",
+                                                    "Your communication with {{peer}} is now \
+                                                    verified.",
+                                                    peer:quote = peer
+                                                )
+                                            } else {
+                                                tr!(
+                                                    "VERIFICATION_POPOVER_OK_MESSAGE",
+                                                    "Your device is now verified, and encryption \
+                                                     keys have been shared."
+                                                )
+                                            })
                                             .child(
                                                 button("verification-popover-ok")
                                                     .child(icon_text(

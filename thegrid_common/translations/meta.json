@@ -1,13 +1,13 @@
 {
   "INCOMING_SELF_VERIFICATION_DESCRIPTION": {
     "context": "verification_requests_cache.rs",
-    "definedIn": "src/session/verification_requests_cache.rs:260",
+    "definedIn": "src/session/verification_requests_cache.rs:439",
     "plural": false,
     "description": null
   },
   "INCOMING_VERIFICATION": {
     "context": "verification_requests_cache.rs",
-    "definedIn": "src/session/verification_requests_cache.rs:252",
+    "definedIn": "src/session/verification_requests_cache.rs:431",
     "plural": false,
     "description": null
   },
@@ -85,7 +85,7 @@
   },
   "UNKNOWN_DEVICE": {
     "context": "verification_requests_cache.rs",
-    "definedIn": "src/session/verification_requests_cache.rs:269",
+    "definedIn": "src/session/verification_requests_cache.rs:448",
     "plural": false,
     "description": null
   }
