@@ -11,14 +11,15 @@ use gpui::{
     PathPromptOptions, WeakEntity, Window,
 };
 use log::error;
-use matrix_sdk::room::RoomMember;
+use matrix_sdk::attachment::{AttachmentInfo, BaseFileInfo};
 use matrix_sdk::room::edit::EditedContent;
+use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::api::client::room::aliases::v3::Response;
 use matrix_sdk::ruma::events::room::canonical_alias::RoomCanonicalAliasEventContent;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::events::tag::Tags;
-use matrix_sdk::ruma::events::{Mentions, MessageLikeEventType, room};
-use matrix_sdk::ruma::{OwnedRoomAliasId, OwnedRoomId, UserId, api};
+use matrix_sdk::ruma::events::{room, Mentions, MessageLikeEventType};
+use matrix_sdk::ruma::{api, OwnedRoomAliasId, OwnedRoomId, UInt, UserId};
 use matrix_sdk::{Error, HttpError, Room};
 use matrix_sdk_ui::timeline::{
     AttachmentConfig, AttachmentSource, EventTimelineItem, RoomExt, TimelineFocus,
@@ -427,6 +428,13 @@ impl OpenRoom {
                         let timeline = timeline.clone();
                         let _ = cx
                             .spawn_tokio(async move {
+                                let attachment_config = AttachmentConfig {
+                                    info: Some(AttachmentInfo::File(BaseFileInfo {
+                                        size: UInt::new(data.len() as u64),
+                                    })),
+                                    ..Default::default()
+                                };
+
                                 timeline
                                     .send_attachment(
                                         AttachmentSource::Data {
@@ -434,7 +442,7 @@ impl OpenRoom {
                                             bytes: data,
                                         },
                                         attachment.mime_type.parse().unwrap(),
-                                        AttachmentConfig::default(),
+                                        attachment_config,
                                     )
                                     .await
                             })
