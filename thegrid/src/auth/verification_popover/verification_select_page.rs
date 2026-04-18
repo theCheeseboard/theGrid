@@ -36,6 +36,8 @@ impl RenderOnce for VerificationSelectPage {
             .flex()
             .flex_col()
             .gap(px(9.))
+            .size_full()
+            .overflow_hidden()
             .child(
                 grandstand("verify-popover-grandstand")
                     .text(tr!("POPOVER_VERIFY"))

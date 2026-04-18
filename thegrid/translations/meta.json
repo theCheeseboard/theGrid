@@ -493,7 +493,7 @@
   },
   "CLOSE": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:377",
+    "definedIn": "src/auth/verification_popover.rs:378",
     "plural": false,
     "description": null
   },
@@ -1687,7 +1687,7 @@
   },
   "POPOVER_VERIFY": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:314",
+    "definedIn": "src/auth/verification_popover.rs:315",
     "plural": false,
     "description": null
   },
@@ -2935,7 +2935,7 @@
   },
   "VERIFICATION_POPOVER_AWAITING_OK": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:479",
+    "definedIn": "src/auth/verification_popover.rs:480",
     "plural": false,
     "description": null
   },
@@ -2947,67 +2947,67 @@
   },
   "VERIFICATION_POPOVER_AWAITING_OK_TEXT": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:491",
+    "definedIn": "src/auth/verification_popover.rs:492",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_AWAITING_OK_US_TEXT": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:499",
+    "definedIn": "src/auth/verification_popover.rs:500",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_CANCELLED": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:440",
+    "definedIn": "src/auth/verification_popover.rs:441",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_EMOJI": {
     "context": "verification_select_page.rs",
-    "definedIn": "src/auth/verification_popover/verification_select_page.rs:137",
+    "definedIn": "src/auth/verification_popover/verification_select_page.rs:139",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_EMOJI_ONLY_TEXT": {
     "context": "verification_select_page.rs",
-    "definedIn": "src/auth/verification_popover/verification_select_page.rs:147",
+    "definedIn": "src/auth/verification_popover/verification_select_page.rs:149",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_EMOJI_TEXT": {
     "context": "verification_select_page.rs",
-    "definedIn": "src/auth/verification_popover/verification_select_page.rs:152",
+    "definedIn": "src/auth/verification_popover/verification_select_page.rs:154",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_OK": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:351",
+    "definedIn": "src/auth/verification_popover.rs:352",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_OK_MESSAGE": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:368",
+    "definedIn": "src/auth/verification_popover.rs:369",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_OK_PEER_MESSAGE": {
     "context": "verification_popover.rs",
-    "definedIn": "src/auth/verification_popover.rs:361",
+    "definedIn": "src/auth/verification_popover.rs:362",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_QR_SCAN": {
     "context": "verification_select_page.rs",
-    "definedIn": "src/auth/verification_popover/verification_select_page.rs:101",
+    "definedIn": "src/auth/verification_popover/verification_select_page.rs:103",
     "plural": false,
     "description": null
   },
   "VERIFICATION_POPOVER_QR_SCAN_TEXT": {
     "context": "verification_select_page.rs",
-    "definedIn": "src/auth/verification_popover/verification_select_page.rs:110",
+    "definedIn": "src/auth/verification_popover/verification_select_page.rs:112",
     "plural": false,
     "description": null
   },
@@ -3037,7 +3037,7 @@
   },
   "VERIFICATION_POPOVER_SAS": {
     "context": "verification_select_page.rs",
-    "definedIn": "src/auth/verification_popover/verification_select_page.rs:161",
+    "definedIn": "src/auth/verification_popover/verification_select_page.rs:163",
     "plural": false,
     "description": null
   },

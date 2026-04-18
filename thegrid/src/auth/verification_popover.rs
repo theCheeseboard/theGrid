@@ -18,8 +18,9 @@ use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, App, AppContext, AsyncApp, ClickEvent, Context, Element, Entity,
-    IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
+    div, px, App, AppContext, AsyncApp, ClickEvent, Context, Element,
+    Entity, InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled,
+    WeakEntity, Window,
 };
 use matrix_sdk::encryption::identities::Device;
 use matrix_sdk::encryption::verification::VerificationRequestState;
@@ -490,17 +491,16 @@ impl Render for VerificationPopover {
                                                     david.child(tr!(
                                                         "VERIFICATION_POPOVER_AWAITING_OK_TEXT",
                                                         "We sent a verification request to that \
-                                                        device. Go ahead and accept it on that \
-                                                        device to continue."
+                                                        device. Go ahead and accept it there to \
+                                                        continue."
                                                     ))
                                                 },
                                                 |david| {
                                                     david.child(tr!(
                                                         "VERIFICATION_POPOVER_AWAITING_OK_US_TEXT",
                                                         "We sent a verification request to all \
-                                                        of your other devices. Go ahead and accept \
-                                                        the verification request on one of your \
-                                                        other verified devices to continue."
+                                                        of your verified other devices. Go ahead \
+                                                        and accept it on one of them to continue."
                                                     ))
                                                 },
                                             )
