@@ -1,6 +1,6 @@
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::displayed_room::DisplayedRoom;
-use cntp_i18n::{Quote, tr};
+use cntp_i18n::{tr, Quote};
 use contemporary::components::button::button;
 use contemporary::components::flyout::flyout;
 use contemporary::components::icon_text::icon_text;
@@ -11,19 +11,18 @@ use contemporary::components::text_field::TextField;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, Bounds, Entity, InteractiveElement, IntoElement, ParentElement, Pixels,
-    RenderOnce, Styled, Window, div, px,
+    div, px, App, AsyncApp, Bounds, Entity, InteractiveElement, IntoElement,
+    ParentElement, Pixels, RenderOnce, Styled, Window,
 };
-use matrix_sdk::Room;
 use matrix_sdk::room::{RoomMember, RoomMemberRole};
-use matrix_sdk::ruma::OwnedUserId;
-use matrix_sdk::ruma::events::StateEventType;
 use matrix_sdk::ruma::events::room::member::MembershipState;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::events::room::power_levels::UserPowerLevel;
+use matrix_sdk::ruma::OwnedUserId;
+use matrix_sdk::Room;
 use matrix_sdk_ui::timeline::RoomExt;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 
@@ -229,10 +228,9 @@ impl RenderOnce for AuthorFlyout {
                     let can_unban =
                         me.is_some_and(|me| me.can_ban()) && membership == MembershipState::Ban;
                     let can_change_power_level = me.is_some_and(|me| {
-                        me.can_send_state(
-                            StateEventType::RoomPowerLevels,
-                        )
-                    } && me.power_level() > room_member.normalized_power_level());
+                        (me.power_level() > room_member.normalized_power_level())
+                            || room_member.user_id() == me.user_id()
+                    });
                     let is_ignored = room_member.is_ignored();
 
                     let theme = cx.global::<Theme>();
