@@ -17,6 +17,7 @@ use gpui::{
 use matrix_sdk::Room;
 use matrix_sdk::room::{RoomMember, RoomMemberRole};
 use matrix_sdk::ruma::OwnedUserId;
+use matrix_sdk::ruma::events::StateEventType;
 use matrix_sdk::ruma::events::room::member::MembershipState;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::events::room::power_levels::UserPowerLevel;
@@ -227,6 +228,11 @@ impl RenderOnce for AuthorFlyout {
                     }) && joined;
                     let can_unban =
                         me.is_some_and(|me| me.can_ban()) && membership == MembershipState::Ban;
+                    let can_change_power_level = me.is_some_and(|me| {
+                        me.can_send_state(
+                            StateEventType::RoomPowerLevels,
+                        )
+                    } && me.power_level() > room_member.normalized_power_level());
                     let is_ignored = room_member.is_ignored();
 
                     let theme = cx.global::<Theme>();
@@ -313,9 +319,13 @@ impl RenderOnce for AuthorFlyout {
                                                 },
                                             )
                                             .child(div().flex_grow())
-                                            .child(
+                                            .when(can_change_power_level, |david| {
+                                                david.child(
                                                 button("change-power-level")
-                                                    .child(tr!("CHANGE_POWER_LEVEL", "Change..."))
+                                                    .child(tr!(
+                                                        "CHANGE_POWER_LEVEL",
+                                                        "Change..."
+                                                    ))
                                                     .on_click(move |_, window, cx| {
                                                         on_close_2(
                                                             &AuthorFlyoutCloseEvent,
@@ -332,8 +342,9 @@ impl RenderOnce for AuthorFlyout {
                                                             window,
                                                             cx,
                                                         );
-                                                    }),
-                                            ),
+                                                    })
+                                                )
+                                            }),
                                     )
                                 })
                                 .when(membership == MembershipState::Ban, |david| {

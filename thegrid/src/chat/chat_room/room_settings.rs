@@ -27,6 +27,7 @@ use gpui::{
 };
 use matrix_sdk::ruma::api::client::room::Visibility;
 use matrix_sdk::ruma::events::room::avatar::ImageInfo;
+use matrix_sdk::ruma::events::{MessageLikeEventType, StateEventType};
 use matrix_sdk::ruma::room::JoinRule;
 use matrix_sdk::ruma::{OwnedRoomAliasId, RoomAliasId, UInt};
 use std::rc::Rc;
@@ -56,7 +57,7 @@ impl RoomSettings {
         on_members_click: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
         cx: &mut Context<RoomSettings>,
     ) -> Self {
-        cx.observe(&open_room, |this, open_room, cx| {
+        cx.observe(&open_room, |_, open_room, cx| {
             if let Some(room) = open_room.read(cx).room.as_ref() {
                 let room = room.clone();
                 cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
@@ -67,7 +68,7 @@ impl RoomSettings {
                         .await;
 
                     if let Ok(room_visibility) = room_visibility {
-                        let _ = this.update(cx, |this, cx| {
+                        let _ = this.update(cx, |this, _| {
                             this.published_to_directory = room_visibility == Visibility::Public;
                         });
                     }
@@ -178,7 +179,8 @@ impl RoomSettings {
         let server_name = client.user_id().unwrap().server_name().to_owned();
 
         let open_room = self.open_room.read(cx);
-        let room = self.open_room.read(cx).room.as_ref().unwrap();
+        let room = open_room.room.as_ref().unwrap();
+        let current_user = open_room.current_user.as_ref();
 
         let is_space = room.is_space();
 
@@ -239,7 +241,7 @@ impl RoomSettings {
                                     loading.write(cx, true);
 
                                     let alias_clone = alias.clone();
-                                    let callback = cx.listener(move |this, result, window, cx| {
+                                    let callback = cx.listener(move |_, result, window, cx| {
                                         if let Err(e) = result {
                                             Toast::new()
                                                 .title(&tr!(
@@ -328,6 +330,14 @@ impl RoomSettings {
                                     menu.push(
                                         ContextMenuItem::menu_item()
                                             .label(tr!("ALIAS_UNSET_CANONICAL", "Remove Main"))
+                                            .when(
+                                                current_user.is_some_and(|user| {
+                                                    !user.can_send_state(
+                                                        StateEventType::RoomAliases,
+                                                    )
+                                                }),
+                                                |david| david.disabled(),
+                                            )
                                             .on_triggered({
                                                 let canonical_alias = None;
                                                 let mut alt_aliases = alt_aliases.clone();
@@ -355,6 +365,14 @@ impl RoomSettings {
                                     menu.push(
                                         ContextMenuItem::menu_item()
                                             .label(tr!("ALIAS_MAKE_CANONICAL", "Make Main"))
+                                            .when(
+                                                current_user.is_some_and(|user| {
+                                                    !user.can_send_state(
+                                                        StateEventType::RoomAliases,
+                                                    )
+                                                }),
+                                                |david| david.disabled(),
+                                            )
                                             .on_triggered({
                                                 let mut canonical_alias = canonical_alias.clone();
                                                 let old_canonical_alias = canonical_alias.replace(alias.clone());
@@ -387,6 +405,14 @@ impl RoomSettings {
                                 menu.push(
                                     ContextMenuItem::menu_item()
                                         .label(tr!("ALIAS_UNPUBLISH", "Unpublish"))
+                                        .when(
+                                            current_user.is_some_and(|user| {
+                                                !user.can_send_state(
+                                                    StateEventType::RoomAliases,
+                                                )
+                                            }),
+                                            |david| david.disabled(),
+                                        )
                                         .on_triggered({
                                             let alias = alias.clone();
                                             let canonical_alias =
@@ -423,6 +449,14 @@ impl RoomSettings {
                                 menu.push(
                                     ContextMenuItem::menu_item()
                                         .label(tr!("ALIAS_MAKE_PUBLIC", "Make Public"))
+                                        .when(
+                                            current_user.is_some_and(|user| {
+                                                !user.can_send_state(
+                                                    StateEventType::RoomAliases,
+                                                )
+                                            }),
+                                            |david| david.disabled(),
+                                        )
                                         .on_triggered({
                                             let canonical_alias = canonical_alias.clone();
                                             let mut alt_aliases = alt_aliases.clone();
@@ -604,7 +638,9 @@ impl RoomSettings {
             let displayed_room = this.open_room.read(cx).displayed_room.clone();
             displayed_room.write(cx, DisplayedRoom::Room(event.new_room_id.clone()));
         });
-        let room = self.open_room.read(cx).room.as_ref().unwrap().clone();
+        let open_room = self.open_room.read(cx);
+        let room = open_room.room.as_ref().unwrap().clone();
+        let current_user = open_room.current_user.clone();
         let replace_popover =
             window.use_state(cx, |_, cx| RoomReplacePopover::new(room, on_replace, cx));
 
@@ -623,6 +659,12 @@ impl RoomSettings {
             .child(
                 button("room-replace-button")
                     .child(icon_text("im-room", tr!("ROOM_REPLACE")))
+                    .when(
+                        current_user.is_some_and(|user| {
+                            !user.can_send_state(StateEventType::RoomTombstone)
+                        }),
+                        |david| david.disabled(),
+                    )
                     .on_click({
                         let replace_popover = replace_popover.clone();
                         move |_, _, cx| {
@@ -641,9 +683,11 @@ impl Render for RoomSettings {
         let on_back_click = self.on_back_click.clone();
         let theme = cx.global::<Theme>();
 
-        let Some(room) = self.open_room.read(cx).room.as_ref() else {
+        let open_room = self.open_room.read(cx);
+        let Some(room) = open_room.room.as_ref() else {
             return div();
         };
+        let current_user = open_room.current_user.as_ref();
 
         let is_space = room.is_space();
 
@@ -752,10 +796,16 @@ impl Render for RoomSettings {
                                                 "edit-rename",
                                                 tr!("ROOM_CHANGE_NAME", "Change Name"),
                                             ))
+                                            .when(
+                                                current_user.is_some_and(|user| {
+                                                    !user.can_send_state(StateEventType::RoomName)
+                                                }),
+                                                |david| david.disabled(),
+                                            )
                                             .on_click(cx.listener(move |this, _, _, cx| {
                                                 this.new_name_text_field.update(
                                                     cx,
-                                                    |text_field, cx| {
+                                                    |text_field, _| {
                                                         text_field.set_text(room_name.as_str());
                                                     },
                                                 );
@@ -769,6 +819,12 @@ impl Render for RoomSettings {
                                                 "edit-rename",
                                                 tr!("ROOM_CHANGE_PICTURE", "Change Picture"),
                                             ))
+                                            .when(
+                                                current_user.is_some_and(|user| {
+                                                    !user.can_send_state(StateEventType::RoomAvatar)
+                                                }),
+                                                |david| david.disabled(),
+                                            )
                                             .on_click(cx.listener(move |this, _, _, cx| {
                                                 this.edit_room_image_open = true;
                                                 cx.notify()
@@ -796,6 +852,14 @@ impl Render for RoomSettings {
                                                             "Enable Encryption"
                                                         ),
                                                     ))
+                                                    .when(
+                                                        current_user.is_some_and(|user| {
+                                                            !user.can_send_state(
+                                                                StateEventType::RoomEncryption,
+                                                            )
+                                                        }),
+                                                        |david| david.disabled(),
+                                                    )
                                                     .on_click(cx.listener(|this, _, _, cx| {
                                                         this.enable_encryption_open = true;
                                                         cx.notify();
@@ -848,6 +912,14 @@ impl Render for RoomSettings {
                                             .child(
                                                 button("change-room-access")
                                                     .child(icon("arrow-down"))
+                                                    .when(
+                                                        current_user.is_some_and(|user| {
+                                                            !user.can_send_state(
+                                                                StateEventType::RoomJoinRules,
+                                                            )
+                                                        }),
+                                                        |david| david.disabled(),
+                                                    )
                                                     .with_menu(vec![
                                                         ContextMenuItem::menu_item()
                                                             .label(tr!("ROOM_ACCESS_INVITE_ONLY"))
