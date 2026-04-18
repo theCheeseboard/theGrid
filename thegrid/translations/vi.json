@@ -400,7 +400,7 @@
   "ROOM_STATE_ROOM_MEMBER_KNOCKED": "{{user}} gõ cửa",
   "ROOM_STATE_ROOM_MEMBER_LEFT": "{{user}} đã rời phòng",
   "ROOM_STATE_ROOM_MEMBER_UNBANNED": "Lệnh cấm của {{user}} bị bỏ",
-  "ROOM_STATE_ROOM_NAME": "{{new_name}} đổi tên phòng đến {{new_name}}",
+  "ROOM_STATE_ROOM_NAME": "{{user}} đổi tên phòng đến {{new_name}}",
   "ROOM_STATE_ROOM_NAME_REDACTED": "{{user}} đổi tên phòng",
   "ROOM_STATE_ROOM_TOPIC": "{{user}} đổi chủ đề phòng",
   "ROOM_STATE_SPACE_PARENT_REDACTED": "{{user}} thêm phòng vào space",
