@@ -379,7 +379,8 @@ impl LivekitCall {
                 let weak_this_clone = weak_this.clone();
                 cx.spawn(async move |cx: &mut AsyncApp| {
                     loop {
-                        let Some(event) = room_events.recv().await else {
+                        let Some(event) = tokio::task::unconstrained(room_events.recv()).await
+                        else {
                             // TODO: End call?
                             return;
                         };

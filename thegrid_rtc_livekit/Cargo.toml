@@ -24,6 +24,7 @@ smallvec = { workspace = true }
 nokhwa = { workspace = true }
 thegrid_screen_share = { workspace = true }
 ringbuffer = { workspace = true }
+tokio = { workspace = true }
 
 [build-dependencies]
 cntp_i18n_gen = { workspace = true }

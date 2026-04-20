@@ -10437,6 +10437,7 @@ dependencies = [
  "smol",
  "thegrid_common",
  "thegrid_screen_share",
+ "tokio",
  "yuv",
  "zed-reqwest",
 ]
