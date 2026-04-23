@@ -69,7 +69,7 @@ impl TimelineView {
                     if event.visible_range.start < 5 {
                         open_room.paginate_backwards(cx);
                     }
-                    if event.visible_range.end > items_len - 5 {
+                    if event.visible_range.end > items_len.saturating_sub(5) {
                         open_room.paginate_forwards(cx);
                     }
                     if event.visible_range.end == items_len && pagination_at_bottom {
