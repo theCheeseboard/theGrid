@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://parlance.vicr123.com/schemas/parlance-json.json
+name: theGrid
+subprojects:
+  - name: theGrid Core
+    type: cntp-rs
+    path: "/thegrid_common/translations/{lang}.json"
+    baseLang: en
+    liveUpdateSupportInformation: |
+      To preview your translations, set the environment variable
+      `CNTP_PARLANCE_ENABLED=1` and start theGrid.
+  - name: theGrid
+    type: cntp-rs
+    path: "/thegrid/translations/{lang}.json"
+    baseLang: en
+      To preview your translations, set the environment variable
+      `CNTP_PARLANCE_ENABLED=1` and start theGrid.
+  - name: theGrid Call Support
+    type: cntp-rs
+    path: "/thegrid_rtc_livekit/translations/{lang}.json"
+    baseLang: en
+      To preview your translations, set the environment variable
+      `CNTP_PARLANCE_ENABLED=1` and start theGrid.
+  - name: theGrid Metadata
+    type: i18next
+    path: "/thegrid/dist/contemporary_toml_translations/{lang}.json"
+    baseLang: en

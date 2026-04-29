@@ -7,7 +7,7 @@
   },
   "ACCOUNT_ACCOUNT_SWITCHER": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:97",
+    "definedIn": "src/main.rs:106",
     "plural": false,
     "description": null
   },
@@ -97,7 +97,7 @@
   },
   "ACCOUNT_LOG_OUT": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:100",
+    "definedIn": "src/main.rs:109",
     "plural": false,
     "description": null
   },
@@ -1357,13 +1357,13 @@
   },
   "MENU_ACCOUNT": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:94",
+    "definedIn": "src/main.rs:103",
     "plural": false,
     "description": null
   },
   "MENU_ROOMS": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:105",
+    "definedIn": "src/main.rs:114",
     "plural": false,
     "description": null
   },
@@ -1897,19 +1897,19 @@
   },
   "ROOMS_CREATE": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:107",
+    "definedIn": "src/main.rs:116",
     "plural": false,
     "description": null
   },
   "ROOMS_CREATE_SPACE": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:109",
+    "definedIn": "src/main.rs:118",
     "plural": false,
     "description": null
   },
   "ROOMS_DIRECT_JOIN": {
     "context": "main.rs",
-    "definedIn": "src/main.rs:113",
+    "definedIn": "src/main.rs:122",
     "plural": false,
     "description": null
   },

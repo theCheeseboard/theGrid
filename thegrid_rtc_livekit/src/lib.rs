@@ -16,12 +16,14 @@ use async_ringbuf::AsyncHeapRb;
 use async_ringbuf::consumer::AsyncConsumer;
 use cancellation_token::CancellationTokenSource;
 use cntp_i18n::{I18N_MANAGER, tr, tr_load};
+use contemporary::icon_tool::Url;
+use contemporary::setup_parlance::setup_parlance_i18n_if_enabled;
 use cpal::Host;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use gpui::http_client::anyhow;
 use gpui::private::{anyhow, serde_json};
 use gpui::{
-    AppContext, AsyncApp, BorrowAppContext, Context, Entity, Image, RenderImage, WeakEntity,
+    App, AppContext, AsyncApp, BorrowAppContext, Context, Entity, Image, RenderImage, WeakEntity,
 };
 use image::{Frame, RgbaImage};
 use livekit::id::TrackSid;
@@ -80,8 +82,16 @@ use yuv::{
     yuv422_to_uyvy422, yuyv422_to_yuv422,
 };
 
-pub fn setup_thegrid_rtc_livekit() {
+pub fn setup_thegrid_rtc_livekit(cx: &mut App) {
     I18N_MANAGER.write().unwrap().load_source(tr_load!());
+
+    setup_parlance_i18n_if_enabled(
+        Url::parse("https://parlance.vicr123.com/").unwrap(),
+        "thegrid",
+        "thegrid-call-support",
+        "thegrid_rtc_livekit",
+        cx,
+    );
 }
 
 pub struct LivekitCall {
@@ -716,6 +726,7 @@ impl LivekitCall {
                                         rotation: VideoRotation::VideoRotation0,
                                         timestamp_us: time_passed as i64,
                                         buffer: i422_frame_buffer,
+                                        frame_metadata: None,
                                     };
 
                                 source.capture_frame(&video_frame);

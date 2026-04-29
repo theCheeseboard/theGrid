@@ -25,6 +25,7 @@ use contemporary::application::{ApplicationLink, Details, License, new_contempor
 use contemporary::macros::application_details;
 use contemporary::self_update::init_self_update;
 use contemporary::setup::{Contemporary, ContemporaryMenus, setup_contemporary};
+use contemporary::setup_parlance::setup_parlance_i18n_if_enabled;
 use contemporary::window::contemporary_window_options;
 use gpui::{
     App, AsyncApp, Bounds, Menu, MenuItem, WeakEntity, WindowBounds, WindowOptions, px, size,
@@ -60,12 +61,20 @@ fn mane() {
         gpui_tokio::init(cx);
         thegrid_text_rendering::init(cx);
         I18N_MANAGER.write().unwrap().load_source(tr_load!());
-        setup_thegrid_common();
-        setup_thegrid_rtc_livekit();
+        setup_thegrid_common(cx);
+        setup_thegrid_rtc_livekit(cx);
         let bounds = Bounds::centered(None, size(px(800.0), px(600.0)), cx);
 
         let outer_window: Rc<RefCell<WeakEntity<MainWindow>>> =
             Rc::new(RefCell::new(WeakEntity::new_invalid()));
+
+        setup_parlance_i18n_if_enabled(
+            Url::parse("https://parlance.vicr123.com/").unwrap(),
+            "thegrid",
+            "thegrid",
+            "thegrid",
+            cx,
+        );
 
         setup_contemporary(
             cx,
