@@ -12,12 +12,14 @@ subprojects:
     type: cntp-rs
     path: "/thegrid/translations/{lang}.json"
     baseLang: en
+    liveUpdateSupportInformation: |
       To preview your translations, set the environment variable
       `CNTP_PARLANCE_ENABLED=1` and start theGrid.
   - name: theGrid Call Support
     type: cntp-rs
     path: "/thegrid_rtc_livekit/translations/{lang}.json"
     baseLang: en
+    liveUpdateSupportInformation: |
       To preview your translations, set the environment variable
       `CNTP_PARLANCE_ENABLED=1` and start theGrid.
   - name: theGrid Metadata
