@@ -27,7 +27,7 @@ jobs:
         if: matrix.os == 'windows-11-arm'
         run: |
           Invoke-WebRequest https://win.rustup.rs/aarch64 -OutFile rustup.exe
-          .\rustup.exe default stable
+          .\rustup.exe default 1.93
           $CargoLocation = .\rustup.exe which cargo
           Add-Content -Path "$env:GITHUB_PATH" -Value ([System.IO.Path]::GetDirectoryName($CargoLocation))
       - uses: Swatinem/rust-cache@v2
