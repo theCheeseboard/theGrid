@@ -56,7 +56,7 @@ jobs:
       - name: Print build UUID
         env:
           BUILD_UUID: ${{ steps.build_uuid.outputs.BUILD_UUID }}
-        run: echo "$BUILD_UUID" > build_uuid.txt
+        run: echo "$env:BUILD_UUID" > build_uuid.txt
       - uses: actions/upload-artifact@v4
         with:
           name: build_uuid-${{ env.ARCH }}
