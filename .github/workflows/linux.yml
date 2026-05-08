@@ -140,7 +140,6 @@ jobs:
         os: [ ubuntu-24.04, ubuntu-24.04-arm ]
     env:
       ARCH: "${{ endsWith(matrix.os, 'arm') && 'aarch64' || 'x86_64' }}"
-      UPLOAD_FILE: theGrid-${{ env.ARCH }}.AppImage
     if: ${{ github.event_name == 'release' }}
     permissions:
       contents: write
@@ -152,6 +151,8 @@ jobs:
         with:
           name: theGrid-linux-${{ env.ARCH }}
       - name: Upload Release
+        env:
+          UPLOAD_FILE: theGrid-${{ env.ARCH }}.AppImage
         run: |
           curl -L \
           -X POST \
