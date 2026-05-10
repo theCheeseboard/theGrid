@@ -1,3 +1,5 @@
+#![recursion_limit = "256"]
+
 use cntp_i18n::{I18N_MANAGER, tr_load};
 use contemporary::icon_tool::Url;
 use contemporary::setup_parlance::setup_parlance_i18n_if_enabled;
