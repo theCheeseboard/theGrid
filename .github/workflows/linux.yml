@@ -54,7 +54,6 @@ jobs:
             libpipewire-0.3-dev \
             libfontconfig-dev
           rustup update
-          rustup default 1.93
       - uses: Swatinem/rust-cache@v2
       - uses: r7kamura/rust-problem-matchers@v1
       - name: Install libcontemporary utils

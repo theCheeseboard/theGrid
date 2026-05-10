@@ -67,8 +67,7 @@ impl RoomReplacePopover {
         let server_room_versions = &session_manager
             .capabilities()
             .read(cx)
-            .capabilities()
-            .room_versions;
+            .supported_room_versions();
 
         Self {
             visible: false,
@@ -147,8 +146,7 @@ impl Render for RoomReplacePopover {
         let server_room_versions = &session_manager
             .capabilities()
             .read(cx)
-            .capabilities()
-            .room_versions;
+            .supported_room_versions();
 
         let stable_room_versions = server_room_versions
             .available

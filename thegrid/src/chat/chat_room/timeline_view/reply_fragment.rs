@@ -10,7 +10,8 @@ use gpui::{
 };
 use matrix_sdk::ruma::{OwnedEventId, OwnedUserId};
 use matrix_sdk_ui::timeline::{
-    InReplyToDetails, MsgLikeKind, Profile, TimelineDetails, TimelineFocus, TimelineItemContent,
+    InReplyToDetails, MsgLikeKind, Profile, TimelineDetails, TimelineEventFocusThreadMode,
+    TimelineFocus, TimelineItemContent,
 };
 use std::rc::Rc;
 
@@ -121,7 +122,9 @@ impl RenderOnce for ReplyFragment {
                                         timeline_focus: TimelineFocus::Event {
                                             target: event_id,
                                             num_context_events: 0,
-                                            hide_threaded_events: false,
+                                            thread_mode: TimelineEventFocusThreadMode::Automatic {
+                                                hide_threaded_events: false,
+                                            },
                                         },
                                         reason: OpenRoomFocusReason::Reply,
                                     },

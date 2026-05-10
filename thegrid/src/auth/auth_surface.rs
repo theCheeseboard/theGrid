@@ -34,13 +34,14 @@ use matrix_sdk::authentication::oauth::error::OAuthDiscoveryError;
 use matrix_sdk::authentication::oauth::registration::{
     ApplicationType, ClientMetadata, ClientRegistrationResponse, Localized, OAuthGrantType,
 };
-use matrix_sdk::authentication::oauth::{ClientRegistrationData, OAuthError, UrlOrQuery};
+use matrix_sdk::authentication::oauth::{ClientRegistrationData, OAuthError};
 use matrix_sdk::config::SyncSettings;
 use matrix_sdk::encryption::CrossSigningStatus;
 use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::AuthorizationServerMetadata;
 use matrix_sdk::ruma::api::client::session::get_login_types::v3::{IdentityProvider, LoginType};
 use matrix_sdk::ruma::serde::Raw;
 use matrix_sdk::ruma::{DeviceId, OwnedUserId, user_id};
+use matrix_sdk::utils::UrlOrQuery;
 use matrix_sdk::{Client, ClientBuildError};
 use smol::future::FutureExt;
 use std::iter;

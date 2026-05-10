@@ -11,20 +11,21 @@ use matrix_sdk_ui::spaces::{SpaceRoom, SpaceRoomList, SpaceService};
 use std::sync::Arc;
 
 pub struct SpacesCache {
-    space_service: Arc<SpaceService>,
+    space_service: Option<Arc<SpaceService>>,
     joined_spaces: Vector<SpaceRoom>,
 }
 
 impl SpacesCache {
     pub fn new(client: &Client, cx: &mut Context<Self>) -> Self {
-        let space_service = Arc::new(SpaceService::new(client.clone()));
-
         cx.spawn({
-            let space_service = space_service.clone();
+            let client = client.clone();
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let (joined_spaces, mut stream) = space_service.subscribe_to_joined_spaces().await;
+                let space_service = Arc::new(SpaceService::new(client).await);
+                let (joined_spaces, mut stream) =
+                    space_service.subscribe_to_top_level_joined_spaces().await;
                 if weak_this
                     .update(cx, |this, cx| {
+                        this.space_service = Some(space_service);
                         this.joined_spaces = joined_spaces;
                         cx.notify();
                     })
@@ -51,7 +52,7 @@ impl SpacesCache {
         .detach();
 
         Self {
-            space_service,
+            space_service: None,
             joined_spaces: Vector::new(),
         }
     }
@@ -61,7 +62,7 @@ impl SpacesCache {
         room_id: OwnedRoomId,
         cx: &mut Context<Self>,
     ) -> Entity<SpaceRoomListEntity> {
-        let space_service = self.space_service.clone();
+        let space_service = self.space_service.clone().unwrap();
         let space_room_list_entity = cx.new(|cx| SpaceRoomListEntity::new());
         let space_room_list_entity_clone = space_room_list_entity.clone();
         cx.spawn(
@@ -84,7 +85,7 @@ impl SpacesCache {
     }
 
     pub fn get_editable_spaces(&self, cx: &mut Context<Self>) -> Entity<Option<Vec<SpaceRoom>>> {
-        let space_service = self.space_service.clone();
+        let space_service = self.space_service.clone().unwrap();
 
         cx.new(|cx| {
             cx.spawn(
@@ -109,7 +110,7 @@ impl SpacesCache {
     }
 
     pub fn space_service(&self) -> Arc<SpaceService> {
-        self.space_service.clone()
+        self.space_service.clone().unwrap()
     }
 }
 

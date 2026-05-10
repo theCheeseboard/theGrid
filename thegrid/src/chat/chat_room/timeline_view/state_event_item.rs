@@ -2,13 +2,11 @@ use crate::chat::chat_room::timeline_view::state_change_element::state_change_el
 use cntp_i18n::{Quote, tr};
 use gpui::{App, IntoElement, RenderOnce, Window, div};
 use matrix_sdk::ruma::OwnedUserId;
+use matrix_sdk::ruma::events::StateEventContentChange;
 use matrix_sdk::ruma::events::room::history_visibility::HistoryVisibility;
-use matrix_sdk::ruma::events::room::join_rules::RoomJoinRulesEventContent;
-use matrix_sdk::ruma::events::room::name::RoomNameEventContent;
-use matrix_sdk::ruma::events::{FullStateEventContent, StateEventType};
 use matrix_sdk::ruma::room::JoinRule;
 use matrix_sdk_ui::timeline::{
-    AnyOtherFullStateEventContent, OtherState, Profile, TimelineDetails,
+    AnyOtherStateEventContentChange, OtherState, Profile, TimelineDetails,
 };
 
 #[derive(IntoElement)]
@@ -39,10 +37,10 @@ impl RenderOnce for StateEventItem {
         .unwrap_or_else(|| self.sender.to_string());
 
         match self.state.content() {
-            AnyOtherFullStateEventContent::RoomName(event) => state_change_element(
+            AnyOtherStateEventContentChange::RoomName(event) => state_change_element(
                 Some("im-room".to_string()),
                 match event {
-                    FullStateEventContent::Original { content, .. } => {
+                    StateEventContentChange::Original { content, .. } => {
                         tr!(
                             "ROOM_STATE_ROOM_NAME",
                             "{{user}} changed the name of the room to {{new_name}}",
@@ -50,7 +48,7 @@ impl RenderOnce for StateEventItem {
                             new_name:Quote = content.name
                         )
                     }
-                    FullStateEventContent::Redacted(_) => {
+                    StateEventContentChange::Redacted(_) => {
                         tr!(
                             "ROOM_STATE_ROOM_NAME_REDACTED",
                             "{{user}} changed the name of the room",
@@ -60,7 +58,7 @@ impl RenderOnce for StateEventItem {
                 },
             )
             .into_any_element(),
-            AnyOtherFullStateEventContent::RoomTopic(_) => state_change_element(
+            AnyOtherStateEventContentChange::RoomTopic(_) => state_change_element(
                 Some("im-room".to_string()),
                 tr!(
                     "ROOM_STATE_ROOM_TOPIC",
@@ -69,7 +67,7 @@ impl RenderOnce for StateEventItem {
                 ),
             )
             .into_any_element(),
-            AnyOtherFullStateEventContent::RoomAvatar(_) => state_change_element(
+            AnyOtherStateEventContentChange::RoomAvatar(_) => state_change_element(
                 Some("im-room".to_string()),
                 tr!(
                     "ROOM_STATE_ROOM_AVATAR",
@@ -78,7 +76,7 @@ impl RenderOnce for StateEventItem {
                 ),
             )
             .into_any_element(),
-            AnyOtherFullStateEventContent::RoomEncryption(_) => state_change_element(
+            AnyOtherStateEventContentChange::RoomEncryption(_) => state_change_element(
                 Some("im-room".to_string()),
                 tr!(
                     "ROOM_STATE_ROOM_ENCRYPTION",
@@ -87,7 +85,7 @@ impl RenderOnce for StateEventItem {
                 ),
             )
             .into_any_element(),
-            AnyOtherFullStateEventContent::RoomPowerLevels(_) => state_change_element(
+            AnyOtherStateEventContentChange::RoomPowerLevels(_) => state_change_element(
                 Some("im-room".to_string()),
                 tr!(
                     "ROOM_STATE_POWER_LEVELS",
@@ -96,7 +94,7 @@ impl RenderOnce for StateEventItem {
                 ),
             )
             .into_any_element(),
-            AnyOtherFullStateEventContent::RoomTombstone(_) => state_change_element(
+            AnyOtherStateEventContentChange::RoomTombstone(_) => state_change_element(
                 Some("im-room".to_string()),
                 tr!(
                     "ROOM_STATE_TOMBSTONE",
@@ -105,10 +103,10 @@ impl RenderOnce for StateEventItem {
                 ),
             )
             .into_any_element(),
-            AnyOtherFullStateEventContent::RoomJoinRules(event) => state_change_element(
+            AnyOtherStateEventContentChange::RoomJoinRules(event) => state_change_element(
                 Some("im-room".to_string()),
                 match event {
-                    FullStateEventContent::Original { content, .. } => match content.join_rule {
+                    StateEventContentChange::Original { content, .. } => match content.join_rule {
                         JoinRule::Invite => Some(tr!(
                             "ROOM_STATE_JOIN_RULES_INVITE",
                             "{{user}} made the room invite-only",
@@ -131,7 +129,7 @@ impl RenderOnce for StateEventItem {
                         )),
                         _ => None,
                     },
-                    FullStateEventContent::Redacted(_) => None,
+                    StateEventContentChange::Redacted(_) => None,
                 }
                 .unwrap_or(tr!(
                     "ROOM_STATE_JOIN_RULES_REDACTED",
@@ -140,7 +138,7 @@ impl RenderOnce for StateEventItem {
                 )),
             )
                 .into_any_element(),
-            AnyOtherFullStateEventContent::SpaceParent(_) => state_change_element(
+            AnyOtherStateEventContentChange::SpaceParent(_) => state_change_element(
                 Some("im-room".to_string()),
                 tr!(
                     "ROOM_STATE_SPACE_PARENT_REDACTED",
@@ -149,10 +147,10 @@ impl RenderOnce for StateEventItem {
                 ),
             )
             .into_any_element(),
-            AnyOtherFullStateEventContent::RoomHistoryVisibility(event) => state_change_element(
+            AnyOtherStateEventContentChange::RoomHistoryVisibility(event) => state_change_element(
                 Some("im-room".to_string()),
                 match event {
-                    FullStateEventContent::Original { content, .. } => match content.history_visibility {
+                    StateEventContentChange::Original { content, .. } => match content.history_visibility {
                         HistoryVisibility::Invited => Some(tr!(
                             "ROOM_STATE_JOIN_RULES_INVITED",
                             "{{user}} allowed people to see messages from when they were invited",
@@ -178,7 +176,7 @@ impl RenderOnce for StateEventItem {
                         )),
                         _ => None,
                     },
-                    FullStateEventContent::Redacted(_) => None,
+                    StateEventContentChange::Redacted(_) => None,
                 }
                     .unwrap_or(tr!(
                     "ROOM_STATE_HISTORY_VISIBILITY_REDACTED",
@@ -187,10 +185,10 @@ impl RenderOnce for StateEventItem {
                 )),
             )
                 .into_any_element(),
-            AnyOtherFullStateEventContent::RoomHistoryVisibility(event) => state_change_element(
+            AnyOtherStateEventContentChange::RoomHistoryVisibility(event) => state_change_element(
                 Some("im-room".to_string()),
                 match event {
-                    FullStateEventContent::Original { content, .. } => match content.history_visibility {
+                    StateEventContentChange::Original { content, .. } => match content.history_visibility {
                         HistoryVisibility::Invited => Some(tr!(
                             "ROOM_STATE_JOIN_RULES_INVITED",
                             "{{user}} allowed people to see messages from when they were invited",
@@ -216,7 +214,7 @@ impl RenderOnce for StateEventItem {
                         )),
                         _ => None,
                     },
-                    FullStateEventContent::Redacted(_) => None,
+                    StateEventContentChange::Redacted(_) => None,
                 }
                     .unwrap_or(tr!(
                     "ROOM_STATE_HISTORY_VISIBILITY_REDACTED",
@@ -225,7 +223,7 @@ impl RenderOnce for StateEventItem {
                 )),
             )
                 .into_any_element(),
-            AnyOtherFullStateEventContent::RoomCanonicalAlias(_) => state_change_element(
+            AnyOtherStateEventContentChange::RoomCanonicalAlias(_) => state_change_element(
                 Some("im-room".to_string()),
                 tr!(
                     "ROOM_STATE_ALIASES_UPDATED",

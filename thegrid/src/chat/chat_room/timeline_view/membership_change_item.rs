@@ -1,8 +1,7 @@
 use crate::chat::chat_room::timeline_view::state_change_element::state_change_element;
 use cntp_i18n::tr;
 use gpui::{App, IntoElement, RenderOnce, Window, div};
-use matrix_sdk::ruma::events::FullStateEventContent;
-use matrix_sdk::ruma::events::room::member::RoomMemberEventContent;
+use matrix_sdk::ruma::events::StateEventContentChange;
 use matrix_sdk_ui::timeline::{MembershipChange, RoomMembershipChange};
 
 #[derive(IntoElement)]
@@ -41,8 +40,8 @@ impl RenderOnce for MembershipChangeItem {
             .into_any_element(),
             Some(MembershipChange::Banned) | Some(MembershipChange::KickedAndBanned) => {
                 let reason = match self.membership_change.content() {
-                    FullStateEventContent::Original { content, .. } => content.reason.clone(),
-                    FullStateEventContent::Redacted(_) => None,
+                    StateEventContentChange::Original { content, .. } => content.reason.clone(),
+                    StateEventContentChange::Redacted(_) => None,
                 };
                 state_change_element(
                     Some("im-ban-user".into()),
@@ -70,8 +69,8 @@ impl RenderOnce for MembershipChangeItem {
             .into_any_element(),
             Some(MembershipChange::Kicked) => {
                 let reason = match self.membership_change.content() {
-                    FullStateEventContent::Original { content, .. } => content.reason.clone(),
-                    FullStateEventContent::Redacted(_) => None,
+                    StateEventContentChange::Original { content, .. } => content.reason.clone(),
+                    StateEventContentChange::Redacted(_) => None,
                 };
                 state_change_element(
                     Some("im-kick-user".into()),

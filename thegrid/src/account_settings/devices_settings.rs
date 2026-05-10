@@ -19,11 +19,13 @@ use gpui::{
     App, AppContext, AsyncApp, Context, ElementId, Entity, InteractiveElement, IntoElement,
     ParentElement, Render, RenderOnce, Styled, WeakEntity, Window, div, px, rgba,
 };
-use matrix_sdk::authentication::oauth::AccountManagementActionFull;
 use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::encryption::identities::Device;
 use matrix_sdk::encryption::recovery::RecoveryState;
 use matrix_sdk::ruma::OwnedDeviceId;
+use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::{
+    AccountManagementActionData, DeviceDeleteData,
+};
 use matrix_sdk::ruma::api::client::uiaa::AuthData;
 use std::rc::Rc;
 use thegrid_common::session::devices_cache::CachedDevice;
@@ -80,9 +82,9 @@ impl DevicesSettings {
             .oauth_management_page_redirect_dialog
             .update(cx, |dialog, cx| {
                 dialog.perform_action(
-                    AccountManagementActionFull::SessionEnd {
-                        device_id: device.clone(),
-                    },
+                    AccountManagementActionData::DeviceDelete(DeviceDeleteData::new(
+                        &device.clone(),
+                    )),
                     cx,
                 )
             })

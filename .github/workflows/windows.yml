@@ -30,14 +30,12 @@ jobs:
         if: matrix.os == 'windows-11-arm'
         run: |
           Invoke-WebRequest https://win.rustup.rs/aarch64 -OutFile rustup.exe
-          .\rustup.exe default 1.93
           $CargoLocation = .\rustup.exe which cargo
           Add-Content -Path "$env:GITHUB_PATH" -Value ([System.IO.Path]::GetDirectoryName($CargoLocation))
       - name: Install Rust
         if: matrix.os == 'windows-latest'
         run: |
           rustup update
-          rustup default 1.93
       - uses: Swatinem/rust-cache@v2
       - uses: r7kamura/rust-problem-matchers@v1
       - name: Install libcontemporary utils

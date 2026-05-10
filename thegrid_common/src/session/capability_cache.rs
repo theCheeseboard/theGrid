@@ -1,11 +1,13 @@
 use crate::tokio_helper::TokioHelper;
 use gpui::{AsyncApp, Context, WeakEntity};
 use matrix_sdk::Client;
-use matrix_sdk::ruma::api::client::discovery::get_capabilities::v3::Capabilities;
+use matrix_sdk::ruma::api::client::discovery::get_capabilities::v3::{
+    Capabilities, RoomVersionsCapability,
+};
 use std::time::Duration;
 
 pub struct CapabilityCache {
-    capabilities: Capabilities,
+    room_versions: RoomVersionsCapability,
 }
 
 impl CapabilityCache {
@@ -15,13 +17,14 @@ impl CapabilityCache {
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 loop {
                     let client = client.clone();
+                    let capabilities = client.homeserver_capabilities();
                     if let Ok(capabilities) = cx
-                        .spawn_tokio(async move { client.get_capabilities().await })
+                        .spawn_tokio(async move { capabilities.room_versions().await })
                         .await
                     {
                         if weak_this
                             .update(cx, |this, cx| {
-                                this.capabilities = capabilities;
+                                this.room_versions = capabilities;
                                 cx.notify();
                             })
                             .is_err()
@@ -40,11 +43,11 @@ impl CapabilityCache {
         .detach();
 
         Self {
-            capabilities: Default::default(),
+            room_versions: Default::default(),
         }
     }
 
-    pub fn capabilities(&self) -> &Capabilities {
-        &self.capabilities
+    pub fn supported_room_versions(&self) -> &RoomVersionsCapability {
+        &self.room_versions
     }
 }

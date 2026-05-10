@@ -11,7 +11,8 @@ use gpui::{
 use matrix_sdk::ruma::api::OutgoingRequest;
 use matrix_sdk::ruma::api::auth_scheme::SendAccessToken;
 use matrix_sdk::ruma::api::client::uiaa::{
-    AuthData, AuthType, FallbackAcknowledgement, Password, UiaaInfo, UserIdentifier,
+    AuthData, AuthType, FallbackAcknowledgement, MatrixUserIdentifier, Password, UiaaInfo,
+    UserIdentifier,
 };
 use std::borrow::Cow;
 use std::rc::Rc;
@@ -206,7 +207,9 @@ impl Render for UiaaClient {
                                 let password = text_field_clone.read(cx).text();
                                 this.send_auth_data(
                                     Some(AuthData::Password(Password::new(
-                                        UserIdentifier::UserIdOrLocalpart(user_id.clone().unwrap()),
+                                        UserIdentifier::Matrix(MatrixUserIdentifier::new(
+                                            user_id.clone().unwrap(),
+                                        )),
                                         password.to_string(),
                                     ))),
                                     window,

@@ -1,9 +1,9 @@
 use crate::session::session_manager::SessionManager;
 use crate::tokio_helper::TokioHelper;
-use gpui::{App, AppContext, AsyncApp, Context, Entity, WeakEntity};
+use gpui::{App, AppContext, AsyncApp, Entity, WeakEntity};
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::OwnedRoomId;
-use matrix_sdk::ruma::events::{AnyFullStateEventContent, AnySyncStateEvent};
+use matrix_sdk::ruma::events::{AnyPossiblyRedactedStateEventContent, AnySyncStateEvent};
 
 pub fn track_active_call_participants(
     room_id: OwnedRoomId,
@@ -19,7 +19,7 @@ pub fn track_active_call_participants(
         let room = room.read(cx).inner.clone();
         let (tx, rx) = async_channel::bounded(1);
         let room_update = room.add_event_handler(|ev: AnySyncStateEvent| async move {
-            if let AnyFullStateEventContent::CallMember(_) = ev.content() {
+            if let AnyPossiblyRedactedStateEventContent::CallMember(_) = ev.content() {
                 let _ = tx.send(ev).await;
             }
         });

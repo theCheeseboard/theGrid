@@ -6,7 +6,9 @@ use gpui::prelude::FluentBuilder;
 use gpui::{
     AsyncApp, Context, IntoElement, ParentElement, Render, SharedString, WeakEntity, Window,
 };
-use matrix_sdk::authentication::oauth::AccountManagementActionFull;
+use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::{
+    AccountManagementAction, AccountManagementActionData,
+};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 use url::Url;
@@ -30,21 +32,34 @@ impl OAuthManagementPageRedirectDialog {
 
     pub fn perform_action(
         &mut self,
-        action: AccountManagementActionFull,
+        action: AccountManagementActionData,
         cx: &mut Context<Self>,
     ) -> bool {
         let session_manager = cx.global::<SessionManager>();
-        if !session_manager
-            .current_account()
-            .read(cx)
-            .supports_account_management_action(action.action_type())
-        {
+        let oauth_metadata = session_manager.current_account().read(cx).oauth_metadata();
+        if oauth_metadata.is_some_and(|oauth_metadata| {
+            oauth_metadata.is_account_management_action_supported(match action {
+                AccountManagementActionData::Profile => &AccountManagementAction::Profile,
+                AccountManagementActionData::DevicesList => &AccountManagementAction::DevicesList,
+                AccountManagementActionData::DeviceView(_) => &AccountManagementAction::DeviceView,
+                AccountManagementActionData::DeviceDelete(_) => {
+                    &AccountManagementAction::DeviceDelete
+                }
+                AccountManagementActionData::AccountDeactivate => {
+                    &AccountManagementAction::AccountDeactivate
+                }
+                AccountManagementActionData::CrossSigningReset => {
+                    &AccountManagementAction::CrossSigningReset
+                }
+                _ => return false,
+            })
+        }) {
             // Don't open the dialog because the homeserver doesn't support this action.
             return false;
         }
 
         (self.title, self.text) = match action {
-            AccountManagementActionFull::SessionEnd { .. } => (
+            AccountManagementActionData::DeviceDelete { .. } => (
                 tr!(
                     "OAUTH_MANAGEMENT_ACTION_SESSION_END_TITLE",
                     "Forcibly log device out"
@@ -56,7 +71,7 @@ impl OAuthManagementPageRedirectDialog {
                 )
                 .into(),
             ),
-            AccountManagementActionFull::AccountDeactivate => (
+            AccountManagementActionData::AccountDeactivate => (
                 tr!(
                     "OAUTH_MANAGEMENT_ACTION_ACCOUNT_DEACTIVATE_TITLE",
                     "Deactivate Account"
@@ -68,7 +83,7 @@ impl OAuthManagementPageRedirectDialog {
                 )
                 .into(),
             ),
-            AccountManagementActionFull::CrossSigningReset => (
+            AccountManagementActionData::CrossSigningReset => (
                 tr!(
                     "OAUTH_MANAGEMENT_ACTION_CROSS_SIGNING_RESET_TITLE",
                     "Reset Cryptographic Identity"
@@ -94,25 +109,11 @@ impl OAuthManagementPageRedirectDialog {
             ),
         };
 
-        let client = session_manager.client().unwrap().read(cx).clone();
+        let url = oauth_metadata
+            .unwrap()
+            .account_management_url_with_action(action);
 
-        cx.spawn(
-            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let Ok(Some(account_management_url)) = cx
-                    .spawn_tokio(async move { client.oauth().account_management_url().await })
-                    .await
-                else {
-                    // TODO: Signal error
-                    return;
-                };
-
-                let url = account_management_url.action(action).build();
-                let _ = weak_this.update(cx, |this, cx| this.continue_url = Some(url));
-            },
-        )
-        .detach();
-
-        self.continue_url = None;
+        self.continue_url = url;
         self.visible = true;
         cx.notify();
 

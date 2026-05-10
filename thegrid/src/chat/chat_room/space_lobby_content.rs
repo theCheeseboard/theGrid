@@ -320,6 +320,8 @@ impl Render for SpaceLobbyContent {
             state: None,
             heroes: None,
             via: vec![],
+            is_dm: None,
+            suggested: false,
         };
 
         let theme = cx.theme();

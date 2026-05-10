@@ -15,8 +15,9 @@ use gpui::{
     WeakEntity, Window, div, px,
 };
 use matrix_sdk::AuthApi;
-use matrix_sdk::authentication::oauth::AccountManagementActionFull;
-use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::AccountManagementAction;
+use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::{
+    AccountManagementAction, AccountManagementActionData,
+};
 use std::rc::Rc;
 use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
@@ -70,18 +71,19 @@ impl ProfileSettings {
                 if let Some(AuthApi::OAuth(oauth)) = client.auth_api() {
                     cx.spawn(
                         async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                            let Ok(Some(account_management_url)) = cx
-                                .spawn_tokio(async move { oauth.account_management_url().await })
+                            let Ok(oauth_metadata) = cx
+                                .spawn_tokio(async move { oauth.cached_server_metadata().await })
                                 .await
                             else {
                                 return;
                             };
 
-                            let profile_management_url = account_management_url
-                                .action(AccountManagementActionFull::Profile)
-                                .build();
+                            let profile_management_url = oauth_metadata
+                                .account_management_url_with_action(
+                                    AccountManagementActionData::Profile,
+                                );
                             let _ = weak_this.update(cx, |this, cx| {
-                                this.account_management_url = Some(profile_management_url);
+                                this.account_management_url = profile_management_url;
                                 cx.notify();
                             });
                         },
@@ -120,7 +122,7 @@ impl ProfileSettings {
             if !this
                 .oauth_management_page_redirect_dialog
                 .update(cx, |dialog, cx| {
-                    dialog.perform_action(AccountManagementActionFull::AccountDeactivate, cx)
+                    dialog.perform_action(AccountManagementActionData::AccountDeactivate, cx)
                 })
             {
                 (this.on_surface_change)(
@@ -284,9 +286,12 @@ impl Render for ProfileSettings {
                                 session_manager
                                     .current_account()
                                     .read(cx)
-                                    .supports_account_management_action(
-                                        AccountManagementAction::AccountDeactivate,
-                                    )
+                                    .oauth_metadata()
+                                    .is_some_and(|oauth_metadata| {
+                                        oauth_metadata.is_account_management_action_supported(
+                                            &AccountManagementAction::AccountDeactivate,
+                                        )
+                                    })
                             }
                             Some(AuthApi::Matrix(_)) => true,
                             _ => false,

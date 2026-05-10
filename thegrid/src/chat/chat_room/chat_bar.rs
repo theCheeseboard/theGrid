@@ -51,7 +51,7 @@ impl ChatBar {
         let room = open_room.room.as_ref().unwrap().clone();
         let replacement_room = room
             .tombstone_content()
-            .map(|content| content.replacement_room);
+            .and_then(|content| content.replacement_room);
 
         let session_manager = cx.global::<SessionManager>();
         let room_manager = session_manager.rooms().read(cx);

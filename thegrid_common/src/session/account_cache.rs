@@ -2,7 +2,9 @@ use crate::tokio_helper::TokioHelper;
 use gpui::{App, AppContext, AsyncApp, Entity, WeakEntity};
 use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::ruma::OwnedMxcUri;
-use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::AccountManagementAction;
+use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::{
+    AccountManagementAction, AuthorizationServerMetadata,
+};
 use matrix_sdk::ruma::events::room::member::SyncRoomMemberEvent;
 use matrix_sdk::{AuthApi, Client, Room};
 
@@ -10,7 +12,7 @@ pub struct AccountCache {
     display_name: Option<String>,
     avatar_url: Option<OwnedMxcUri>,
     verification_state: VerificationState,
-    supported_account_management_actions: Vec<AccountManagementAction>,
+    oauth_metadata: Option<AuthorizationServerMetadata>,
 }
 
 enum CacheMutation {
@@ -126,18 +128,15 @@ impl AccountCache {
                 let client = client.clone();
                 async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                     if let Some(AuthApi::OAuth(oauth_auth)) = client.auth_api() {
-                        let Ok(supported_actions) = cx
-                            .spawn_tokio(async move {
-                                oauth_auth.account_management_actions_supported().await
-                            })
+                        let Ok(metadata) = cx
+                            .spawn_tokio(async move { oauth_auth.cached_server_metadata().await })
                             .await
                         else {
                             return;
                         };
 
                         let _ = weak_this.update(cx, |this, cx| {
-                            this.supported_account_management_actions =
-                                supported_actions.into_iter().collect();
+                            this.oauth_metadata = Some(metadata);
                             cx.notify();
                         });
                     }
@@ -149,7 +148,7 @@ impl AccountCache {
                 display_name: None,
                 avatar_url: None,
                 verification_state: VerificationState::Unknown,
-                supported_account_management_actions: Vec::new(),
+                oauth_metadata: None,
             }
         })
     }
@@ -166,7 +165,7 @@ impl AccountCache {
         self.verification_state
     }
 
-    pub fn supports_account_management_action(&self, action: AccountManagementAction) -> bool {
-        self.supported_account_management_actions.contains(&action)
+    pub fn oauth_metadata(&self) -> Option<&AuthorizationServerMetadata> {
+        self.oauth_metadata.as_ref()
     }
 }
