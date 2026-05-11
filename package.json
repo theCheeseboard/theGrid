@@ -16,9 +16,9 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "astro": "^6.1.3",
+    "contemporary-astro-components": "github:theCheeseboard/contemporary-astro-components",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "sharp": "^0.34.5",
-    "simple-icons-astro": "^16.1.0"
+    "sharp": "^0.34.5"
   }
 }

@@ -1,16 +1,46 @@
 ---
 import { ClientRouter } from "astro:transitions";
-
-import Footer from "../components/Footer.astro";
-import Header from "../components/Header/Header.astro";
-import MobileHeader from "../components/Header/MobileHeader.astro";
+import { MobileHeader, Header, Footer, Head } from "contemporary-astro-components";
 
 interface Props {
 	page_title?: string;
 }
 
+const logo = "/thegrid.png";
+const application = "theGrid";
+
 const { page_title } = Astro.props;
-const title = page_title ? `${page_title} - theGrid` : "theGrid";
+const title = page_title ? `${page_title} - ${application}` : application;
+
+const socialLinks = [
+	{
+		type: "github",
+		link: "https://github.com/theCheeseboard/theGrid"
+	}
+] as const;
+
+const footerLinks = [
+	{
+		text: "Home",
+		href: "/"
+	},
+	{
+		text: "Download",
+		href: "/download"
+	},
+	"separator",
+	{
+		text: "#thegrid:bnbdiscord.net",
+		href: "https://matrix.to/#/!oDEvITb2MViWFgdJe5:bnbdiscord.net?via=bnbdiscord.net&via=matrix.org"
+	},
+	"separator",
+	{
+		text: "Victor Tran",
+		href: "https://vicr123.com"
+	}
+] as const;
+
+import "./styles.css";
 ---
 
 <!doctype html>
@@ -20,25 +50,25 @@ const title = page_title ? `${page_title} - theGrid` : "theGrid";
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
-		<link rel="stylesheet" href="/styles.css" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+		<Head />
 		<ClientRouter />
 	</head>
 	<body>
 		<div class="main-container">
 			<div class="header">
 				<div class="mobile-header">
-					<MobileHeader />
+					<MobileHeader logo={logo} application={application} socialLinks={socialLinks} />
 				</div>
 				<div class="desktop-header">
-					<Header />
+					<Header logo={logo} application={application} socialLinks={socialLinks} />
 				</div>
 			</div>
 			<div class="content" transition:name="content" transition:animate="fade">
 				<slot />
 				<div class="filler" />
-				<Footer />
+				<Footer logo={logo} application={application} footerLinks={footerLinks} />
 			</div>
 		</div>
 		<div id="loading-bar" transition:persist transition:name="progress-bar" transition:animate="none" />
