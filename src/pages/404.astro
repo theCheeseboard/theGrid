@@ -1,34 +1,8 @@
 ---
+import { NotFoundContents } from "contemporary-astro-components";
 import Layout from "../layouts/Layout.astro";
-import Crash from "./crash.svg"
-import { Button } from "contemporary-astro-components";
 ---
 
 <Layout page_title="Page Not Found">
-    <div class="container">
-        <h1>Oh, bonkers!</h1>
-        <Crash class={"crash"} />
-        <p>Let's get you back on the right track.</p>
-        <Button href="/">Go Home</Button>
-    </div>
+    <NotFoundContents />
 </Layout>
-
-<style>
-    .container {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-    }
-
-    .crash {
-        width: 80vw;
-        height: 80vw;
-        max-width: 128px;
-        max-height: 128px;
-        opacity: 0.5;
-
-        --svg-fg: var(--foreground-color);
-    }
-</style>
