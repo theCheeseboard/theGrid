@@ -1,6 +1,6 @@
 ---
 import { ClientRouter } from "astro:transitions";
-import { MobileHeader, Header, Footer, Head } from "contemporary-astro-components";
+import { Head, MasterLayout } from "contemporary-astro-components";
 
 interface Props {
 	page_title?: string;
@@ -56,138 +56,8 @@ import "./styles.css";
 		<ClientRouter />
 	</head>
 	<body>
-		<div class="main-container">
-			<div class="header">
-				<div class="mobile-header">
-					<MobileHeader logo={logo} application={application} socialLinks={socialLinks} />
-				</div>
-				<div class="desktop-header">
-					<Header logo={logo} application={application} socialLinks={socialLinks} />
-				</div>
-			</div>
-			<div class="content" transition:name="content" transition:animate="fade">
-				<slot />
-				<div class="filler" />
-				<Footer logo={logo} application={application} footerLinks={footerLinks} />
-			</div>
-		</div>
-		<div id="loading-bar" transition:persist transition:name="progress-bar" transition:animate="none" />
+		<MasterLayout logo={logo} application={application} socialLinks={socialLinks} footerLinks={footerLinks}>
+			<slot />
+		</MasterLayout>
 	</body>
 </html>
-
-<style>
-	.main-container {
-		display: grid;
-		grid-template-areas: "header content";
-		grid-template-rows: 1fr;
-		grid-template-columns: 300px 1fr;
-		gap: 4px;
-		height: 100%;
-		width: 100%;
-
-		overflow: auto;
-	}
-
-	.header {
-		grid-area: header;
-		background-color: var(--layer-color);
-		border-top-right-radius: 4px;
-		border-bottom-right-radius: 4px;
-
-		position: sticky;
-		top: 0;
-
-		backdrop-filter: blur(10px);
-		max-height: 100vh;
-
-		display: flex;
-		z-index: 1;
-	}
-
-	.content {
-		grid-area: content;
-		display: flex;
-		flex-direction: column;
-		justify-content: stretch;
-	}
-
-	.filler {
-		flex-grow: 1;
-	}
-
-	.desktop-header {
-		display: flex;
-		flex-grow: 1;
-	}
-
-	.mobile-header {
-		display: none;
-		flex-grow: 1;
-	}
-
-	@media (max-width: 768px) {
-		.main-container {
-			grid-template-areas: "header" "content";
-			grid-template-columns: 1fr;
-			grid-template-rows: max-content 1fr;
-		}
-
-		.header {
-			border-top-right-radius: 0;
-			border-bottom-left-radius: 4px;
-
-			padding: 4px;
-		}
-
-		.mobile-header {
-			display: flex;
-		}
-
-		.desktop-header {
-			display: none;
-		}
-	}
-	
-	#loading-bar {
-		position: fixed;
-		top: 0;
-		left: 0;
-		height: 4px;
-		background: linear-gradient(to right, var(--accent-color-1), var(--accent-color-2));
-		z-index: 2;
-		animation: load-end 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-	}
-
-	#loading-bar.loading {
-		animation: load-start 5s cubic-bezier(0.22, 1, 0.36, 1);
-	}
-
-	@keyframes load-start {
-		0% {
-			width: 0;
-			opacity: 1;
-		}
-
-		100% {
-			width: 80%;
-		}
-	}
-
-	@keyframes load-end {
-		100% {
-			width: 100%;
-			opacity: 0;
-		}
-	}
-</style>
-
-<script is:inline>
-	document.addEventListener("astro:before-preparation", (event) => {
-		const bar = document.getElementById("loading-bar");
-		bar.classList.add("loading");
-	});
-	document.addEventListener("astro:after-swap", (event) => {
-		const bar = document.getElementById("loading-bar");
-		bar.classList.remove("loading");
-	});
-</script>
