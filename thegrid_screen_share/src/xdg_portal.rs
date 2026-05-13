@@ -34,6 +34,7 @@ use pipewire::types::ObjectType;
 use smallvec::smallvec;
 use std::cell::RefCell;
 use std::mem::ManuallyDrop;
+use std::ops::Deref;
 use std::os::fd::OwnedFd;
 use std::ptr::null_mut;
 use std::rc::Rc;
@@ -45,6 +46,8 @@ use yuv::{
     BufferStoreMut, YuvConversionMode, YuvPlanarImageMut, YuvRange, YuvStandardMatrix,
     bgr_to_yuv422, bgra_to_yuv422,
 };
+
+const PIPEWIRE_LIBRARY: &str = "libpipewire-0.3.so";
 
 pub struct XdgPortalScreenshareManager {
     tx: async_channel::Sender<XdgPortalScreenshareMessage>,
@@ -88,9 +91,16 @@ enum PipewireMessage {}
 
 impl XdgPortalScreenshareManager {
     pub fn new(cx: &mut Context<Self>) -> Self {
-        pipewire::init();
-
         let (tx, rx) = async_channel::bounded(1);
+        
+        if DlopenHandle::new(PIPEWIRE_LIBRARY).is_none() {
+            return Self {
+                tx,
+                is_available: false
+            }
+        };
+        
+        pipewire::init();
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
                 loop {
@@ -480,30 +490,59 @@ fn build_bgrx_format() -> anyhow::Result<Vec<u8>> {
     Ok(bytes)
 }
 
+struct DlopenHandle {
+    handle: *mut libc::c_void,
+}
+
+impl DlopenHandle {
+    pub fn new(lib: &str) -> Option<Self> {
+        let handle = unsafe {
+            libc::dlopen(
+                format!("{}\0", lib).as_ptr().cast(),
+                libc::RTLD_NOW | libc::RTLD_NOLOAD,
+            )
+        };
+
+        if handle.is_null() {
+            return None;
+        }
+
+        Some(Self { handle })
+    }
+}
+
+impl Drop for DlopenHandle {
+    fn drop(&mut self) {
+        unsafe {
+            libc::dlclose(self.handle);
+        }
+    }
+}
+
+impl Deref for DlopenHandle {
+    type Target = *mut libc::c_void;
+
+    fn deref(&self) -> &Self::Target {
+        &self.handle
+    }
+}
+
 macro_rules! declare_forwarded_c_function {
     (
-        $lib:literal,
+        $lib:ident,
         fn $name:ident ( $( $arg:ident : $arg_ty:ty ),* $(,)? ) $( -> $ret:ty )? ;
     ) => {
         #[unsafe(no_mangle)]
         pub extern "C" fn $name( $( $arg : $arg_ty ),* ) $( -> $ret )? {
             unsafe {
-                let handle = libc::dlopen(
-                    concat!($lib, "\0").as_ptr().cast(),
-                    libc::RTLD_NOW | libc::RTLD_NOLOAD,
-                );
-
-                if handle.is_null() {
-                    panic!(concat!("failed to open already-loaded library: ", $lib));
-                }
+                let handle = DlopenHandle::new($lib).expect(&format!("dlopen failed for {}", $lib));
 
                 let addr = libc::dlsym(
-                    handle,
+                    *handle,
                     concat!(stringify!($name), "\0").as_ptr().cast(),
                 );
 
                 if addr.is_null() {
-                    libc::dlclose(handle);
                     panic!(concat!("failed to resolve symbol: ", stringify!($name)));
                 }
 
@@ -512,8 +551,6 @@ macro_rules! declare_forwarded_c_function {
 
                 let result = func( $( $arg ),* );
 
-                libc::dlclose(handle);
-
                 result
             }
         }
@@ -521,11 +558,11 @@ macro_rules! declare_forwarded_c_function {
 }
 
 declare_forwarded_c_function!(
-    "libpipewire-0.3.so",
+    PIPEWIRE_LIBRARY,
     fn pw_init(argc: *mut ::std::os::raw::c_int, argv: *mut *mut *mut ::std::os::raw::c_char);
 );
 declare_forwarded_c_function!(
-    "libpipewire-0.3.so",
+    PIPEWIRE_LIBRARY,
     fn pw_context_new(
         main_loop: *mut pipewire::sys::pw_loop,
         props: *mut pipewire::sys::pw_properties,
@@ -533,7 +570,7 @@ declare_forwarded_c_function!(
     ) -> *mut pipewire::sys::pw_context;
 );
 declare_forwarded_c_function!(
-    "libpipewire-0.3.so",
+    PIPEWIRE_LIBRARY,
     fn pw_context_connect_fd(
         context: *mut pipewire::sys::pw_context,
         fd: ::std::os::raw::c_int,
@@ -542,11 +579,11 @@ declare_forwarded_c_function!(
     ) -> *mut pw_core;
 );
 declare_forwarded_c_function!(
-    "libpipewire-0.3.so",
+    PIPEWIRE_LIBRARY,
     fn pw_context_destroy(context: *mut pipewire::sys::pw_context);
 );
 declare_forwarded_c_function!(
-    "libpipewire-0.3.so",
+    PIPEWIRE_LIBRARY,
     fn pw_stream_new(
         core: *mut pipewire::sys::pw_core,
         name: *const ::std::os::raw::c_char,
@@ -554,7 +591,7 @@ declare_forwarded_c_function!(
     ) -> *mut pipewire::sys::pw_stream;
 );
 declare_forwarded_c_function!(
-    "libpipewire-0.3.so",
+    PIPEWIRE_LIBRARY,
     fn pw_stream_add_listener(
         stream: *mut pw_stream,
         listener: *mut spa_hook,
@@ -563,7 +600,7 @@ declare_forwarded_c_function!(
     );
 );
 declare_forwarded_c_function!(
-    "libpipewire-0.3.so",
+    PIPEWIRE_LIBRARY,
     fn pw_stream_connect(
         stream: *mut pw_stream,
         direction: pipewire::spa::sys::spa_direction,
@@ -574,25 +611,22 @@ declare_forwarded_c_function!(
     ) -> ::std::os::raw::c_int;
 );
 declare_forwarded_c_function!(
-    "libpipewire-0.3.so",
+    PIPEWIRE_LIBRARY,
     fn pw_stream_destroy(stream: *mut pw_stream);
 );
 declare_forwarded_c_function!(
-    "libpipewire-0.3.so",
+    PIPEWIRE_LIBRARY,
     fn pw_stream_dequeue_buffer(stream: *mut pw_stream) -> *mut pw_buffer;
 );
 declare_forwarded_c_function!(
-    "libpipewire-0.3.so",
+    PIPEWIRE_LIBRARY,
     fn pw_stream_queue_buffer(
         stream: *mut pw_stream,
         buffer: *mut pw_buffer,
     ) -> ::std::os::raw::c_int;
 );
+declare_forwarded_c_function!(PIPEWIRE_LIBRARY, fn pw_proxy_destroy(proxy: *mut pw_proxy););
 declare_forwarded_c_function!(
-    "libpipewire-0.3.so",
-    fn pw_proxy_destroy(proxy: *mut pw_proxy);
-);
-declare_forwarded_c_function!(
-    "libpipewire-0.3.so",
+    PIPEWIRE_LIBRARY,
     fn pw_core_disconnect(core: *mut pw_core) -> ::std::os::raw::c_int;
 );
