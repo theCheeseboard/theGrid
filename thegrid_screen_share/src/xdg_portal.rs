@@ -47,7 +47,7 @@ use yuv::{
     bgr_to_yuv422, bgra_to_yuv422,
 };
 
-const PIPEWIRE_LIBRARY: &str = "libpipewire-0.3.so";
+const PIPEWIRE_LIBRARY: &str = "libpipewire-0.3.so.0";
 
 pub struct XdgPortalScreenshareManager {
     tx: async_channel::Sender<XdgPortalScreenshareMessage>,
@@ -92,14 +92,14 @@ enum PipewireMessage {}
 impl XdgPortalScreenshareManager {
     pub fn new(cx: &mut Context<Self>) -> Self {
         let (tx, rx) = async_channel::bounded(1);
-        
+
         if DlopenHandle::new(PIPEWIRE_LIBRARY).is_none() {
             return Self {
                 tx,
-                is_available: false
-            }
+                is_available: false,
+            };
         };
-        
+
         pipewire::init();
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
