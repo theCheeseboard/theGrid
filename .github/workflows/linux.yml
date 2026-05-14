@@ -65,6 +65,11 @@ jobs:
       - name: Bundle
         run: cargo cntp-bundle
         working-directory: thegrid
+      - name: Checkout icons into bundle
+        uses: actions/checkout@v6
+        with:
+          repository: theCheeseboard/contemporary-icons
+          path: target/bundle/${{ env.ARCH }}-unknown-linux-gnu/release/appdir/usr/share/icons/contemporary
       - name: Deploy
         run: cargo cntp-deploy --output-file "$HOME/theGrid-$ARCH.AppImage"
         working-directory: thegrid
