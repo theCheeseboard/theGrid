@@ -5,7 +5,7 @@ use crate::chat::chat_room::timeline_view::author_flyout::{
 use crate::chat::chat_room::timeline_view::message_error_item::message_error_item;
 use crate::chat::chat_room::timeline_view::reply_fragment::reply_fragment_in_reply_to;
 use crate::chat::displayed_room::DisplayedRoom;
-use cntp_i18n::{I18N_MANAGER, Quote, i18n_manager, tr};
+use cntp_i18n::{I18N_MANAGER, Quote, tr};
 use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::anchorer::WithAnchorer;
 use contemporary::components::button::button;
@@ -151,7 +151,7 @@ impl RenderOnce for TimelineMessageItem {
                                     }
                                 })
                                 .child(reaction.clone())
-                                .child(i18n_manager!().locale.format_decimal(reactees.len())),
+                                .child(I18N_MANAGER.locale().format_decimal(reactees.len())),
                         )
                     },
                 ))

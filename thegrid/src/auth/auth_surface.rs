@@ -2,7 +2,7 @@ use crate::utilities::default_device_name;
 use base64::alphabet::URL_SAFE;
 use base64::prelude::{BASE64_URL_SAFE, BASE64_URL_SAFE_NO_PAD};
 use base64::{DecodeError, Engine};
-use cntp_i18n::{i18n_manager, tr};
+use cntp_i18n::{I18N_MANAGER, tr};
 use cntp_icon_tool_macros::{application_icon_asset_path, application_icon_source};
 use contemporary::application::Details;
 use contemporary::components::button::button;
@@ -1102,7 +1102,7 @@ impl AuthSurface {
 
 impl Render for AuthSurface {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let locale = &i18n_manager!().locale;
+        let locale = I18N_MANAGER.locale();
         let details = cx.global::<Details>();
         let session_manager = cx.global::<SessionManager>();
 

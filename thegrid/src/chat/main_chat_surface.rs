@@ -10,7 +10,7 @@ use crate::chat::join_room::create_space_popover::CreateSpacePopover;
 use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
 use crate::chat::room_directory::RoomDirectory;
 use crate::chat::sidebar::Sidebar;
-use cntp_i18n::{i18n_manager, tr};
+use cntp_i18n::{I18N_MANAGER, tr};
 use contemporary::application::Details;
 use contemporary::components::interstitial::interstitial;
 use gpui::{
@@ -198,7 +198,7 @@ impl Render for MainChatSurface {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let details = cx.global::<Details>();
 
-        let locale = &i18n_manager!().locale;
+        let locale = I18N_MANAGER.locale();
 
         div()
             .track_focus(&self.focus_handle)

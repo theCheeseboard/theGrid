@@ -1380,9 +1380,10 @@ dependencies = [
 
 [[package]]
 name = "cntp_config"
-version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#00644da13b2fbf3502bc21dd75aaba02ccb6ac5f"
+version = "0.2.0"
+source = "git+https://github.com/vicr123/contemporary-rs#b70603eba28559afc975d416f3ebbd05a590dc24"
 dependencies = [
+ "git2",
  "serde",
  "serde_json",
  "toml 0.8.23",
@@ -1391,12 +1392,12 @@ dependencies = [
 
 [[package]]
 name = "cntp_i18n"
-version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#00644da13b2fbf3502bc21dd75aaba02ccb6ac5f"
+version = "0.2.0"
+source = "git+https://github.com/vicr123/contemporary-rs#b70603eba28559afc975d416f3ebbd05a590dc24"
 dependencies = [
- "cntp_i18n_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
+ "cntp_i18n_core 0.2.0",
  "cntp_i18n_macros",
- "cntp_localesupport 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
+ "cntp_localesupport 0.2.0",
  "once_cell",
  "phf 0.12.1",
  "quick_cache",
@@ -1416,8 +1417,8 @@ dependencies = [
 
 [[package]]
 name = "cntp_i18n_build_core"
-version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#00644da13b2fbf3502bc21dd75aaba02ccb6ac5f"
+version = "0.2.0"
+source = "git+https://github.com/vicr123/contemporary-rs#b70603eba28559afc975d416f3ebbd05a590dc24"
 dependencies = [
  "serde",
  "serde_json",
@@ -1431,17 +1432,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb8ae8043dd263e2d3a0edacc7d288bb78d960e3303a35e03a1386eacbe4c374"
 dependencies = [
  "anyhow",
- "cntp_localesupport 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cntp_localesupport 0.1.0",
  "icu",
 ]
 
 [[package]]
 name = "cntp_i18n_core"
-version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#00644da13b2fbf3502bc21dd75aaba02ccb6ac5f"
+version = "0.2.0"
+source = "git+https://github.com/vicr123/contemporary-rs#b70603eba28559afc975d416f3ebbd05a590dc24"
 dependencies = [
  "anyhow",
- "cntp_localesupport 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
+ "cntp_localesupport 0.2.0",
  "gpui-unofficial",
  "icu",
 ]
@@ -1452,9 +1453,9 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "70fbf6b66bc0e1a68e65fbc7e6c4a33458d0c4ee6091844a7b7a31e59b8c9f80"
 dependencies = [
- "cntp_i18n_build_core 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "cntp_i18n_core 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "cntp_i18n_parse 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cntp_i18n_build_core 0.1.0",
+ "cntp_i18n_core 0.1.0",
+ "cntp_i18n_parse 0.1.0",
  "icu",
  "itertools 0.14.0",
  "proc-macro2",
@@ -1466,12 +1467,12 @@ dependencies = [
 
 [[package]]
 name = "cntp_i18n_gen"
-version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#00644da13b2fbf3502bc21dd75aaba02ccb6ac5f"
+version = "0.2.0"
+source = "git+https://github.com/vicr123/contemporary-rs#b70603eba28559afc975d416f3ebbd05a590dc24"
 dependencies = [
- "cntp_i18n_build_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
- "cntp_i18n_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
- "cntp_i18n_parse 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
+ "cntp_i18n_build_core 0.2.0",
+ "cntp_i18n_core 0.2.0",
+ "cntp_i18n_parse 0.2.0",
  "icu",
  "itertools 0.14.0",
  "proc-macro2",
@@ -1483,12 +1484,12 @@ dependencies = [
 
 [[package]]
 name = "cntp_i18n_macros"
-version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#00644da13b2fbf3502bc21dd75aaba02ccb6ac5f"
+version = "0.2.0"
+source = "git+https://github.com/vicr123/contemporary-rs#b70603eba28559afc975d416f3ebbd05a590dc24"
 dependencies = [
- "cntp_i18n_build_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
- "cntp_i18n_core 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
- "cntp_i18n_parse 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
+ "cntp_i18n_build_core 0.2.0",
+ "cntp_i18n_core 0.2.0",
+ "cntp_i18n_parse 0.2.0",
  "once_cell",
  "proc-macro2",
  "quote",
@@ -1498,8 +1499,8 @@ dependencies = [
 
 [[package]]
 name = "cntp_i18n_parlance_source"
-version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#00644da13b2fbf3502bc21dd75aaba02ccb6ac5f"
+version = "0.2.0"
+source = "git+https://github.com/vicr123/contemporary-rs#b70603eba28559afc975d416f3ebbd05a590dc24"
 dependencies = [
  "cntp_i18n",
  "serde",
@@ -1521,24 +1522,24 @@ dependencies = [
 
 [[package]]
 name = "cntp_i18n_parse"
-version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#00644da13b2fbf3502bc21dd75aaba02ccb6ac5f"
+version = "0.2.0"
+source = "git+https://github.com/vicr123/contemporary-rs#b70603eba28559afc975d416f3ebbd05a590dc24"
 dependencies = [
  "syn 2.0.117",
 ]
 
 [[package]]
 name = "cntp_icon_tool_core"
-version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#00644da13b2fbf3502bc21dd75aaba02ccb6ac5f"
+version = "0.2.0"
+source = "git+https://github.com/vicr123/contemporary-rs#b70603eba28559afc975d416f3ebbd05a590dc24"
 dependencies = [
  "regex",
 ]
 
 [[package]]
 name = "cntp_icon_tool_macros"
-version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#00644da13b2fbf3502bc21dd75aaba02ccb6ac5f"
+version = "0.2.0"
+source = "git+https://github.com/vicr123/contemporary-rs#b70603eba28559afc975d416f3ebbd05a590dc24"
 dependencies = [
  "cntp_config",
  "cntp_icon_tool_core",
@@ -1563,8 +1564,8 @@ dependencies = [
 
 [[package]]
 name = "cntp_localesupport"
-version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#00644da13b2fbf3502bc21dd75aaba02ccb6ac5f"
+version = "0.2.0"
+source = "git+https://github.com/vicr123/contemporary-rs#b70603eba28559afc975d416f3ebbd05a590dc24"
 dependencies = [
  "chrono",
  "icu",
@@ -1577,8 +1578,8 @@ dependencies = [
 
 [[package]]
 name = "cntp_macros"
-version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#00644da13b2fbf3502bc21dd75aaba02ccb6ac5f"
+version = "0.2.0"
+source = "git+https://github.com/vicr123/contemporary-rs#b70603eba28559afc975d416f3ebbd05a590dc24"
 dependencies = [
  "cntp_config",
  "quote",
@@ -1818,8 +1819,8 @@ checksum = "3d52eff69cd5e647efe296129160853a42795992097e8af39800e1060caeea9b"
 
 [[package]]
 name = "contemporary"
-version = "0.1.0"
-source = "git+https://github.com/vicr123/contemporary-rs#00644da13b2fbf3502bc21dd75aaba02ccb6ac5f"
+version = "0.2.0"
+source = "git+https://github.com/vicr123/contemporary-rs#b70603eba28559afc975d416f3ebbd05a590dc24"
 dependencies = [
  "anyhow",
  "ashpd 0.11.1",
@@ -1829,7 +1830,7 @@ dependencies = [
  "cancellation-token",
  "cntp_config",
  "cntp_i18n",
- "cntp_i18n_gen 0.1.0 (git+https://github.com/vicr123/contemporary-rs)",
+ "cntp_i18n_gen 0.2.0",
  "cntp_i18n_parlance_source",
  "cntp_macros",
  "directories",
@@ -3708,6 +3709,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "git2"
+version = "0.20.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b88256088d75a56f8ecfa070513a775dd9107f6530ef14919dac831af9cfe2b"
+dependencies = [
+ "bitflags 2.11.1",
+ "libc",
+ "libgit2-sys",
+ "log",
+ "openssl-probe 0.1.6",
+ "openssl-sys",
+ "url",
+]
+
+[[package]]
 name = "gl_generator"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5555,6 +5571,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "libgit2-sys"
+version = "0.18.4+1.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b26f66f35e1871b22efcf7191564123d2a446ca0538cde63c23adfefa9b15b7"
+dependencies = [
+ "cc",
+ "libc",
+ "libssh2-sys",
+ "libz-sys",
+ "openssl-sys",
+ "pkg-config",
+]
+
+[[package]]
 name = "libloading"
 version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5622,6 +5652,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "libssh2-sys"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "220e4f05ad4a218192533b300327f5150e809b54c4ec83b5a1d91833601811b9"
+dependencies = [
+ "cc",
+ "libc",
+ "libz-sys",
+ "openssl-sys",
+ "pkg-config",
+ "vcpkg",
+]
+
+[[package]]
 name = "libwebrtc"
 version = "0.3.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5645,6 +5689,18 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
  "webrtc-sys",
+]
+
+[[package]]
+name = "libz-sys"
+version = "1.1.28"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc3a226e576f50782b3305c5ccf458698f92798987f551c6a02efe8276721e22"
+dependencies = [
+ "cc",
+ "libc",
+ "pkg-config",
+ "vcpkg",
 ]
 
 [[package]]
@@ -6611,7 +6667,7 @@ dependencies = [
  "libc",
  "log",
  "openssl",
- "openssl-probe",
+ "openssl-probe 0.2.1",
  "openssl-sys",
  "schannel",
  "security-framework 3.7.0",
@@ -7495,6 +7551,12 @@ dependencies = [
  "quote",
  "syn 2.0.117",
 ]
+
+[[package]]
+name = "openssl-probe"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d05e27ee213611ffe7d6348b942e8f942b37114c00cc03cec254295a4a17852e"
 
 [[package]]
 name = "openssl-probe"
@@ -9282,7 +9344,7 @@ version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "612460d5f7bea540c490b2b6395d8e34a953e52b491accd6c86c8164c5932a63"
 dependencies = [
- "openssl-probe",
+ "openssl-probe 0.2.1",
  "rustls-pki-types",
  "schannel",
  "security-framework 3.7.0",
@@ -10679,7 +10741,7 @@ dependencies = [
  "base64 0.22.1",
  "chrono",
  "cntp_i18n",
- "cntp_i18n_gen 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cntp_i18n_gen 0.1.0",
  "cntp_icon_tool_macros",
  "contemporary",
  "core-text",
@@ -10722,7 +10784,7 @@ dependencies = [
  "async-channel 2.5.0",
  "base64 0.22.1",
  "cntp_i18n",
- "cntp_i18n_gen 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cntp_i18n_gen 0.1.0",
  "contemporary",
  "getrandom 0.4.2",
  "gpui-unofficial",
@@ -10754,7 +10816,7 @@ dependencies = [
  "async-ringbuf",
  "cancellation-token",
  "cntp_i18n",
- "cntp_i18n_gen 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cntp_i18n_gen 0.1.0",
  "contemporary",
  "cpal",
  "gpui-unofficial",

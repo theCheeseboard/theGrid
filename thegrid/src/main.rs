@@ -60,7 +60,7 @@ fn mane() {
     application.run(|cx: &mut App| {
         gpui_tokio::init(cx);
         thegrid_text_rendering::init(cx);
-        I18N_MANAGER.write().unwrap().load_source(tr_load!());
+        I18N_MANAGER.load_source(tr_load!());
         setup_thegrid_common(cx);
         setup_thegrid_rtc_livekit(cx);
         let bounds = Bounds::centered(None, size(px(800.0), px(600.0)), cx);

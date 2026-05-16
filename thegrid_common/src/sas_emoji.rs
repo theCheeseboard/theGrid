@@ -1,4 +1,4 @@
-use cntp_i18n::i18n_manager;
+use cntp_i18n::I18N_MANAGER;
 use imbl::HashMap;
 use matrix_sdk::encryption::verification::Emoji;
 use serde::Deserialize;
@@ -23,7 +23,7 @@ pub trait SasEmoji {
 
 impl SasEmoji for Emoji {
     fn translated_description(&self) -> String {
-        let current_locales = &i18n_manager!().locale.messages;
+        let current_locales = I18N_MANAGER.locale().messages;
 
         EMOJI_DATA
             .iter()
