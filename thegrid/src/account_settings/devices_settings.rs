@@ -12,6 +12,7 @@ use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::{layer, Layer};
+use contemporary::components::scroll_area::scroll_area_cx;
 use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
@@ -221,48 +222,52 @@ impl Render for DevicesSettings {
                     .pt(px(36.)),
             )
             .child(
-                constrainer("devices")
-                    .flex()
-                    .flex_col()
-                    .w_full()
-                    .p(px(8.))
-                    .gap(px(8.))
-                    .when(recovery_not_set_up, |david| {
-                        david.child(
-                            admonition()
-                                .severity(AdmonitionSeverity::Warning)
-                                .title(tr!("SETUP_RECOVERY"))
-                                .child(
-                                    div()
-                                        .flex()
-                                        .flex_col()
-                                        .gap(px(4.))
-                                        .child(tr!("SETUP_RECOVERY_DESCRIPTION"))
+                scroll_area_cx(
+                    "devices-scrollable",
+                    move |this, window, cx| {
+                        constrainer("devices")
+                            .flex()
+                            .flex_col()
+                            .w_full()
+                            .p(px(8.))
+                            .gap(px(8.))
+                            .when(recovery_not_set_up, |david| {
+                                david.child(
+                                    admonition()
+                                        .severity(AdmonitionSeverity::Warning)
+                                        .title(tr!("SETUP_RECOVERY"))
                                         .child(
-                                            div().flex().child(div().flex_grow()).child(
-                                                button("setup-now")
-                                                    .child(icon_text(
-                                                        "configure",
-                                                        tr!("SETUP_RECOVERY_NOW"),
-                                                    ))
-                                                    .on_click(cx.listener(
-                                                        move |this, _, _, cx| {
-                                                            this.recovery_key_reset_popover.update(
-                                                                cx,
-                                                                |popover, cx| {
-                                                                    popover.open(cx);
-                                                                    cx.notify();
+                                            div()
+                                                .flex()
+                                                .flex_col()
+                                                .gap(px(4.))
+                                                .child(tr!("SETUP_RECOVERY_DESCRIPTION"))
+                                                .child(
+                                                    div().flex().child(div().flex_grow()).child(
+                                                        button("setup-now")
+                                                            .child(icon_text(
+                                                                "configure",
+                                                                tr!("SETUP_RECOVERY_NOW"),
+                                                            ))
+                                                            .on_click(cx.listener(
+                                                                move |this, _, _, cx| {
+                                                                    this.recovery_key_reset_popover
+                                                                        .update(
+                                                                            cx,
+                                                                            |popover, cx| {
+                                                                                popover.open(cx);
+                                                                                cx.notify();
+                                                                            },
+                                                                        )
                                                                 },
-                                                            )
-                                                        },
-                                                    )),
-                                            ),
+                                                            )),
+                                                    ),
+                                                ),
                                         ),
-                                ),
-                        )
-                    })
-                    .when(!verified && !recovery_not_set_up, |david| {
-                        david.child(
+                                )
+                            })
+                            .when(!verified && !recovery_not_set_up, |david| {
+                                david.child(
                             admonition()
                                 .severity(AdmonitionSeverity::Warning)
                                 .title(tr!("VERIFY_SESSION"))
@@ -295,49 +300,52 @@ impl Render for DevicesSettings {
                                         ),
                                 ),
                         )
-                    })
-                    .when_some(self.this_device.as_ref(), |div, device| {
-                        div.child(
-                            layer()
-                                .flex()
-                                .flex_col()
-                                .p(px(8.))
-                                .w_full()
-                                .child(subtitle(tr!("DEVICES_THIS_DEVICE", "This Device")))
-                                .child({
-                                    let device_id = device.inner.device_id.clone();
-                                    DeviceItem {
-                                        device: device.clone(),
-                                        verify_device: None,
-                                        erase_device: Rc::new(Box::new(cx.listener(
-                                            move |this, _, _, cx| {
-                                                this.log_out_device(device_id.clone(), cx)
-                                            },
-                                        ))),
-                                    }
-                                }),
-                        )
-                    })
-                    .when(!self.devices.is_empty(), |david| {
-                        david.child(
-                            self.device_layer(
-                                &self.devices,
-                                layer()
-                                    .flex()
-                                    .flex_col()
-                                    .p(px(8.))
-                                    .gap(px(4.))
-                                    .w_full()
-                                    .child(subtitle(tr!("DEVICES_OTHER_DEVICES", "Other Devices"))),
-                                window,
-                                cx,
-                            ),
-                        )
-                    })
-                    .when(!self.inactive_devices.is_empty(), |david| {
-                        david.child(
-                            self.device_layer(
-                                &self.inactive_devices,
+                            })
+                            .when_some(this.this_device.as_ref(), |div, device| {
+                                div.child(
+                                    layer()
+                                        .flex()
+                                        .flex_col()
+                                        .p(px(8.))
+                                        .w_full()
+                                        .child(subtitle(tr!("DEVICES_THIS_DEVICE", "This Device")))
+                                        .child({
+                                            let device_id = device.inner.device_id.clone();
+                                            DeviceItem {
+                                                device: device.clone(),
+                                                verify_device: None,
+                                                erase_device: Rc::new(Box::new(cx.listener(
+                                                    move |this, _, _, cx| {
+                                                        this.log_out_device(device_id.clone(), cx)
+                                                    },
+                                                ))),
+                                            }
+                                        }),
+                                )
+                            })
+                            .when(!this.devices.is_empty(), |david| {
+                                david.child(
+                                    this.device_layer(
+                                        &this.devices,
+                                        layer()
+                                            .flex()
+                                            .flex_col()
+                                            .p(px(8.))
+                                            .gap(px(4.))
+                                            .w_full()
+                                            .child(subtitle(tr!(
+                                                "DEVICES_OTHER_DEVICES",
+                                                "Other Devices"
+                                            ))),
+                                        window,
+                                        cx,
+                                    ),
+                                )
+                            })
+                            .when(!this.inactive_devices.is_empty(), |david| {
+                                david.child(
+                            this.device_layer(
+                                &this.inactive_devices,
                                 layer()
                                     .flex()
                                     .flex_col()
@@ -357,7 +365,11 @@ impl Render for DevicesSettings {
                                 cx,
                             ),
                         )
-                    }),
+                            })
+                    },
+                    cx,
+                )
+                .flex_grow(),
             )
             .child(self.verification_popover.clone().into_any_element())
             .child(
