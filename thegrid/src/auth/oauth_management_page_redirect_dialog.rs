@@ -38,7 +38,7 @@ impl OAuthManagementPageRedirectDialog {
         let session_manager = cx.global::<SessionManager>();
         let oauth_metadata = session_manager.current_account().read(cx).oauth_metadata();
         if oauth_metadata.is_none_or(|oauth_metadata| {
-            oauth_metadata.is_account_management_action_supported(match action {
+            !oauth_metadata.is_account_management_action_supported(match action {
                 AccountManagementActionData::Profile => &AccountManagementAction::Profile,
                 AccountManagementActionData::DevicesList => &AccountManagementAction::DevicesList,
                 AccountManagementActionData::DeviceView(_) => &AccountManagementAction::DeviceView,

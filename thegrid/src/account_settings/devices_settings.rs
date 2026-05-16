@@ -4,30 +4,31 @@ use crate::auth::verification_popover::VerificationPopover;
 use crate::uiaa_client::{SendAuthDataEvent, UiaaClient};
 use chrono::{DateTime, Local};
 use cntp_i18n::tr;
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
-use contemporary::components::layer::layer;
+use contemporary::components::layer::{layer, Layer};
 use contemporary::components::subtitle::subtitle;
-use contemporary::styling::theme::{Theme, VariableColor};
+use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, Context, ElementId, Entity, InteractiveElement, IntoElement,
-    ParentElement, Render, RenderOnce, Styled, WeakEntity, Window, div, px, rgba,
+    div, px, rgba, App, AppContext, AsyncApp, Context, ElementId,
+    Entity, InteractiveElement, IntoElement, ParentElement, Render, RenderOnce, Styled, WeakEntity, Window,
 };
-use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::encryption::identities::Device;
 use matrix_sdk::encryption::recovery::RecoveryState;
-use matrix_sdk::ruma::OwnedDeviceId;
+use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::{
     AccountManagementActionData, DeviceDeleteData,
 };
 use matrix_sdk::ruma::api::client::uiaa::AuthData;
+use matrix_sdk::ruma::{MilliSecondsSinceUnixEpoch, OwnedDeviceId};
 use std::rc::Rc;
+use std::time::{Duration, SystemTime};
 use thegrid_common::session::devices_cache::CachedDevice;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
@@ -40,6 +41,10 @@ pub struct DevicesSettings {
     log_out_confirm_dialog_visible: bool,
     uiaa_client: Entity<UiaaClient>,
     oauth_management_page_redirect_dialog: Entity<OAuthManagementPageRedirectDialog>,
+
+    devices: Vec<CachedDevice>,
+    inactive_devices: Vec<CachedDevice>,
+    this_device: Option<CachedDevice>,
 }
 
 impl DevicesSettings {
@@ -58,6 +63,9 @@ impl DevicesSettings {
                 uiaa_client: cx.new(|cx| UiaaClient::new(send_auth_data, |_, _, _| {}, cx)),
                 oauth_management_page_redirect_dialog: cx
                     .new(|cx| OAuthManagementPageRedirectDialog::new(cx)),
+                devices: Vec::new(),
+                inactive_devices: Vec::new(),
+                this_device: None,
             }
         })
     }
@@ -122,11 +130,77 @@ impl DevicesSettings {
         )
         .detach();
     }
+
+    fn update_devices(&mut self, cx: &mut App) {
+        let session_manager = cx.global::<SessionManager>();
+        let client = session_manager.client().unwrap().read(cx).clone();
+
+        let devices = session_manager.devices().read(cx);
+        let mut device_list = devices.devices();
+
+        self.this_device = device_list
+            .iter()
+            .position(|device| device.inner.device_id == client.device_id().unwrap())
+            .map(|position| device_list.swap_remove(position).clone());
+
+        device_list.sort_by_key(|device| std::cmp::Reverse(device.inner.last_seen_ts));
+
+        self.devices = device_list.into_iter().cloned().collect();
+        self.inactive_devices = self
+            .devices
+            .iter()
+            .position(|device| {
+                device.inner.last_seen_ts.is_some_and(|time| {
+                    time <= MilliSecondsSinceUnixEpoch::from_system_time(
+                        SystemTime::now() - Duration::from_hours(24 * 90),
+                    )
+                    .unwrap()
+                })
+            })
+            .map(|position| self.devices.split_off(position))
+            .unwrap_or_default();
+    }
+
+    fn device_layer(
+        &self,
+        devices: &Vec<CachedDevice>,
+        fold_start: Layer,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> impl IntoElement {
+        devices.iter().cloned().fold(fold_start, |david, item| {
+            let device = item.encryption_status.clone();
+            let device_id = item.inner.device_id.clone();
+            david.child(
+                div()
+                    .id(ElementId::Name(device_id.clone().to_string().into()))
+                    .child(DeviceItem {
+                        device: item,
+                        verify_device: match device {
+                            None => None,
+                            Some(device) => {
+                                Some(Rc::new(Box::new(cx.listener(move |this, _, _, cx| {
+                                    this.request_device_verification(device.clone(), cx)
+                                }))))
+                            }
+                        },
+                        erase_device: Rc::new(Box::new(cx.listener(move |this, _, _, cx| {
+                            this.log_out_device(device_id.clone(), cx)
+                        }))),
+                    }),
+            )
+        })
+    }
 }
 
 impl Render for DevicesSettings {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let theme = cx.global::<Theme>();
+        window.use_state(cx, |_, cx| {
+            // Update devices every time this is closed and reopened
+            self.update_devices(cx);
+        });
+
+        let theme = cx.theme();
         let session_manager = cx.global::<SessionManager>();
 
         let account = session_manager.current_account().read(cx);
@@ -134,14 +208,6 @@ impl Render for DevicesSettings {
 
         let client = session_manager.client().unwrap().read(cx).clone();
         let recovery_not_set_up = client.encryption().recovery().state() == RecoveryState::Disabled;
-
-        let devices = session_manager.devices().read(cx);
-        let mut device_list = devices.devices();
-        let this_device = device_list
-            .iter()
-            .position(|device| device.inner.device_id == client.device_id().unwrap())
-            .unwrap();
-        let this_device = device_list.swap_remove(this_device).clone();
 
         div()
             .bg(theme.background)
@@ -230,29 +296,32 @@ impl Render for DevicesSettings {
                                 ),
                         )
                     })
-                    .child(
-                        layer()
-                            .flex()
-                            .flex_col()
-                            .p(px(8.))
-                            .w_full()
-                            .child(subtitle(tr!("DEVICES_THIS_DEVICE", "This Device")))
-                            .child({
-                                let device_id = this_device.inner.device_id.clone();
-                                DeviceItem {
-                                    device: this_device,
-                                    verify_device: None,
-                                    erase_device: Rc::new(Box::new(cx.listener(
-                                        move |this, _, _, cx| {
-                                            this.log_out_device(device_id.clone(), cx)
-                                        },
-                                    ))),
-                                }
-                            }),
-                    )
-                    .when(!device_list.is_empty(), |david| {
+                    .when_some(self.this_device.as_ref(), |div, device| {
+                        div.child(
+                            layer()
+                                .flex()
+                                .flex_col()
+                                .p(px(8.))
+                                .w_full()
+                                .child(subtitle(tr!("DEVICES_THIS_DEVICE", "This Device")))
+                                .child({
+                                    let device_id = device.inner.device_id.clone();
+                                    DeviceItem {
+                                        device: device.clone(),
+                                        verify_device: None,
+                                        erase_device: Rc::new(Box::new(cx.listener(
+                                            move |this, _, _, cx| {
+                                                this.log_out_device(device_id.clone(), cx)
+                                            },
+                                        ))),
+                                    }
+                                }),
+                        )
+                    })
+                    .when(!self.devices.is_empty(), |david| {
                         david.child(
-                            device_list.into_iter().cloned().fold(
+                            self.device_layer(
+                                &self.devices,
                                 layer()
                                     .flex()
                                     .flex_col()
@@ -260,35 +329,32 @@ impl Render for DevicesSettings {
                                     .gap(px(4.))
                                     .w_full()
                                     .child(subtitle(tr!("DEVICES_OTHER_DEVICES", "Other Devices"))),
-                                |david, item| {
-                                    let device = item.encryption_status.clone();
-                                    let device_id = item.inner.device_id.clone();
-                                    david.child(
-                                        div()
-                                            .id(ElementId::Name(
-                                                device_id.clone().to_string().into(),
-                                            ))
-                                            .child(DeviceItem {
-                                                device: item,
-                                                verify_device: match device {
-                                                    None => None,
-                                                    Some(device) => Some(Rc::new(Box::new(
-                                                        cx.listener(move |this, _, _, cx| {
-                                                            this.request_device_verification(
-                                                                device.clone(),
-                                                                cx,
-                                                            )
-                                                        }),
-                                                    ))),
-                                                },
-                                                erase_device: Rc::new(Box::new(cx.listener(
-                                                    move |this, _, _, cx| {
-                                                        this.log_out_device(device_id.clone(), cx)
-                                                    },
-                                                ))),
-                                            }),
-                                    )
-                                },
+                                window,
+                                cx,
+                            ),
+                        )
+                    })
+                    .when(!self.inactive_devices.is_empty(), |david| {
+                        david.child(
+                            self.device_layer(
+                                &self.inactive_devices,
+                                layer()
+                                    .flex()
+                                    .flex_col()
+                                    .p(px(8.))
+                                    .gap(px(4.))
+                                    .w_full()
+                                    .child(subtitle(tr!(
+                                        "DEVICES_INACTIVE_DEVICES",
+                                        "Inactive Devices"
+                                    )))
+                                    .child(tr!(
+                                        "DEVICES_INACTIVE_DEVICES_DESCRIPTION",
+                                        "These devices have not connected for at least 90 days. \
+                                        Remove them from your account to maintain account security."
+                                    )),
+                                window,
+                                cx,
                             ),
                         )
                     }),
