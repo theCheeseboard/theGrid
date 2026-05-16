@@ -1,6 +1,7 @@
-use crate::account_settings::AccountSettingsSurface;
 use crate::account_settings::deactivate_account::DeactivateSurface;
 use crate::account_settings::security_settings::identity_reset::IdentityResetSurface;
+use crate::account_settings::security_settings::password_change::PasswordChangeSurface;
+use crate::account_settings::AccountSettingsSurface;
 use crate::auth::auth_surface::AuthSurface;
 use crate::chat::chat_surface::ChatSurface;
 use crate::register::register_surface::RegisterSurface;
@@ -9,7 +10,7 @@ use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
 use contemporary::window::contemporary_window;
 use gpui::{
-    App, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window, div,
+    div, App, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window,
 };
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{
@@ -23,6 +24,7 @@ pub struct MainWindow {
     register_surface: Entity<RegisterSurface>,
     account_settings_surface: Entity<AccountSettingsSurface>,
     identity_reset_surface: Entity<IdentityResetSurface>,
+    password_change_surface: Entity<PasswordChangeSurface>,
     deactivate_account_surface: Entity<DeactivateSurface>,
     call_surface: Option<Entity<CallSurface>>,
     current_surface: Vec<MainWindowSurface>,
@@ -30,24 +32,37 @@ pub struct MainWindow {
 
 impl MainWindow {
     pub fn new(cx: &mut App) -> Entity<MainWindow> {
-        cx.new(|cx| {
-            let handle_surface_change = cx.listener(Self::handle_surface_change);
-            let handle_surface_change_2 = cx.listener(Self::handle_surface_change);
-            let handle_surface_change_3 = cx.listener(Self::handle_surface_change);
-            let handle_surface_change_4 = cx.listener(Self::handle_surface_change);
-            let handle_surface_change_5 = cx.listener(Self::handle_surface_change);
-            let handle_surface_change_6 = cx.listener(Self::handle_surface_change);
-
-            MainWindow {
-                main_surface: ChatSurface::new(cx, handle_surface_change),
-                auth_surface: AuthSurface::new(cx, handle_surface_change_5),
-                register_surface: cx.new(|cx| RegisterSurface::new(cx, handle_surface_change_4)),
-                account_settings_surface: AccountSettingsSurface::new(cx, handle_surface_change_2),
-                identity_reset_surface: IdentityResetSurface::new(cx, handle_surface_change_3),
-                deactivate_account_surface: DeactivateSurface::new(cx, handle_surface_change_6),
-                call_surface: None,
-                current_surface: vec![MainWindowSurface::Main],
-            }
+        cx.new(|cx| MainWindow {
+            main_surface: {
+                let handle_surface_change = cx.listener(Self::handle_surface_change);
+                ChatSurface::new(cx, handle_surface_change)
+            },
+            auth_surface: {
+                let handle_surface_change = cx.listener(Self::handle_surface_change);
+                AuthSurface::new(cx, handle_surface_change)
+            },
+            register_surface: {
+                let handle_surface_change = cx.listener(Self::handle_surface_change);
+                cx.new(|cx| RegisterSurface::new(cx, handle_surface_change))
+            },
+            account_settings_surface: {
+                let handle_surface_change = cx.listener(Self::handle_surface_change);
+                AccountSettingsSurface::new(cx, handle_surface_change)
+            },
+            identity_reset_surface: {
+                let handle_surface_change = cx.listener(Self::handle_surface_change);
+                IdentityResetSurface::new(cx, handle_surface_change)
+            },
+            password_change_surface: {
+                let handle_surface_change = cx.listener(Self::handle_surface_change);
+                cx.new(|cx| PasswordChangeSurface::new(cx, handle_surface_change))
+            },
+            deactivate_account_surface: {
+                let handle_surface_change = cx.listener(Self::handle_surface_change);
+                DeactivateSurface::new(cx, handle_surface_change)
+            },
+            call_surface: None,
+            current_surface: vec![MainWindowSurface::Main],
         })
     }
 
@@ -123,33 +138,31 @@ impl Render for MainWindow {
                     MainWindowSurface::Register => 3,
                     MainWindowSurface::AccountSettings(_) => 4,
                     MainWindowSurface::IdentityReset => 5,
-                    MainWindowSurface::DeactivateAccount => 6,
-                    MainWindowSurface::About => 7,
+                    MainWindowSurface::PasswordChange => 6,
+                    MainWindowSurface::DeactivateAccount => 7,
+                    MainWindowSurface::About => 8,
                 },
             )
             .w_full()
             .h_full()
             .animation(LiftAnimation::new())
-            .page(self.main_surface.clone().into_any_element())
-            .page(self.auth_surface.clone().into_any_element())
+            .page(self.main_surface.clone())
+            .page(self.auth_surface.clone())
             .page(
                 self.call_surface
                     .clone()
                     .map(|call_surface| call_surface.into_any_element())
                     .unwrap_or_else(|| div().into_any_element()),
             )
-            .page(self.register_surface.clone().into_any_element())
-            .page(self.account_settings_surface.clone().into_any_element())
-            .page(self.identity_reset_surface.clone().into_any_element())
-            .page(self.deactivate_account_surface.clone().into_any_element())
-            .page(
-                about_surface()
-                    .on_back_click(cx.listener(|this, _, _, cx| {
-                        this.current_surface.pop();
-                        cx.notify();
-                    }))
-                    .into_any_element(),
-            ),
+            .page(self.register_surface.clone())
+            .page(self.account_settings_surface.clone())
+            .page(self.identity_reset_surface.clone())
+            .page(self.password_change_surface.clone())
+            .page(self.deactivate_account_surface.clone())
+            .page(about_surface().on_back_click(cx.listener(|this, _, _, cx| {
+                this.current_surface.pop();
+                cx.notify();
+            }))),
         )
     }
 }

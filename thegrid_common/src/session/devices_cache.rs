@@ -1,10 +1,8 @@
 use crate::tokio_helper::TokioHelper;
-use gpui::http_client::anyhow;
 use gpui::{App, AppContext, AsyncApp, Entity, WeakEntity};
-use matrix_sdk::Client;
 use matrix_sdk::ruma::api::client::device::Device;
 use matrix_sdk::stream::StreamExt;
-use std::time::Duration;
+use matrix_sdk::Client;
 
 pub struct DevicesCache {
     devices: Vec<CachedDevice>,
@@ -78,7 +76,7 @@ impl DevicesCache {
                             return;
                         }
 
-                        let _ = devices_stream.next().await;
+                        let _ = tokio::task::unconstrained(devices_stream.next()).await;
                     }
                 },
             )

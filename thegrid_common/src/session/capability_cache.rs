@@ -1,13 +1,12 @@
 use crate::tokio_helper::TokioHelper;
 use gpui::{AsyncApp, Context, WeakEntity};
+use matrix_sdk::ruma::api::client::discovery::get_capabilities::v3::RoomVersionsCapability;
 use matrix_sdk::Client;
-use matrix_sdk::ruma::api::client::discovery::get_capabilities::v3::{
-    Capabilities, RoomVersionsCapability,
-};
 use std::time::Duration;
 
 pub struct CapabilityCache {
     room_versions: RoomVersionsCapability,
+    can_change_password: bool,
 }
 
 impl CapabilityCache {
@@ -18,13 +17,34 @@ impl CapabilityCache {
                 loop {
                     let client = client.clone();
                     let capabilities = client.homeserver_capabilities();
-                    if let Ok(capabilities) = cx
-                        .spawn_tokio(async move { capabilities.room_versions().await })
+                    if let Ok(room_versions) = cx
+                        .spawn_tokio({
+                            let capabilities = capabilities.clone();
+                            async move { capabilities.room_versions().await }
+                        })
                         .await
                     {
                         if weak_this
                             .update(cx, |this, cx| {
-                                this.room_versions = capabilities;
+                                this.room_versions = room_versions;
+                                cx.notify();
+                            })
+                            .is_err()
+                        {
+                            return;
+                        }
+                    }
+
+                    if let Ok(can_change_password) = cx
+                        .spawn_tokio({
+                            let capabilities = capabilities.clone();
+                            async move { capabilities.can_change_password().await }
+                        })
+                        .await
+                    {
+                        if weak_this
+                            .update(cx, |this, cx| {
+                                this.can_change_password = can_change_password;
                                 cx.notify();
                             })
                             .is_err()
@@ -44,10 +64,15 @@ impl CapabilityCache {
 
         Self {
             room_versions: Default::default(),
+            can_change_password: true,
         }
     }
 
     pub fn supported_room_versions(&self) -> &RoomVersionsCapability {
         &self.room_versions
+    }
+
+    pub fn can_change_password(&self) -> bool {
+        self.can_change_password
     }
 }

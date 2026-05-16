@@ -164,7 +164,7 @@ impl DevicesSettings {
 
     fn device_layer(
         &self,
-        devices: &Vec<CachedDevice>,
+        devices: &[CachedDevice],
         fold_start: Layer,
         window: &mut Window,
         cx: &mut Context<Self>,

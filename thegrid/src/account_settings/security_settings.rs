@@ -1,6 +1,7 @@
 pub mod identity_reset;
 mod key_export_popover;
 mod key_import_popover;
+pub mod password_change;
 pub mod recovery_key_reset_popover;
 
 use crate::account_settings::security_settings::key_export_popover::KeyExportPopover;
@@ -9,7 +10,7 @@ use crate::account_settings::security_settings::recovery_key_reset_popover::Reco
 use crate::auth::oauth_management_page_redirect_dialog::OAuthManagementPageRedirectDialog;
 use crate::auth::recovery_passphrase_popover::RecoveryPassphrasePopover;
 use cntp_i18n::tr;
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
@@ -19,11 +20,11 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, ClickEvent, Context, Entity, IntoElement, ParentElement,
-    PathPromptOptions, Render, Styled, Window, div, px,
+    div, px, App, AppContext, AsyncApp, ClickEvent, Context, Entity,
+    IntoElement, ParentElement, PathPromptOptions, Render, Styled, Window,
 };
-use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::encryption::recovery::RecoveryState;
+use matrix_sdk::encryption::VerificationState;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{
@@ -64,6 +65,22 @@ impl SecuritySettings {
         (self.on_surface_change)(
             &SurfaceChangeEvent {
                 change: SurfaceChange::Push(MainWindowSurface::IdentityReset),
+            },
+            window,
+            cx,
+        );
+        cx.notify();
+    }
+
+    fn open_password_change_page(
+        &mut self,
+        _: &ClickEvent,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        (self.on_surface_change)(
+            &SurfaceChangeEvent {
+                change: SurfaceChange::Push(MainWindowSurface::PasswordChange),
             },
             window,
             cx,
@@ -195,6 +212,41 @@ impl Render for SecuritySettings {
                             )
                         },
                     )
+
+                    .child(
+                        layer()
+                            .flex()
+                            .flex_col()
+                            .p(px(8.))
+                            .gap(px(4.))
+                            .w_full()
+                            .child(subtitle(tr!(
+                                "PASSWORD_CHANGE",
+                            )))
+                            .child(tr!(
+                                "PASSWORD_CHANGE_SETTING_DESCRIPTION",
+                                "If you need to, you can change your password here."
+                            ))
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .bg(theme.button_background)
+                                    .rounded(theme.border_radius)
+                                    .child(
+                                        button("password-change")
+                                            .child(icon_text(
+                                                "edit-rename",
+                                                tr!(
+                                                    "PASSWORD_CHANGE",
+                                                )
+                                                ,
+                                            ))
+                                            .on_click(cx.listener(Self::open_password_change_page)),
+                                    ),
+                            ),
+                    )
+
                     .when(verified, |david| {
                         david.child(
                             layer()

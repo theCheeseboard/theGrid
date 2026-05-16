@@ -14,6 +14,7 @@ pub enum MainWindowSurface {
     AccountSettings(AccountSettingsDeepLink),
     Register,
     IdentityReset,
+    PasswordChange,
     DeactivateAccount,
     About,
 }
