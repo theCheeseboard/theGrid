@@ -2,8 +2,9 @@ use crate::auth::emoji_flyout::EmojiFlyout;
 use crate::chat::chat_input::{ChatInput, End};
 use crate::chat::chat_room::open_room::{OpenRoom, OpenRoomFocus};
 use crate::chat::chat_room::timeline_view::author_flyout::{
-    AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener, author_flyout,
+    author_flyout, AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener,
 };
+use crate::chat::chat_room::timeline_view::flag_event_popover::FlagEventPopover;
 use crate::chat::chat_room::timeline_view::membership_change_item::membership_change_item;
 use crate::chat::chat_room::timeline_view::message_error_item::message_error_item;
 use crate::chat::chat_room::timeline_view::profile_change_item::profile_change_item;
@@ -22,26 +23,26 @@ use contemporary::components::flyout::flyout;
 use contemporary::components::icon::icon;
 use contemporary::components::layer::layer;
 use contemporary::components::tooltip::simple_tooltip;
-use contemporary::styling::theme::{Theme, VariableColor, variable_transparent};
+use contemporary::styling::theme::{variable_transparent, Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, ElementId, Entity, Focusable, InteractiveElement, IntoElement, ParentElement,
-    RenderOnce, StatefulInteractiveElement, Styled, WeakEntity, Window, deferred, div, px,
+    deferred, div, px, App, AsyncApp, ElementId, Entity, Focusable,
+    InteractiveElement, IntoElement, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, WeakEntity, Window,
 };
-use matrix_sdk::room::RoomMember;
 use matrix_sdk::room::edit::EditedContent;
-use matrix_sdk::ruma::events::MessageLikeEventType;
+use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::events::room::message::{
     MessageType, RoomMessageEventContentWithoutRelation,
 };
+use matrix_sdk::ruma::events::MessageLikeEventType;
 use matrix_sdk_ui::timeline::{
-    EventTimelineItem, Message, MsgLikeContent, MsgLikeKind, TimelineDetails, TimelineFocus,
+    EventTimelineItem, MsgLikeContent, MsgLikeKind, TimelineDetails, TimelineFocus,
     TimelineItem as MatrixUiTimelineItem, TimelineItemContent, TimelineItemKind,
     VirtualTimelineItem,
 };
 use std::rc::Rc;
 use std::sync::Arc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::tokio_helper::TokioHelper;
 
 #[derive(IntoElement)]
@@ -122,6 +123,8 @@ impl TimelineItem {
                 emoji_flyout
             }
         });
+        let flag_event_popover =
+            window.use_state(cx, |_, cx| FlagEventPopover::new(open_room.clone(), cx));
 
         let author = event.sender();
         let previous_event_author =
@@ -213,6 +216,22 @@ impl TimelineItem {
                                 move |_, _, cx| {
                                     open_room.update(cx, |open_room, cx| {
                                         open_room.set_pending_reply(Some(event.clone()), cx);
+                                    });
+                                }
+                            })
+                            .build(),
+                    );
+                    context_menu.push(
+                        ContextMenuItem::menu_item()
+                            .label(tr!("MESSAGE_FLAG", "Flag message as inappropriate"))
+                            .when(event.event_id().is_none(), |menu| menu.disabled())
+                            .icon("flag")
+                            .on_triggered({
+                                let flag = flag_event_popover.clone();
+                                let event = event.clone();
+                                move |_, _, cx| {
+                                    flag.update(cx, |flag, cx| {
+                                        flag.show(event.clone(), cx);
                                     });
                                 }
                             })
@@ -388,7 +407,8 @@ impl TimelineItem {
                         .child("⬑ ")
                         .child(tr!("EDITED_MESSAGE_INDICATOR", "(edited)")),
                 )
-            });
+            })
+            .child(flag_event_popover.clone());
 
         let hovered = window.use_keyed_state(
             ElementId::NamedChild(

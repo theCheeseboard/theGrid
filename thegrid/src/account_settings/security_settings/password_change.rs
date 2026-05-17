@@ -1,9 +1,9 @@
 use crate::uiaa_client::{CancelAuthenticationEvent, SendAuthDataEvent, UiaaClient};
 use cntp_i18n::tr;
-use contemporary::components::admonition::{AdmonitionSeverity, admonition};
+use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -18,19 +18,19 @@ use contemporary::surface::surface;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AppContext, AsyncApp, AsyncWindowContext, Context, Entity, IntoElement, ParentElement,
-    Render, Styled, WeakEntity, Window, div, px,
+    div, px, App, AppContext, AsyncApp, AsyncWindowContext, Context, Entity,
+    IntoElement, ParentElement, Render, Styled, WeakEntity, Window,
 };
-use matrix_sdk::Error;
-use matrix_sdk::encryption::CrossSigningResetAuthType;
 use matrix_sdk::encryption::recovery::{IdentityResetHandle, RecoveryError};
+use matrix_sdk::encryption::CrossSigningResetAuthType;
 use matrix_sdk::ruma::api::client::uiaa::AuthData;
 use matrix_sdk::ruma::api::error::ErrorKind;
+use matrix_sdk::Error;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use thegrid_common::tokio_helper::TokioHelper;
-use tracing::{Id, error};
+use tracing::{error, Id};
 
 pub struct PasswordChangeSurface {
     state: PasswordChangeState,
@@ -319,10 +319,7 @@ impl Render for PasswordChangeSurface {
                                                 ))
                                                 .child(
                                                     button("password-change-ok")
-                                                        .child(icon_text(
-                                                            "dialog-ok",
-                                                            tr!("DONE", "Done"),
-                                                        ))
+                                                        .child(icon_text("dialog-ok", tr!("DONE")))
                                                         .on_click(cx.listener(
                                                             |this, _, window, cx| {
                                                                 (this.on_surface_change)(

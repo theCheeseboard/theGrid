@@ -1,5 +1,6 @@
 pub mod author_flyout;
 pub mod event_filter;
+pub mod flag_event_popover;
 mod membership_change_item;
 mod message_error_item;
 mod profile_change_item;
@@ -11,28 +12,21 @@ mod state_event_item;
 mod timeline_item;
 mod timeline_message_item;
 
-use crate::chat::chat_room::open_room::{OpenRoom, OpenRoomFocus, OpenRoomFocusReason};
-use crate::chat::chat_room::timeline::Timeline;
+use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::timeline_view::author_flyout::{
     AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener,
 };
 use crate::chat::chat_room::timeline_view::timeline_item::timeline_item;
 use crate::chat::displayed_room::DisplayedRoom;
-use cntp_i18n::tr;
-use contemporary::components::button::button;
-use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
-use contemporary::components::icon_text::icon_text;
+use contemporary::components::context_menu::ContextMenuExt;
 use contemporary::components::spinner::spinner;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, Context, Element, ElementId, Entity, InteractiveElement, IntoElement,
-    ListAlignment, ListOffset, ListScrollEvent, ListSizingBehavior, ListState, ParentElement,
-    Render, Styled, Window, div, list, px, rgb,
+    div, list, px, App, AsyncApp, Context, Element, ElementId,
+    Entity, InteractiveElement, IntoElement, ListAlignment,
+    ListScrollEvent, ListState, ParentElement, Render, Styled, Window,
 };
-use image::open;
-use log::info;
 use matrix_sdk::ruma::api::client::receipt::create_receipt::v3::ReceiptType;
-use matrix_sdk_ui::timeline::TimelineFocus;
 use thegrid_common::tokio_helper::TokioHelper;
 
 pub struct TimelineView {
