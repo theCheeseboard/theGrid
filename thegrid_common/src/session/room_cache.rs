@@ -128,15 +128,23 @@ impl RoomCache {
 
     pub fn rooms_in_category(&self, category: RoomCategory, cx: &App) -> Vec<Entity<CachedRoom>> {
         match category {
-            RoomCategory::Root => self
-                .cached_rooms
-                .values()
-                .filter(|&room| {
-                    let room = room.read(cx);
-                    room.parent_spaces.is_empty() && room.inner.state() == RoomState::Joined
-                })
-                .cloned()
-                .collect(),
+            RoomCategory::Root => {
+                let child_rooms = self
+                    .cached_rooms
+                    .values()
+                    .flat_map(|room| room.read(cx).child_rooms.clone())
+                    .collect::<HashSet<_>>();
+
+                // TODO: This does not take into account loops in the room graph.
+                self.cached_rooms
+                    .values()
+                    .filter(|&room| {
+                        let room = room.read(cx);
+                        !child_rooms.contains(room.inner.room_id())
+                    })
+                    .cloned()
+                    .collect()
+            }
             RoomCategory::Space(room_id) => {
                 let Some(room) = self.cached_rooms.get(&room_id) else {
                     return Default::default();
