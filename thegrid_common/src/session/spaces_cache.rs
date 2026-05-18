@@ -1,24 +1,20 @@
-use crate::session::room_cache::{RoomCache, RoomCategory};
+use crate::session::room_cache::RoomCategory;
 use crate::session::session_manager::SessionManager;
 use crate::tokio_helper::TokioHelper;
 use async_channel::Sender;
 use gpui::private::anyhow;
 use gpui::{App, AppContext, AsyncApp, Context, Entity, WeakEntity};
-use imbl::{HashSet, Vector};
+use imbl::Vector;
 use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::stream::StreamExt;
 use matrix_sdk::{Client, Room};
 use matrix_sdk_ui::spaces::room_list::SpaceRoomListPaginationState;
 use matrix_sdk_ui::spaces::{SpaceRoom, SpaceRoomList, SpaceService};
-use std::collections::HashMap;
 use std::sync::Arc;
 
 pub struct SpacesCache {
-    client: Client,
     space_service: Arc<SpaceService>,
     joined_spaces: Vector<SpaceRoom>,
-
-    space_room_lists: HashMap<OwnedRoomId, Entity<SpaceRoomListEntity>>,
 }
 
 impl SpacesCache {
@@ -26,10 +22,8 @@ impl SpacesCache {
         let space_service = Arc::new(SpaceService::new(client.clone()).await);
 
         Self {
-            client: client.clone(),
             space_service,
             joined_spaces: Vector::new(),
-            space_room_lists: HashMap::new(),
         }
     }
 
@@ -73,31 +67,26 @@ impl SpacesCache {
         room_id: OwnedRoomId,
         cx: &mut App,
     ) -> Entity<SpaceRoomListEntity> {
-        self.space_room_lists
-            .entry(room_id.clone())
-            .or_insert_with(|| {
-                let space_service = self.space_service.clone();
-                let space_room_list_entity = cx.new(|_| SpaceRoomListEntity::new(room_id.clone()));
-                let space_room_list_entity_clone = space_room_list_entity.clone();
-                cx.spawn(async move |cx: &mut AsyncApp| {
-                    let Ok(room_list) = cx
-                        .spawn_tokio(async move {
-                            Ok::<_, anyhow::Error>(space_service.space_room_list(room_id).await)
-                        })
-                        .await
-                    else {
-                        return;
-                    };
-
-                    space_room_list_entity_clone.update(cx, |space_room_list, cx| {
-                        space_room_list.setup(room_list, cx);
-                    })
+        let space_service = self.space_service.clone();
+        let space_room_list_entity = cx.new(|_| SpaceRoomListEntity::new(room_id.clone()));
+        let space_room_list_entity_clone = space_room_list_entity.clone();
+        cx.spawn(async move |cx: &mut AsyncApp| {
+            let Ok(room_list) = cx
+                .spawn_tokio(async move {
+                    Ok::<_, anyhow::Error>(space_service.space_room_list(room_id).await)
                 })
-                .detach();
+                .await
+            else {
+                return;
+            };
 
-                space_room_list_entity
+            space_room_list_entity_clone.update(cx, |space_room_list, cx| {
+                space_room_list.setup(room_list, cx);
             })
-            .clone()
+        })
+        .detach();
+
+        space_room_list_entity
     }
 
     pub fn get_editable_spaces(&self, cx: &mut Context<Self>) -> Entity<Option<Vec<SpaceRoom>>> {
