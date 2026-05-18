@@ -1,16 +1,19 @@
-use cntp_i18n::{Quote, tr};
+use cntp_i18n::{tr, Quote};
 use contemporary::components::button::button;
 use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::icon_text::icon_text;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
+use gpui::private::anyhow;
 use gpui::{
-    App, AsyncApp, ClickEvent, ClipboardItem, Entity, FontWeight, InteractiveElement, IntoElement,
-    ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window, div, px,
+    div, px, App, AsyncApp, ClickEvent, ClipboardItem, Entity, FontWeight,
+    InteractiveElement, IntoElement, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window,
 };
-use matrix_sdk::RoomMemberships;
+use matrix_sdk::ruma::api::client::receipt::create_receipt::v3::ReceiptType;
 use matrix_sdk::ruma::OwnedRoomId;
+use matrix_sdk::RoomMemberships;
+use matrix_sdk_ui::timeline::RoomExt;
 use std::collections::HashMap;
 use std::rc::Rc;
 use thegrid_common::session::room_cache::CachedRoom;
@@ -71,7 +74,24 @@ impl RenderOnce for StandardRoomElement {
             ContextMenuItem::menu_item()
                 .label(tr!("ROOM_MARK_READ", "Mark as Read"))
                 .icon("mail-mark-read")
-                .disabled()
+                .on_triggered({
+                    let room = room.inner.clone();
+                    move |_, _, cx| {
+                        let room = room.clone();
+                        cx.spawn(async move |cx: &mut AsyncApp| {
+                            let _ = cx
+                                .spawn_tokio(async move {
+                                    if let Ok(timeline) = room.timeline().await {
+                                        let _ = timeline.mark_as_read(ReceiptType::Read).await;
+                                    };
+
+                                    Ok::<_, anyhow::Error>(())
+                                })
+                                .await;
+                        })
+                        .detach();
+                    }
+                })
                 .build(),
             ContextMenuItem::menu_item()
                 .label(tr!("ROOM_NOTIFICATIONS", "Notification Settings..."))
