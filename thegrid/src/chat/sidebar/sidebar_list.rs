@@ -182,18 +182,7 @@ impl RenderOnce for SidebarList {
                     let room = cached_room.read(cx);
                     let room_id = room.inner.room_id().to_owned();
 
-                    let space_room_list = session_manager
-                        .spaces()
-                        .clone()
-                        .update(cx, |spaces, cx| spaces.space_room_list(room_id.clone(), cx));
-                    let (unread_notifications, unread_messages) =
-                        space_room_list.update(cx, |space_room_list, cx| {
-                            let unread_notifications = space_room_list.unread_notifications(cx);
-                            let unread_messages = space_room_list.unread_messages(cx);
-                            (unread_notifications, unread_messages)
-                        });
-
-                    let room = cached_room.read(cx);
+                    let unread_state = room.unread_state(cx);
 
                     div()
                         .flex()
@@ -219,18 +208,21 @@ impl RenderOnce for SidebarList {
                         )
                         .child(div().flex_grow())
                         .when_else(
-                            unread_notifications > 0,
+                            unread_state.unread_notifications > 0,
                             |david| {
                                 david.font_weight(FontWeight::BOLD).child(
                                     div()
                                         .rounded(theme.border_radius)
                                         .bg(theme.error_accent_color)
                                         .p(px(2.))
-                                        .child(locale.format_decimal(unread_notifications)),
+                                        .child(
+                                            locale
+                                                .format_decimal(unread_state.unread_notifications),
+                                        ),
                                 )
                             },
                             |david| {
-                                david.when(unread_messages > 0, |david| {
+                                david.when(unread_state.unread_messages > 0, |david| {
                                     david.child(
                                         div()
                                             .m(px(4.))

@@ -210,6 +210,12 @@ pub struct CachedRoom {
     is_direct: bool,
 }
 
+#[derive(Default)]
+pub struct UnreadState {
+    pub unread_notifications: u64,
+    pub unread_messages: u64,
+}
+
 impl CachedRoom {
     pub fn new(inner: Room, cx: &mut App) -> Entity<Self> {
         cx.new(|cx| {
@@ -365,5 +371,47 @@ impl CachedRoom {
 
     pub fn is_direct(&self) -> bool {
         self.is_direct
+    }
+
+    pub fn unread_state(&self, cx: &App) -> UnreadState {
+        if self.inner.is_space() {
+            let session_manager = cx.global::<SessionManager>();
+            let room_cache = session_manager.rooms().read(cx);
+
+            let mut rooms_to_visit = vec![room_cache.room(self.inner.room_id()).unwrap().clone()];
+            let mut child_rooms = Vec::new();
+            while let Some(room_entity) = rooms_to_visit.pop() {
+                let room = room_entity.read(cx);
+                if child_rooms
+                    .iter()
+                    .any(|child_room: &Room| child_room.room_id() == room.inner.room_id())
+                {
+                    continue;
+                }
+
+                if room.inner.is_space() {
+                    let child_rooms = room_cache.rooms_in_category(
+                        RoomCategory::Space(room.inner.room_id().to_owned()),
+                        cx,
+                    );
+                    rooms_to_visit.extend(child_rooms.iter().cloned());
+                }
+                child_rooms.push(room.inner.clone())
+            }
+
+            child_rooms.iter().filter(|room| !room.is_space()).fold(
+                UnreadState::default(),
+                |unread_state, room| UnreadState {
+                    unread_notifications: unread_state.unread_notifications
+                        + room.num_unread_notifications(),
+                    unread_messages: unread_state.unread_messages + room.num_unread_messages(),
+                },
+            )
+        } else {
+            UnreadState {
+                unread_messages: self.inner.num_unread_messages(),
+                unread_notifications: self.inner.num_unread_notifications(),
+            }
+        }
     }
 }

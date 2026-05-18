@@ -67,14 +67,10 @@ impl RenderOnce for StandardRoomElement {
             .or_else(|| room.inner.name())
             .unwrap_or_default();
 
-        let (unread_notifications, unread_messages) = match self.render_as {
-            StandardRoomElementType::Room => (
-                room.inner.num_unread_notifications(),
-                room.inner.num_unread_messages(),
-            ),
-            StandardRoomElementType::Space => (0, 0),
+        let unread_state = match self.render_as {
+            StandardRoomElementType::Room => room.unread_state(cx),
+            StandardRoomElementType::Space => Default::default(),
         };
-        let room = self.room.read(cx);
 
         let theme = cx.theme();
 
@@ -273,18 +269,18 @@ impl RenderOnce for StandardRoomElement {
             })
             .child(div().flex_grow())
             .when_else(
-                unread_notifications > 0,
+                unread_state.unread_notifications > 0,
                 |david| {
                     david.font_weight(FontWeight::BOLD).child(
                         div()
                             .rounded(theme.border_radius)
                             .bg(theme.error_accent_color)
                             .p(px(2.))
-                            .child(locale.format_decimal(unread_notifications)),
+                            .child(locale.format_decimal(unread_state.unread_notifications)),
                     )
                 },
                 |david| {
-                    david.when(unread_messages > 0, |david| {
+                    david.when(unread_state.unread_messages > 0, |david| {
                         david.child(
                             div()
                                 .m(px(4.))

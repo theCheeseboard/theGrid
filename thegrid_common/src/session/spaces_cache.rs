@@ -1,5 +1,3 @@
-use crate::session::room_cache::RoomCategory;
-use crate::session::session_manager::SessionManager;
 use crate::tokio_helper::TokioHelper;
 use async_channel::Sender;
 use gpui::private::anyhow;
@@ -7,7 +5,7 @@ use gpui::{App, AppContext, AsyncApp, Context, Entity, WeakEntity};
 use imbl::Vector;
 use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::stream::StreamExt;
-use matrix_sdk::{Client, Room};
+use matrix_sdk::Client;
 use matrix_sdk_ui::spaces::room_list::SpaceRoomListPaginationState;
 use matrix_sdk_ui::spaces::{SpaceRoom, SpaceRoomList, SpaceService};
 use std::sync::Arc;
@@ -222,65 +220,5 @@ impl SpaceRoomListEntity {
         if let Some(tx) = self.paginate_tx.as_ref() {
             let _ = smol::block_on(tx.send(()));
         }
-    }
-
-    pub fn unread_notifications(&self, cx: &mut App) -> u64 {
-        let session_manager = cx.global::<SessionManager>();
-        let room_cache = session_manager.rooms().read(cx);
-
-        let mut rooms_to_visit = vec![room_cache.room(&self.room_id).unwrap().clone()];
-        let mut child_rooms = Vec::new();
-        while let Some(room_entity) = rooms_to_visit.pop() {
-            let room = room_entity.read(cx);
-            if child_rooms
-                .iter()
-                .any(|child_room: &Room| child_room.room_id() == room.inner.room_id())
-            {
-                continue;
-            }
-
-            if room.inner.is_space() {
-                let child_rooms = room_cache
-                    .rooms_in_category(RoomCategory::Space(room.inner.room_id().to_owned()), cx);
-                rooms_to_visit.extend(child_rooms.iter().cloned());
-            }
-            child_rooms.push(room.inner.clone())
-        }
-
-        child_rooms
-            .iter()
-            .filter(|room| !room.is_space())
-            .map(|room| room.num_unread_notifications())
-            .sum()
-    }
-
-    pub fn unread_messages(&self, cx: &mut App) -> u64 {
-        let session_manager = cx.global::<SessionManager>();
-        let room_cache = session_manager.rooms().read(cx);
-
-        let mut rooms_to_visit = vec![room_cache.room(&self.room_id).unwrap().clone()];
-        let mut child_rooms = Vec::new();
-        while let Some(room_entity) = rooms_to_visit.pop() {
-            let room = room_entity.read(cx);
-            if child_rooms
-                .iter()
-                .any(|child_room: &Room| child_room.room_id() == room.inner.room_id())
-            {
-                continue;
-            }
-
-            if room.inner.is_space() {
-                let child_rooms = room_cache
-                    .rooms_in_category(RoomCategory::Space(room.inner.room_id().to_owned()), cx);
-                rooms_to_visit.extend(child_rooms.iter().cloned());
-            }
-            child_rooms.push(room.inner.clone())
-        }
-
-        child_rooms
-            .iter()
-            .filter(|room| !room.is_space())
-            .map(|room| room.num_unread_messages())
-            .sum()
     }
 }
