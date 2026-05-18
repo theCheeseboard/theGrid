@@ -1,31 +1,46 @@
+use crate::session::room_cache::{RoomCache, RoomCategory};
+use crate::session::session_manager::SessionManager;
 use crate::tokio_helper::TokioHelper;
 use async_channel::Sender;
 use gpui::private::anyhow;
-use gpui::{AppContext, AsyncApp, Context, Entity, WeakEntity};
-use imbl::Vector;
-use matrix_sdk::Client;
+use gpui::{App, AppContext, AsyncApp, Context, Entity, WeakEntity};
+use imbl::{HashSet, Vector};
 use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::stream::StreamExt;
+use matrix_sdk::{Client, Room};
 use matrix_sdk_ui::spaces::room_list::SpaceRoomListPaginationState;
 use matrix_sdk_ui::spaces::{SpaceRoom, SpaceRoomList, SpaceService};
+use std::collections::HashMap;
 use std::sync::Arc;
 
 pub struct SpacesCache {
-    space_service: Option<Arc<SpaceService>>,
+    client: Client,
+    space_service: Arc<SpaceService>,
     joined_spaces: Vector<SpaceRoom>,
+
+    space_room_lists: HashMap<OwnedRoomId, Entity<SpaceRoomListEntity>>,
 }
 
 impl SpacesCache {
-    pub fn new(client: &Client, cx: &mut Context<Self>) -> Self {
+    pub async fn new(client: &Client, cx: &mut AsyncApp) -> Self {
+        let space_service = Arc::new(SpaceService::new(client.clone()).await);
+
+        Self {
+            client: client.clone(),
+            space_service,
+            joined_spaces: Vector::new(),
+            space_room_lists: HashMap::new(),
+        }
+    }
+
+    pub fn start_listening(self, cx: &mut Context<Self>) -> Self {
         cx.spawn({
-            let client = client.clone();
+            let space_service = self.space_service.clone();
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let space_service = Arc::new(SpaceService::new(client).await);
                 let (joined_spaces, mut stream) =
                     space_service.subscribe_to_top_level_joined_spaces().await;
                 if weak_this
                     .update(cx, |this, cx| {
-                        this.space_service = Some(space_service);
                         this.joined_spaces = joined_spaces;
                         cx.notify();
                     })
@@ -50,42 +65,43 @@ impl SpacesCache {
             }
         })
         .detach();
-
-        Self {
-            space_service: None,
-            joined_spaces: Vector::new(),
-        }
+        self
     }
 
     pub fn space_room_list(
         &mut self,
         room_id: OwnedRoomId,
-        cx: &mut Context<Self>,
+        cx: &mut App,
     ) -> Entity<SpaceRoomListEntity> {
-        let space_service = self.space_service.clone().unwrap();
-        let space_room_list_entity = cx.new(|cx| SpaceRoomListEntity::new());
-        let space_room_list_entity_clone = space_room_list_entity.clone();
-        cx.spawn(
-            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let room_list = cx
-                    .spawn_tokio(async move {
-                        Ok::<_, anyhow::Error>(space_service.space_room_list(room_id).await)
+        self.space_room_lists
+            .entry(room_id.clone())
+            .or_insert_with(|| {
+                let space_service = self.space_service.clone();
+                let space_room_list_entity = cx.new(|_| SpaceRoomListEntity::new(room_id.clone()));
+                let space_room_list_entity_clone = space_room_list_entity.clone();
+                cx.spawn(async move |cx: &mut AsyncApp| {
+                    let Ok(room_list) = cx
+                        .spawn_tokio(async move {
+                            Ok::<_, anyhow::Error>(space_service.space_room_list(room_id).await)
+                        })
+                        .await
+                    else {
+                        return;
+                    };
+
+                    space_room_list_entity_clone.update(cx, |space_room_list, cx| {
+                        space_room_list.setup(room_list, cx);
                     })
-                    .await
-                    .unwrap();
-
-                space_room_list_entity_clone.update(cx, |space_room_list, cx| {
-                    space_room_list.setup(room_list, cx);
                 })
-            },
-        )
-        .detach();
+                .detach();
 
-        space_room_list_entity
+                space_room_list_entity
+            })
+            .clone()
     }
 
     pub fn get_editable_spaces(&self, cx: &mut Context<Self>) -> Entity<Option<Vec<SpaceRoom>>> {
-        let space_service = self.space_service.clone().unwrap();
+        let space_service = self.space_service.clone();
 
         cx.new(|cx| {
             cx.spawn(
@@ -110,11 +126,12 @@ impl SpacesCache {
     }
 
     pub fn space_service(&self) -> Arc<SpaceService> {
-        self.space_service.clone().unwrap()
+        self.space_service.clone()
     }
 }
 
 pub struct SpaceRoomListEntity {
+    room_id: OwnedRoomId,
     rooms: Vector<SpaceRoom>,
     ready: bool,
 
@@ -123,8 +140,9 @@ pub struct SpaceRoomListEntity {
 }
 
 impl SpaceRoomListEntity {
-    fn new() -> Self {
+    fn new(room_id: OwnedRoomId) -> Self {
         Self {
+            room_id,
             rooms: Vector::new(),
             ready: false,
             paginate_tx: None,
@@ -166,7 +184,7 @@ impl SpaceRoomListEntity {
         let mut stream = space_room_list.subscribe_to_pagination_state_updates();
         cx.spawn(
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                while let Some(pagination_state) = stream.next().await {
+                while let Some(pagination_state) = tokio::task::unconstrained(stream.next()).await {
                     if weak_this
                         .update(cx, |this, cx| {
                             this.pagination_state = pagination_state;
@@ -181,20 +199,18 @@ impl SpaceRoomListEntity {
         )
         .detach();
 
-        cx.spawn(
-            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let _ = cx
-                    .spawn_tokio(async move {
+        cx.spawn(async move |_: WeakEntity<Self>, cx: &mut AsyncApp| {
+            let _ = cx
+                .spawn_tokio(async move {
+                    let _ = space_room_list.paginate().await;
+                    while rx.recv().await.is_ok() {
                         let _ = space_room_list.paginate().await;
-                        while rx.recv().await.is_ok() {
-                            let _ = space_room_list.paginate().await;
-                        }
+                    }
 
-                        Ok::<_, anyhow::Error>(())
-                    })
-                    .await;
-            },
-        )
+                    Ok::<_, anyhow::Error>(())
+                })
+                .await;
+        })
         .detach();
 
         self.ready = true;
@@ -217,5 +233,65 @@ impl SpaceRoomListEntity {
         if let Some(tx) = self.paginate_tx.as_ref() {
             let _ = smol::block_on(tx.send(()));
         }
+    }
+
+    pub fn unread_notifications(&self, cx: &mut App) -> u64 {
+        let session_manager = cx.global::<SessionManager>();
+        let room_cache = session_manager.rooms().read(cx);
+
+        let mut rooms_to_visit = vec![room_cache.room(&self.room_id).unwrap().clone()];
+        let mut child_rooms = Vec::new();
+        while let Some(room_entity) = rooms_to_visit.pop() {
+            let room = room_entity.read(cx);
+            if child_rooms
+                .iter()
+                .any(|child_room: &Room| child_room.room_id() == room.inner.room_id())
+            {
+                continue;
+            }
+
+            if room.inner.is_space() {
+                let child_rooms = room_cache
+                    .rooms_in_category(RoomCategory::Space(room.inner.room_id().to_owned()), cx);
+                rooms_to_visit.extend(child_rooms.iter().cloned());
+            }
+            child_rooms.push(room.inner.clone())
+        }
+
+        child_rooms
+            .iter()
+            .filter(|room| !room.is_space())
+            .map(|room| room.num_unread_notifications())
+            .sum()
+    }
+
+    pub fn unread_messages(&self, cx: &mut App) -> u64 {
+        let session_manager = cx.global::<SessionManager>();
+        let room_cache = session_manager.rooms().read(cx);
+
+        let mut rooms_to_visit = vec![room_cache.room(&self.room_id).unwrap().clone()];
+        let mut child_rooms = Vec::new();
+        while let Some(room_entity) = rooms_to_visit.pop() {
+            let room = room_entity.read(cx);
+            if child_rooms
+                .iter()
+                .any(|child_room: &Room| child_room.room_id() == room.inner.room_id())
+            {
+                continue;
+            }
+
+            if room.inner.is_space() {
+                let child_rooms = room_cache
+                    .rooms_in_category(RoomCategory::Space(room.inner.room_id().to_owned()), cx);
+                rooms_to_visit.extend(child_rooms.iter().cloned());
+            }
+            child_rooms.push(room.inner.clone())
+        }
+
+        child_rooms
+            .iter()
+            .filter(|room| !room.is_space())
+            .map(|room| room.num_unread_messages())
+            .sum()
     }
 }

@@ -3,9 +3,10 @@ use crate::tokio_helper::TokioHelper;
 use gpui::private::anyhow;
 use gpui::{App, AppContext, AsyncApp, AsyncWindowContext, Context, Entity, WeakEntity, Window};
 use imbl::Vector;
-use matrix_sdk::Error;
 use matrix_sdk::room::{Invite, ParentSpace};
+use matrix_sdk::ruma::events::space::child::SpaceChildEventContent;
 use matrix_sdk::ruma::{OwnedRoomId, OwnedRoomOrAliasId, RoomId};
+use matrix_sdk::Error;
 use matrix_sdk::{Client, OwnedServerName, Room, RoomState};
 use smol::stream::StreamExt;
 use std::collections::{HashMap, HashSet};
@@ -136,15 +137,17 @@ impl RoomCache {
                 })
                 .cloned()
                 .collect(),
-            RoomCategory::Space(room_id) => self
-                .cached_rooms
-                .values()
-                .filter(|&room| {
-                    let room = room.read(cx);
-                    room.parent_spaces.contains(&room_id) && room.inner.state() == RoomState::Joined
-                })
-                .cloned()
-                .collect(),
+            RoomCategory::Space(room_id) => {
+                let Some(room) = self.cached_rooms.get(&room_id) else {
+                    return Default::default();
+                };
+                room.read(cx)
+                    .child_rooms
+                    .iter()
+                    .filter_map(|child_room| self.cached_rooms.get(child_room))
+                    .cloned()
+                    .collect()
+            }
         }
     }
 
@@ -194,6 +197,7 @@ impl RoomCache {
 pub struct CachedRoom {
     pub inner: Room,
     parent_spaces: Vec<OwnedRoomId>,
+    child_rooms: Vec<OwnedRoomId>,
     invite_details: Option<Invite>,
     is_direct: bool,
 }
@@ -204,6 +208,7 @@ impl CachedRoom {
             let mut room = Self {
                 inner,
                 parent_spaces: Vec::new(),
+                child_rooms: Vec::new(),
                 invite_details: None,
                 is_direct: false,
             };
@@ -295,6 +300,33 @@ impl CachedRoom {
                 });
             },
         )
+        .detach();
+
+        cx.spawn({
+            let inner = self.inner.clone();
+            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                let Ok(space_children) = cx
+                    .spawn_tokio(async move {
+                        inner
+                            .get_state_events_static::<SpaceChildEventContent>()
+                            .await
+                    })
+                    .await
+                else {
+                    return;
+                };
+
+                let _ = weak_this.update(cx, |this, cx| {
+                    this.child_rooms = space_children
+                        .iter()
+                        .filter_map(|space_child_event| {
+                            Some(space_child_event.deserialize().ok()?.state_key().clone())
+                        })
+                        .collect();
+                    cx.notify();
+                });
+            }
+        })
         .detach();
 
         let inner = self.inner.clone();

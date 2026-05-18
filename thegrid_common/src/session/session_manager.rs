@@ -354,8 +354,9 @@ impl SessionManager {
         })
         .detach();
 
+        let caches = Caches::new(&client, cx).await;
         cx.update_global::<Self, ()>(|session_manager, cx| {
-            session_manager.current_caches = Some(Caches::new(&client, cx));
+            session_manager.current_caches = Some(caches);
             session_manager.current_session_client = Some(cx.new(|_| client));
             session_manager.is_new_account = user_identity.is_none();
         });

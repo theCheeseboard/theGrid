@@ -6,9 +6,9 @@ use crate::session::media_cache::MediaCache;
 use crate::session::room_cache::RoomCache;
 use crate::session::spaces_cache::SpacesCache;
 use crate::session::verification_requests_cache::VerificationRequestsCache;
-use gpui::{App, AppContext, Entity};
-use matrix_sdk::Client;
+use gpui::{AppContext, AsyncApp, Entity};
 use matrix_sdk::ruma::api::client::discovery::discover_homeserver::RtcFocusInfo;
+use matrix_sdk::Client;
 
 pub struct Caches {
     pub verification_requests: Entity<VerificationRequestsCache>,
@@ -24,17 +24,20 @@ pub struct Caches {
 }
 
 impl Caches {
-    pub fn new(client: &Client, cx: &mut App) -> Self {
-        Self {
+    pub async fn new(client: &Client, cx: &mut AsyncApp) -> Self {
+        let spaces_cache = SpacesCache::new(client, cx).await;
+        let spaces_cache = cx.new(|cx| spaces_cache.start_listening(cx));
+
+        cx.update(|cx| Self {
             verification_requests: VerificationRequestsCache::new(client, cx),
             account_cache: AccountCache::new(client, cx),
             devices_cache: DevicesCache::new(client, cx),
             capability_cache: cx.new(|cx| CapabilityCache::new(client, cx)),
             media_cache: MediaCache::new(client),
             room_cache: RoomCache::new(client, cx),
-            spaces_cache: cx.new(|cx| SpacesCache::new(client, cx)),
+            spaces_cache,
             ignored_users_cache: cx.new(|cx| IgnoredUsersCache::new(client, cx)),
             rtc_foci: Vec::new(),
-        }
+        })
     }
 }

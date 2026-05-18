@@ -2,18 +2,18 @@ use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::standard_room_element::{
     InviteEvent, StandardRoomElement, StandardRoomElementType,
 };
-use cntp_i18n::{tr, trn};
+use cntp_i18n::{tr, trn, I18N_MANAGER};
 use contemporary::components::icon::icon;
 use contemporary::components::subtitle::subtitle;
-use contemporary::styling::theme::Theme;
+use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, ElementId, Entity, InteractiveElement, IntoElement, ListState, ParentElement, RenderOnce,
-    StatefulInteractiveElement, Styled, Window, div, list, px,
+    div, list, px, App, ElementId, Entity, FontWeight, InteractiveElement,
+    IntoElement, ListState, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::room_cache::CachedRoom;
 use thegrid_common::session::session_manager::SessionManager;
 
@@ -60,8 +60,10 @@ impl RenderOnce for SidebarList {
         let items = self.items;
         let displayed_room_entity = self.displayed_room;
         let event_handler = self.event_handler;
+        let locale = I18N_MANAGER.locale();
+        let theme = cx.theme().clone();
+
         list(self.list_state, move |i, _, cx| {
-            let theme = cx.global::<Theme>();
             let item = &items[i];
 
             let displayed_room = displayed_room_entity.read(cx);
@@ -174,13 +176,30 @@ impl RenderOnce for SidebarList {
                         })
                         .into_any_element()
                 }
-                SidebarItem::Space(room) => {
-                    let room = room.read(cx);
+                SidebarItem::Space(cached_room) => {
+                    let session_manager = cx.global::<SessionManager>();
+
+                    let room = cached_room.read(cx);
                     let room_id = room.inner.room_id().to_owned();
+
+                    let space_room_list = session_manager
+                        .spaces()
+                        .clone()
+                        .update(cx, |spaces, cx| spaces.space_room_list(room_id.clone(), cx));
+                    let (unread_notifications, unread_messages) =
+                        space_room_list.update(cx, |space_room_list, cx| {
+                            let unread_notifications = space_room_list.unread_notifications(cx);
+                            let unread_messages = space_room_list.unread_messages(cx);
+                            (unread_notifications, unread_messages)
+                        });
+
+                    let room = cached_room.read(cx);
+
                     div()
                         .flex()
+                        .w_full()
                         .items_center()
-                        .id(ElementId::Name(room.inner.room_id().to_string().into()))
+                        .id(ElementId::Name(room_id.to_string().into()))
                         .m(px(2.))
                         .p(px(2.))
                         .gap(px(2.))
@@ -197,6 +216,30 @@ impl RenderOnce for SidebarList {
                                 .map(|name| name.to_string())
                                 .or_else(|| room.inner.name())
                                 .unwrap_or_default(),
+                        )
+                        .child(div().flex_grow())
+                        .when_else(
+                            unread_notifications > 0,
+                            |david| {
+                                david.font_weight(FontWeight::BOLD).child(
+                                    div()
+                                        .rounded(theme.border_radius)
+                                        .bg(theme.error_accent_color)
+                                        .p(px(2.))
+                                        .child(locale.format_decimal(unread_notifications)),
+                                )
+                            },
+                            |david| {
+                                david.when(unread_messages > 0, |david| {
+                                    david.child(
+                                        div()
+                                            .m(px(4.))
+                                            .bg(theme.foreground)
+                                            .size(px(8.))
+                                            .rounded(px(4.)),
+                                    )
+                                })
+                            },
                         )
                         .on_click({
                             let event_handler = event_handler.clone();

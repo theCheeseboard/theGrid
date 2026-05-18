@@ -3,7 +3,7 @@ use contemporary::components::button::button;
 use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
 use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::icon_text::icon_text;
-use contemporary::styling::theme::Theme;
+use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::private::anyhow;
 use gpui::{
@@ -49,7 +49,6 @@ impl RenderOnce for StandardRoomElement {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let current_dialog_box = window.use_state(cx, |_, _| CurrentDialogBox::None);
         let current_dialog_box_value = *current_dialog_box.read(cx);
-        let theme = cx.global::<Theme>();
         let room = self.room.read(cx);
         let room_id = room.inner.room_id().to_owned();
         let room_id_2 = room_id.clone();
@@ -67,6 +66,17 @@ impl RenderOnce for StandardRoomElement {
             .map(|name| name.to_string())
             .or_else(|| room.inner.name())
             .unwrap_or_default();
+
+        let (unread_notifications, unread_messages) = match self.render_as {
+            StandardRoomElementType::Room => (
+                room.inner.num_unread_notifications(),
+                room.inner.num_unread_messages(),
+            ),
+            StandardRoomElementType::Space => (0, 0),
+        };
+        let room = self.room.read(cx);
+
+        let theme = cx.theme();
 
         let context_menu = vec![
             ContextMenuItem::separator()
@@ -263,18 +273,18 @@ impl RenderOnce for StandardRoomElement {
             })
             .child(div().flex_grow())
             .when_else(
-                room.inner.num_unread_notifications() > 0,
+                unread_notifications > 0,
                 |david| {
                     david.font_weight(FontWeight::BOLD).child(
                         div()
                             .rounded(theme.border_radius)
                             .bg(theme.error_accent_color)
                             .p(px(2.))
-                            .child(locale.format_decimal(room.inner.num_unread_notifications())),
+                            .child(locale.format_decimal(unread_notifications)),
                     )
                 },
                 |david| {
-                    david.when(room.inner.num_unread_messages() > 0, |david| {
+                    david.when(unread_messages > 0, |david| {
                         david.child(
                             div()
                                 .m(px(4.))
