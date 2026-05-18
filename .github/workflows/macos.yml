@@ -64,7 +64,7 @@ jobs:
 
           # We finally codesign our app bundle, specifying the Hardened runtime option
 
-          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime target/bundle/*/release/*.app -v
+          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime --entitlements thegrid/dist/entitlements.plist target/bundle/*/release/*.app -v
       - name: "Notarize app bundle"
         env:
           PROD_MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.APPLE_NOTARIZATION_APPLE_ID }}
