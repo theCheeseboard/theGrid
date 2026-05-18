@@ -1,4 +1,4 @@
-use cntp_i18n::{tr, Quote};
+use cntp_i18n::{tr, Quote, I18N_MANAGER};
 use contemporary::components::button::button;
 use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
 use contemporary::components::dialog_box::{dialog_box, StandardButton};
@@ -56,6 +56,7 @@ impl RenderOnce for StandardRoomElement {
         let on_click = self.on_click;
         let on_invite = self.on_invite;
         let matrix_room = room.inner.clone();
+        let locale = I18N_MANAGER.locale();
 
         let current_dialog_box_2 = current_dialog_box.clone();
         let current_dialog_box_3 = current_dialog_box.clone();
@@ -262,24 +263,25 @@ impl RenderOnce for StandardRoomElement {
             })
             .child(div().flex_grow())
             .when_else(
-                room.inner.unread_notification_counts().notification_count > 0,
+                room.inner.num_unread_notifications() > 0,
                 |david| {
                     david.font_weight(FontWeight::BOLD).child(
                         div()
                             .rounded(theme.border_radius)
                             .bg(theme.error_accent_color)
                             .p(px(2.))
-                            .child(
-                                room.inner
-                                    .unread_notification_counts()
-                                    .notification_count
-                                    .to_string(),
-                            ),
+                            .child(locale.format_decimal(room.inner.num_unread_notifications())),
                     )
                 },
                 |david| {
                     david.when(room.inner.num_unread_messages() > 0, |david| {
-                        david.child(div().bg(theme.foreground).size(px(8.)).rounded(px(4.)))
+                        david.child(
+                            div()
+                                .m(px(4.))
+                                .bg(theme.foreground)
+                                .size(px(8.))
+                                .rounded(px(4.)),
+                        )
                     })
                 },
             )
@@ -335,12 +337,12 @@ impl RenderOnce for StandardRoomElement {
                                         .is_err()
                                     {
                                         // TODO: Show error
-                                        let _ = current_dialog_box
+                                        current_dialog_box
                                             .write(cx, CurrentDialogBox::LeaveRoom(false));
                                         return;
                                     };
 
-                                    let _ = current_dialog_box.write(cx, CurrentDialogBox::None);
+                                    current_dialog_box.write(cx, CurrentDialogBox::None);
                                 })
                                 .detach();
                             }),
