@@ -144,8 +144,19 @@ impl SessionManager {
                 )
                 .await
                 {
+                    if let Some(error) = error.downcast_ref::<Error>() {
+                        let error = handle_error(error);
+                        if let ClientError::Terminal(_) = error {
+                            cx.update_global::<Self, ()>(|session_manager, cx| {
+                                session_manager.current_client_error = error;
+                            });
+
+                            return;
+                        }
+                    }
+
                     error!("Unable to create client: {error:?}");
-                    let _ = cx.update_global::<Self, ()>(|session_manager, cx| {
+                    cx.update_global::<Self, ()>(|session_manager, cx| {
                         session_manager.current_client_error =
                             ClientError::Terminal(TerminalClientError::UnknownError);
                     });
@@ -322,14 +333,14 @@ impl SessionManager {
                     ClientError::None => {}
                     ClientError::Terminal(_) => {
                         error!("Sync error: {sync_result:?}");
-                        let _ = cx.update_global::<Self, ()>(|session_manager, cx| {
+                        cx.update_global::<Self, ()>(|session_manager, cx| {
                             session_manager.current_client_error = error;
                         });
 
                         return;
                     }
                     ClientError::Recoverable(_) => {
-                        let _ = cx.update_global::<Self, ()>(|session_manager, cx| {
+                        cx.update_global::<Self, ()>(|session_manager, cx| {
                             session_manager.current_client_error = error;
                         });
                     }
