@@ -22,11 +22,7 @@ use gpui::LineFragment::Text;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::private::anyhow;
-use gpui::{
-    App, AppContext, AsyncApp, BorrowAppContext, Context, ElementId, Entity, ImageSource,
-    InteractiveElement, IntoElement, ParentElement, Render, Resource, SharedString, Styled,
-    WeakEntity, Window, div, img, px,
-};
+use gpui::{App, AppContext, AsyncApp, BorrowAppContext, Context, ElementId, Entity, ImageSource, InteractiveElement, IntoElement, ParentElement, Render, Resource, SharedString, Styled, WeakEntity, Window, div, img, px, Menu};
 use gpui_tokio::Tokio;
 use keyring::default::default_credential_builder;
 use matrix_sdk::authentication::matrix::MatrixSession;
@@ -48,6 +44,7 @@ use std::iter;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
+use contemporary::components::application_menu::ApplicationMenu;
 use thegrid_common::session::database_secret::{DatabaseSecret, SessionType};
 use thegrid_common::session::session_manager::{SessionManager, SessionSecretPurpose};
 use thegrid_common::session::sso_login::SsoLogin;
@@ -90,6 +87,7 @@ pub struct AuthSurface {
     database_secret: DatabaseSecret,
 
     on_surface_change: Rc<Box<SurfaceChangeHandler>>,
+    application_menu: Entity<ApplicationMenu>
 }
 
 impl AuthSurface {
@@ -164,6 +162,11 @@ impl AuthSurface {
                 session_uuid: Uuid::new_v4(),
                 on_surface_change: Rc::new(Box::new(on_surface_change)),
                 database_secret: DatabaseSecret::new().unwrap(),
+                application_menu: ApplicationMenu::new(cx, Menu {
+                    name: "Menu".into(),
+                    disabled: false,
+                    items: vec![],
+                }),
             };
             surface
         })
@@ -1109,144 +1112,151 @@ impl Render for AuthSurface {
         let sessions = session_manager.sessions(cx);
 
         div().size_full().key_context("AuthSurface").child(
-            surface().child(
-                div()
-                    .size_full()
-                    .flex()
-                    .flex_col()
-                    .items_center()
-                    .justify_center()
-                    .gap(px(8.))
-                    .child(
-                        div()
-                            .flex()
-                            .items_center()
-                            .gap(px(12.))
-                            .child(img(application_icon_source!()).w(px(40.)))
-                            .child(
-                                div().text_size(px(35.)).child(
-                                    details
-                                        .generatable
-                                        .application_name
-                                        .resolve_languages_or_default(&locale.messages),
+            surface()
+                .child(
+                    div()
+                        .size_full()
+                        .flex()
+                        .flex_col()
+                        .items_center()
+                        .justify_center()
+                        .gap(px(8.))
+                        .child(
+                            div()
+                                .flex()
+                                .items_center()
+                                .gap(px(12.))
+                                .child(img(application_icon_source!()).w(px(40.)))
+                                .child(
+                                    div().text_size(px(35.)).child(
+                                        details
+                                            .generatable
+                                            .application_name
+                                            .resolve_languages_or_default(&locale.messages),
+                                    ),
                                 ),
-                            ),
-                    )
-                    .when(!sessions.is_empty(), |david| {
-                        david.child(
-                            sessions.iter().fold(
-                                layer()
-                                    .p(px(8.))
-                                    .w(px(400.))
-                                    .flex()
-                                    .flex_col()
-                                    .gap(px(8.))
-                                    .child(subtitle(tr!(
-                                        "AUTH_SESSION_RESTORE",
-                                        "Use existing login"
-                                    ))),
-                                |layer, session| {
-                                    let uuid = session.uuid;
-                                    layer.child(
-                                        button(ElementId::Name(
-                                            format!("session-{}", session.uuid).into(),
-                                        ))
-                                        .child(
-                                            session
-                                                .secrets
-                                                .session_meta()
-                                                .unwrap()
-                                                .user_id
-                                                .to_string(),
-                                        )
-                                        .on_click(
-                                            cx.listener(move |this, _, _, cx| {
+                        )
+                        .when(!sessions.is_empty(), |david| {
+                            david.child(
+                                sessions.iter().fold(
+                                    layer()
+                                        .p(px(8.))
+                                        .w(px(400.))
+                                        .flex()
+                                        .flex_col()
+                                        .gap(px(8.))
+                                        .child(subtitle(tr!(
+                                            "AUTH_SESSION_RESTORE",
+                                            "Use existing login"
+                                        ))),
+                                    |layer, session| {
+                                        let uuid = session.uuid;
+                                        layer.child(
+                                            button(ElementId::Name(
+                                                format!("session-{}", session.uuid).into(),
+                                            ))
+                                            .child(
+                                                session
+                                                    .secrets
+                                                    .session_meta()
+                                                    .unwrap()
+                                                    .user_id
+                                                    .to_string(),
+                                            )
+                                            .on_click(cx.listener(move |this, _, _, cx| {
                                                 cx.update_global::<SessionManager, ()>(
                                                     |session_manager, cx| {
                                                         session_manager.set_session(uuid, cx);
                                                     },
                                                 )
-                                            }),
-                                        ),
-                                    )
-                                },
-                            ),
-                        )
-                    })
-                    .child(
-                        layer()
-                            .p(px(8.))
-                            .w(px(400.))
-                            .flex()
-                            .flex_col()
-                            .gap(px(8.))
-                            .child(subtitle(tr!("AUTH_LOG_IN_TO_MATRIX", "Log in to Matrix")))
-                            .child(self.matrix_id_field.clone().into_any_element())
-                            .child(
-                                div()
-                                    .flex()
-                                    .gap(px(4.))
-                                    // .child(
-                                    //     button("open_account")
-                                    //         .child(tr!("AUTH_OPEN_ACCOUNT", "Open New Account..."))
-                                    //         .on_click(cx.listener(|this, _, window, cx| {
-                                    //             this.open_account_clicked(window, cx)
-                                    //         })),
-                                    // )
-                                    .child(div().flex_grow())
-                                    .child(
-                                        button("advanced_log_in")
-                                            .child(tr!("AUTH_ADVANCED_LOG_IN", "Advanced Login..."))
-                                            .flat()
-                                            .on_click(cx.listener(|this, _, _, cx| {
-                                                this.advanced_login_clicked(cx)
                                             })),
-                                    )
-                                    .child(
-                                        button("log_in_button")
-                                            .child(icon_text(
-                                                "arrow-right",
-                                                tr!("AUTH_LOG_IN", "Log In"),
-                                            ))
-                                            .on_click(cx.listener(|this, _, window, cx| {
-                                                this.login_clicked(window, cx);
-                                            })),
-                                    ),
-                            ),
-                    )
-                    .child(
-                        popover("login-popover")
-                            .visible(!matches!(self.state, AuthState::Idle))
-                            .size_neg(100.)
-                            .anchor_bottom()
-                            .content(
-                                div()
-                                    .flex()
-                                    .flex_col()
-                                    .size_full()
-                                    .gap(px(9.))
-                                    .child(
-                                        grandstand("login-popover-grandstand")
-                                            .when_some(self.user_id.clone(), |david, user_id| {
-                                                david.text(tr!(
-                                                    "POPOVER_LOGIN_HOMESERVER",
-                                                    "Log in to {{homeserver}}",
-                                                    homeserver = user_id.server_name().to_string()
+                                        )
+                                    },
+                                ),
+                            )
+                        })
+                        .child(
+                            layer()
+                                .p(px(8.))
+                                .w(px(400.))
+                                .flex()
+                                .flex_col()
+                                .gap(px(8.))
+                                .child(subtitle(tr!("AUTH_LOG_IN_TO_MATRIX", "Log in to Matrix")))
+                                .child(self.matrix_id_field.clone().into_any_element())
+                                .child(
+                                    div()
+                                        .flex()
+                                        .gap(px(4.))
+                                        // .child(
+                                        //     button("open_account")
+                                        //         .child(tr!("AUTH_OPEN_ACCOUNT", "Open New Account..."))
+                                        //         .on_click(cx.listener(|this, _, window, cx| {
+                                        //             this.open_account_clicked(window, cx)
+                                        //         })),
+                                        // )
+                                        .child(div().flex_grow())
+                                        .child(
+                                            button("advanced_log_in")
+                                                .child(tr!(
+                                                    "AUTH_ADVANCED_LOG_IN",
+                                                    "Advanced Login..."
                                                 ))
-                                            })
-                                            .when_none(&self.user_id, |david| {
-                                                david.text(tr!("POPOVER_LOGIN", "Log in"))
-                                            })
-                                            .on_back_click(cx.listener(|this, _, _, cx| {
-                                                this.client = None;
-                                                this.state = AuthState::Idle;
-                                                cx.notify()
-                                            })),
-                                    )
-                                    .child(self.render_popover_child(window, cx)),
-                            ),
-                    ),
-            ),
+                                                .flat()
+                                                .on_click(cx.listener(|this, _, _, cx| {
+                                                    this.advanced_login_clicked(cx)
+                                                })),
+                                        )
+                                        .child(
+                                            button("log_in_button")
+                                                .child(icon_text(
+                                                    "arrow-right",
+                                                    tr!("AUTH_LOG_IN", "Log In"),
+                                                ))
+                                                .on_click(cx.listener(|this, _, window, cx| {
+                                                    this.login_clicked(window, cx);
+                                                })),
+                                        ),
+                                ),
+                        )
+                        .child(
+                            popover("login-popover")
+                                .visible(!matches!(self.state, AuthState::Idle))
+                                .size_neg(100.)
+                                .anchor_bottom()
+                                .content(
+                                    div()
+                                        .flex()
+                                        .flex_col()
+                                        .size_full()
+                                        .gap(px(9.))
+                                        .child(
+                                            grandstand("login-popover-grandstand")
+                                                .when_some(
+                                                    self.user_id.clone(),
+                                                    |david, user_id| {
+                                                        david.text(tr!(
+                                                            "POPOVER_LOGIN_HOMESERVER",
+                                                            "Log in to {{homeserver}}",
+                                                            homeserver =
+                                                                user_id.server_name().to_string()
+                                                        ))
+                                                    },
+                                                )
+                                                .when_none(&self.user_id, |david| {
+                                                    david.text(tr!("POPOVER_LOGIN", "Log in"))
+                                                })
+                                                .on_back_click(cx.listener(|this, _, _, cx| {
+                                                    this.client = None;
+                                                    this.state = AuthState::Idle;
+                                                    cx.notify()
+                                                })),
+                                        )
+                                        .child(self.render_popover_child(window, cx)),
+                                ),
+                        ),
+                )
+                .application_menu(self.application_menu.clone()),
         )
     }
 }
