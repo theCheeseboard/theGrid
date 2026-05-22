@@ -3,7 +3,7 @@ use crate::session::caches::Caches;
 use crate::session::capability_cache::CapabilityCache;
 use crate::session::database_secret::{DatabaseSecret, DatabaseSecretExt};
 use crate::session::devices_cache::DevicesCache;
-use crate::session::error_handling::{ClientError, TerminalClientError, handle_error};
+use crate::session::error_handling::{handle_error, ClientError, TerminalClientError};
 use crate::session::ignored_users_cache::IgnoredUsersCache;
 use crate::session::media_cache::MediaCache;
 use crate::session::notifications::trigger_notification;
@@ -12,25 +12,25 @@ use crate::session::spaces_cache::SpacesCache;
 use crate::session::sso_login::SsoLogin;
 use crate::session::verification_requests_cache::VerificationRequestsCache;
 use crate::tokio_helper::TokioHelper;
-use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use contemporary::application::Details;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{App, AppContext, AsyncApp, Context, Entity, Global, Task, WeakEntity};
 use gpui_tokio::Tokio;
-use imbl::HashMap;
 use imbl::hashmap::Entry;
 use imbl::shared_ptr::DefaultSharedPtr;
-use keyring::Credential;
+use imbl::HashMap;
 use keyring::default::default_credential_builder;
+use keyring::Credential;
 use log::{error, info};
 use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::config::SyncSettings;
-use matrix_sdk::ruma::OwnedUserId;
 use matrix_sdk::ruma::api::client::discovery::discover_homeserver::RtcFocusInfo;
 use matrix_sdk::ruma::api::error::FromHttpResponseError;
 use matrix_sdk::ruma::events::key::verification::request::ToDeviceKeyVerificationRequestEvent;
+use matrix_sdk::ruma::OwnedUserId;
 use matrix_sdk::store::RoomLoadSettings;
 use matrix_sdk::sync::Notification;
 use matrix_sdk::{Client, Error, HttpError, LoopCtrl, Room, RumaApiError};
@@ -349,28 +349,33 @@ impl SessionManager {
         })
         .detach();
 
-        let client_clone = client.clone();
-        cx.spawn(async move |cx: &mut AsyncApp| {
-            let rtc_foci = cx
-                .spawn_tokio(async move {
-                    let _ = client_clone.reset_well_known().await;
-                    client_clone.rtc_foci().await
-                })
-                .await;
+        let caches = Caches::new(&client, cx).await;
+        cx.update_global::<Self, ()>({
+            let client = client.clone();
+            |session_manager, cx| {
+                session_manager.current_caches = Some(caches);
+                session_manager.current_session_client = Some(cx.new(|_| client));
+                session_manager.is_new_account = user_identity.is_none();
+            }
+        });
 
-            let _ = cx.update_global::<Self, ()>(|session_manager, _| {
-                session_manager.current_caches.as_mut().unwrap().rtc_foci =
-                    rtc_foci.unwrap_or_default();
-            });
+        cx.spawn({
+            let client = client.clone();
+            async move |cx: &mut AsyncApp| {
+                let rtc_foci = cx
+                    .spawn_tokio(async move {
+                        let _ = client.reset_well_known().await;
+                        client.rtc_foci().await
+                    })
+                    .await;
+
+                cx.update_global::<Self, ()>(|session_manager, _| {
+                    session_manager.current_caches.as_mut().unwrap().rtc_foci =
+                        rtc_foci.unwrap_or_default();
+                });
+            }
         })
         .detach();
-
-        let caches = Caches::new(&client, cx).await;
-        cx.update_global::<Self, ()>(|session_manager, cx| {
-            session_manager.current_caches = Some(caches);
-            session_manager.current_session_client = Some(cx.new(|_| client));
-            session_manager.is_new_account = user_identity.is_none();
-        });
 
         Ok(())
     }

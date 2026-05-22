@@ -1086,14 +1086,14 @@
     "description": null
   },
   "JOIN_ERROR_TEXT": {
-    "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:278",
+    "context": "space_lobby_content.rs",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:126",
     "plural": false,
     "description": null
   },
   "JOIN_ERROR_TITLE": {
-    "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:275",
+    "context": "space_lobby_content.rs",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:123",
     "plural": false,
     "description": null
   },
@@ -1734,8 +1734,8 @@
     "description": null
   },
   "PASSWORD_CONFIRM": {
-    "context": "password_change.rs",
-    "definedIn": "src/account_settings/security_settings/password_change.rs:81",
+    "context": "key_export_popover.rs",
+    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:44",
     "plural": false,
     "description": null
   },
@@ -2244,8 +2244,8 @@
     "description": null
   },
   "ROOM_DIRECTORY_MEMBER_COUNT": {
-    "context": "room_directory.rs",
-    "definedIn": "src/chat/room_directory.rs:417",
+    "context": "space_lobby_content.rs",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:258",
     "plural": true,
     "description": null
   },
@@ -2724,20 +2724,20 @@
     "description": null
   },
   "SECURITY_RECOVERY_KEY_CHANGE": {
-    "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:271",
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:284",
     "plural": false,
     "description": null
   },
   "SECURITY_RECOVERY_KEY_RESET": {
-    "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:288",
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:299",
     "plural": false,
     "description": null
   },
   "SECURITY_RECOVERY_KEY_SETUP": {
-    "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:280",
+    "context": "recovery_key_reset_popover.rs",
+    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:292",
     "plural": false,
     "description": null
   },
