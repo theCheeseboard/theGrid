@@ -51,7 +51,7 @@ fn mane() {
 
     let store = cfg_select! {
         target_os = "windows" => {
-            windows_secret_service_keyring_store::store::Store::new()
+            windows_native_keyring_store::store::Store::new()
         }
         target_os = "macos" => {
             apple_native_keyring_store::keychain::Store::new()
