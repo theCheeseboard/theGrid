@@ -4,19 +4,21 @@ use crate::account_settings::security_settings::password_change::PasswordChangeS
 use crate::account_settings::AccountSettingsSurface;
 use crate::auth::auth_surface::AuthSurface;
 use crate::chat::chat_surface::ChatSurface;
+use crate::not_ready_surface::not_ready_surface;
 use crate::register::register_surface::RegisterSurface;
 use contemporary::about_surface::about_surface;
 use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
 use contemporary::window::contemporary_window;
 use gpui::{
-    div, App, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window,
+    div, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window,
 };
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{
-    AccountSettingsDeepLink, MainWindowSurface, SurfaceChange, SurfaceChangeEvent,
+    AccountSettingsDeepLink, MainWindowSurface, NotReadyReason, SurfaceChange, SurfaceChangeEvent,
 };
 use thegrid_rtc_livekit::call_surface::CallSurface;
+use uuid::Uuid;
 
 pub struct MainWindow {
     main_surface: Entity<ChatSurface>,
@@ -31,8 +33,18 @@ pub struct MainWindow {
 }
 
 impl MainWindow {
-    pub fn new(cx: &mut App) -> Entity<MainWindow> {
-        cx.new(|cx| MainWindow {
+    pub fn new(cx: &mut Context<Self>) -> MainWindow {
+        let session_manager = cx.global::<SessionManager>();
+        let start_page = if session_manager
+            .session_secrets(&Uuid::new_v4(), cx)
+            .is_err()
+        {
+            MainWindowSurface::NotReady(NotReadyReason::SecretServiceManagerBroken)
+        } else {
+            MainWindowSurface::Main
+        };
+
+        MainWindow {
             main_surface: {
                 let handle_surface_change = cx.listener(Self::handle_surface_change);
                 ChatSurface::new(cx, handle_surface_change)
@@ -62,8 +74,8 @@ impl MainWindow {
                 DeactivateSurface::new(cx, handle_surface_change)
             },
             call_surface: None,
-            current_surface: vec![MainWindowSurface::Main],
-        })
+            current_surface: vec![start_page],
+        }
     }
 
     pub fn about_surface_open(&mut self, is_open: bool) -> &Self {
@@ -126,6 +138,7 @@ impl MainWindow {
 impl Render for MainWindow {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let session_manager = cx.global::<SessionManager>();
+
         contemporary_window().child(
             pager(
                 "main-pager",
@@ -140,7 +153,8 @@ impl Render for MainWindow {
                     MainWindowSurface::IdentityReset => 5,
                     MainWindowSurface::PasswordChange => 6,
                     MainWindowSurface::DeactivateAccount => 7,
-                    MainWindowSurface::About => 8,
+                    MainWindowSurface::NotReady(_) => 8,
+                    MainWindowSurface::About => 9,
                 },
             )
             .w_full()
@@ -159,6 +173,12 @@ impl Render for MainWindow {
             .page(self.identity_reset_surface.clone())
             .page(self.password_change_surface.clone())
             .page(self.deactivate_account_surface.clone())
+            .page(match self.current_surface.last().unwrap() {
+                MainWindowSurface::NotReady(reason) => {
+                    not_ready_surface(*reason).into_any_element()
+                }
+                _ => div().into_any_element(),
+            })
             .page(about_surface().on_back_click(cx.listener(|this, _, _, cx| {
                 this.current_surface.pop();
                 cx.notify();

@@ -8,6 +8,7 @@
   "NOTIFICATION_MESSAGE_BODY_IMAGE": "sent an image",
   "NOTIFICATION_MESSAGE_BODY_VIDEO": "sent a video",
   "NOTIFICATION_MESSAGE_SUMMARY": "{{sender}} in {{room}}",
+  "NOT_READY_SECRET_SERVICE_MANAGER_BROKEN": "Your secret service manager is not working correctly.",
   "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE": "Disconnected from Homeserver",
   "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE_DESCRIPTION": "Trying to reconnect...",
   "TERMINAL_ERROR_SECRET_FAILURE": "Failed to decrypt secrets.",

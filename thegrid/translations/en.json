@@ -267,6 +267,7 @@
   "NEW_USERNAME_DESCRIPTION": "Choose a username for your account.",
   "NEXT": "Next",
   "NOTIFICATIONS_SYSTEM": "System Notifications",
+  "NOT_READY_TITLE": "theGrid cannot be used",
   "NO_DISPLAYED_ROOM_MESSAGE": "Choose a room to start chatting!",
   "NO_DISPLAYED_ROOM_TITLE": "Welcome to {{application_name}}",
   "NUMBERS_MATCH": "The numbers match",

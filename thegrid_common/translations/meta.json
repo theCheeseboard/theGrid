@@ -53,6 +53,12 @@
     "plural": false,
     "description": null
   },
+  "NOT_READY_SECRET_SERVICE_MANAGER_BROKEN": {
+    "context": "surfaces.rs",
+    "definedIn": "src/surfaces.rs:21",
+    "plural": false,
+    "description": null
+  },
   "RECOVERABLE_ERROR_HOMESERVER_UNAVAILABLE": {
     "context": "error_handling.rs",
     "definedIn": "src/session/error_handling.rs:94",
