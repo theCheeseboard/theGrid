@@ -3,7 +3,7 @@ use crate::session::caches::Caches;
 use crate::session::capability_cache::CapabilityCache;
 use crate::session::database_secret::{DatabaseSecret, DatabaseSecretExt};
 use crate::session::devices_cache::DevicesCache;
-use crate::session::error_handling::{handle_error, ClientError, TerminalClientError};
+use crate::session::error_handling::{ClientError, TerminalClientError, handle_error};
 use crate::session::ignored_users_cache::IgnoredUsersCache;
 use crate::session::media_cache::MediaCache;
 use crate::session::notifications::trigger_notification;
@@ -12,25 +12,23 @@ use crate::session::spaces_cache::SpacesCache;
 use crate::session::sso_login::SsoLogin;
 use crate::session::verification_requests_cache::VerificationRequestsCache;
 use crate::tokio_helper::TokioHelper;
-use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
 use contemporary::application::Details;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{App, AppContext, AsyncApp, Context, Entity, Global, Task, WeakEntity};
 use gpui_tokio::Tokio;
+use imbl::HashMap;
 use imbl::hashmap::Entry;
 use imbl::shared_ptr::DefaultSharedPtr;
-use imbl::HashMap;
-use keyring::default::default_credential_builder;
-use keyring::Credential;
 use log::{error, info};
 use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::config::SyncSettings;
+use matrix_sdk::ruma::OwnedUserId;
 use matrix_sdk::ruma::api::client::discovery::discover_homeserver::RtcFocusInfo;
 use matrix_sdk::ruma::api::error::FromHttpResponseError;
 use matrix_sdk::ruma::events::key::verification::request::ToDeviceKeyVerificationRequestEvent;
-use matrix_sdk::ruma::OwnedUserId;
 use matrix_sdk::store::RoomLoadSettings;
 use matrix_sdk::sync::Notification;
 use matrix_sdk::{Client, Error, HttpError, LoopCtrl, Room, RumaApiError};
@@ -110,13 +108,9 @@ impl SessionManager {
         .collect()
     }
 
-    pub fn session_secrets(&self, session: &Uuid, cx: &App) -> keyring::Result<Box<Credential>> {
+    pub fn session_secrets(&self, session: &Uuid, cx: &App) -> keyring_core::Result<keyring_core::Entry> {
         let details = cx.global::<Details>();
-        default_credential_builder().build(
-            None,
-            details.generatable.desktop_entry,
-            &session.to_string(),
-        )
+        keyring_core::get_default_store().unwrap().build(details.generatable.desktop_entry, &session.to_string(), None)
     }
 
     pub fn set_session(&mut self, uuid: Uuid, cx: &mut App) {
@@ -201,8 +195,10 @@ impl SessionManager {
                     let uuid = uuid.clone();
                     move |_| {
                         let uuid = uuid.to_string();
-                        let creds =
-                            default_credential_builder().build(None, desktop_entry, &uuid)?;
+                        let creds = keyring_core::get_default_store()
+                            .unwrap()
+                            .build(desktop_entry, &uuid, None)
+                            .unwrap();
                         Ok(creds
                             .get_database_secret()
                             .unwrap()
@@ -216,8 +212,10 @@ impl SessionManager {
                     let uuid = uuid.clone();
                     move |client| {
                         let uuid = uuid.to_string();
-                        let creds =
-                            default_credential_builder().build(None, desktop_entry, &uuid)?;
+                        let creds = keyring_core::get_default_store()
+                            .unwrap()
+                            .build(desktop_entry, &uuid, None)
+                            .unwrap();
                         let mut secret = creds.get_database_secret().unwrap();
                         secret.set_oauth_session(client.oauth().full_session().unwrap());
                         creds

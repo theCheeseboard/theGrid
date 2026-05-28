@@ -2,9 +2,10 @@ use crate::utilities::default_device_name;
 use base64::alphabet::URL_SAFE;
 use base64::prelude::{BASE64_URL_SAFE, BASE64_URL_SAFE_NO_PAD};
 use base64::{DecodeError, Engine};
-use cntp_i18n::{I18N_MANAGER, tr};
+use cntp_i18n::{tr, I18N_MANAGER};
 use cntp_icon_tool_macros::{application_icon_asset_path, application_icon_source};
 use contemporary::application::Details;
+use contemporary::components::application_menu::ApplicationMenu;
 use contemporary::components::button::button;
 use contemporary::components::constrainer;
 use contemporary::components::constrainer::constrainer;
@@ -18,13 +19,16 @@ use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::{MaskMode, TextField};
 use contemporary::surface::surface;
-use gpui::LineFragment::Text;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::private::anyhow;
-use gpui::{App, AppContext, AsyncApp, BorrowAppContext, Context, ElementId, Entity, ImageSource, InteractiveElement, IntoElement, ParentElement, Render, Resource, SharedString, Styled, WeakEntity, Window, div, img, px, Menu};
+use gpui::LineFragment::Text;
+use gpui::{
+    div, img, px, App, AppContext, AsyncApp, BorrowAppContext, Context,
+    ElementId, Entity, ImageSource, InteractiveElement, IntoElement, Menu, ParentElement, Render,
+    Resource, SharedString, Styled, WeakEntity, Window,
+};
 use gpui_tokio::Tokio;
-use keyring::default::default_credential_builder;
 use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::authentication::oauth::error::OAuthDiscoveryError;
 use matrix_sdk::authentication::oauth::registration::{
@@ -36,7 +40,7 @@ use matrix_sdk::encryption::CrossSigningStatus;
 use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::AuthorizationServerMetadata;
 use matrix_sdk::ruma::api::client::session::get_login_types::v3::{IdentityProvider, LoginType};
 use matrix_sdk::ruma::serde::Raw;
-use matrix_sdk::ruma::{DeviceId, OwnedUserId, user_id};
+use matrix_sdk::ruma::{user_id, DeviceId, OwnedUserId};
 use matrix_sdk::utils::UrlOrQuery;
 use matrix_sdk::{Client, ClientBuildError};
 use smol::future::FutureExt;
@@ -44,7 +48,6 @@ use std::iter;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
-use contemporary::components::application_menu::ApplicationMenu;
 use thegrid_common::session::database_secret::{DatabaseSecret, SessionType};
 use thegrid_common::session::session_manager::{SessionManager, SessionSecretPurpose};
 use thegrid_common::session::sso_login::SsoLogin;
@@ -87,7 +90,7 @@ pub struct AuthSurface {
     database_secret: DatabaseSecret,
 
     on_surface_change: Rc<Box<SurfaceChangeHandler>>,
-    application_menu: Entity<ApplicationMenu>
+    application_menu: Entity<ApplicationMenu>,
 }
 
 impl AuthSurface {
@@ -162,11 +165,14 @@ impl AuthSurface {
                 session_uuid: Uuid::new_v4(),
                 on_surface_change: Rc::new(Box::new(on_surface_change)),
                 database_secret: DatabaseSecret::new().unwrap(),
-                application_menu: ApplicationMenu::new(cx, Menu {
-                    name: "Menu".into(),
-                    disabled: false,
-                    items: vec![],
-                }),
+                application_menu: ApplicationMenu::new(
+                    cx,
+                    Menu {
+                        name: "Menu".into(),
+                        disabled: false,
+                        items: vec![],
+                    },
+                ),
             };
             surface
         })

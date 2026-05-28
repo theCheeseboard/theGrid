@@ -10,9 +10,7 @@ use contemporary::about_surface::about_surface;
 use contemporary::components::pager::lift_animation::LiftAnimation;
 use contemporary::components::pager::pager;
 use contemporary::window::contemporary_window;
-use gpui::{
-    div, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window,
-};
+use gpui::{div, AppContext, Context, Entity, IntoElement, ParentElement, Render, Styled, Window};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{
     AccountSettingsDeepLink, MainWindowSurface, NotReadyReason, SurfaceChange, SurfaceChangeEvent,
@@ -35,9 +33,10 @@ pub struct MainWindow {
 impl MainWindow {
     pub fn new(cx: &mut Context<Self>) -> MainWindow {
         let session_manager = cx.global::<SessionManager>();
-        let start_page = if session_manager
-            .session_secrets(&Uuid::new_v4(), cx)
-            .is_err()
+        let start_page = if keyring_core::get_default_store().is_none()
+            || session_manager
+                .session_secrets(&Uuid::new_v4(), cx)
+                .is_err()
         {
             MainWindowSurface::NotReady(NotReadyReason::SecretServiceManagerBroken)
         } else {

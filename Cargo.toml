@@ -41,7 +41,7 @@ async-ringbuf = "0.3"
 cancellation-token = "0.1"
 yuv = "0.8"
 nokhwa = { version = "0.10", features = ["input-native", "output-threaded"], default-features = false }
-keyring = { version = "3", features = ["windows-native", "apple-native", "sync-secret-service", "tokio", "crypto-rust"] }
+keyring-core = "1"
 getrandom = "0.4"
 base64 = "0.22"
 libwebrtc = "0.3"

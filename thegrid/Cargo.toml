@@ -35,7 +35,7 @@ mime2ext = { workspace = true }
 thegrid_text_rendering = { path = "../thegrid_text_rendering" }
 thegrid_common = { workspace = true }
 thegrid_rtc_livekit = { workspace = true }
-keyring = { workspace = true }
+keyring-core = { workspace = true }
 getrandom = { workspace = true }
 base64 = { workspace = true }
 qrcode = { workspace = true }
@@ -47,3 +47,10 @@ cntp_i18n_gen = { workspace = true }
 # Fixes "two different versions of crate `core_graphics` are being used" error.
 [target.'cfg(target_os = "macos")'.dependencies]
 core-text = "=21.0.0"
+apple-native-keyring-store = { version = "1", features = ["keychain"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-native-keyring-store = "1"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+zbus-secret-service-keyring-store = { version = "1", features = ["crypto-rust"] }

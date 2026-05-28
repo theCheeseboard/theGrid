@@ -43,10 +43,32 @@ use thegrid_common::session::sso_login::SsoLogin;
 use thegrid_common::setup_thegrid_common;
 use thegrid_rtc_livekit::call_manager::setup_call_manager;
 use thegrid_rtc_livekit::setup_thegrid_rtc_livekit;
+use tracing::error;
 use url::Url;
 
 fn mane() {
     application_icon!("../dist/baseicon.svg");
+
+    let store = cfg_select! {
+        target_os = "windows" => {
+            windows_secret_service_keyring_store::store::Store::new()
+        }
+        target_os = "macos" => {
+            apple_native_keyring_store::keychain::Store::new()
+        }
+        target_os = "linux" => {
+            zbus_secret_service_keyring_store::store::Store::new()
+        }
+        _ => {
+            Err(keyring_core::Error::NoDefaultStore)
+        }
+    };
+    match store {
+        Ok(store) => keyring_core::set_default_store(store),
+        Err(e) => {
+            error!("Unable to create default store for platform: {e}")
+        }
+    }
 
     let (open_urls_tx, open_urls_rx) = async_channel::bounded(1);
 
@@ -212,6 +234,8 @@ fn mane() {
         .unwrap();
         cx.activate(true);
     });
+
+    keyring_core::unset_default_store();
 }
 
 #[tokio::main]
