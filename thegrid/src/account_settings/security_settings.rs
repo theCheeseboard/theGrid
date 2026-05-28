@@ -122,6 +122,11 @@ impl Render for SecuritySettings {
             .verification_state()
             == VerificationState::Verified;
 
+        let can_change_password = session_manager
+            .capabilities()
+            .read(cx)
+            .can_change_password();
+
         div()
             .bg(theme.background)
             .w_full()
@@ -177,6 +182,16 @@ impl Render for SecuritySettings {
                     .when(
                         recovery_state == RecoveryState::Incomplete && verified,
                         |david| {
+                            let fix_recovery_handler = cx.listener(move |this, _, _, cx| {
+                                this.recovery_passphrase_popover.update(
+                                    cx,
+                                    |recovery_passphrase_popover, cx| {
+                                        recovery_passphrase_popover.set_visible(true);
+                                        cx.notify()
+                                    },
+                                )
+                            });
+
                             david.child(
                                 admonition()
                                     .severity(AdmonitionSeverity::Warning)
@@ -192,61 +207,47 @@ impl Render for SecuritySettings {
                                                     button("verify-recovery")
                                                         .child(icon_text(
                                                             "visibility",
-                                                            tr!("VERIFY_SESSION_RECOVERY_KEY",),
+                                                            tr!("VERIFY_SESSION_RECOVERY_KEY"),
                                                         ))
-                                                        .on_click(cx.listener(
-                                                            move |this, _, _, cx| {
-                                                                this.recovery_passphrase_popover.update(
-                                                                    cx,
-                                                                    |recovery_passphrase_popover, cx| {
-                                                                        recovery_passphrase_popover
-                                                                            .set_visible(true);
-                                                                        cx.notify()
-                                                                    },
-                                                                )
-                                                            },
-                                                        )),
+                                                        .on_click(fix_recovery_handler),
                                                 ),
                                             ),
                                     ),
                             )
                         },
                     )
-
-                    .child(
-                        layer()
-                            .flex()
-                            .flex_col()
-                            .p(px(8.))
-                            .gap(px(4.))
-                            .w_full()
-                            .child(subtitle(tr!(
-                                "PASSWORD_CHANGE",
-                            )))
-                            .child(tr!(
-                                "PASSWORD_CHANGE_SETTING_DESCRIPTION",
-                                "If you need to, you can change your password here."
-                            ))
-                            .child(
-                                div()
-                                    .flex()
-                                    .flex_col()
-                                    .bg(theme.button_background)
-                                    .rounded(theme.border_radius)
-                                    .child(
-                                        button("password-change")
-                                            .child(icon_text(
-                                                "edit-rename",
-                                                tr!(
-                                                    "PASSWORD_CHANGE",
-                                                )
-                                                ,
-                                            ))
-                                            .on_click(cx.listener(Self::open_password_change_page)),
-                                    ),
-                            ),
-                    )
-
+                    .when(can_change_password, |david| {
+                        david.child(
+                            layer()
+                                .flex()
+                                .flex_col()
+                                .p(px(8.))
+                                .gap(px(4.))
+                                .w_full()
+                                .child(subtitle(tr!("PASSWORD_CHANGE",)))
+                                .child(tr!(
+                                    "PASSWORD_CHANGE_SETTING_DESCRIPTION",
+                                    "If you need to, you can change your password here."
+                                ))
+                                .child(
+                                    div()
+                                        .flex()
+                                        .flex_col()
+                                        .bg(theme.button_background)
+                                        .rounded(theme.border_radius)
+                                        .child(
+                                            button("password-change")
+                                                .child(icon_text(
+                                                    "edit-rename",
+                                                    tr!("PASSWORD_CHANGE",),
+                                                ))
+                                                .on_click(
+                                                    cx.listener(Self::open_password_change_page),
+                                                ),
+                                        ),
+                                ),
+                        )
+                    })
                     .when(verified, |david| {
                         david.child(
                             layer()
@@ -270,8 +271,7 @@ impl Render for SecuritySettings {
                                                         tr!(
                                                             "SECURITY_RECOVERY_KEY_CHANGE",
                                                             "Change Recovery Key"
-                                                        )
-                                                            ,
+                                                        ),
                                                     ),
                                                     RecoveryState::Unknown
                                                     | RecoveryState::Disabled => icon_text(
@@ -279,16 +279,14 @@ impl Render for SecuritySettings {
                                                         tr!(
                                                             "SECURITY_RECOVERY_KEY_SETUP",
                                                             "Set up Recovery Key"
-                                                        )
-                                                            ,
+                                                        ),
                                                     ),
                                                     RecoveryState::Incomplete => icon_text(
                                                         "edit-rename",
                                                         tr!(
                                                             "SECURITY_RECOVERY_KEY_RESET",
                                                             "Reset Recovery Key"
-                                                        )
-                                                            ,
+                                                        ),
                                                     ),
                                                 })
                                                 .on_click(cx.listener(|this, _, _, cx| {
@@ -301,7 +299,7 @@ impl Render for SecuritySettings {
                                                     );
                                                     cx.notify()
                                                 })),
-                                        )
+                                        ),
                                 ),
                         )
                     })
@@ -331,8 +329,7 @@ impl Render for SecuritySettings {
                                                 tr!(
                                                     "SECURITY_KEY_BACKUP_EXPORT",
                                                     "Export Encryption Keys"
-                                                )
-                                                    ,
+                                                ),
                                             ))
                                             .on_click(cx.listener(|this, _, _, cx| {
                                                 this.key_export_popover.update(
@@ -351,15 +348,15 @@ impl Render for SecuritySettings {
                                                 tr!(
                                                     "SECURITY_KEY_BACKUP_IMPORT",
                                                     "Import Encryption Keys"
-                                                )
-                                                    ,
+                                                ),
                                             ))
                                             .on_click(cx.listener(|this, _, _, cx| {
                                                 this.start_import(cx);
                                             })),
                                     ),
                             ),
-                    ).child(
+                    )
+                    .child(
                         layer()
                             .flex()
                             .flex_col()
@@ -395,8 +392,7 @@ impl Render for SecuritySettings {
                                                 tr!(
                                                     "SECURITY_IDENTITY_RESET",
                                                     "Reset Cryptographic Identity"
-                                                )
-                                                    ,
+                                                ),
                                             ))
                                             .destructive()
                                             .on_click(cx.listener(Self::open_crypto_reset_page)),
@@ -407,6 +403,7 @@ impl Render for SecuritySettings {
             .child(self.key_export_popover.clone())
             .child(self.key_import_popover.clone())
             .child(self.recovery_key_reset_popover.clone())
-            .child(self.recovery_passphrase_popover.clone()).child(self.oauth_management_page_redirect_dialog.clone())
+            .child(self.recovery_passphrase_popover.clone())
+            .child(self.oauth_management_page_redirect_dialog.clone())
     }
 }

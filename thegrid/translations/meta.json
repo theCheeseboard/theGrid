@@ -1735,7 +1735,7 @@
   },
   "PASSWORD_CHANGE_SETTING_DESCRIPTION": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:227",
+    "definedIn": "src/account_settings/security_settings.rs:229",
     "plural": false,
     "description": null
   },
@@ -2671,55 +2671,55 @@
   },
   "SECURITY_CRYPTO_IDENTITY": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:370",
+    "definedIn": "src/account_settings/security_settings.rs:367",
     "plural": false,
     "description": null
   },
   "SECURITY_ENCRYPTION": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:257",
+    "definedIn": "src/account_settings/security_settings.rs:258",
     "plural": false,
     "description": null
   },
   "SECURITY_IDENTITY_DESCRIPTION": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:374",
+    "definedIn": "src/account_settings/security_settings.rs:371",
     "plural": false,
     "description": null
   },
   "SECURITY_IDENTITY_DESCRIPTION_2": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:379",
+    "definedIn": "src/account_settings/security_settings.rs:376",
     "plural": false,
     "description": null
   },
   "SECURITY_IDENTITY_RESET": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:396",
+    "definedIn": "src/account_settings/security_settings.rs:393",
     "plural": false,
     "description": null
   },
   "SECURITY_KEY_BACKUP": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:314",
+    "definedIn": "src/account_settings/security_settings.rs:312",
     "plural": false,
     "description": null
   },
   "SECURITY_KEY_BACKUP_DESCRIPTION": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:316",
+    "definedIn": "src/account_settings/security_settings.rs:314",
     "plural": false,
     "description": null
   },
   "SECURITY_KEY_BACKUP_EXPORT": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:332",
+    "definedIn": "src/account_settings/security_settings.rs:330",
     "plural": false,
     "description": null
   },
   "SECURITY_KEY_BACKUP_IMPORT": {
     "context": "security_settings.rs",
-    "definedIn": "src/account_settings/security_settings.rs:352",
+    "definedIn": "src/account_settings/security_settings.rs:349",
     "plural": false,
     "description": null
   },
