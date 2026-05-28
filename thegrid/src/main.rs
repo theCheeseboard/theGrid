@@ -85,7 +85,7 @@ fn mane() {
                     generatable: application_details!(),
                     copyright_holder: "Victor Tran",
                     copyright_year: "2026",
-                    application_version: "1.0",
+                    application_version: "0.1",
                     license: License::Gpl3OrLater,
                     links: [
                         (
