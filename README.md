@@ -43,9 +43,9 @@ theGrid currently supports the following features:
     - [X] Text Messages
     - [X] Attachments
     - [X] Replies
-    - [ ] Edits
-    - [ ] Redactions
-    - [ ] Reactions
+    - [X] Edits
+    - [X] Redactions
+    - [X] Reactions
     - [X] Read Receipts
     - [X] Typing Indicators
     - [ ] Polls
@@ -68,7 +68,7 @@ theGrid currently supports the following features:
 - [ ] Message Search
 - [ ] Account Settings
     - [X] Update User Profile
-    - [ ] Change Password
+    - [X] Change Password
     - [ ] 3PID Management
     - [X] Session Management
         - [X] Emoji Verification
