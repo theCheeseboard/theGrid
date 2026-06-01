@@ -1,6 +1,7 @@
 ---
-import { Button, Grid, GridSlice } from "contemporary-astro-components";
+import {Button, Grid, GridSlice} from "contemporary-astro-components";
 import Layout from "../layouts/Layout.astro";
+import { LatestVersionIndicator } from "../components/LatestVersionIndicator.tsx";
 
 function downloadUrl(target: string, channel: string) {
     return `https://binchicken.vicr123.com/api/repositories/thegrid/latest/by_target_channel/${target}/${channel}/download`
@@ -14,13 +15,38 @@ function downloadUrl(target: string, channel: string) {
         </GridSlice>
     </Grid>
     <Grid>
-        <GridSlice width={12} class="warning">
-            <p>BEFORE YOU CONTINUE</p>
-            It's great to have you on board, but before you go ahead, be aware that theGrid is still under construction.
-            You may encounter strange bugs and missing features.
+        <GridSlice width={12}>
+            <p>Choose your operating system and platform.</p>
+            <LatestVersionIndicator client:load />
+        </GridSlice>
+        <GridSlice class="download-platform-group">
+            <h2>Windows</h2>
+            <Button href={downloadUrl("x86_64-pc-windows-msvc", "stable")}>Windows (x86_64)</Button>
+            <Button href={downloadUrl("aarch64-pc-windows-msvc", "stable")}>Windows (arm64)</Button>
+        </GridSlice>
+        <GridSlice class="download-platform-group">
+            <h2>macOS</h2>
+            <Button href={downloadUrl("aarch64-apple-darwin-dmg", "stable")}>macOS (Apple Silicon)</Button>
+        </GridSlice>
+        <GridSlice class="download-platform-group">
+            <h2>Linux</h2>
+            <Button href={downloadUrl("x86_64-unknown-linux-gnu", "stable")}>AppImage (x86_64)</Button>
+            <Button href={downloadUrl("aarch64-unknown-linux-gnu", "stable")}>AppImage (arm64)</Button>
+        </GridSlice>
+        <GridSlice width={12}>
+            <div class="more-releases-container">
+                <a href="https://github.com/thecheeseboard/thegrid/releases">
+                    More releases on the GitHub Releases page →
+                </a>
+            </div>
         </GridSlice>
     </Grid>
     <Grid>
+        <GridSlice width={12}>
+            <h2>Blueprint Builds</h2>
+            <p>If you'd like to see what's coming up, you can try the Blueprint builds. They'll contain the latest
+                features, hot off the press, but they might be unstable.</p>
+        </GridSlice>
         <GridSlice class="download-platform-group">
             <h2>Windows</h2>
             <Button href={downloadUrl("x86_64-pc-windows-msvc", "blueprint")}>Windows (x86_64)</Button>
@@ -65,5 +91,10 @@ function downloadUrl(target: string, channel: string) {
         margin: 0;
         font-size: unset;
         font-weight: bold;
+    }
+
+    .more-releases-container {
+        display: flex;
+        justify-content: flex-end;
     }
 </style>
