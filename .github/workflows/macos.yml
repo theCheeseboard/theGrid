@@ -215,5 +215,5 @@ jobs:
           -H "Authorization: Bearer ${{ github.token }}" \
           -H "X-GitHub-Api-Version: 2022-11-28" \
           -H "Content-Type: application/octet-stream" \
-          "https://uploads.github.com/repos/${{ github.event.repository.owner.login }}/${{ github.event.repository.name }}/releases/${{ github.event.release.id }}/assets?name=Contemporary_Playground-macOS.dmg" \
+          "https://uploads.github.com/repos/${{ github.event.repository.owner.login }}/${{ github.event.repository.name }}/releases/${{ github.event.release.id }}/assets?name=theGrid-macOS.dmg" \
           --data-binary "@$UPLOAD_FILE"
