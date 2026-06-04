@@ -6,7 +6,7 @@ use crate::chat::chat_surface::{
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -15,11 +15,13 @@ use contemporary::components::pager::pager;
 use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::{ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
-use gpui::{App, Entity, IntoElement, ParentElement, RenderOnce, Styled, Window, div, px};
+use gpui::{
+    div, px, App, BorrowAppContext, Entity, IntoElement, ParentElement, RenderOnce, Styled, Window,
+};
 use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::ruma::OwnedUserId;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{MainWindowSurface, SurfaceChangeEvent, SurfaceChangeHandler};
 
@@ -97,7 +99,12 @@ impl RenderOnce for ForcedDeviceVerification {
                 .child(
                     grandstand("force-verification-grandstand")
                         .text(tr!("FORCE_VERIFICATION_TITLE", "Verify this device"))
-                        .pt(px(36.)),
+                        .pt(px(36.)).on_back_click(|_, _, cx| {
+                        // Go back to the account switcher
+                        cx.update_global::<SessionManager, ()>(|session_manager, cx| {
+                            session_manager.clear_session()
+                        });
+                    }),
                 )
                 .child(
                     constrainer("user-pane")

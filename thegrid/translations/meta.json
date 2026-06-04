@@ -841,19 +841,19 @@
   },
   "FORCE_VERIFICATION_INCOMING_VERIFICATION_PROMPT": {
     "context": "forced_device_verification.rs",
-    "definedIn": "src/chat/forced_device_verification.rs:275",
+    "definedIn": "src/chat/forced_device_verification.rs:282",
     "plural": false,
     "description": null
   },
   "FORCE_VERIFICATION_PROMPT": {
     "context": "forced_device_verification.rs",
-    "definedIn": "src/chat/forced_device_verification.rs:150",
+    "definedIn": "src/chat/forced_device_verification.rs:157",
     "plural": false,
     "description": null
   },
   "FORCE_VERIFICATION_TITLE": {
     "context": "forced_device_verification.rs",
-    "definedIn": "src/chat/forced_device_verification.rs:99",
+    "definedIn": "src/chat/forced_device_verification.rs:101",
     "plural": false,
     "description": null
   },
@@ -3001,7 +3001,7 @@
   },
   "UNKNOWN_DEVICE": {
     "context": "forced_device_verification.rs",
-    "definedIn": "src/chat/forced_device_verification.rs:75",
+    "definedIn": "src/chat/forced_device_verification.rs:77",
     "plural": false,
     "description": null
   },
