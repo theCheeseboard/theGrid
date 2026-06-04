@@ -5,8 +5,7 @@ mod space_sidebar_page;
 mod standard_room_element;
 
 use crate::account_settings::security_settings::recovery_key_reset_popover::RecoveryKeyResetPopover;
-use crate::auth::recovery_passphrase_popover::RecoveryPassphrasePopover;
-use crate::auth::verification_popover::VerificationPopover;
+use crate::chat::chat_surface::{RequestCryptographicResetEvent, SelfVerificationUi};
 use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::directory_sidebar_page::DirectorySidebarPage;
 use crate::chat::sidebar::root_sidebar_page::RootSidebarPage;
@@ -14,7 +13,6 @@ use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
 use cntp_i18n::{tr, trn};
 use contemporary::components::admonition::{admonition, AdmonitionSeverity};
 use contemporary::components::button::button;
-use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
 use contemporary::components::pager::pager;
@@ -48,6 +46,8 @@ pub struct Sidebar {
 
     current_page: usize,
     pages: Vec<SidebarPage>,
+
+    verification_ui: SelfVerificationUi,
 }
 
 pub enum SidebarPage {
@@ -59,17 +59,22 @@ pub enum SidebarPage {
 #[derive(IntoElement)]
 enum SidebarAlert {
     None,
-    IncomingVerificationRequest(Entity<VerificationRequestDetails>),
-    VerifySession(bool, Option<Rc<Box<SurfaceChangeHandler>>>),
+    IncomingVerificationRequest(Entity<VerificationRequestDetails>, SelfVerificationUi),
+    VerifySession(bool, SelfVerificationUi),
     SetupRecovery,
-    RecoverRecovery,
+    RecoverRecovery(SelfVerificationUi),
     UnverifiedDevices(usize, Option<Rc<Box<SurfaceChangeHandler>>>),
     ClientError(RecoverableClientError),
     ActiveCall(Option<Rc<Box<SurfaceChangeHandler>>>),
 }
 
 impl Sidebar {
-    pub fn new(cx: &mut Context<Self>, displayed_room: Entity<DisplayedRoom>) -> Self {
+    pub fn new(
+        cx: &mut Context<Self>,
+        displayed_room: Entity<DisplayedRoom>,
+
+        verification_ui: SelfVerificationUi,
+    ) -> Self {
         let self_entity = cx.entity();
         let displayed_room_clone = displayed_room.clone();
 
@@ -80,6 +85,7 @@ impl Sidebar {
             pages: vec![SidebarPage::Root(cx.new(|cx| {
                 RootSidebarPage::new(self_entity, displayed_room_clone, cx)
             }))],
+            verification_ui,
         }
     }
 
@@ -107,6 +113,7 @@ impl Sidebar {
         if !shown_verification_requests.is_empty() {
             return SidebarAlert::IncomingVerificationRequest(
                 shown_verification_requests[0].clone(),
+                self.verification_ui.clone(),
             );
         }
 
@@ -120,7 +127,7 @@ impl Sidebar {
         if account.verification_state() != VerificationState::Verified {
             return SidebarAlert::VerifySession(
                 devices.is_last_device(),
-                self.on_surface_change.clone(),
+                self.verification_ui.clone(),
             );
         }
 
@@ -129,7 +136,7 @@ impl Sidebar {
         if recovery.state() == RecoveryState::Disabled {
             return SidebarAlert::SetupRecovery;
         } else if recovery.state() == RecoveryState::Incomplete {
-            return SidebarAlert::RecoverRecovery;
+            return SidebarAlert::RecoverRecovery(self.verification_ui.clone());
         }
 
         let unverified_devices = devices.unverified_devices();
@@ -236,23 +243,16 @@ impl Render for Sidebar {
 
 impl RenderOnce for SidebarAlert {
     fn render<'a>(self, window: &mut Window, cx: &'a mut App) -> impl IntoElement {
-        let verification_popover = window.use_state(cx, |_, cx| VerificationPopover::new(cx));
-        let verification_popover_clone = verification_popover.clone();
-
         let recovery_key_reset_popover =
             window.use_state(cx, |_, cx| RecoveryKeyResetPopover::new(cx));
         let recovery_key_reset_popover_clone = recovery_key_reset_popover.clone();
-
-        let recovery_passphrase_popover =
-            window.use_state(cx, |_, cx| RecoveryPassphrasePopover::new(cx));
-        let recovery_passphrase_popover_clone = recovery_passphrase_popover.clone();
 
         let theme = cx.global::<Theme>();
 
         div()
             .child(match self {
                 SidebarAlert::None => div(),
-                SidebarAlert::IncomingVerificationRequest(verification_request_entity) => {
+                SidebarAlert::IncomingVerificationRequest(verification_request_entity, verification_ui) => {
                     let verification_request = verification_request_entity.read(cx);
 
                     let session_manager = cx.global::<SessionManager>();
@@ -331,7 +331,7 @@ impl RenderOnce for SidebarAlert {
                                                                 verification_request.accept(cx);
                                                             });
 
-                                                            verification_popover.update(
+                                                            verification_ui.verification_popover.update(
                                                                 cx,
                                                                 |verification_popover, cx| {
                                                                     verification_popover
@@ -406,7 +406,7 @@ impl RenderOnce for SidebarAlert {
                                 ),
                         ),
                 ),
-                SidebarAlert::RecoverRecovery => div().p(px(4.)).child(
+                SidebarAlert::RecoverRecovery(verification_ui) => div().p(px(4.)).child(
                     admonition()
                         .severity(AdmonitionSeverity::Warning)
                         .title(tr!("FIX_RECOVERY", "Recovery data corrupt"))
@@ -436,7 +436,7 @@ impl RenderOnce for SidebarAlert {
                                                         ,
                                                 ))
                                                 .on_click(move |_, _, cx| {
-                                                    recovery_passphrase_popover.update(
+                                                    verification_ui.recovery_passphrase_popover.update(
                                                         cx,
                                                         |recovery_passphrase_popover, cx| {
                                                             recovery_passphrase_popover
@@ -449,9 +449,8 @@ impl RenderOnce for SidebarAlert {
                                 ),
                         ),
                 ),
-                SidebarAlert::VerifySession(is_last_device, handler) => {
+                SidebarAlert::VerifySession(is_last_device, verification_ui) => {
                     let theme = theme.clone();
-                    let reset_dialog_open = window.use_state(cx, |_, _| false);
 
                     div().p(px(4.)).child(
                         admonition()
@@ -485,7 +484,7 @@ impl RenderOnce for SidebarAlert {
                                                                 ,
                                                         ))
                                                         .on_click(move |_, _, cx| {
-                                                            verification_popover.update(
+                                                            verification_ui.verification_popover.update(
                                                                 cx,
                                                                 |verification_popover, cx| {
                                                                     verification_popover
@@ -508,7 +507,7 @@ impl RenderOnce for SidebarAlert {
                                                             ,
                                                     ))
                                                     .on_click(move |_, _, cx| {
-                                                        recovery_passphrase_popover.update(
+                                                        verification_ui.recovery_passphrase_popover.update(
                                                             cx,
                                                             |recovery_passphrase_popover, cx| {
                                                                 recovery_passphrase_popover
@@ -528,59 +527,14 @@ impl RenderOnce for SidebarAlert {
                                                             "I lost my verification methods"
                                                         ),
                                                     ))
-                                                    .on_click({
-                                                        let reset_dialog_open = reset_dialog_open.clone();
+                                                    .on_click(
                                                         move |_, window, cx| {
-                                                            reset_dialog_open.write(cx, true);
+                                                            (verification_ui.on_request_cryptographic_reset)(&RequestCryptographicResetEvent, window, cx);
                                                         }
-                                                    }),
+                                                    ),
                                             ),
                                     ),
                             ),
-                    ).child(
-                        dialog_box("crypto-reset-dialog")
-                            .visible(*reset_dialog_open.read(cx))
-                            .title(
-                                tr!(
-                                    "VERIFY_SESSION_RESET_CRYPTO_DIALOG_TITLE",
-                                    "Encryption Setup Recovery"
-                                )
-                            )
-                            .content(
-                                tr!(
-                                    "VERIFY_SESSION_RESET_CRYPTO_DIALOG_MESSAGE",
-                                    "If you can't verify this session because you've lost access \
-                                    to all your other verification methods, you can reset your \
-                                    cryptographic identity to start over. You will lose access to \
-                                    your existing encrypted messages, and all of your devices \
-                                    will become unverified."
-                                )
-                            )
-                            .standard_button(StandardButton::Cancel, {
-                                let reset_dialog_open = reset_dialog_open.clone();
-                                move |_, _, cx| {
-                                    reset_dialog_open.write(cx, false);
-                                }
-                            }).button(
-                            button("do-reset-crypto")
-                                .destructive()
-                                .child(icon_text(
-                                    "view-refresh",
-                                    tr!("SECURITY_IDENTITY_RESET"),
-                                ))
-                                .on_click(move |_, window, cx| {
-                                    reset_dialog_open.write(cx, false);
-                                    if let Some(handler) = handler.clone() {
-                                        handler(
-                                            &SurfaceChangeEvent {
-                                                change: MainWindowSurface::IdentityReset.into(),
-                                            },
-                                            window,
-                                            cx,
-                                        );
-                                    }
-                                }),
-                        )
                     )
                 }
                 SidebarAlert::UnverifiedDevices(count, handler) => div().p(px(4.)).child(
@@ -651,8 +605,6 @@ impl RenderOnce for SidebarAlert {
                         ))))
                 }
             })
-            .child(verification_popover_clone.clone().into_any_element())
-            .child(recovery_passphrase_popover_clone.clone().into_any_element())
             .child(recovery_key_reset_popover_clone.clone().into_any_element())
     }
 }

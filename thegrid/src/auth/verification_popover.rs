@@ -215,6 +215,9 @@ enum VerificationPopoverPage {
 impl Render for VerificationPopover {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let session_manager = cx.global::<SessionManager>();
+        if session_manager.client().is_none() {
+            return div().into_any_element();
+        }
         let account = session_manager.current_account().read(cx);
         let verified = account.verification_state() == VerificationState::Verified;
 
@@ -521,7 +524,7 @@ impl Render for VerificationPopover {
                         )
                         .into_any_element(),
                 ),
-            )
+            ).into_any_element()
     }
 }
 

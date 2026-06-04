@@ -3,6 +3,10 @@ name = "thegrid"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+force-device-verification = []
+default = ["force-device-verification"]
+
 [dependencies]
 gpui = { workspace = true }
 gpui_tokio = { workspace = true }

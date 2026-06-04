@@ -3,19 +3,20 @@ use crate::actions::{
 };
 use crate::auth::logout_popover::logout_popover;
 use crate::chat::chat_room::ChatRoom;
+use crate::chat::chat_surface::SelfVerificationUi;
 use crate::chat::displayed_room::DisplayedRoom;
-use crate::chat::join_room::JoinRoom;
 use crate::chat::join_room::create_room_popover::CreateRoomPopover;
 use crate::chat::join_room::create_space_popover::CreateSpacePopover;
 use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
+use crate::chat::join_room::JoinRoom;
 use crate::chat::room_directory::RoomDirectory;
 use crate::chat::sidebar::Sidebar;
-use cntp_i18n::{I18N_MANAGER, tr};
+use cntp_i18n::{tr, I18N_MANAGER};
 use contemporary::application::Details;
 use contemporary::components::interstitial::interstitial;
 use gpui::{
-    App, AppContext, BorrowAppContext, Context, Entity, FocusHandle, InteractiveElement,
-    IntoElement, ParentElement, Render, Styled, Window, div, px,
+    div, px, App, AppContext, BorrowAppContext, Context, Entity,
+    FocusHandle, InteractiveElement, IntoElement, ParentElement, Render, Styled, Window,
 };
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
@@ -46,7 +47,8 @@ impl MainChatSurface {
     pub fn new(
         cx: &mut App,
         displayed_room: Entity<DisplayedRoom>,
-        on_surface_change: impl Fn(&SurfaceChangeEvent, &mut Window, &mut App) + 'static,
+        verification_ui: SelfVerificationUi,
+        on_surface_change: Rc<Box<SurfaceChangeHandler>>,
     ) -> Entity<MainChatSurface> {
         cx.new(|cx| {
             let surface_change_handler =
@@ -89,7 +91,7 @@ impl MainChatSurface {
 
             MainChatSurface {
                 sidebar: cx.new(|cx| {
-                    let mut sidebar = Sidebar::new(cx, displayed_room.clone());
+                    let mut sidebar = Sidebar::new(cx, displayed_room.clone(), verification_ui);
                     sidebar.on_surface_change(surface_change_handler);
                     sidebar
                 }),
@@ -107,7 +109,7 @@ impl MainChatSurface {
                 room_directory: None,
                 focus_handle: cx.focus_handle(),
                 logout_popover_visible: cx.new(|_| false),
-                on_surface_change: Rc::new(Box::new(on_surface_change)),
+                on_surface_change,
                 create_room_popover,
                 create_space_popover,
                 direct_join_room_popover,

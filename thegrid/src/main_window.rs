@@ -46,7 +46,7 @@ impl MainWindow {
         MainWindow {
             main_surface: {
                 let handle_surface_change = cx.listener(Self::handle_surface_change);
-                ChatSurface::new(cx, handle_surface_change)
+                cx.new(|cx| ChatSurface::new(cx, handle_surface_change))
             },
             auth_surface: {
                 let handle_surface_change = cx.listener(Self::handle_surface_change);

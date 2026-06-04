@@ -7,3 +7,4 @@ mod main_chat_surface;
 mod new_account_onboarding;
 mod room_directory;
 mod sidebar;
+mod forced_device_verification;

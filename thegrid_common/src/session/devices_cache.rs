@@ -6,7 +6,7 @@ use matrix_sdk::Client;
 
 pub struct DevicesCache {
     devices: Vec<CachedDevice>,
-    pub is_last_device: bool,
+    is_last_device: bool,
 }
 
 enum CacheMutation {}
