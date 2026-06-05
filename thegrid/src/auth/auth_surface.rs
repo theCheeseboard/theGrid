@@ -24,9 +24,9 @@ use gpui::prelude::FluentBuilder;
 use gpui::private::anyhow;
 use gpui::LineFragment::Text;
 use gpui::{
-    div, img, px, App, AppContext, AsyncApp, BorrowAppContext, Context,
-    ElementId, Entity, ImageSource, InteractiveElement, IntoElement, Menu, ParentElement, Render,
-    Resource, SharedString, Styled, WeakEntity, Window,
+    div, img, px, App, AppContext, AsyncApp, BorrowAppContext, ClipboardItem,
+    Context, ElementId, Entity, ImageSource, InteractiveElement, IntoElement, Menu,
+    ParentElement, Render, Resource, SharedString, Styled, WeakEntity, Window,
 };
 use gpui_tokio::Tokio;
 use matrix_sdk::authentication::matrix::MatrixSession;
@@ -473,7 +473,12 @@ impl AuthSurface {
         self.perform_login(LoginMethod::Password(password), cx);
     }
 
-    fn trigger_sso_login(&mut self, idp: Option<IdentityProvider>, cx: &mut Context<Self>) {
+    fn trigger_sso_login(
+        &mut self,
+        idp: Option<IdentityProvider>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let client = self.client.clone().unwrap();
         let client_clone = client.clone();
 
@@ -484,6 +489,8 @@ impl AuthSurface {
         cx.update_global::<SessionManager, _>(|session_manager, cx| {
             session_manager.set_sso_login_entity(weak_sso_login_entity);
         });
+
+        let copy_url_instead = window.modifiers().shift;
 
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
             let requested_url = match idp {
@@ -510,7 +517,13 @@ impl AuthSurface {
                 }
             };
 
-            cx.update(|cx| cx.open_url(&requested_url.unwrap()));
+            cx.update(|cx| {
+                if copy_url_instead {
+                    cx.write_to_clipboard(ClipboardItem::new_string(requested_url.unwrap()))
+                } else {
+                    cx.open_url(&requested_url.unwrap())
+                }
+            });
         })
         .detach();
 
@@ -921,12 +934,15 @@ impl AuthSurface {
                                                         ),
                                                     },
                                                 ))
-                                                .on_click(cx.listener(move |this, _, _, cx| {
-                                                    this.trigger_sso_login(
-                                                        sso_provider.clone(),
-                                                        cx,
-                                                    );
-                                                })),
+                                                .on_click(cx.listener(
+                                                    move |this, _, window, cx| {
+                                                        this.trigger_sso_login(
+                                                            sso_provider.clone(),
+                                                            window,
+                                                            cx,
+                                                        );
+                                                    },
+                                                )),
                                             )
                                         },
                                     ),
@@ -1057,14 +1073,22 @@ impl AuthSurface {
                                             "arrow-right",
                                             tr!("AUTH_OAUTH_BUTTON", "Continue in Browser"),
                                         ))
-                                        .on_click(cx.listener(move |this, _, _, cx| {
+                                        .on_click(cx.listener(move |this, _, window, cx| {
                                             let AuthState::OAuthContinueInBrowserPrompt(url, _) =
                                                 &this.state
                                             else {
                                                 return;
                                             };
 
-                                            cx.open_url(url.as_str())
+                                            let copy_url_instead = window.modifiers().shift;
+
+                                            if copy_url_instead {
+                                                cx.write_to_clipboard(ClipboardItem::new_string(
+                                                    url.as_str().to_string(),
+                                                ));
+                                            } else {
+                                                cx.open_url(url.as_str())
+                                            }
                                         })),
                                 ),
                         )
