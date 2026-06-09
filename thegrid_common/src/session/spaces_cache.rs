@@ -17,7 +17,14 @@ pub struct SpacesCache {
 
 impl SpacesCache {
     pub async fn new(client: &Client, cx: &mut AsyncApp) -> Self {
-        let space_service = Arc::new(SpaceService::new(client.clone()).await);
+        let space_service = cx
+            .spawn_tokio({
+                let client = client.clone();
+                async move { Ok::<_, anyhow::Error>(SpaceService::new(client).await) }
+            })
+            .await
+            .unwrap();
+        let space_service = Arc::new(space_service);
 
         Self {
             space_service,
