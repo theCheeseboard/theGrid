@@ -141,6 +141,7 @@ impl LivekitCallManager {
             *device = output_device
                 .and_then(|device| DeviceSinkBuilder::from_device(device).ok())
                 .and_then(|device| device.open_stream().ok());
+            cx.notify();
         });
     }
 }

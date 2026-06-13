@@ -1,6 +1,7 @@
 use async_ringbuf::producer::AsyncProducer;
 use async_ringbuf::traits::{Consumer, Observer, Split};
 use async_ringbuf::{AsyncHeapCons, AsyncHeapRb};
+use cancellation_token::{CancellationToken, CancellationTokenSource};
 use gpui::private::anyhow;
 use gpui::{App, AsyncApp, Entity};
 use livekit::webrtc::audio_stream::native::NativeAudioStream;
@@ -15,6 +16,7 @@ pub struct RtcAudioStreamSource {
     sample_rate: SampleRate,
     pub consumer: AsyncHeapCons<i16>,
     deaf: Arc<RwLock<bool>>,
+    cancellation_token: CancellationToken,
 }
 
 impl RtcAudioStreamSource {
@@ -23,22 +25,31 @@ impl RtcAudioStreamSource {
         channels: ChannelCount,
         sample_rate: SampleRate,
         deafen: Entity<bool>,
+        cancellation_token_source: CancellationTokenSource,
         cx: &mut App,
     ) -> Self {
         let (mut producer, consumer) = AsyncHeapRb::<i16>::new(16384).split();
-        cx.spawn(async move |cx: &mut AsyncApp| {
-            let _ = cx
-                .spawn_tokio(async move {
-                    // Receive the audio frames in a new task
-                    while let Some(audio_frame) = stream.next().await {
-                        if producer.push_exact(&audio_frame.data).await.is_err() {
-                            return Ok(());
-                        };
-                    }
+        cx.spawn({
+            let cancellation_token_source = cancellation_token_source.clone();
+            async move |cx: &mut AsyncApp| {
+                let _ = cx
+                    .spawn_tokio({
+                        let cancellation_token_source = cancellation_token_source.clone();
+                        async move {
+                            // Receive the audio frames in a new task
+                            while let Some(audio_frame) = stream.next().await {
+                                if producer.push_exact(&audio_frame.data).await.is_err() {
+                                    cancellation_token_source.cancel();
+                                    return Ok(());
+                                };
+                            }
 
-                    Ok::<_, anyhow::Error>(())
-                })
-                .await;
+                            cancellation_token_source.cancel();
+                            Ok::<_, anyhow::Error>(())
+                        }
+                    })
+                    .await;
+            }
         })
         .detach();
 
@@ -57,6 +68,7 @@ impl RtcAudioStreamSource {
             channels,
             sample_rate,
             deaf,
+            cancellation_token: cancellation_token_source.token(),
         }
     }
 }
@@ -65,7 +77,9 @@ impl Iterator for RtcAudioStreamSource {
     type Item = Sample;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if *self.deaf.read().unwrap() {
+        if self.cancellation_token.is_canceled() {
+            None
+        } else if *self.deaf.read().unwrap() {
             Some(0.)
         } else {
             Some(self.consumer.try_pop().map(reformat).unwrap_or_default())

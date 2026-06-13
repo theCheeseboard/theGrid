@@ -1019,6 +1019,9 @@ impl LivekitCall {
                 return;
             };
 
+            let cancellation_source =
+                CancellationTokenSource::with_parent(&self.cancellation_source.token());
+
             let sample_rate = device.config().sample_rate();
             let channels = device.config().channel_count();
 
@@ -1033,9 +1036,15 @@ impl LivekitCall {
                 channels,
                 sample_rate,
                 call_manager_deaf,
+                cancellation_source.clone(),
                 cx,
             );
             device.mixer().add(source);
+
+            cx.observe(&device_entity, move |this, device, cx| {
+                cancellation_source.cancel();
+            })
+            .detach();
         });
     }
 
