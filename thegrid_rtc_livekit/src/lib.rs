@@ -6,20 +6,22 @@ pub mod call_manager;
 pub mod call_surface;
 mod focus;
 mod mic;
+pub mod rtc_audio_stream_source;
 mod webcam;
 
 use crate::call_manager::LivekitCallManager;
-use crate::focus::{FocusUrlError, get_focus_url};
+use crate::focus::{get_focus_url, FocusUrlError};
 use crate::mic::open_mic;
+use crate::rtc_audio_stream_source::RtcAudioStreamSource;
 use crate::webcam::Webcam;
-use async_ringbuf::AsyncHeapRb;
 use async_ringbuf::consumer::AsyncConsumer;
+use async_ringbuf::AsyncHeapRb;
 use cancellation_token::CancellationTokenSource;
-use cntp_i18n::{I18N_MANAGER, tr, tr_load};
+use cntp_i18n::{tr, tr_load, I18N_MANAGER};
 use contemporary::icon_tool::Url;
 use contemporary::setup_parlance::setup_parlance_i18n_if_enabled;
-use cpal::Host;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::Host;
 use gpui::http_client::anyhow;
 use gpui::private::{anyhow, serde_json};
 use gpui::{
@@ -59,7 +61,7 @@ use matrix_sdk::ruma::exports::serde_json::json;
 use matrix_sdk::ruma::serde::Raw;
 use matrix_sdk::ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId, RoomId, UserId};
 use matrix_sdk::stream::StreamExt;
-use matrix_sdk::{HttpError, reqwest};
+use matrix_sdk::{reqwest, HttpError};
 use nokhwa::utils::FrameFormat;
 use reqwest::header;
 use ringbuffer::RingBuffer;
@@ -77,9 +79,9 @@ use thegrid_common::sfx;
 use thegrid_common::sfx::SoundEffect;
 use thegrid_common::tokio_helper::TokioHelper;
 use yuv::{
-    BufferStoreMut, YuvChromaSubsampling, YuvPackedImage, YuvPackedImageMut, YuvPlanarImage,
-    YuvPlanarImageMut, YuvRange, YuvStandardMatrix, yuv420_to_bgra, yuv420_to_rgba,
-    yuv422_to_uyvy422, yuyv422_to_yuv422,
+    yuv420_to_bgra, yuv420_to_rgba, yuv422_to_uyvy422, yuyv422_to_yuv422, BufferStoreMut,
+    YuvChromaSubsampling, YuvPackedImage, YuvPackedImageMut, YuvPlanarImage, YuvPlanarImageMut,
+    YuvRange, YuvStandardMatrix,
 };
 
 pub fn setup_thegrid_rtc_livekit(cx: &mut App) {
@@ -1006,118 +1008,35 @@ impl LivekitCall {
     fn route_audio(
         &mut self,
         audio_track: RemoteAudioTrack,
-        device_entity: Entity<Option<cpal::Device>>,
+        device_entity: Entity<Option<rodio::MixerDeviceSink>>,
         cx: &mut Context<Self>,
     ) {
         let call_manager = cx.global::<LivekitCallManager>();
         let call_manager_deaf = call_manager.deaf();
-        let cancellation_token = self.cancellation_source.token();
 
-        let (mut producer, mut consumer) = AsyncHeapRb::<i16>::new(16384).split();
+        device_entity.update(cx, |device, cx| {
+            let Some(device) = device else {
+                return;
+            };
 
-        let device = device_entity.read(cx).clone();
-        let (sample_rate, channels, output_stream) = if let Some(device) = device {
-            let mut supported_device_configs = device.supported_output_configs().unwrap();
-            let supported_config = supported_device_configs
-                .find_map(|config| {
-                    config
-                        .try_with_sample_rate(48000)
-                        .or_else(|| config.try_with_sample_rate(44100))
-                })
-                .unwrap();
+            let sample_rate = device.config().sample_rate();
+            let channels = device.config().channel_count();
 
-            let deaf = Arc::new(RwLock::new(false));
-            let deaf_clone = deaf.clone();
-            cx.observe_self(move |this, cx| {
-                *deaf_clone.write().unwrap() = this.is_deaf(cx);
-            })
-            .detach();
-            let deaf_clone = deaf.clone();
-            cx.observe(&call_manager_deaf, move |this, _, cx| {
-                *deaf_clone.write().unwrap() = this.is_deaf(cx);
-            })
-            .detach();
-
-            let output_stream = device
-                .build_output_stream(
-                    &supported_config.config(),
-                    move |data: &mut [i16], _: &cpal::OutputCallbackInfo| {
-                        consumer.pop_slice(data);
-                        if *deaf.read().unwrap() {
-                            data.fill(0);
-                        }
-                    },
-                    move |err| {
-                        // Errors? What errors!?
-                        error!("cpal: error in output stream: {:?}", err)
-                    },
-                    None,
-                )
-                .unwrap();
-
-            (
-                supported_config.sample_rate() as i32,
-                supported_config.channels() as i32,
-                Some(output_stream),
-            )
-        } else {
-            cx.spawn(
-                async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                    loop {
-                        consumer.pop_until_end(&mut Default::default()).await;
-                        if consumer.is_closed() {
-                            return;
-                        }
-                    }
-                },
-            )
-            .detach();
-            (44100, 2, None)
-        };
-
-        let cancellation_source = CancellationTokenSource::new();
-        let cancellation_source_2 = cancellation_source.clone();
-
-        let rtc_track = audio_track.rtc_track();
-        let mut audio_stream = NativeAudioStream::new(rtc_track, sample_rate, channels);
-        cx.spawn(
-            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let _ = cx
-                    .spawn_tokio(async move {
-                        // Receive the audio frames in a new task
-                        while let Some(audio_frame) = audio_stream.next().await {
-                            if cancellation_token.is_canceled() {
-                                cancellation_source_2.cancel();
-                                return Ok(());
-                            }
-
-                            if producer.push_exact(&audio_frame.data).await.is_err() {
-                                cancellation_source_2.cancel();
-                                return Ok(());
-                            };
-                        }
-
-                        cancellation_source_2.cancel();
-                        Ok::<_, anyhow::Error>(())
-                    })
-                    .await;
-            },
-        )
-        .detach();
-
-        let cancellation_token_2 = cancellation_source.token();
-        cx.spawn(
-            async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                cancellation_token_2.wait().await;
-                drop(output_stream);
-            },
-        )
-        .detach();
-
-        cx.observe(&device_entity, move |this, device, cx| {
-            cancellation_source.cancel();
-        })
-        .detach();
+            let rtc_track = audio_track.rtc_track();
+            let audio_stream = NativeAudioStream::new(
+                rtc_track,
+                sample_rate.get().try_into().unwrap(),
+                channels.get().into(),
+            );
+            let source = RtcAudioStreamSource::new(
+                audio_stream,
+                channels,
+                sample_rate,
+                call_manager_deaf,
+                cx,
+            );
+            device.mixer().add(source);
+        });
     }
 
     fn route_video(&mut self, video_track: RemoteVideoTrack, cx: &mut Context<Self>) {

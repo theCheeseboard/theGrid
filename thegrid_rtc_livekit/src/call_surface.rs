@@ -8,8 +8,8 @@ use contemporary::components::pager::fade_animation::FadeAnimation;
 use contemporary::components::pager::pager;
 use contemporary::surface::surface;
 use gpui::{
-    App, AppContext, Context, Entity, InteractiveElement, IntoElement, Render, Styled, Window, div,
-    rgb,
+    div, rgb, App, AppContext, Context, Entity, InteractiveElement, IntoElement, Render, Styled,
+    Window,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use std::rc::Rc;

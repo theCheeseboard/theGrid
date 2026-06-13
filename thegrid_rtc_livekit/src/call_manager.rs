@@ -2,6 +2,7 @@ use crate::focus::get_focus_url;
 use crate::{CallState, LivekitCall, TrackType};
 use gpui::{App, AppContext, AsyncApp, BorrowAppContext, Context, Entity, Global, WeakEntity};
 use matrix_sdk::ruma::OwnedRoomId;
+use rodio::DeviceSinkBuilder;
 use std::collections::HashMap;
 use thegrid_common::outbound_track::OutboundTrack;
 use thegrid_common::session::session_manager::SessionManager;
@@ -14,7 +15,7 @@ pub struct LivekitCallManager {
     mute: Entity<bool>,
     deaf: Entity<bool>,
 
-    active_output_device: Entity<Option<cpal::Device>>,
+    active_output_device: Entity<Option<rodio::MixerDeviceSink>>,
     active_input_device: Entity<Option<cpal::Device>>,
 }
 
@@ -127,12 +128,20 @@ impl LivekitCallManager {
         FocusUrl::Processing
     }
 
-    pub fn active_output_device(&self) -> Entity<Option<cpal::Device>> {
+    pub fn active_output_device(&self) -> Entity<Option<rodio::MixerDeviceSink>> {
         self.active_output_device.clone()
     }
 
     pub fn active_input_device(&self) -> Entity<Option<cpal::Device>> {
         self.active_input_device.clone()
+    }
+
+    pub fn set_active_output_device(&mut self, output_device: Option<cpal::Device>, cx: &mut App) {
+        self.active_output_device.update(cx, |device, cx| {
+            *device = output_device
+                .and_then(|device| DeviceSinkBuilder::from_device(device).ok())
+                .and_then(|device| device.open_stream().ok());
+        });
     }
 }
 

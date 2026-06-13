@@ -10715,6 +10715,7 @@ dependencies = [
  "matrix-sdk",
  "nokhwa",
  "ringbuffer",
+ "rodio",
  "serde",
  "smallvec",
  "smol",
