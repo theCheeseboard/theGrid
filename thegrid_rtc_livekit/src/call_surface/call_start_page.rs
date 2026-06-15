@@ -35,14 +35,29 @@ pub struct CallStartPage {
     room_id: OwnedRoomId,
     on_surface_change: Rc<Box<SurfaceChangeHandler>>,
 
-    audio_output_devices: Vec<cpal::Device>,
-    audio_input_devices: Vec<cpal::Device>,
-    selected_output_device: Option<cpal::Device>,
-    selected_input_device: Option<cpal::Device>,
+    audio_output_devices: Vec<AudioDevice>,
+    audio_input_devices: Vec<AudioDevice>,
+    selected_output_device: Option<AudioDevice>,
+    selected_input_device: Option<AudioDevice>,
     active_call_users: Entity<Vec<RoomMember>>,
 
     active_camera: Option<Entity<Webcam>>,
     camera_info: Option<Vec<CameraInfo>>,
+}
+
+#[derive(Clone)]
+pub struct AudioDevice {
+    pub device: cpal::Device,
+    pub description: Option<cpal::DeviceDescription>,
+}
+
+impl From<cpal::Device> for AudioDevice {
+    fn from(value: Device) -> Self {
+        AudioDevice {
+            description: value.description().ok(),
+            device: value,
+        }
+    }
 }
 
 impl CallStartPage {
@@ -59,9 +74,9 @@ impl CallStartPage {
         let host = cpal::default_host();
         let output_devices = host
             .output_devices()
-            .map(|devices| devices.collect())
+            .map(|devices| devices.map(|device| device.into()).collect())
             .unwrap_or_default();
-        let selected_output_device = host.default_output_device();
+        let selected_output_device = host.default_output_device().map(|device| device.into());
 
         let active_call_users = track_active_call_participants(room_id.clone(), cx);
 
@@ -69,9 +84,13 @@ impl CallStartPage {
             room_id,
             on_surface_change,
             audio_output_devices: output_devices,
-            audio_input_devices: input_devices,
+            audio_input_devices: input_devices.into(),
             selected_output_device,
-            selected_input_device: if muted { None } else { selected_input_device },
+            selected_input_device: if muted {
+                None
+            } else {
+                selected_input_device.into()
+            },
             active_call_users,
             active_camera: None,
             camera_info: None,
@@ -80,17 +99,20 @@ impl CallStartPage {
         this
     }
 
-    fn get_default_mic_settings() -> (Vec<Device>, Option<Device>) {
+    fn get_default_mic_settings() -> (Vec<AudioDevice>, Option<AudioDevice>) {
         match Permissions::grant_status(PermissionType::Microphone) {
             GrantStatus::Granted | GrantStatus::PlatformUnsupported => {
                 let host = cpal::default_host();
                 let input_devices = host
                     .input_devices()
-                    .map(|devices| devices.collect())
+                    .map(|devices| devices.map(|device| device.into()).collect())
                     .unwrap_or_default();
                 let selected_input_device = host.default_input_device();
 
-                (input_devices, selected_input_device)
+                (
+                    input_devices,
+                    selected_input_device.map(|device| device.into()),
+                )
             }
             GrantStatus::Denied | GrantStatus::NotDetermined => {
                 // Avoid loading mic information
@@ -316,7 +338,7 @@ impl CallStartPage {
                             .child(
                                 self.selected_output_device
                                     .clone()
-                                    .and_then(|device| device.description().ok())
+                                    .and_then(|device| device.description)
                                     .map(|device| device.name().to_string())
                                     .unwrap_or_else(|| tr!("AUDIO_DEVICE_NONE", "Muted").into()),
                             )
@@ -324,8 +346,8 @@ impl CallStartPage {
                                 std::iter::once(None)
                                     .chain(self.audio_output_devices.iter().filter_map(|device| {
                                         device
-                                            .description()
-                                            .ok()
+                                            .description
+                                            .as_ref()
                                             .map(|description| Some((device.clone(), description)))
                                     }))
                                     .map(|device| {
@@ -430,7 +452,7 @@ impl CallStartPage {
                                     .child(
                                         self.selected_input_device
                                             .clone()
-                                            .and_then(|device| device.description().ok())
+                                            .and_then(|device| device.description)
                                             .map(|device| device.name().to_string())
                                             .unwrap_or_else(|| tr!("AUDIO_DEVICE_NONE").into()),
                                     )
@@ -438,7 +460,7 @@ impl CallStartPage {
                                         std::iter::once(None)
                                             .chain(self.audio_input_devices.iter().filter_map(
                                                 |device| {
-                                                    device.description().ok().map(|description| {
+                                                    device.description.as_ref().map(|description| {
                                                         Some((device.clone(), description))
                                                     })
                                                 },
@@ -524,8 +546,8 @@ impl CallStartPage {
                     } else {
                         let (input_devices, selected_input_device) =
                             Self::get_default_mic_settings();
-                        this.audio_input_devices = input_devices;
-                        this.selected_input_device = selected_input_device;
+                        this.audio_input_devices = input_devices.into();
+                        this.selected_input_device = selected_input_device.into();
                     }
                     cx.notify();
                 },
@@ -541,8 +563,10 @@ impl CallStartPage {
         let input_device = self.selected_input_device.clone();
 
         cx.update_global::<LivekitCallManager, _>(|call_manager, cx| {
-            call_manager.set_active_output_device(output_device, cx);
-            call_manager.active_input_device().write(cx, input_device);
+            call_manager.set_active_output_device(output_device.map(|device| device.device), cx);
+            call_manager
+                .active_input_device()
+                .write(cx, input_device.map(|device| device.device));
 
             let mut initial_streams = HashMap::new();
             if let Some(active_camera) = &self.active_camera {
