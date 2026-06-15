@@ -1013,6 +1013,12 @@ impl LivekitCall {
     ) {
         let call_manager = cx.global::<LivekitCallManager>();
         let call_manager_deaf = call_manager.deaf();
+        let volumes = call_manager.volumes();
+        let subscribed_stream = self
+            .subscribed_streams
+            .iter()
+            .find(|stream| stream.stream_sid == audio_track.sid())
+            .expect("Tried to route an audio track for a SID that is not subscribed");
 
         device_entity.update(cx, |device, cx| {
             let Some(device) = device else {
@@ -1036,6 +1042,10 @@ impl LivekitCall {
                 channels,
                 sample_rate,
                 call_manager_deaf,
+                volumes,
+                subscribed_stream.user_id.to_owned(),
+                subscribed_stream.device_id.to_owned(),
+                subscribed_stream.source,
                 cancellation_source.clone(),
                 cx,
             );

@@ -1,9 +1,10 @@
-use crate::call_manager::LivekitCallManager;
+use crate::call_manager::{LivekitCallManager, VolumeKey};
 use crate::call_surface::call_page::webcam_start_dialog::WebcamStartDialog;
 use crate::{CallMember, CallState, LivekitCall, StreamState, TrackType};
 use cntp_i18n::tr;
 use contemporary::components::anchorer::WithAnchorer;
 use contemporary::components::button::button;
+use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
@@ -15,16 +16,18 @@ use contemporary::lerp::Lerpable;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    Along, App, AppContext, Axis, BorrowAppContext, Bounds, Context, ElementId, Entity,
-    InteractiveElement, IntoElement, ObjectFit, ParentElement, Pixels, Point, Render, RenderOnce,
-    StatefulInteractiveElement, Styled, StyledImage, Window, anchored, div, img, px, rgb,
+    anchored, div, img, px, rgb, Along, App, AppContext, Axis,
+    BorrowAppContext, Bounds, Context, ElementId, Entity, InteractiveElement, IntoElement, ObjectFit,
+    ParentElement, Pixels, Point, Render, RenderOnce, StatefulInteractiveElement, Styled, StyledImage, Window,
 };
+use livekit::prelude::TrackSource;
+use log::{debug, info};
 use matrix_sdk::ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId};
 use std::collections::HashMap;
 use std::iter;
 use std::rc::Rc;
 use std::time::Instant;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use thegrid_screen_share::{PickerRequired, ScreenShareManager, ScreenShareStartEvent};
@@ -645,8 +648,84 @@ impl RenderOnce for CallMemberDisplay {
             _ => None,
         };
 
-        let on_action = Rc::new(self.on_action);
+        let display_name = call_member
+            .room_member
+            .display_name()
+            .unwrap_or_default()
+            .to_string();
 
+        let mut context_menu = Vec::new();
+        if let Some(device_id) = call_member.device_id {
+            let call_manager = cx.global::<LivekitCallManager>();
+            let volume_key = VolumeKey::new(
+                call_member.room_member.user_id().to_owned(),
+                device_id,
+                TrackSource::Microphone,
+            );
+            let current_volume = *call_manager
+                .volumes()
+                .read(cx)
+                .get(&volume_key)
+                .unwrap_or(&1_f32);
+            context_menu.extend([
+                ContextMenuItem::menu_item()
+                    .label("Volume Up")
+                    .remain_open()
+                    .on_triggered({
+                        let volume_key = volume_key.clone();
+                        move |_, _, cx| {
+                            let call_manager = cx.global::<LivekitCallManager>();
+                            let new_volume = (current_volume + 0.05).clamp(0., 1.);
+                            debug!("Volume change: {new_volume} -> {:?}", volume_key);
+                            call_manager.volumes().update(cx, {
+                                let volume_key = volume_key.clone();
+                                move |volumes, cx| {
+                                    volumes.insert(volume_key, new_volume);
+                                    cx.notify();
+                                }
+                            });
+                        }
+                    })
+                    .build(),
+                ContextMenuItem::menu_item()
+                    .disabled()
+                    .label(format!("Current volume: {:.0}%", current_volume * 100.))
+                    .build(),
+                ContextMenuItem::menu_item()
+                    .label("Volume Down")
+                    .remain_open()
+                    .on_triggered({
+                        let volume_key = volume_key.clone();
+                        move |_, _, cx| {
+                            let call_manager = cx.global::<LivekitCallManager>();
+                            let new_volume = (current_volume - 0.05).clamp(0., 1.);
+                            debug!("Volume change: {new_volume} -> {:?}", volume_key);
+                            call_manager.volumes().update(cx, {
+                                let volume_key = volume_key.clone();
+                                move |volumes, cx| {
+                                    volumes.insert(volume_key, new_volume);
+                                    cx.notify();
+                                }
+                            });
+                        }
+                    })
+                    .build(),
+            ])
+        }
+
+        if !context_menu.is_empty() {
+            context_menu.insert(
+                0,
+                ContextMenuItem::separator()
+                    .label(tr!(
+                        "CALL_MEMBER_DISPLAY_CONTEXT_MENU_SECTION",
+                        "For {{user}}",
+                        user:quote = display_name))
+                    .build(),
+            );
+        }
+
+        let on_action = Rc::new(self.on_action);
         anchored()
             .position(Point::new(px(0.), px(0.)))
             .child(
@@ -743,13 +822,7 @@ impl RenderOnce for CallMemberDisplay {
                                     div()
                                         .flex()
                                         .flex_grow()
-                                        .child(
-                                            call_member
-                                                .room_member
-                                                .display_name()
-                                                .unwrap_or_default()
-                                                .to_string(),
-                                        )
+                                        .child(display_name)
                                         .child(div().flex_grow())
                                         .when(is_muted, |david| david.child(icon("mic-off"))),
                                 ),
@@ -757,7 +830,8 @@ impl RenderOnce for CallMemberDisplay {
                     )
                     .on_click(move |_, window, app| {
                         on_action(&CallMemberAction::Focus, window, app);
-                    }),
+                    })
+                    .with_context_menu(context_menu),
             )
             .into_any_element()
     }
