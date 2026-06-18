@@ -235,6 +235,7 @@ impl LivekitCall {
                 let service_url = match get_focus_url(room_clone, rtc_foci, cx).await {
                     Ok(url) => url,
                     Err(FocusUrlError::RoomError) => {
+                        error!("Call failed: {}", CallError::RoomError);
                         let _ = weak_this.update(cx, |this, cx| {
                             this.state = CallState::Error(CallError::RoomError);
                             cx.notify();
@@ -242,6 +243,7 @@ impl LivekitCall {
                         return;
                     }
                     Err(FocusUrlError::NoRtcFocus) => {
+                        error!("Call failed: {}", CallError::NoRtcFocus);
                         let _ = weak_this.update(cx, |this, cx| {
                             this.state = CallState::Error(CallError::NoRtcFocus);
                             cx.notify();
@@ -259,6 +261,10 @@ impl LivekitCall {
                 let openid_token = match openid_token_response {
                     Ok(token) => token,
                     Err(e) => {
+                        error!(
+                            "Call failed: {}: {e:?}",
+                            CallError::OpenIdTokenRequestFailed
+                        );
                         let _ = weak_this.update(cx, |this, cx| {
                             this.state = CallState::Error(CallError::OpenIdTokenRequestFailed);
                             cx.notify();
@@ -269,7 +275,7 @@ impl LivekitCall {
 
                 // Get the LiveKit JWT
                 let client = zed_reqwest::Client::new();
-                let Ok(livekit_jwt_response) = cx
+                let livekit_jwt_response = cx
                     .spawn_tokio({
                         let client = client.clone();
                         let device_id = device_id.clone();
@@ -277,9 +283,9 @@ impl LivekitCall {
                         let service_url = format!("{}/sfu/get", service_url);
                         async move {
                             client
-                        .post(service_url)
-                        .body(
-                            json!({
+                                .post(service_url)
+                                .body(
+                                    json!({
                             "device_id": device_id.to_string(),
                             "openid_token": {
                                 "access_token": openid_token.access_token,
@@ -289,15 +295,31 @@ impl LivekitCall {
                             },
                             "room": room_id
                         })
-                                .to_string(),
-                        )
-                        .header(header::CONTENT_TYPE, "application/json")
-                        .send()
-                        .await
+                                        .to_string(),
+                                )
+                                .header(header::CONTENT_TYPE, "application/json")
+                                .send()
+                                .await
                         }
                     })
-                    .await
-                else {
+                    .await;
+                let livekit_jwt = match livekit_jwt_response {
+                    Ok(livekit_jwt) => livekit_jwt,
+                    Err(e) => {
+                        error!("Call failed: {}: {e:?}", CallError::LivekitJwtRequestFailed);
+                        let _ = weak_this.update(cx, |this, cx| {
+                            this.state = CallState::Error(CallError::LivekitJwtRequestFailed);
+                            cx.notify();
+                        });
+                        return;
+                    }
+                };
+
+                let Ok(livekit_jwt) = livekit_jwt.text().await else {
+                    error!(
+                        "Call failed: {}: response could not be interpreted as text",
+                        CallError::LivekitJwtRequestFailed
+                    );
                     let _ = weak_this.update(cx, |this, cx| {
                         this.state = CallState::Error(CallError::LivekitJwtRequestFailed);
                         cx.notify();
@@ -305,17 +327,13 @@ impl LivekitCall {
                     return;
                 };
 
-                let Ok(livekit_jwt_response) = livekit_jwt_response.text().await else {
-                    let _ = weak_this.update(cx, |this, cx| {
-                        this.state = CallState::Error(CallError::LivekitJwtRequestFailed);
-                        cx.notify();
-                    });
-                    return;
-                };
-
-                let Ok(livekit_jwt) =
-                    serde_json::from_str::<LivekitJwtResponse>(&livekit_jwt_response)
+                let Ok(livekit_jwt) = serde_json::from_str::<LivekitJwtResponse>(&livekit_jwt)
                 else {
+                    error!(
+                        "Call failed: {}: response could not be interpreted as JSON",
+                        CallError::LivekitJwtRequestFailed
+                    );
+                    error!("The response was: {:?}", livekit_jwt);
                     let _ = weak_this.update(cx, |this, cx| {
                         this.state = CallState::Error(CallError::LivekitJwtRequestFailed);
                         cx.notify();

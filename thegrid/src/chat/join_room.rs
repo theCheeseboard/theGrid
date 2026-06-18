@@ -5,9 +5,9 @@ use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
 use cntp_i18n::tr;
 use contemporary::components::admonition::AdmonitionSeverity;
 use contemporary::components::button::button;
-use contemporary::components::checkbox::{CheckState, checkbox};
+use contemporary::components::checkbox::{checkbox, CheckState};
 use contemporary::components::constrainer::constrainer;
-use contemporary::components::dialog_box::{StandardButton, dialog_box};
+use contemporary::components::dialog_box::{dialog_box, StandardButton};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -16,12 +16,12 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    App, AsyncApp, Context, Element, Entity, InteractiveElement, IntoElement, ListAlignment,
-    ListSizingBehavior, ListState, ParentElement, Render, RenderOnce, Styled, Subscription, Window,
-    div, list, px,
+    div, list, px, App, AsyncApp, Context, Element, Entity,
+    InteractiveElement, IntoElement, ListAlignment, ListSizingBehavior, ListState, ParentElement, Render, RenderOnce,
+    Styled, Subscription, Window,
 };
 use matrix_sdk::room::RoomMember;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::room_cache::{CachedRoom, RoomJoinEvent};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
@@ -118,37 +118,6 @@ impl Render for JoinRoom {
                     .w_full()
                     .p(px(8.))
                     .gap(px(8.))
-                    .when(self.invitations_list.item_count() != 0, |david| {
-                        david.child(
-                            layer()
-                                .flex()
-                                .flex_col()
-                                .p(px(8.))
-                                .w_full()
-                                .child(subtitle(tr!(
-                                    "JOIN_ROOM_INVITATIONS",
-                                    "Pending Invitations"
-                                )))
-                                .child(
-                                    list(
-                                        self.invitations_list.clone(),
-                                        cx.processor(move |this, i, _, cx| {
-                                            let invitation: &Entity<CachedRoom> =
-                                                &this.invitations[i];
-                                            div()
-                                                .id(i)
-                                                .py(px(2.))
-                                                .child(Invitation {
-                                                    room: invitation.clone(),
-                                                    displayed_room: displayed_room.clone(),
-                                                })
-                                                .into_any_element()
-                                        }),
-                                    )
-                                    .with_sizing_behavior(ListSizingBehavior::Infer),
-                                ),
-                        )
-                    })
                     .child(
                         layer()
                             .flex()
@@ -207,7 +176,38 @@ impl Render for JoinRoom {
                                             })),
                                     ),
                             ),
-                    ),
+                    )
+                    .when(self.invitations_list.item_count() != 0, |david| {
+                        david.child(
+                            layer()
+                                .flex()
+                                .flex_col()
+                                .p(px(8.))
+                                .w_full()
+                                .child(subtitle(tr!(
+                                    "JOIN_ROOM_INVITATIONS",
+                                    "Pending Invitations"
+                                )))
+                                .child(
+                                    list(
+                                        self.invitations_list.clone(),
+                                        cx.processor(move |this, i, _, cx| {
+                                            let invitation: &Entity<CachedRoom> =
+                                                &this.invitations[i];
+                                            div()
+                                                .id(i)
+                                                .py(px(2.))
+                                                .child(Invitation {
+                                                    room: invitation.clone(),
+                                                    displayed_room: displayed_room.clone(),
+                                                })
+                                                .into_any_element()
+                                        }),
+                                    )
+                                    .with_sizing_behavior(ListSizingBehavior::Infer),
+                                ),
+                        )
+                    }),
             )
     }
 }
