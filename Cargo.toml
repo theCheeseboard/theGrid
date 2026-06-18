@@ -3,7 +3,7 @@ resolver = "3"
 members = ["gpui_tokio", "thegrid", "thegrid_common", "thegrid_rtc_livekit", "thegrid_screen_share", "thegrid_text_rendering"]
 
 [workspace.dependencies]
-gpui = { version = "0.231", package = "gpui-unofficial" }
+gpui = { version = "1.2", package = "gpui-unofficial" }
 gpui_tokio = { path = "gpui_tokio" }
 thegrid_common = { path = "thegrid_common" }
 thegrid_rtc_livekit = { path = "thegrid_rtc_livekit" }

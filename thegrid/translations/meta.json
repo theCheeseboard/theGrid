@@ -1104,14 +1104,14 @@
     "description": null
   },
   "JOIN_ERROR_TEXT": {
-    "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:126",
+    "context": "room_directory.rs",
+    "definedIn": "src/chat/room_directory.rs:278",
     "plural": false,
     "description": null
   },
   "JOIN_ERROR_TITLE": {
-    "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:123",
+    "context": "room_directory.rs",
+    "definedIn": "src/chat/room_directory.rs:275",
     "plural": false,
     "description": null
   },
@@ -1758,8 +1758,8 @@
     "description": null
   },
   "PASSWORD_CONFIRM": {
-    "context": "key_export_popover.rs",
-    "definedIn": "src/account_settings/security_settings/key_export_popover.rs:44",
+    "context": "password_change.rs",
+    "definedIn": "src/account_settings/security_settings/password_change.rs:81",
     "plural": false,
     "description": null
   },
@@ -2268,8 +2268,8 @@
     "description": null
   },
   "ROOM_DIRECTORY_MEMBER_COUNT": {
-    "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:258",
+    "context": "room_directory.rs",
+    "definedIn": "src/chat/room_directory.rs:417",
     "plural": true,
     "description": null
   },
@@ -2748,20 +2748,20 @@
     "description": null
   },
   "SECURITY_RECOVERY_KEY_CHANGE": {
-    "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:284",
+    "context": "security_settings.rs",
+    "definedIn": "src/account_settings/security_settings.rs:272",
     "plural": false,
     "description": null
   },
   "SECURITY_RECOVERY_KEY_RESET": {
-    "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:299",
+    "context": "security_settings.rs",
+    "definedIn": "src/account_settings/security_settings.rs:287",
     "plural": false,
     "description": null
   },
   "SECURITY_RECOVERY_KEY_SETUP": {
-    "context": "recovery_key_reset_popover.rs",
-    "definedIn": "src/account_settings/security_settings/recovery_key_reset_popover.rs:292",
+    "context": "security_settings.rs",
+    "definedIn": "src/account_settings/security_settings.rs:280",
     "plural": false,
     "description": null
   },
@@ -3000,8 +3000,8 @@
     "description": null
   },
   "UNKNOWN_DEVICE": {
-    "context": "forced_device_verification.rs",
-    "definedIn": "src/chat/forced_device_verification.rs:77",
+    "context": "sidebar.rs",
+    "definedIn": "src/chat/sidebar.rs:278",
     "plural": false,
     "description": null
   },
