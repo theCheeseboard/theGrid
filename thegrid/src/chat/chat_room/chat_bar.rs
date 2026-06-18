@@ -291,7 +291,7 @@ impl Render for ChatBar {
                     )
                     .child(
                         button("emoji")
-                            .child("😀")
+                            .child(icon("face-smile-big"))
                             .flat()
                             .when(!can_send_message, |david| david.disabled())
                             .on_click(cx.listener(|this, _, _, cx| {
