@@ -1,8 +1,8 @@
 use crate::chat::displayed_room::DisplayedRoom;
 use cntp_i18n::tr;
 use contemporary::components::admonition::AdmonitionSeverity;
-use contemporary::components::button::{ButtonMenuOpenPolicy, button};
-use contemporary::components::checkbox::{CheckState, CheckedChangeEvent, radio_button};
+use contemporary::components::button::{button, ButtonMenuOpenPolicy};
+use contemporary::components::checkbox::{radio_button, CheckState, CheckedChangeEvent};
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::context_menu::ContextMenuItem;
 use contemporary::components::grandstand::grandstand;
@@ -19,14 +19,14 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AppContext, AsyncWindowContext, Context, Entity, IntoElement, ParentElement, Render, Styled,
-    WeakEntity, Window, div, px,
+    div, px, AppContext, AsyncWindowContext, Context, Entity, IntoElement, ParentElement,
+    Render, Styled, WeakEntity, Window,
 };
 use matrix_sdk::ruma::api::client::room::create_room::v3::{CreationContent, Request};
 use matrix_sdk::ruma::room::{JoinRule, RoomType};
 use matrix_sdk::ruma::serde::Raw;
 use matrix_sdk_ui::spaces::SpaceRoom;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 
@@ -72,7 +72,7 @@ impl CreateSpacePopover {
         let session_manager = cx.global::<SessionManager>();
         self.editable_spaces = session_manager
             .spaces()
-            .update(cx, |spaces, cx| spaces.get_editable_spaces(cx));
+            .update(cx, |spaces, cx| cx.new(|cx| spaces.get_editable_spaces(cx)));
 
         cx.notify()
     }
@@ -119,7 +119,6 @@ impl CreateSpacePopover {
 
                     let _ = cx
                         .spawn_tokio({
-                            let create_in_space = create_in_space.clone();
                             async move {
                                 room.privacy_settings()
                                     .update_join_rule(match is_private_room {

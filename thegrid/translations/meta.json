@@ -583,37 +583,37 @@
   },
   "CREATE_SPACE_DESCRIPTION": {
     "context": "create_space_popover.rs",
-    "definedIn": "src/chat/join_room/create_space_popover.rs:194",
+    "definedIn": "src/chat/join_room/create_space_popover.rs:193",
     "plural": false,
     "description": null
   },
   "CREATE_SPACE_OPTIONS": {
     "context": "create_space_popover.rs",
-    "definedIn": "src/chat/join_room/create_space_popover.rs:187",
+    "definedIn": "src/chat/join_room/create_space_popover.rs:186",
     "plural": false,
     "description": null
   },
   "CREATE_SPACE_TITLE": {
     "context": "create_space_popover.rs",
-    "definedIn": "src/chat/join_room/create_space_popover.rs:326",
+    "definedIn": "src/chat/join_room/create_space_popover.rs:325",
     "plural": false,
     "description": null
   },
   "CREATE_SPACE_VISIBILITY_PRIVATE": {
     "context": "create_space_popover.rs",
-    "definedIn": "src/chat/join_room/create_space_popover.rs:267",
+    "definedIn": "src/chat/join_room/create_space_popover.rs:266",
     "plural": false,
     "description": null
   },
   "CREATE_SPACE_VISIBILITY_PUBLIC": {
     "context": "create_space_popover.rs",
-    "definedIn": "src/chat/join_room/create_space_popover.rs:283",
+    "definedIn": "src/chat/join_room/create_space_popover.rs:282",
     "plural": false,
     "description": null
   },
   "CREATE_SUBSPACE": {
     "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:391",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:411",
     "plural": false,
     "description": null
   },
@@ -1105,13 +1105,13 @@
   },
   "JOIN_ERROR_TEXT": {
     "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:126",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:133",
     "plural": false,
     "description": null
   },
   "JOIN_ERROR_TITLE": {
     "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:123",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:130",
     "plural": false,
     "description": null
   },
@@ -2269,7 +2269,7 @@
   },
   "ROOM_DIRECTORY_MEMBER_COUNT": {
     "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:258",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:265",
     "plural": true,
     "description": null
   },
@@ -2833,13 +2833,13 @@
   },
   "SPACE_CREATE_ERROR_TEXT": {
     "context": "create_space_popover.rs",
-    "definedIn": "src/chat/join_room/create_space_popover.rs:160",
+    "definedIn": "src/chat/join_room/create_space_popover.rs:159",
     "plural": false,
     "description": null
   },
   "SPACE_CREATE_ERROR_TITLE": {
     "context": "create_space_popover.rs",
-    "definedIn": "src/chat/join_room/create_space_popover.rs:155",
+    "definedIn": "src/chat/join_room/create_space_popover.rs:154",
     "plural": false,
     "description": null
   },
@@ -2851,7 +2851,7 @@
   },
   "SPACE_LOBBY_INTRO": {
     "context": "space_lobby_content.rs",
-    "definedIn": "src/chat/chat_room/space_lobby_content.rs:349",
+    "definedIn": "src/chat/chat_room/space_lobby_content.rs:365",
     "plural": false,
     "description": null
   },

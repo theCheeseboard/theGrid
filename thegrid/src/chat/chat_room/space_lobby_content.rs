@@ -13,15 +13,15 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    AnyElement, Context, Entity, InteractiveElement, IntoElement, ListAlignment, ListScrollEvent,
-    ListState, ParentElement, Render, Styled, Window, div, list, px,
+    div, list, px, AnyElement, AppContext, Context, Entity,
+    InteractiveElement, IntoElement, ListAlignment, ListScrollEvent, ListState, ParentElement, Render, Styled, Window,
 };
-use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::ruma::room::JoinRuleSummary;
+use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::{Room, RoomState};
-use matrix_sdk_ui::spaces::SpaceRoom;
 use matrix_sdk_ui::spaces::room_list::SpaceRoomListPaginationState;
-use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use matrix_sdk_ui::spaces::SpaceRoom;
+use thegrid_common::mxc_image::{mxc_image, SizePolicy};
 use thegrid_common::session::room_cache::RoomJoinEvent;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::session::spaces_cache::SpaceRoomListEntity;
@@ -33,6 +33,8 @@ pub struct SpaceLobbyContent {
 
     create_room_popover: Entity<CreateRoomPopover>,
     create_space_popover: Entity<CreateSpacePopover>,
+
+    editable_spaces: Entity<Option<Vec<SpaceRoom>>>,
 
     list_state: ListState,
 }
@@ -52,10 +54,14 @@ impl SpaceLobbyContent {
         cx: &mut Context<Self>,
     ) -> Self {
         let room_id = open_room.read(cx).room_id.clone();
-        let session_manager = cx.global::<SessionManager>();
-        let space_rooms = session_manager
+        let space_rooms = cx
+            .global::<SessionManager>()
             .spaces()
             .update(cx, |spaces, cx| spaces.space_room_list(room_id, cx));
+        let editable_spaces = cx
+            .global::<SessionManager>()
+            .spaces()
+            .update(cx, |spaces, cx| cx.new(|cx| spaces.get_editable_spaces(cx)));
 
         let list_state = ListState::new(0, ListAlignment::Top, px(200.));
 
@@ -99,6 +105,7 @@ impl SpaceLobbyContent {
             list_state,
             create_room_popover,
             create_space_popover,
+            editable_spaces,
         }
     }
 
@@ -296,11 +303,12 @@ impl Render for SpaceLobbyContent {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let open_room = self.open_room.read(cx);
         let room = open_room.room.as_ref().unwrap();
+        let room_id = room.room_id().to_owned();
 
         // We don't need to fill out all these fields - only the ones that are used by
         // the space selection logic.
         let space_room = SpaceRoom {
-            room_id: room.room_id().to_owned(),
+            room_id: room_id.clone(),
             canonical_alias: None,
             name: room.name(),
             display_name: room
@@ -309,7 +317,7 @@ impl Render for SpaceLobbyContent {
                 .or_else(|| room.name())
                 .unwrap_or_default(),
             topic: None,
-            avatar_url: None,
+            avatar_url: room.avatar_url(),
             room_type: None,
             num_joined_members: 0,
             join_rule: None,
@@ -323,6 +331,14 @@ impl Render for SpaceLobbyContent {
             is_dm: None,
             suggested: false,
         };
+
+        let is_editable = self
+            .editable_spaces
+            .read(cx)
+            .as_ref()
+            .is_some_and(|editable_spaces| {
+                editable_spaces.iter().any(|space| space.room_id == room_id)
+            });
 
         let theme = cx.theme();
 
@@ -355,57 +371,66 @@ impl Render for SpaceLobbyContent {
                                 .unwrap_or_default(),
                         ),
                     )
-                    .child(
-                        layer()
-                            .w(px(250.))
-                            .p(px(8.))
-                            .gap(px(8.))
-                            .child(subtitle(tr!("ACTIONS")))
-                            .child(
-                                div()
-                                    .bg(theme.button_background)
-                                    .rounded(theme.border_radius)
-                                    .flex()
-                                    .flex_col()
-                                    .child(
-                                        button("create-room")
-                                            .child(icon_text("list-add", tr!("CREATE_ROOM")))
-                                            .on_click(cx.listener({
-                                                let space_room = space_room.clone();
-                                                move |this, _, _, cx| {
+                    .when(is_editable, |david| {
+                        david.child(
+                            layer()
+                                .w(px(250.))
+                                .p(px(8.))
+                                .gap(px(8.))
+                                .child(subtitle(tr!("ACTIONS")))
+                                .child(
+                                    div()
+                                        .bg(theme.button_background)
+                                        .rounded(theme.border_radius)
+                                        .flex()
+                                        .flex_col()
+                                        .child(
+                                            button("create-room")
+                                                .child(icon_text("list-add", tr!("CREATE_ROOM")))
+                                                .on_click(cx.listener({
                                                     let space_room = space_room.clone();
-                                                    this.create_room_popover.update(
-                                                        cx,
-                                                        move |create_room_popover, cx| {
-                                                            create_room_popover
-                                                                .open(Some(space_room.clone()), cx);
-                                                        },
-                                                    );
-                                                }
-                                            })),
-                                    )
-                                    .child(
-                                        button("create-space")
-                                            .child(icon_text(
-                                                "list-add",
-                                                tr!("CREATE_SUBSPACE", "Create Subordinate Space"),
-                                            ))
-                                            .on_click(cx.listener({
-                                                let space_room = space_room.clone();
-                                                move |this, _, _, cx| {
+                                                    move |this, _, _, cx| {
+                                                        let space_room = space_room.clone();
+                                                        this.create_room_popover.update(
+                                                            cx,
+                                                            move |create_room_popover, cx| {
+                                                                create_room_popover.open(
+                                                                    Some(space_room.clone()),
+                                                                    cx,
+                                                                );
+                                                            },
+                                                        );
+                                                    }
+                                                })),
+                                        )
+                                        .child(
+                                            button("create-space")
+                                                .child(icon_text(
+                                                    "list-add",
+                                                    tr!(
+                                                        "CREATE_SUBSPACE",
+                                                        "Create Subordinate Space"
+                                                    ),
+                                                ))
+                                                .on_click(cx.listener({
                                                     let space_room = space_room.clone();
-                                                    this.create_space_popover.update(
-                                                        cx,
-                                                        move |create_space_popover, cx| {
-                                                            create_space_popover
-                                                                .open(Some(space_room.clone()), cx);
-                                                        },
-                                                    );
-                                                }
-                                            })),
-                                    ),
-                            ),
-                    ),
+                                                    move |this, _, _, cx| {
+                                                        let space_room = space_room.clone();
+                                                        this.create_space_popover.update(
+                                                            cx,
+                                                            move |create_space_popover, cx| {
+                                                                create_space_popover.open(
+                                                                    Some(space_room.clone()),
+                                                                    cx,
+                                                                );
+                                                            },
+                                                        );
+                                                    }
+                                                })),
+                                        ),
+                                ),
+                        )
+                    }),
             )
             .child(
                 div()

@@ -94,29 +94,27 @@ impl SpacesCache {
         space_room_list_entity
     }
 
-    pub fn get_editable_spaces(&self, cx: &mut Context<Self>) -> Entity<Option<Vec<SpaceRoom>>> {
+    pub fn get_editable_spaces(&self, cx: &mut Context<Option<Vec<SpaceRoom>>>) -> Option<Vec<SpaceRoom>> {
         let space_service = self.space_service.clone();
 
-        cx.new(|cx| {
-            cx.spawn(
-                async move |weak_this: WeakEntity<Option<Vec<SpaceRoom>>>, cx: &mut AsyncApp| {
-                    let editable_spaces = cx
-                        .spawn_tokio(async move {
-                            Ok::<_, anyhow::Error>(space_service.editable_spaces().await)
-                        })
-                        .await
-                        .unwrap();
+        cx.spawn(
+            async move |weak_this: WeakEntity<Option<Vec<SpaceRoom>>>, cx: &mut AsyncApp| {
+                let editable_spaces = cx
+                    .spawn_tokio(async move {
+                        Ok::<_, anyhow::Error>(space_service.editable_spaces().await)
+                    })
+                    .await
+                    .unwrap();
 
-                    let _ = weak_this.update(cx, |this, cx| {
-                        *this = Some(editable_spaces);
-                        cx.notify();
-                    });
-                },
-            )
-            .detach();
+                let _ = weak_this.update(cx, |this, cx| {
+                    *this = Some(editable_spaces);
+                    cx.notify();
+                });
+            },
+        )
+        .detach();
 
-            None
-        })
+        None
     }
 
     pub fn space_service(&self) -> Arc<SpaceService> {
