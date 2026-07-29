@@ -319,7 +319,8 @@ impl AuthSurface {
     ) {
         let application_name = cx
             .read_global::<Details, _>(|details, cx| details.generatable.application_name.clone());
-        match cx
+
+        let should_use_legacy_auth = match cx
             .spawn_tokio({
                 let client = client.clone();
                 async move { client.oauth().server_metadata().await }
@@ -351,7 +352,7 @@ impl AuthSurface {
                     iter::empty(),
                 ));
 
-                let login_url = match cx
+                match cx
                     .spawn_tokio({
                         let client = client.clone();
                         async move {
@@ -371,87 +372,54 @@ impl AuthSurface {
                     })
                     .await
                 {
-                    Ok(response) => response.url,
-                    Err(e) => {
-                        this.update(cx, |this, cx| {
-                            if !matches!(this.state, AuthState::Connecting) {
-                                return;
-                            }
+                    Ok(response) => {
+                        let login_url = response.url;
 
-                            this.state = AuthState::ConnectionError;
-                            error!("Unable to register OAuth client: {e:?}");
-                            cx.notify();
+                        this.update(cx, {
+                            let client = client.clone();
+                            move |this, cx| {
+                                if !matches!(this.state, AuthState::Connecting) {
+                                    return;
+                                }
+
+                                let sso_login_entity = cx.new(|cx| None);
+                                let weak_sso_login_entity = sso_login_entity.downgrade();
+                                cx.update_global::<SessionManager, _>(|session_manager, cx| {
+                                    session_manager.set_sso_login_entity(weak_sso_login_entity);
+                                });
+
+                                cx.observe(&sso_login_entity, |this, sso_login_entity, cx| {
+                                    let Some(sso_login) = sso_login_entity
+                                        .update(cx, |sso_login_entity, _| sso_login_entity.take())
+                                    else {
+                                        return;
+                                    };
+
+                                    let _ = this.trigger_oauth_state_login(sso_login.token, cx);
+                                })
+                                .detach();
+
+                                this.client = Some(client);
+                                this.state = AuthState::OAuthContinueInBrowserPrompt(
+                                    login_url,
+                                    sso_login_entity,
+                                );
+                                cx.notify();
+                            }
                         })
                         .unwrap();
-                        return;
+                        false
                     }
-                };
-
-                this.update(cx, |this, cx| {
-                    if !matches!(this.state, AuthState::Connecting) {
-                        return;
+                    Err(e) => {
+                        error!("Unable to register OAuth client: {e:?}");
+                        // Fall back to legacy Matrix auth
+                        true
                     }
-
-                    let sso_login_entity = cx.new(|cx| None);
-                    let weak_sso_login_entity = sso_login_entity.downgrade();
-                    cx.update_global::<SessionManager, _>(|session_manager, cx| {
-                        session_manager.set_sso_login_entity(weak_sso_login_entity);
-                    });
-
-                    cx.observe(&sso_login_entity, |this, sso_login_entity, cx| {
-                        let Some(sso_login) = sso_login_entity
-                            .update(cx, |sso_login_entity, _| sso_login_entity.take())
-                        else {
-                            return;
-                        };
-
-                        let _ = this.trigger_oauth_state_login(sso_login.token, cx);
-                    })
-                    .detach();
-
-                    this.client = Some(client);
-                    this.state =
-                        AuthState::OAuthContinueInBrowserPrompt(login_url, sso_login_entity);
-                    cx.notify();
-                })
-                .unwrap();
+                }
             }
             Err(e) if e.is_not_supported() => {
                 // Continue with legacy Matrix auth
-                let login_types = cx
-                    .spawn_tokio({
-                        let client = client.clone();
-                        async move { client.matrix_auth().get_login_types().await }
-                    })
-                    .await;
-
-                match login_types {
-                    Ok(login_types) => {
-                        this.update(cx, |this, cx| {
-                            if !matches!(this.state, AuthState::Connecting) {
-                                return;
-                            }
-
-                            this.client = Some(client);
-                            this.login_types = login_types.flows;
-                            this.state = AuthState::AuthRequired;
-                            cx.notify();
-                        })
-                        .unwrap();
-                    }
-                    Err(e) => {
-                        this.update(cx, |this, cx| {
-                            if !matches!(this.state, AuthState::Connecting) {
-                                return;
-                            }
-
-                            this.state = AuthState::ConnectionError;
-                            error!("Unable to create client: {e:?}");
-                            cx.notify();
-                        })
-                        .unwrap();
-                    }
-                }
+                true
             }
             Err(e) => {
                 this.update(cx, |this, cx| {
@@ -464,6 +432,44 @@ impl AuthSurface {
                     cx.notify();
                 })
                 .unwrap();
+                false
+            }
+        };
+
+        if should_use_legacy_auth {
+            let login_types = cx
+                .spawn_tokio({
+                    let client = client.clone();
+                    async move { client.matrix_auth().get_login_types().await }
+                })
+                .await;
+
+            match login_types {
+                Ok(login_types) => {
+                    this.update(cx, |this, cx| {
+                        if !matches!(this.state, AuthState::Connecting) {
+                            return;
+                        }
+
+                        this.client = Some(client);
+                        this.login_types = login_types.flows;
+                        this.state = AuthState::AuthRequired;
+                        cx.notify();
+                    })
+                    .unwrap();
+                }
+                Err(e) => {
+                    this.update(cx, |this, cx| {
+                        if !matches!(this.state, AuthState::Connecting) {
+                            return;
+                        }
+
+                        this.state = AuthState::ConnectionError;
+                        error!("Unable to create client: {e:?}");
+                        cx.notify();
+                    })
+                    .unwrap();
+                }
             }
         }
     }
