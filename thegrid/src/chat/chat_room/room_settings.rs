@@ -529,7 +529,7 @@ impl RoomSettings {
                                                     .child(tr!("ROOM_ALIAS_PUBLIC", "Public")),
                                             )
                                         })
-                                        .child(div().flex_grow())
+                                        .child(div().flex_grow(1.))
                                         .child(
                                             button("overflow-menu")
                                                 .child(icon("application-menu"))
@@ -924,7 +924,7 @@ impl Render for RoomSettings {
                                             .items_center()
                                             .flex()
                                             .child(tr!("ROOM_ACCESS", "Access Policy"))
-                                            .child(div().flex_grow())
+                                            .child(div().flex_grow(1.))
                                             .child(match room.join_rule() {
                                                 Some(JoinRule::Public) => {
                                                     tr!("ROOM_ACCESS_PUBLIC", "Public")
@@ -1000,7 +1000,7 @@ impl Render for RoomSettings {
                                                 "ROOM_PUBLISH_TO_DIRECTORY",
                                                 "Publish to Server Directory"
                                             ))
-                                            .child(div().flex_grow())
+                                            .child(div().flex_grow(1.))
                                             .child(
                                                 switch("publish-to-server-directory")
                                                     .when(self.published_to_directory, |david| {

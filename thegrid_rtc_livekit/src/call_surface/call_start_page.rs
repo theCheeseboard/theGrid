@@ -1,8 +1,8 @@
+use crate::TrackType;
 use crate::call_manager::{FocusUrl, LivekitCallManager};
 use crate::webcam::Webcam;
-use crate::TrackType;
 use cntp_i18n::{tr, trn};
-use contemporary::components::button::{button, ButtonMenuOpenPolicy};
+use contemporary::components::button::{ButtonMenuOpenPolicy, button};
 use contemporary::components::context_menu::ContextMenuItem;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
@@ -13,12 +13,12 @@ use contemporary::permissions::{
     GrantStatus, PermissionRequestCompleteEvent, PermissionType, Permissions,
 };
 use contemporary::styling::theme::ThemeStorage;
-use cpal::traits::{DeviceTrait, HostTrait};
 use cpal::Device;
+use cpal::traits::{DeviceTrait, HostTrait};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, img, px, rgb, AppContext, BorrowAppContext, Context, Entity,
-    IntoElement, ObjectFit, ParentElement, Render, Styled, StyledImage, Window,
+    AppContext, BorrowAppContext, Context, Entity, IntoElement, ObjectFit, ParentElement, Render,
+    Styled, StyledImage, Window, div, img, px, rgb,
 };
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::OwnedRoomId;
@@ -26,7 +26,7 @@ use nokhwa::utils::CameraInfo;
 use nokhwa::{native_api_backend, query};
 use std::collections::HashMap;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::room::active_call_participants::track_active_call_participants;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::SurfaceChangeHandler;
@@ -218,7 +218,7 @@ impl CallStartPage {
                                         div()
                                             .flex()
                                             .flex_col()
-                                            .flex_grow()
+                                            .flex_grow(1.)
                                             .child(
                                                 div()
                                                     .flex()
@@ -238,12 +238,12 @@ impl CallStartPage {
                                                         },
                                                     )
                                                     .when_some(webcam.error(), |david, error| {
-                                                        david.flex_grow().child(
+                                                        david.flex_grow(1.).child(
                                                             div()
                                                                 .flex()
                                                                 .items_center()
                                                                 .justify_center()
-                                                                .flex_grow()
+                                                                .flex_grow(1.)
                                                                 .size_full()
                                                                 .child(icon_text(
                                                                     "exception",
@@ -262,7 +262,7 @@ impl CallStartPage {
                                                     .flex()
                                                     .child(
                                                         button("camera-selection-button")
-                                                            .flex_grow()
+                                                            .flex_grow(1.)
                                                             .child(
                                                                 webcam.camera_info().human_name(),
                                                             )
@@ -332,7 +332,7 @@ impl CallStartPage {
                 div()
                     .flex()
                     .child(tr!("AUDIO_SETUP_OUTPUT", "Audio Output"))
-                    .child(div().flex_grow())
+                    .child(div().flex_grow(1.))
                     .child(
                         button("audio-select-device")
                             .child(
@@ -446,7 +446,7 @@ impl CallStartPage {
                         div()
                             .flex()
                             .child(tr!("AUDIO_SETUP_INPUT", "Audio Input"))
-                            .child(div().flex_grow())
+                            .child(div().flex_grow(1.))
                             .child(
                                 button("mic-select-device")
                                     .child(
@@ -616,7 +616,7 @@ impl Render for CallStartPage {
             .bg(rgb(0x000000))
             .flex()
             .flex_col()
-            .flex_grow()
+            .flex_grow(1.)
             .child(
                 grandstand("call-join")
                     .text(
@@ -636,7 +636,7 @@ impl Render for CallStartPage {
             )
             .child(
                 div()
-                    .flex_grow()
+                    .flex_grow(1.)
                     .flex()
                     .items_center()
                     .justify_center()

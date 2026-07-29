@@ -116,7 +116,7 @@ impl Render for AccountSettingsSurface {
                                     })),
                             )
                             .child(
-                                div().flex_grow().p(px(2.)).child(
+                                div().flex_grow(1.).p(px(2.)).child(
                                     uniform_list(
                                         "sidebar-items",
                                         5,
@@ -175,7 +175,7 @@ impl Render for AccountSettingsSurface {
                     )
                     .child(
                         pager("main-area", self.current_page)
-                            .flex_grow()
+                            .flex_grow(1.)
                             .animation(LiftAnimation::new())
                             .animation_direction(PagerAnimationDirection::Forward)
                             .page(self.profile_settings.clone().into_any_element())

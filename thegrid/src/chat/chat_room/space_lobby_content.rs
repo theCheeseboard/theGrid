@@ -13,15 +13,15 @@ use contemporary::components::toast::Toast;
 use contemporary::styling::theme::{ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, list, px, AnyElement, AppContext, Context, Entity,
-    InteractiveElement, IntoElement, ListAlignment, ListScrollEvent, ListState, ParentElement, Render, Styled, Window,
+    AnyElement, AppContext, Context, Entity, InteractiveElement, IntoElement, ListAlignment,
+    ListScrollEvent, ListState, ParentElement, Render, Styled, Window, div, list, px,
 };
-use matrix_sdk::ruma::room::JoinRuleSummary;
 use matrix_sdk::ruma::OwnedRoomId;
+use matrix_sdk::ruma::room::JoinRuleSummary;
 use matrix_sdk::{Room, RoomState};
-use matrix_sdk_ui::spaces::room_list::SpaceRoomListPaginationState;
 use matrix_sdk_ui::spaces::SpaceRoom;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use matrix_sdk_ui::spaces::room_list::SpaceRoomListPaginationState;
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::room_cache::RoomJoinEvent;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::session::spaces_cache::SpaceRoomListEntity;
@@ -173,7 +173,7 @@ impl SpaceLobbyContent {
                                 .overflow_x_hidden()
                                 .flex()
                                 .flex_col()
-                                .flex_grow()
+                                .flex_grow(1.)
                                 .gap(px(4.))
                                 .child(skeleton("name-skeleton").w(px(150.)))
                                 .child(skeleton("topic-skeleton").w(px(350.)))
@@ -182,7 +182,7 @@ impl SpaceLobbyContent {
                                         .flex()
                                         .items_center()
                                         .gap(px(4.))
-                                        .child(div().flex_grow())
+                                        .child(div().flex_grow(1.))
                                         .child(skeleton("count-skeleton").w(px(100.)))
                                         .child(skeleton("alias-skeleton").w(px(150.)))
                                         .child(
@@ -245,7 +245,7 @@ impl SpaceLobbyContent {
                             .overflow_x_hidden()
                             .flex()
                             .flex_col()
-                            .flex_grow()
+                            .flex_grow(1.)
                             .gap(px(4.))
                             .child(div().child(space_room.name.clone().unwrap_or("".into())))
                             .child(
@@ -259,7 +259,7 @@ impl SpaceLobbyContent {
                                     .flex()
                                     .items_center()
                                     .gap(px(4.))
-                                    .child(div().flex_grow())
+                                    .child(div().flex_grow(1.))
                                     .child(div().text_color(theme.foreground.disabled()).child(
                                         trn!(
                                             "ROOM_DIRECTORY_MEMBER_COUNT",
@@ -343,7 +343,7 @@ impl Render for SpaceLobbyContent {
         let theme = cx.theme();
 
         div()
-            .flex_grow()
+            .flex_grow(1.)
             .flex()
             .justify_center()
             .size_full()

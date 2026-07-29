@@ -11,7 +11,7 @@ use crate::chat::sidebar::directory_sidebar_page::DirectorySidebarPage;
 use crate::chat::sidebar::root_sidebar_page::RootSidebarPage;
 use crate::chat::sidebar::space_sidebar_page::SpaceSidebarPage;
 use cntp_i18n::{tr, trn};
-use contemporary::components::admonition::{admonition, AdmonitionSeverity};
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -20,15 +20,15 @@ use contemporary::components::pager::slide_horizontal_animation::SlideHorizontal
 use contemporary::styling::theme::{Theme, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, App, AppContext, BorrowAppContext, Context, Entity,
-    InteractiveElement, IntoElement, ListAlignment, ListState, ParentElement, Render,
-    RenderOnce, StatefulInteractiveElement, Styled, Window,
+    App, AppContext, BorrowAppContext, Context, Entity, InteractiveElement, IntoElement,
+    ListAlignment, ListState, ParentElement, Render, RenderOnce, StatefulInteractiveElement,
+    Styled, Window, div, px,
 };
-use matrix_sdk::encryption::recovery::RecoveryState;
 use matrix_sdk::encryption::VerificationState;
+use matrix_sdk::encryption::recovery::RecoveryState;
 use matrix_sdk::ruma::room_id;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::error_handling::{ClientError, RecoverableClientError};
 use thegrid_common::session::room_cache::RoomCategory;
 use thegrid_common::session::session_manager::SessionManager;
@@ -199,7 +199,7 @@ impl Render for Sidebar {
                 self.pages.iter().fold(
                     pager("sidebar-pager", self.current_page)
                         .animation(SlideHorizontalAnimation::new())
-                        .flex_grow(),
+                        .flex_grow(1.),
                     |pager, page| match page {
                         SidebarPage::Root(root_sidebar_page) => {
                             pager.page(root_sidebar_page.clone().into_any_element())

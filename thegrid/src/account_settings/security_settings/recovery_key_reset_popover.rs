@@ -375,7 +375,7 @@ impl Render for RecoveryKeyResetPopover {
                                                         .gap(px(4.))
                                                         .child(
                                                             div()
-                                                                .flex_grow()
+                                                                .flex_grow(1.)
                                                                 .font_family(
                                                                     theme
                                                                         .monospaced_font_family

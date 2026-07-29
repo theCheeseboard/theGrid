@@ -5,18 +5,18 @@ use crate::auth::logout_popover::logout_popover;
 use crate::chat::chat_room::ChatRoom;
 use crate::chat::chat_surface::SelfVerificationUi;
 use crate::chat::displayed_room::DisplayedRoom;
+use crate::chat::join_room::JoinRoom;
 use crate::chat::join_room::create_room_popover::CreateRoomPopover;
 use crate::chat::join_room::create_space_popover::CreateSpacePopover;
 use crate::chat::join_room::direct_join_room_popover::DirectJoinRoomPopover;
-use crate::chat::join_room::JoinRoom;
 use crate::chat::room_directory::RoomDirectory;
 use crate::chat::sidebar::Sidebar;
-use cntp_i18n::{tr, I18N_MANAGER};
+use cntp_i18n::{I18N_MANAGER, tr};
 use contemporary::application::Details;
 use contemporary::components::interstitial::interstitial;
 use gpui::{
-    div, px, App, AppContext, BorrowAppContext, Context, Entity,
-    FocusHandle, InteractiveElement, IntoElement, ParentElement, Render, Styled, Window,
+    App, AppContext, BorrowAppContext, Context, Entity, FocusHandle, InteractiveElement,
+    IntoElement, ParentElement, Render, Styled, Window, div, px,
 };
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
@@ -248,7 +248,7 @@ impl Render for MainChatSurface {
                                     .clone()
                                     .into_any_element(),
                             })
-                            .flex_grow(),
+                            .flex_grow(1.),
                     ),
             )
             .child(logout_popover(self.logout_popover_visible.clone()))

@@ -102,7 +102,7 @@ impl Render for WebcamStartDialog {
                 div()
                     .flex()
                     .flex_col()
-                    .flex_grow()
+                    .flex_grow(1.)
                     .gap(px(4.))
                     .child(
                         layer()
@@ -133,7 +133,7 @@ impl Render for WebcamStartDialog {
                                                 |david, camera| {
                                                     let webcam = camera.read(cx);
 
-                                                    david.flex().flex_col().flex_grow().child(
+                                                    david.flex().flex_col().flex_grow(1.).child(
                                                         div()
                                                             .flex()
                                                             .overflow_hidden()
@@ -156,12 +156,12 @@ impl Render for WebcamStartDialog {
                                                             .when_some(
                                                                 webcam.error(),
                                                                 |david, error| {
-                                                                    david.flex_grow().child(
+                                                                    david.flex_grow(1.).child(
                                                                         div()
                                                                             .flex()
                                                                             .items_center()
                                                                             .justify_center()
-                                                                            .flex_grow()
+                                                                            .flex_grow(1.)
                                                                             .size_full()
                                                                             .child(icon_text(
                                                                                 "exception",
@@ -195,7 +195,7 @@ impl Render for WebcamStartDialog {
                             .items_center()
                             .gap(px(4.))
                             .child(tr!("WEBCAM_START_CAMERA_SELECTION", "Camera"))
-                            .child(div().flex_grow())
+                            .child(div().flex_grow(1.))
                             .when_some(self.active_camera.as_ref(), |david, camera| {
                                 let camera = camera.read(cx);
                                 david.child(camera.camera_info().human_name())

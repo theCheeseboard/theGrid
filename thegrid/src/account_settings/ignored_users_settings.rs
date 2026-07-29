@@ -254,7 +254,7 @@ impl Render for IgnoredUsersSettings {
                                                             .items_center()
                                                             .child(
                                                                 div()
-                                                                    .flex_grow()
+                                                                    .flex_grow(1.)
                                                                     .child(user.clone()),
                                                             )
                                                             .child(

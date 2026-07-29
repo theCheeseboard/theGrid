@@ -1,16 +1,16 @@
 use crate::chat::chat_room::open_room::OpenRoom;
 use crate::chat::chat_room::timeline_view::author_flyout::{
-    author_flyout, AuthorFlyoutUserActionListener,
+    AuthorFlyoutUserActionListener, author_flyout,
 };
 use crate::chat::chat_room::timeline_view::message_error_item::message_error_item;
 use crate::chat::chat_room::timeline_view::reply_fragment::reply_fragment_in_reply_to;
 use crate::chat::displayed_room::DisplayedRoom;
-use cntp_i18n::{tr, Quote, I18N_MANAGER};
-use contemporary::components::admonition::{admonition, AdmonitionSeverity};
+use cntp_i18n::{I18N_MANAGER, Quote, tr};
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::anchorer::WithAnchorer;
 use contemporary::components::button::button;
 use contemporary::components::context_menu::ContextMenuItem;
-use contemporary::components::dialog_box::{dialog_box, StandardButton};
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
 use contemporary::components::layer::layer;
@@ -19,9 +19,9 @@ use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use directories::UserDirs;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    canvas, div, point, px, rgba, AnyElement, App, AppContext,
-    AsyncApp, BorrowAppContext, Bounds, ClipboardItem, Entity, InteractiveElement,
-    IntoElement, ParentElement, Path, Pixels, RenderOnce, StatefulInteractiveElement, Styled, Window,
+    AnyElement, App, AppContext, AsyncApp, BorrowAppContext, Bounds, ClipboardItem, Entity,
+    InteractiveElement, IntoElement, ParentElement, Path, Pixels, RenderOnce,
+    StatefulInteractiveElement, Styled, Window, canvas, div, point, px, rgba,
 };
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::events::room::message::{
@@ -34,7 +34,7 @@ use matrix_sdk_ui::timeline::{
 };
 use std::fs::copy;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::media_cache::{MediaCacheEntry, MediaFile, MediaState};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
@@ -525,7 +525,7 @@ fn text_message(
                                 .gap(px(4.))
                                 .child(
                                     div()
-                                        .flex_grow()
+                                        .flex_grow(1.)
                                         .child(current_link.unwrap_or_default().to_string()),
                                 )
                                 .child(

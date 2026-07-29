@@ -236,7 +236,7 @@ impl Render for IdentityResetSurface {
                             },
                         )
                         .size_full()
-                        .flex_grow()
+                        .flex_grow(1.)
                         .animation(SlideHorizontalAnimation::new())
                         .page(
                             div()

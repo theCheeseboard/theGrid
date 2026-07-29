@@ -324,7 +324,7 @@ impl RoomDirectory {
                                 .overflow_x_hidden()
                                 .flex()
                                 .flex_col()
-                                .flex_grow()
+                                .flex_grow(1.)
                                 .gap(px(4.))
                                 .child(skeleton("name-skeleton").w(px(150.)))
                                 .child(skeleton("topic-skeleton").w(px(350.)))
@@ -333,7 +333,7 @@ impl RoomDirectory {
                                         .flex()
                                         .items_center()
                                         .gap(px(4.))
-                                        .child(div().flex_grow())
+                                        .child(div().flex_grow(1.))
                                         .child(skeleton("count-skeleton").w(px(100.)))
                                         .child(skeleton("alias-skeleton").w(px(150.)))
                                         .child(
@@ -397,7 +397,7 @@ impl RoomDirectory {
                             .overflow_x_hidden()
                             .flex()
                             .flex_col()
-                            .flex_grow()
+                            .flex_grow(1.)
                             .gap(px(4.))
                             .child(div().child(room_description.name.clone().unwrap_or("".into())))
                             .child(
@@ -411,7 +411,7 @@ impl RoomDirectory {
                                     .flex()
                                     .items_center()
                                     .gap(px(4.))
-                                    .child(div().flex_grow())
+                                    .child(div().flex_grow(1.))
                                     .child(div().text_color(theme.foreground.disabled()).child(
                                         trn!(
                                             "ROOM_DIRECTORY_MEMBER_COUNT",

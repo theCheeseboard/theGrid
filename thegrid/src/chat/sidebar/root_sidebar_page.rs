@@ -187,7 +187,7 @@ impl Render for RootSidebarPage {
                     .text(tr!("ROOMS_SPACES", "Rooms and Spaces"))
                     .pt(px(36.)),
             )
-            .child(div().flex_grow().child(sidebar_list(
+            .child(div().flex_grow(1.).child(sidebar_list(
                 self.list_state.clone(),
                 self.items.clone(),
                 self.displayed_room.clone(),

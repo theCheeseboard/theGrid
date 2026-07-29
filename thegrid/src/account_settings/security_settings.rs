@@ -10,7 +10,7 @@ use crate::account_settings::security_settings::recovery_key_reset_popover::Reco
 use crate::auth::oauth_management_page_redirect_dialog::OAuthManagementPageRedirectDialog;
 use crate::auth::recovery_passphrase_popover::RecoveryPassphrasePopover;
 use cntp_i18n::tr;
-use contemporary::components::admonition::{admonition, AdmonitionSeverity};
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
 use contemporary::components::grandstand::grandstand;
@@ -20,11 +20,11 @@ use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::Theme;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, App, AppContext, AsyncApp, ClickEvent, Context, Entity,
-    IntoElement, ParentElement, PathPromptOptions, Render, Styled, Window,
+    App, AppContext, AsyncApp, ClickEvent, Context, Entity, IntoElement, ParentElement,
+    PathPromptOptions, Render, Styled, Window, div, px,
 };
-use matrix_sdk::encryption::recovery::RecoveryState;
 use matrix_sdk::encryption::VerificationState;
+use matrix_sdk::encryption::recovery::RecoveryState;
 use std::rc::Rc;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{
@@ -157,7 +157,7 @@ impl Render for SecuritySettings {
                                         .gap(px(4.))
                                         .child(tr!("SETUP_RECOVERY_DESCRIPTION"))
                                         .child(
-                                            div().flex().child(div().flex_grow()).child(
+                                            div().flex().child(div().flex_grow(1.)).child(
                                                 button("setup-now")
                                                     .child(icon_text(
                                                         "configure",
@@ -203,7 +203,7 @@ impl Render for SecuritySettings {
                                             .gap(px(4.))
                                             .child(tr!("FIX_RECOVERY_DESCRIPTION"))
                                             .child(
-                                                div().flex().child(div().flex_grow()).child(
+                                                div().flex().child(div().flex_grow(1.)).child(
                                                     button("verify-recovery")
                                                         .child(icon_text(
                                                             "visibility",

@@ -92,7 +92,7 @@ impl Render for DirectorySidebarPage {
                     })),
             )
             .child(
-                div().flex_grow().child(
+                div().flex_grow(1.).child(
                     list(
                         self.list_state.clone(),
                         cx.processor(move |this, i, _, cx| {

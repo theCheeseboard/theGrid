@@ -2,7 +2,7 @@ use crate::utilities::default_device_name;
 use base64::alphabet::URL_SAFE;
 use base64::prelude::{BASE64_URL_SAFE, BASE64_URL_SAFE_NO_PAD};
 use base64::{DecodeError, Engine};
-use cntp_i18n::{tr, I18N_MANAGER};
+use cntp_i18n::{I18N_MANAGER, tr};
 use cntp_icon_tool_macros::{application_icon_asset_path, application_icon_source};
 use contemporary::application::Details;
 use contemporary::components::application_menu::ApplicationMenu;
@@ -19,14 +19,14 @@ use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use contemporary::components::text_field::{MaskMode, TextField};
 use contemporary::surface::surface;
+use gpui::LineFragment::Text;
 use gpui::http_client::anyhow;
 use gpui::prelude::FluentBuilder;
 use gpui::private::anyhow;
-use gpui::LineFragment::Text;
 use gpui::{
-    div, img, px, App, AppContext, AsyncApp, BorrowAppContext, ClipboardItem,
-    Context, ElementId, Entity, ImageSource, InteractiveElement, IntoElement, Menu,
-    ParentElement, Render, Resource, SharedString, Styled, WeakEntity, Window,
+    App, AppContext, AsyncApp, BorrowAppContext, ClipboardItem, Context, ElementId, Entity,
+    ImageSource, InteractiveElement, IntoElement, Menu, ParentElement, Render, Resource,
+    SharedString, Styled, WeakEntity, Window, div, img, px,
 };
 use gpui_tokio::Tokio;
 use matrix_sdk::authentication::matrix::MatrixSession;
@@ -40,7 +40,7 @@ use matrix_sdk::encryption::CrossSigningStatus;
 use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::AuthorizationServerMetadata;
 use matrix_sdk::ruma::api::client::session::get_login_types::v3::{IdentityProvider, LoginType};
 use matrix_sdk::ruma::serde::Raw;
-use matrix_sdk::ruma::{user_id, DeviceId, OwnedUserId};
+use matrix_sdk::ruma::{DeviceId, OwnedUserId, user_id};
 use matrix_sdk::utils::UrlOrQuery;
 use matrix_sdk::{Client, ClientBuildError};
 use smol::future::FutureExt;
@@ -863,7 +863,7 @@ impl AuthSurface {
                                         .child(subtitle(tr!("AUTH_PASSWORD", "Password Login")))
                                         .child(self.password_field.clone().into_any_element())
                                         .child(
-                                            div().flex().child(div().flex_grow()).child(
+                                            div().flex().child(div().flex_grow(1.)).child(
                                                 button("log_in_button")
                                                     .child(icon_text(
                                                         "arrow-right",
@@ -1017,7 +1017,7 @@ impl AuthSurface {
                                     ))
                                     .child(self.token_field.clone().into_any_element())
                                     .child(
-                                        div().flex().child(div().flex_grow()).child(
+                                        div().flex().child(div().flex_grow(1.)).child(
                                             button("log_in_button")
                                                 .child(icon_text("arrow-right", tr!("AUTH_LOG_IN")))
                                                 .on_click(cx.listener(|this, _, window, cx| {
@@ -1103,7 +1103,7 @@ impl AuthSurface {
                                 .child(tr!("AUTH_MANUAL_LOGIN_MESSAGE",))
                                 .child(self.token_field.clone().into_any_element())
                                 .child(
-                                    div().flex().child(div().flex_grow()).child(
+                                    div().flex().child(div().flex_grow(1.)).child(
                                         button("oauth_log_in_button")
                                             .child(icon_text("arrow-right", tr!("AUTH_LOG_IN")))
                                             .on_click(cx.listener(|this, _, window, cx| {
@@ -1225,7 +1225,7 @@ impl Render for AuthSurface {
                                         //             this.open_account_clicked(window, cx)
                                         //         })),
                                         // )
-                                        .child(div().flex_grow())
+                                        .child(div().flex_grow(1.))
                                         .child(
                                             button("advanced_log_in")
                                                 .child(tr!(

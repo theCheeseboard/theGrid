@@ -22,9 +22,9 @@ use contemporary::components::context_menu::ContextMenuExt;
 use contemporary::components::spinner::spinner;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, list, px, App, AsyncApp, Context, Element, ElementId,
-    Entity, InteractiveElement, IntoElement, ListAlignment,
-    ListScrollEvent, ListState, ParentElement, Render, Styled, Window,
+    App, AsyncApp, Context, Element, ElementId, Entity, InteractiveElement, IntoElement,
+    ListAlignment, ListScrollEvent, ListState, ParentElement, Render, Styled, Window, div, list,
+    px,
 };
 use matrix_sdk::ruma::api::client::receipt::create_receipt::v3::ReceiptType;
 use thegrid_common::tokio_helper::TokioHelper;
@@ -130,7 +130,7 @@ impl Render for TimelineView {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let open_room = self.open_room.read(cx);
         let Some(timeline_entity) = open_room.timeline.as_ref() else {
-            return div().flex_grow().into_any_element();
+            return div().flex_grow(1.).into_any_element();
         };
         let is_paginating = open_room.pagination_pending(cx);
 
@@ -139,7 +139,7 @@ impl Render for TimelineView {
         let open_room = self.open_room.clone();
 
         div()
-            .flex_grow()
+            .flex_grow(1.)
             .when(
                 self.list_state.item_count() == 0 && is_paginating,
                 |david| david.child(div().flex().justify_center().pb(px(2.)).child(spinner())),

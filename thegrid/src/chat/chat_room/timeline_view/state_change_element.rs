@@ -29,7 +29,7 @@ impl RenderOnce for StateChangeElement {
                     .items_center()
                     .min_w(px(40.))
                     .mx(px(2.))
-                    .child(div().flex_grow())
+                    .child(div().flex_grow(1.))
                     .when_some(self.icon, |david, icon_name| david.child(icon(icon_name))),
             )
             .child(div().w_full().max_w_full().child(self.text))

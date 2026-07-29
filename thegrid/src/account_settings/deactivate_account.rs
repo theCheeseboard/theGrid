@@ -464,7 +464,7 @@ impl Render for DeactivateSurface {
                             },
                         )
                         .size_full()
-                        .flex_grow()
+                        .flex_grow(1.)
                         .animation(SlideHorizontalAnimation::new())
                         .when_else(
                             has_no_session,

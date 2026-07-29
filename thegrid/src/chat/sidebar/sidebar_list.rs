@@ -2,18 +2,18 @@ use crate::chat::displayed_room::DisplayedRoom;
 use crate::chat::sidebar::standard_room_element::{
     InviteEvent, StandardRoomElement, StandardRoomElementType,
 };
-use cntp_i18n::{tr, trn, I18N_MANAGER};
+use cntp_i18n::{I18N_MANAGER, tr, trn};
 use contemporary::components::icon::icon;
 use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, list, px, App, ElementId, Entity, FontWeight, InteractiveElement,
-    IntoElement, ListState, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window,
+    App, ElementId, Entity, FontWeight, InteractiveElement, IntoElement, ListState, ParentElement,
+    RenderOnce, StatefulInteractiveElement, Styled, Window, div, list, px,
 };
 use matrix_sdk::ruma::OwnedRoomId;
 use std::rc::Rc;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::room_cache::CachedRoom;
 use thegrid_common::session::session_manager::SessionManager;
 
@@ -206,7 +206,7 @@ impl RenderOnce for SidebarList {
                                 .or_else(|| room.inner.name())
                                 .unwrap_or_default(),
                         )
-                        .child(div().flex_grow())
+                        .child(div().flex_grow(1.))
                         .when_else(
                             unread_state.unread_notifications > 0,
                             |david| {

@@ -2,7 +2,7 @@ use crate::auth::emoji_flyout::EmojiFlyout;
 use crate::chat::chat_input::{ChatInput, End};
 use crate::chat::chat_room::open_room::{OpenRoom, OpenRoomFocus};
 use crate::chat::chat_room::timeline_view::author_flyout::{
-    author_flyout, AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener,
+    AuthorFlyoutUserActionEvent, AuthorFlyoutUserActionListener, author_flyout,
 };
 use crate::chat::chat_room::timeline_view::flag_event_popover::FlagEventPopover;
 use crate::chat::chat_room::timeline_view::membership_change_item::membership_change_item;
@@ -23,18 +23,18 @@ use contemporary::components::flyout::flyout;
 use contemporary::components::icon::icon;
 use contemporary::components::layer::layer;
 use contemporary::components::tooltip::simple_tooltip;
-use contemporary::styling::theme::{variable_transparent, Theme, VariableColor};
+use contemporary::styling::theme::{Theme, VariableColor, variable_transparent};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    deferred, div, px, App, AsyncApp, ElementId, Entity, Focusable,
-    InteractiveElement, IntoElement, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, WeakEntity, Window,
+    App, AsyncApp, ElementId, Entity, Focusable, InteractiveElement, IntoElement, ParentElement,
+    RenderOnce, StatefulInteractiveElement, Styled, WeakEntity, Window, deferred, div, px,
 };
-use matrix_sdk::room::edit::EditedContent;
 use matrix_sdk::room::RoomMember;
+use matrix_sdk::room::edit::EditedContent;
+use matrix_sdk::ruma::events::MessageLikeEventType;
 use matrix_sdk::ruma::events::room::message::{
     MessageType, RoomMessageEventContentWithoutRelation,
 };
-use matrix_sdk::ruma::events::MessageLikeEventType;
 use matrix_sdk_ui::timeline::{
     EventTimelineItem, MsgLikeContent, MsgLikeKind, TimelineDetails, TimelineFocus,
     TimelineItem as MatrixUiTimelineItem, TimelineItemContent, TimelineItemKind,
@@ -42,7 +42,7 @@ use matrix_sdk_ui::timeline::{
 };
 use std::rc::Rc;
 use std::sync::Arc;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::tokio_helper::TokioHelper;
 
 #[derive(IntoElement)]
@@ -335,7 +335,7 @@ impl TimelineItem {
                                 div()
                                     .flex()
                                     .gap(px(4.))
-                                    .child(div().flex_grow())
+                                    .child(div().flex_grow(1.))
                                     .child(
                                         button("edit-cancel-button")
                                             .child(icon("dialog-cancel"))
@@ -484,7 +484,7 @@ impl TimelineItem {
                         }
                     })
                     .flex()
-                    .flex_grow()
+                    .flex_grow(1.)
                     .w_full()
                     .overflow_hidden()
                     .gap(px(8.))
@@ -529,7 +529,7 @@ impl TimelineItem {
                     .child(
                         div()
                             .id("content")
-                            .flex_grow()
+                            .flex_grow(1.)
                             .flex()
                             .flex_col()
                             .overflow_hidden()
@@ -632,7 +632,7 @@ impl RenderOnce for TimelineItem {
                     .w_full()
                     .gap(px(8.))
                     .items_center()
-                    .child(div().h(px(1.)).bg(theme.border_color).flex_grow())
+                    .child(div().h(px(1.)).bg(theme.border_color).flex_grow(1.))
                     .child(
                         div()
                             .child(tr!(
@@ -642,7 +642,7 @@ impl RenderOnce for TimelineItem {
                             ))
                             .text_color(theme.border_color),
                     )
-                    .child(div().h(px(1.)).bg(theme.border_color).flex_grow())
+                    .child(div().h(px(1.)).bg(theme.border_color).flex_grow(1.))
                     .into_any_element()
             }
             TimelineItemKind::Virtual(VirtualTimelineItem::TimelineStart) => {

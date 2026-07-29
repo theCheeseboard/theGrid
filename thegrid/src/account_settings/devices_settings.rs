@@ -4,25 +4,25 @@ use crate::auth::verification_popover::VerificationPopover;
 use crate::uiaa_client::{SendAuthDataEvent, UiaaClient};
 use chrono::{DateTime, Local};
 use cntp_i18n::tr;
-use contemporary::components::admonition::{admonition, AdmonitionSeverity};
+use contemporary::components::admonition::{AdmonitionSeverity, admonition};
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
-use contemporary::components::dialog_box::{dialog_box, StandardButton};
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
-use contemporary::components::layer::{layer, Layer};
+use contemporary::components::layer::{Layer, layer};
 use contemporary::components::scroll_area::scroll_area_cx;
 use contemporary::components::subtitle::subtitle;
 use contemporary::styling::theme::{Theme, ThemeStorage, VariableColor};
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, rgba, App, AppContext, AsyncApp, Context, ElementId,
-    Entity, InteractiveElement, IntoElement, ParentElement, Render, RenderOnce, Styled, WeakEntity, Window,
+    App, AppContext, AsyncApp, Context, ElementId, Entity, InteractiveElement, IntoElement,
+    ParentElement, Render, RenderOnce, Styled, WeakEntity, Window, div, px, rgba,
 };
+use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::encryption::identities::Device;
 use matrix_sdk::encryption::recovery::RecoveryState;
-use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::{
     AccountManagementActionData, DeviceDeleteData,
 };
@@ -243,7 +243,7 @@ impl Render for DevicesSettings {
                                                 .gap(px(4.))
                                                 .child(tr!("SETUP_RECOVERY_DESCRIPTION"))
                                                 .child(
-                                                    div().flex().child(div().flex_grow()).child(
+                                                    div().flex().child(div().flex_grow(1.)).child(
                                                         button("setup-now")
                                                             .child(icon_text(
                                                                 "configure",
@@ -285,7 +285,7 @@ impl Render for DevicesSettings {
                                             options."
                                         ))
                                         .child(
-                                            div().flex().child(div().flex_grow()).child(
+                                            div().flex().child(div().flex_grow(1.)).child(
                                                 button("verify-now")
                                                     .child(icon_text(
                                                         "edit-copy",
@@ -369,7 +369,7 @@ impl Render for DevicesSettings {
                     },
                     cx,
                 )
-                .flex_grow(),
+                .flex_grow(1.),
             )
             .child(self.verification_popover.clone().into_any_element())
             .child(
@@ -502,7 +502,7 @@ impl RenderOnce for DeviceItem {
                             .child(supplementary_text.join(" • ")),
                     ),
             )
-            .child(div().flex_grow())
+            .child(div().flex_grow(1.))
             .child(
                 div()
                     .flex()

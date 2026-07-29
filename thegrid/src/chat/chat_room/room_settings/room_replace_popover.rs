@@ -225,7 +225,7 @@ impl Render for RoomReplacePopover {
                                                         .items_center()
                                                         .flex()
                                                         .child(tr!("ROOM_VERSION", "Room Version"))
-                                                        .child(div().flex_grow())
+                                                        .child(div().flex_grow(1.))
                                                         .child(
                                                             self.new_room_version
                                                                 .as_str()

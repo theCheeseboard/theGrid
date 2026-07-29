@@ -140,7 +140,7 @@ impl RenderOnce for ActiveCallSidebarAlert {
                                                     cx,
                                                 )
                                             })
-                                            .flex_grow(),
+                                            .flex_grow(1.),
                                     )
                                     .child(
                                         button("deaf")
@@ -231,7 +231,7 @@ impl RenderOnce for ActiveCallSidebarAlert {
                                         .flex()
                                         .items_center()
                                         .child(room.display_name())
-                                        .child(div().flex_grow())
+                                        .child(div().flex_grow(1.))
                                         .child(
                                             button("switch-button")
                                                 .child(icon("call-start"))
@@ -279,7 +279,7 @@ impl RenderOnce for CallMemberState {
                     .rounded(theme.border_radius),
             )
             .child(room_member.display_name().unwrap_or_default().to_string())
-            .child(div().flex_grow())
+            .child(div().flex_grow(1.))
             .when(
                 matches!(self.call_member.screenshare_state, StreamState::On(_)),
                 |david| david.child(icon("video-display")),

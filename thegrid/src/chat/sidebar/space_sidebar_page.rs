@@ -154,7 +154,7 @@ impl Render for SpaceSidebarPage {
             .when_else(
                 self.have_rooms,
                 |david| {
-                    david.child(div().flex_grow().child(sidebar_list(
+                    david.child(div().flex_grow(1.).child(sidebar_list(
                         self.list_state.clone(),
                         self.items.clone(),
                         self.displayed_room.clone(),
@@ -189,7 +189,7 @@ impl Render for SpaceSidebarPage {
                                         this.change_room(this.room_id.clone(), window, cx);
                                     })),
                             )
-                            .flex_grow(),
+                            .flex_grow(1.),
                     )
                 },
             )

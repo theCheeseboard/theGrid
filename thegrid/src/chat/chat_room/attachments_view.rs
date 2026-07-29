@@ -61,7 +61,7 @@ impl RenderOnce for AttachmentsView {
                                                 .flex()
                                                 .items_center()
                                                 .child(attachment.filename.clone())
-                                                .child(div().flex_grow())
+                                                .child(div().flex_grow(1.))
                                                 .child(
                                                     button("delete-button")
                                                         .flat()

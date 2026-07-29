@@ -204,7 +204,7 @@ impl ChatBar {
                         })
                         .when(replacement_room.is_some(), |david| {
                             david.child(
-                                div().flex().child(div().flex_grow()).child(
+                                div().flex().child(div().flex_grow(1.)).child(
                                     button("view-replaced-room-button")
                                         .when(joining, |david| david.disabled())
                                         .child(icon_text(
@@ -279,7 +279,7 @@ impl Render for ChatBar {
                         |david| {
                             david.child(
                                 div()
-                                    .flex_grow()
+                                    .flex_grow(1.)
                                     .self_center()
                                     .text_color(theme.foreground.disabled())
                                     .child(tr!(

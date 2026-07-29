@@ -274,7 +274,7 @@ impl Render for ChatRoom {
                         )
                         .child(match self.view.clone() {
                             ChatRoomView::Loading => div()
-                                .flex_grow()
+                                .flex_grow(1.)
                                 .flex()
                                 .items_center()
                                 .justify_center()

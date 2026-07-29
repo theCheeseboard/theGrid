@@ -74,12 +74,12 @@ impl Render for RoomTimelineContent {
         div()
             .flex()
             .flex_col()
-            .flex_grow()
+            .flex_grow(1.)
             .child(
                 div()
                     .flex()
                     .flex_col()
-                    .flex_grow()
+                    .flex_grow(1.)
                     .child(self.timeline_view.clone())
                     .when(!call_members.is_empty(), |david| {
                         david.child(CallMembersView {
@@ -117,7 +117,7 @@ impl Render for RoomTimelineContent {
                         .items_center()
                         .child(
                             div()
-                                .flex_grow()
+                                .flex_grow(1.)
                                 .child(tr!("FOCUS_REASON_REPLY", "Viewing a reply")),
                         )
                         .child(

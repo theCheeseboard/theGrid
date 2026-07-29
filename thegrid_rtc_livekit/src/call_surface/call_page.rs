@@ -16,9 +16,9 @@ use contemporary::lerp::Lerpable;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    anchored, div, img, px, rgb, Along, App, AppContext, Axis,
-    BorrowAppContext, Bounds, Context, ElementId, Entity, InteractiveElement, IntoElement, ObjectFit,
-    ParentElement, Pixels, Point, Render, RenderOnce, StatefulInteractiveElement, Styled, StyledImage, Window,
+    Along, App, AppContext, Axis, BorrowAppContext, Bounds, Context, ElementId, Entity,
+    InteractiveElement, IntoElement, ObjectFit, ParentElement, Pixels, Point, Render, RenderOnce,
+    StatefulInteractiveElement, Styled, StyledImage, Window, anchored, div, img, px, rgb,
 };
 use livekit::prelude::TrackSource;
 use log::{debug, info};
@@ -27,7 +27,7 @@ use std::collections::HashMap;
 use std::iter;
 use std::rc::Rc;
 use std::time::Instant;
-use thegrid_common::mxc_image::{mxc_image, SizePolicy};
+use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use thegrid_screen_share::{PickerRequired, ScreenShareManager, ScreenShareStartEvent};
@@ -196,7 +196,7 @@ impl Render for CallPage {
             .bg(rgb(0x000000))
             .flex()
             .flex_col()
-            .flex_grow()
+            .flex_grow(1.)
             .child(
                 grandstand("call-join")
                     .text(room_name)
@@ -213,7 +213,7 @@ impl Render for CallPage {
             )
             .child(
                 div()
-                    .flex_grow()
+                    .flex_grow(1.)
                     .flex()
                     .flex_col()
                     .when_else(
@@ -221,7 +221,7 @@ impl Render for CallPage {
                         |david| {
                             david.child(
                                 interstitial()
-                                    .flex_grow()
+                                    .flex_grow(1.)
                                     .icon("media-playback-pause")
                                     .title(tr!("CALL_ON_HOLD", "This call is on hold"))
                                     .message(tr!(
@@ -257,14 +257,14 @@ impl Render for CallPage {
                         |david| {
                             david.child(match call.state {
                                 CallState::Connecting => div()
-                                    .flex_grow()
+                                    .flex_grow(1.)
                                     .flex()
                                     .items_center()
                                     .justify_center()
                                     .child(spinner().size(px(32.)))
                                     .into_any_element(),
                                 CallState::Active { .. } => div()
-                                    .flex_grow()
+                                    .flex_grow(1.)
                                     .child(
                                         call_members.iter().enumerate().fold(
                                             div()
@@ -328,7 +328,7 @@ impl Render for CallPage {
                                             ))
                                             .child({
                                                 let this = cx.entity();
-                                                div().flex_grow().with_anchorer(
+                                                div().flex_grow(1.).with_anchorer(
                                                     move |div, bounds, _, cx| {
                                                         this.update(cx, |this, cx| {
                                                             this.big_focus_coordinates = bounds;
@@ -403,9 +403,9 @@ impl Render for CallPage {
                                             ),
                                     )
                                     .into_any_element(),
-                                CallState::Ended => div().flex_grow().into_any_element(),
+                                CallState::Ended => div().flex_grow(1.).into_any_element(),
                                 CallState::Error(error) => interstitial()
-                                    .flex_grow()
+                                    .flex_grow(1.)
                                     .icon("call-start")
                                     .title(tr!(
                                         "CALL_CONNECTION_ERROR",
@@ -420,7 +420,7 @@ impl Render for CallPage {
                         div()
                             .flex()
                             .p(px(16.))
-                            .child(div().flex_grow())
+                            .child(div().flex_grow(1.))
                             .child(
                                 layer()
                                     .border(px(1.))
@@ -531,21 +531,25 @@ impl Render for CallPage {
                                             })),
                                     ),
                             )
-                            .child(div().flex().flex_grow().justify_end().items_center().when(
-                                matches!(self.focus, Focus::Focus(_, _)),
-                                |david| {
-                                    david.child(
-                                        button("overview-button")
-                                            .child(icon_text(
-                                                "view-grid",
-                                                tr!("CALL_OVERVIEW", "Back to Overview"),
-                                            ))
-                                            .on_click(cx.listener(|this, _, window, cx| {
-                                                this.return_to_overview(window, cx)
-                                            })),
-                                    )
-                                },
-                            )),
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_grow(1.)
+                                    .justify_end()
+                                    .items_center()
+                                    .when(matches!(self.focus, Focus::Focus(_, _)), |david| {
+                                        david.child(
+                                            button("overview-button")
+                                                .child(icon_text(
+                                                    "view-grid",
+                                                    tr!("CALL_OVERVIEW", "Back to Overview"),
+                                                ))
+                                                .on_click(cx.listener(|this, _, window, cx| {
+                                                    this.return_to_overview(window, cx)
+                                                })),
+                                        )
+                                    }),
+                            ),
                     ),
             )
             .child(self.webcam_start_dialog.clone())
@@ -821,9 +825,9 @@ impl RenderOnce for CallMemberDisplay {
                                 .child(
                                     div()
                                         .flex()
-                                        .flex_grow()
+                                        .flex_grow(1.)
                                         .child(display_name)
-                                        .child(div().flex_grow())
+                                        .child(div().flex_grow(1.))
                                         .when(is_muted, |david| david.child(icon("mic-off"))),
                                 ),
                         ),

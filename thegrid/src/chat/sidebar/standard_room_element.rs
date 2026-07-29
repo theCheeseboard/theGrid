@@ -1,18 +1,18 @@
-use cntp_i18n::{tr, Quote, I18N_MANAGER};
+use cntp_i18n::{I18N_MANAGER, Quote, tr};
 use contemporary::components::button::button;
 use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
-use contemporary::components::dialog_box::{dialog_box, StandardButton};
+use contemporary::components::dialog_box::{StandardButton, dialog_box};
 use contemporary::components::icon_text::icon_text;
 use contemporary::styling::theme::ThemeStorage;
 use gpui::prelude::FluentBuilder;
 use gpui::private::anyhow;
 use gpui::{
-    div, px, App, AsyncApp, ClickEvent, ClipboardItem, Entity, FontWeight,
-    InteractiveElement, IntoElement, ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window,
+    App, AsyncApp, ClickEvent, ClipboardItem, Entity, FontWeight, InteractiveElement, IntoElement,
+    ParentElement, RenderOnce, StatefulInteractiveElement, Styled, Window, div, px,
 };
-use matrix_sdk::ruma::api::client::receipt::create_receipt::v3::ReceiptType;
-use matrix_sdk::ruma::OwnedRoomId;
 use matrix_sdk::RoomMemberships;
+use matrix_sdk::ruma::OwnedRoomId;
+use matrix_sdk::ruma::api::client::receipt::create_receipt::v3::ReceiptType;
 use matrix_sdk_ui::timeline::RoomExt;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -267,7 +267,7 @@ impl RenderOnce for StandardRoomElement {
                 )
                 .into_any_element(),
             })
-            .child(div().flex_grow())
+            .child(div().flex_grow(1.))
             .when_else(
                 unread_state.unread_notifications > 0,
                 |david| {
