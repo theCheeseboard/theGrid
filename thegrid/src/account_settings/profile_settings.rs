@@ -1,4 +1,5 @@
 use crate::auth::oauth_management_page_redirect_dialog::OAuthManagementPageRedirectDialog;
+use crate::upload_mxc_dialog::{UploadMxcAcceptEvent, upload_mxc_dialog};
 use cntp_i18n::tr;
 use contemporary::components::button::button;
 use contemporary::components::constrainer::constrainer;
@@ -15,9 +16,11 @@ use gpui::{
     WeakEntity, Window, div, px,
 };
 use matrix_sdk::AuthApi;
+use matrix_sdk::ruma::UInt;
 use matrix_sdk::ruma::api::client::discovery::get_authorization_server_metadata::v1::{
     AccountManagementAction, AccountManagementActionData,
 };
+use matrix_sdk::ruma::events::room::avatar::ImageInfo;
 use std::rc::Rc;
 use thegrid_common::mxc_image::{SizePolicy, mxc_image};
 use thegrid_common::session::session_manager::SessionManager;
@@ -268,15 +271,20 @@ impl Render for ProfileSettings {
                                                 cx.notify()
                                             })),
                                     )
-                                    .child(button("profile-change-profile-picture").child(
-                                        icon_text(
-                                            "edit-rename",
-                                            tr!(
-                                                "PROFILE_CHANGE_PROFILE_PICTURE",
-                                                "Change Profile Picture"
-                                            ),
-                                        ),
-                                    )),
+                                    .child(
+                                        button("profile-change-profile-picture")
+                                            .child(icon_text(
+                                                "edit-rename",
+                                                tr!(
+                                                    "PROFILE_CHANGE_PROFILE_PICTURE",
+                                                    "Change Profile Picture"
+                                                ),
+                                            ))
+                                            .on_click(cx.listener(move |this, _, _, cx| {
+                                                this.edit_profile_picture_open = true;
+                                                cx.notify()
+                                            })),
+                                    ),
                             ),
                     )
                     .when(
@@ -391,6 +399,48 @@ impl Render for ProfileSettings {
                             })),
                     ),
             )
+            .child(upload_mxc_dialog(
+                tr!("PROFILE_CHANGE_PROFILE_PICTURE"),
+                self.edit_profile_picture_open,
+                "dialog-ok".into(),
+                tr!("PROFILE_CHANGE_PROFILE_PICTURE").into(),
+                cx.listener(move |this, _, _, cx| {
+                    this.edit_profile_picture_open = false;
+                    cx.notify();
+                }),
+                cx.listener({
+                    move |this, event: &UploadMxcAcceptEvent, _, cx| {
+                        let mxc_url = event.mxc_url.clone();
+
+                        let session_manager = cx.global::<SessionManager>();
+                        let client = session_manager.client().unwrap().read(cx).clone();
+
+                        cx.spawn({
+                            async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
+                                if cx
+                                    .spawn_tokio(async move {
+                                        client.account().set_avatar_url(Some(&mxc_url)).await
+                                    })
+                                    .await
+                                    .is_err()
+                                {
+                                    this.update(cx, |this, cx| {
+                                        this.edit_profile_picture_open = false;
+                                        cx.notify()
+                                    })
+                                } else {
+                                    this.update(cx, |this, cx| {
+                                        this.edit_profile_picture_open = false;
+                                        cx.notify()
+                                    })
+                                }
+                            }
+                        })
+                        .detach();
+                        cx.notify()
+                    }
+                }),
+            ))
             .child(self.call_disconnect_confirmation_dialog.clone())
             .child(self.oauth_management_page_redirect_dialog.clone())
     }

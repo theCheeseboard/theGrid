@@ -1579,7 +1579,7 @@
   },
   "NEW_DISPLAY_NAME_PLACEHOLDER": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:104",
+    "definedIn": "src/account_settings/profile_settings.rs:107",
     "plural": false,
     "description": null
   },
@@ -1909,49 +1909,49 @@
   },
   "PROFILE_ACCOUNT": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:306",
+    "definedIn": "src/account_settings/profile_settings.rs:314",
     "plural": false,
     "description": null
   },
   "PROFILE_CHANGE_DISPLAY_NAME": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:256",
+    "definedIn": "src/account_settings/profile_settings.rs:259",
     "plural": false,
     "description": null
   },
   "PROFILE_CHANGE_DISPLAY_NAME_DESCRIPTION": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:347",
+    "definedIn": "src/account_settings/profile_settings.rs:355",
     "plural": false,
     "description": null
   },
   "PROFILE_CHANGE_PROFILE_PICTURE": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:275",
+    "definedIn": "src/account_settings/profile_settings.rs:279",
     "plural": false,
     "description": null
   },
   "PROFILE_DEACTIVATE": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:318",
+    "definedIn": "src/account_settings/profile_settings.rs:326",
     "plural": false,
     "description": null
   },
   "PROFILE_MANAGE_ACCOUNT": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:211",
+    "definedIn": "src/account_settings/profile_settings.rs:214",
     "plural": false,
     "description": null
   },
   "PROFILE_MANAGE_ACCOUNT_DESCRIPTION": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:213",
+    "definedIn": "src/account_settings/profile_settings.rs:216",
     "plural": false,
     "description": null
   },
   "PROFILE_PROFILE": {
     "context": "profile_settings.rs",
-    "definedIn": "src/account_settings/profile_settings.rs:244",
+    "definedIn": "src/account_settings/profile_settings.rs:247",
     "plural": false,
     "description": null
   },

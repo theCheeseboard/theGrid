@@ -124,7 +124,7 @@ impl RenderOnce for UploadMxcDialog {
                     let mut image = image.into();
                     rgb_to_bgr(&mut image);
 
-                    let _ = state.update(cx, |state, cx| {
+                    state.update(cx, |state, cx| {
                         *state = UploadMxcState::Selected {
                             data,
                             image: Arc::new(RenderImage::new(smallvec![Frame::new(image.into())])),
@@ -309,11 +309,12 @@ impl RenderOnce for UploadMxcDialog {
                                                         window,
                                                         cx,
                                                     );
+                                                    state.write(cx, UploadMxcState::Idle);
                                                 });
                                             }
                                             Err(e) => {
                                                 // TODO: error
-                                                let _ = state.write(
+                                                state.write(
                                                     cx,
                                                     UploadMxcState::Selected {
                                                         data: data.clone(),
