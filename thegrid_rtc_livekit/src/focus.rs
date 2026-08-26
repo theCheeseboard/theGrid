@@ -1,11 +1,11 @@
 use gpui::AsyncApp;
-use matrix_sdk::Room;
 use matrix_sdk::deserialized_responses::RawAnySyncOrStrippedState;
 use matrix_sdk::ruma::api::client::discovery::discover_homeserver::RtcFocusInfo;
 use matrix_sdk::ruma::events::call::member::{
     ActiveFocus, CallMemberEventContent, Focus, FocusSelection,
 };
 use matrix_sdk::ruma::events::{AnySyncStateEvent, StateEventType};
+use matrix_sdk::Room;
 use thegrid_common::tokio_helper::TokioHelper;
 
 pub enum FocusUrlError {
@@ -14,13 +14,16 @@ pub enum FocusUrlError {
 }
 
 pub async fn get_focus_url(
-    room: Room,
+    room: &Room,
     rtc_foci: Vec<RtcFocusInfo>,
     cx: &mut AsyncApp,
 ) -> Result<String, FocusUrlError> {
     let room_id = room.room_id().to_owned();
     let Ok(call_member_state_events) = cx
-        .spawn_tokio(async move { room.get_state_events(StateEventType::CallMember).await })
+        .spawn_tokio({
+            let room = room.clone();
+            async move { room.get_state_events(StateEventType::CallMember).await }
+        })
         .await
     else {
         return Err(FocusUrlError::RoomError);

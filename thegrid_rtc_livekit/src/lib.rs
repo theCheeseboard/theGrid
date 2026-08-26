@@ -7,12 +7,14 @@ pub mod call_surface;
 mod focus;
 mod mic;
 pub mod rtc_audio_stream_source;
+mod sfu_session;
 mod webcam;
 
 use crate::call_manager::LivekitCallManager;
 use crate::focus::{get_focus_url, FocusUrlError};
 use crate::mic::open_mic;
 use crate::rtc_audio_stream_source::RtcAudioStreamSource;
+use crate::sfu_session::{SfuSession, SfuSessionState};
 use crate::webcam::Webcam;
 use async_ringbuf::consumer::AsyncConsumer;
 use async_ringbuf::AsyncHeapRb;
@@ -103,6 +105,9 @@ pub struct LivekitCall {
     our_track_sids: HashMap<TrackType, TrackSid>,
     active_devices: HashMap<TrackSid, Entity<OutboundTrack>>,
 
+    connected_sfu_sessions: HashMap<String, Entity<SfuSession>>,
+    master_sfu_session: Option<String>,
+
     subscribed_streams: Vec<SubscribedStream>,
     active_call_participants_state: Entity<Vec<RoomMember>>,
     muted_streams: HashSet<TrackSid>,
@@ -110,8 +115,11 @@ pub struct LivekitCall {
     cached_call_members: Entity<Vec<CallMember>>,
     video_stream_images: HashMap<TrackSid, Arc<RenderImage>>,
 
+    openid_token: Option<request_openid_token::v3::Response>,
+
     cancellation_source: CancellationTokenSource,
     started_at: Instant,
+    initial_streams: HashMap<TrackType, Entity<OutboundTrack>>,
 
     on_hold: bool,
 }
@@ -142,6 +150,7 @@ pub enum StreamState {
     On(TrackSid),
 }
 
+#[derive(Clone)]
 pub struct SubscribedStream {
     stream_sid: TrackSid,
     user_id: OwnedUserId,
@@ -224,15 +233,12 @@ impl LivekitCall {
         let rtc_foci = session_manager.rtc_foci().clone();
 
         let cancellation_source = CancellationTokenSource::new();
-        let cancellation_token = cancellation_source.token();
 
         cx.spawn({
             let room_id = room_id.clone();
-
+            let room = room.clone();
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let room_clone = room.clone();
-
-                let service_url = match get_focus_url(room_clone, rtc_foci, cx).await {
+                let service_url = match get_focus_url(&room, rtc_foci, cx).await {
                     Ok(url) => url,
                     Err(FocusUrlError::RoomError) => {
                         error!("Call failed: {}", CallError::RoomError);
@@ -273,94 +279,39 @@ impl LivekitCall {
                     }
                 };
 
-                // Get the LiveKit JWT
-                let client = zed_reqwest::Client::new();
-                let livekit_jwt_response = cx
-                    .spawn_tokio({
-                        let client = client.clone();
-                        let device_id = device_id.clone();
-                        let room_id = room_id.clone();
-                        let service_url = format!("{}/sfu/get", service_url);
-                        async move {
-                            client
-                                .post(service_url)
-                                .body(
-                                    json!({
-                            "device_id": device_id.to_string(),
-                            "openid_token": {
-                                "access_token": openid_token.access_token,
-                                "expires_in": openid_token.expires_in.as_secs(),
-                                "matrix_server_name": openid_token.matrix_server_name.to_string(),
-                                "token_type": openid_token.token_type.to_string()
-                            },
-                            "room": room_id
-                        })
-                                        .to_string(),
-                                )
-                                .header(header::CONTENT_TYPE, "application/json")
-                                .send()
-                                .await
-                        }
+                if weak_this
+                    .update(cx, |this, cx| {
+                        this.openid_token = Some(openid_token);
                     })
-                    .await;
-                let livekit_jwt = match livekit_jwt_response {
-                    Ok(livekit_jwt) => livekit_jwt,
-                    Err(e) => {
-                        error!("Call failed: {}: {e:?}", CallError::LivekitJwtRequestFailed);
-                        let _ = weak_this.update(cx, |this, cx| {
-                            this.state = CallState::Error(CallError::LivekitJwtRequestFailed);
-                            cx.notify();
-                        });
-                        return;
-                    }
-                };
-
-                let Ok(livekit_jwt) = livekit_jwt.text().await else {
-                    error!(
-                        "Call failed: {}: response could not be interpreted as text",
-                        CallError::LivekitJwtRequestFailed
-                    );
-                    let _ = weak_this.update(cx, |this, cx| {
-                        this.state = CallState::Error(CallError::LivekitJwtRequestFailed);
-                        cx.notify();
-                    });
+                    .is_err()
+                {
                     return;
-                };
-
-                let Ok(livekit_jwt) = serde_json::from_str::<LivekitJwtResponse>(&livekit_jwt)
-                else {
-                    error!(
-                        "Call failed: {}: response could not be interpreted as JSON",
-                        CallError::LivekitJwtRequestFailed
-                    );
-                    error!("The response was: {:?}", livekit_jwt);
-                    let _ = weak_this.update(cx, |this, cx| {
-                        this.state = CallState::Error(CallError::LivekitJwtRequestFailed);
-                        cx.notify();
-                    });
-                    return;
-                };
+                }
 
                 if let Err(e) = cx
-                    .spawn_tokio(async move {
-                        room.send_state_event_for_key(
-                            &CallMemberStateKey::new(user_id, None, true),
-                            CallMemberEventContent::new(
-                                Application::Call(CallApplicationContent::new(
-                                    "".to_string(),
-                                    CallScope::Room,
-                                )),
-                                device_id,
-                                ActiveFocus::Livekit(ActiveLivekitFocus::new()),
-                                vec![Focus::Livekit(LivekitFocus::new(
-                                    room_id.to_string(),
-                                    service_url,
-                                ))],
-                                None,
-                                Some(Duration::from_millis(14400000)),
-                            ),
-                        )
-                        .await
+                    .spawn_tokio({
+                        let room = room.clone();
+                        let service_url = service_url.clone();
+                        async move {
+                            room.send_state_event_for_key(
+                                &CallMemberStateKey::new(user_id, None, true),
+                                CallMemberEventContent::new(
+                                    Application::Call(CallApplicationContent::new(
+                                        "".to_string(),
+                                        CallScope::Room,
+                                    )),
+                                    device_id,
+                                    ActiveFocus::Livekit(ActiveLivekitFocus::new()),
+                                    vec![Focus::Livekit(LivekitFocus::new(
+                                        room_id.to_string(),
+                                        service_url,
+                                    ))],
+                                    None,
+                                    Some(Duration::from_millis(14400000)),
+                                ),
+                            )
+                            .await
+                        }
                     })
                     .await
                 {
@@ -378,165 +329,9 @@ impl LivekitCall {
                     return;
                 };
 
-                let (livekit_room, mut room_events) = match cx
-                    .spawn_tokio(async move {
-                        let mut room_options = RoomOptions::default();
-                        room_options.auto_subscribe = true;
-                        room_options.adaptive_stream = true;
-                        Room::connect(&livekit_jwt.url, &livekit_jwt.jwt, room_options).await
-                    })
-                    .await
-                {
-                    Ok(room) => room,
-                    Err(e) => {
-                        error!("LiveKit room connection failed: {:?}", e);
-                        let _ = weak_this.update(cx, |this, cx| {
-                            this.state = CallState::Error(CallError::LivekitRtcFailed);
-                            cx.notify();
-                        });
-                        return;
-                    }
-                };
-
-                let local_participant = livekit_room.local_participant();
-
-                cx.spawn(async move |cx: &mut AsyncApp| {
-                    cancellation_token.wait().await;
-                    let _ = livekit_room.close().await;
-                })
-                .detach();
-
-                let weak_this_clone = weak_this.clone();
-                cx.spawn(async move |cx: &mut AsyncApp| {
-                    loop {
-                        let Some(event) = tokio::task::unconstrained(room_events.recv()).await
-                        else {
-                            // TODO: End call?
-                            return;
-                        };
-
-                        match &event {
-                            RoomEvent::TrackSubscribed {
-                                track,
-                                publication,
-                                participant,
-                            } => {
-                                let identity: String = participant.identity().into();
-                                let Ok((user_id, device_id)) = decode_livekit_identity(&identity)
-                                else {
-                                    error!(
-                                        "Subscribed to stream but failed to decode identity: {}. \
-                                         The stream will not be played.",
-                                        identity
-                                    );
-                                    return;
-                                };
-
-                                if weak_this_clone
-                                    .update(cx, |this, cx| {
-                                        this.subscribed_streams.push(SubscribedStream {
-                                            stream_sid: track.sid(),
-                                            user_id,
-                                            device_id,
-                                            source: track.source(),
-                                        });
-                                        if track.is_muted() {
-                                            this.muted_streams.insert(track.sid());
-                                        }
-                                        cx.notify();
-
-                                        this.start_track(track, cx);
-                                    })
-                                    .is_err()
-                                {
-                                    // TODO: End call?
-                                    return;
-                                }
-                            }
-                            RoomEvent::TrackUnsubscribed {
-                                track,
-                                publication,
-                                participant,
-                            } => {
-                                if weak_this_clone
-                                    .update(cx, |this, cx| {
-                                        this.muted_streams.remove(&track.sid());
-                                        this.subscribed_streams
-                                            .retain(|stream| stream.stream_sid != track.sid());
-                                    })
-                                    .is_err()
-                                {
-                                    // TODO: End call?
-                                    return;
-                                }
-                            }
-                            RoomEvent::TrackMuted {
-                                participant,
-                                publication,
-                            } => {
-                                if weak_this_clone
-                                    .update(cx, |this, cx| {
-                                        this.muted_streams.insert(publication.sid());
-                                    })
-                                    .is_err()
-                                {
-                                    // TODO: End call?
-                                    return;
-                                }
-                            }
-                            RoomEvent::TrackUnmuted {
-                                participant,
-                                publication,
-                            } => {
-                                if weak_this_clone
-                                    .update(cx, |this, cx| {
-                                        this.muted_streams.remove(&publication.sid());
-                                    })
-                                    .is_err()
-                                {
-                                    // TODO: End call?
-                                    return;
-                                }
-                            }
-                            RoomEvent::ActiveSpeakersChanged { speakers } => {
-                                if weak_this_clone
-                                    .update(cx, |this, cx| {
-                                        this.active_speakers = speakers
-                                            .iter()
-                                            .flat_map(|participant| {
-                                                participant
-                                                    .track_publications()
-                                                    .keys()
-                                                    .cloned()
-                                                    .collect::<Vec<_>>()
-                                            })
-                                            .collect();
-                                        cx.notify();
-                                    })
-                                    .is_err()
-                                {
-                                    // TODO: End call?
-                                    return;
-                                }
-                            }
-                            _ => {}
-                        }
-
-                        info!("LiveKit event: {:?}", event);
-                    }
-                })
-                .detach();
-
-                let _ = weak_this.update(cx, |this, cx| {
-                    this.state = CallState::Active { local_participant };
-                    this.started_at = Instant::now();
-                    cx.notify();
-
-                    this.setup_local_mic(cx);
-
-                    for (track_type, track_device) in initial_streams {
-                        this.publish_track(track_type, Some(track_device), cx);
-                    }
+                let _ = weak_this.update(cx, move |this, cx| {
+                    this.connect_to_sfu(&service_url, cx);
+                    this.master_sfu_session = Some(service_url);
                 });
 
                 // TODO: Delay a disconnection message
@@ -583,6 +378,7 @@ impl LivekitCall {
             started_at: Instant::now(),
             our_track_sids: HashMap::new(),
             active_call_participants_state,
+            connected_sfu_sessions: HashMap::new(),
             subscribed_streams: Vec::new(),
             muted_streams: HashSet::new(),
             active_speakers: HashSet::new(),
@@ -590,7 +386,94 @@ impl LivekitCall {
             on_hold: false,
             cached_call_members,
             active_devices: HashMap::new(),
+            openid_token: None,
+            master_sfu_session: None,
+            initial_streams,
         }
+    }
+
+    fn connect_to_sfu(&mut self, service_url: &str, cx: &mut Context<Self>) {
+        let room_id = self.room.clone();
+        let openid_token = self
+            .openid_token
+            .clone()
+            .expect("Tried to connect to SFU but OpenID token is not yet ready");
+        let weak_this = cx.weak_entity();
+        let sfu_session = cx.new(|cx| {
+            SfuSession::new(
+                room_id,
+                service_url,
+                openid_token,
+                {
+                    move |track, cx| {
+                        let Some(this) = weak_this.upgrade() else {
+                            return;
+                        };
+
+                        this.update(cx, |this, cx| {
+                            this.start_track(track, cx);
+                        })
+                    }
+                },
+                cx,
+            )
+        });
+        self.connected_sfu_sessions
+            .insert(service_url.to_string(), sfu_session.clone());
+        cx.observe(&sfu_session, |this, _, cx| {
+            this.update_sfu_data(cx);
+        })
+        .detach();
+
+        self.update_sfu_data(cx);
+    }
+
+    fn update_sfu_data(&mut self, cx: &mut Context<Self>) {
+        let mut subscribed_streams = Vec::new();
+        let mut muted_streams = HashSet::new();
+        let mut active_speakers = HashSet::new();
+
+        let sfu_sessions = self
+            .connected_sfu_sessions
+            .values()
+            .map(|sfu_session| sfu_session.read(cx));
+
+        for sfu_session in sfu_sessions.clone() {
+            subscribed_streams.append(&mut sfu_session.subscribed_streams.clone());
+            muted_streams.extend(sfu_session.muted_streams.clone());
+            active_speakers.extend(sfu_session.active_speakers.clone());
+        }
+
+        self.subscribed_streams = subscribed_streams;
+        self.muted_streams = muted_streams;
+        self.active_speakers = active_speakers;
+
+        if let Some((_, master_sfu_session)) =
+            self.connected_sfu_sessions.iter().find(|(service_url, _)| {
+                self.master_sfu_session
+                    .as_ref()
+                    .is_some_and(|master_service_url| *service_url == master_service_url)
+            })
+        {
+            let master_sfu_session = master_sfu_session.read(cx);
+            let old_state = std::mem::replace(&mut self.state, master_sfu_session.state().into());
+            if !matches!(old_state, CallState::Active { .. })
+                && matches!(self.state, CallState::Active { .. })
+            {
+                self.started_at = Instant::now();
+                cx.notify();
+
+                self.setup_local_mic(cx);
+
+                for (track_type, track_device) in self.initial_streams.clone() {
+                    self.publish_track(track_type, Some(track_device), cx);
+                }
+            }
+        } else {
+            self.state = CallState::Connecting;
+        }
+
+        cx.notify();
     }
 
     pub fn room(&self) -> &RoomId {
