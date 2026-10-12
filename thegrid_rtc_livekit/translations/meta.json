@@ -67,7 +67,7 @@
   },
   "CALL_CONNECTION_ERROR": {
     "context": "call_page.rs",
-    "definedIn": "src/call_surface/call_page.rs:411",
+    "definedIn": "src/call_surface/call_page.rs:443",
     "plural": false,
     "description": null
   },
@@ -125,6 +125,12 @@
     "plural": false,
     "description": null
   },
+  "CALL_INFORMATION_FLYOUT_TITLE": {
+    "context": "call_information_flyout.rs",
+    "definedIn": "src/call_surface/call_page/call_information_flyout.rs:40",
+    "plural": false,
+    "description": null
+  },
   "CALL_JOIN_BUTTON": {
     "context": "call_start_page.rs",
     "definedIn": "src/call_surface/call_start_page.rs:751",
@@ -157,25 +163,25 @@
   },
   "CALL_MEMBER_DISPLAY_CONTEXT_MENU_SECTION": {
     "context": "call_page.rs",
-    "definedIn": "src/call_surface/call_page.rs:725",
+    "definedIn": "src/call_surface/call_page.rs:757",
     "plural": false,
     "description": null
   },
   "CALL_ON_HOLD": {
     "context": "call_page.rs",
-    "definedIn": "src/call_surface/call_page.rs:226",
+    "definedIn": "src/call_surface/call_page.rs:258",
     "plural": false,
     "description": null
   },
   "CALL_ON_HOLD_MESSAGE": {
     "context": "call_page.rs",
-    "definedIn": "src/call_surface/call_page.rs:228",
+    "definedIn": "src/call_surface/call_page.rs:260",
     "plural": false,
     "description": null
   },
   "CALL_OVERVIEW": {
     "context": "call_page.rs",
-    "definedIn": "src/call_surface/call_page.rs:545",
+    "definedIn": "src/call_surface/call_page.rs:577",
     "plural": false,
     "description": null
   },
@@ -187,7 +193,7 @@
   },
   "CALL_TAKE_OFF_HOLD": {
     "context": "call_page.rs",
-    "definedIn": "src/call_surface/call_page.rs:235",
+    "definedIn": "src/call_surface/call_page.rs:267",
     "plural": false,
     "description": null
   },

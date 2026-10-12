@@ -1,10 +1,12 @@
 use crate::call_manager::{LivekitCallManager, VolumeKey};
+use crate::call_surface::call_page::call_information_flyout::CallInformationFlyout;
 use crate::call_surface::call_page::webcam_start_dialog::WebcamStartDialog;
 use crate::{CallMember, CallState, LivekitCall, StreamState, TrackType};
 use cntp_i18n::tr;
 use contemporary::components::anchorer::WithAnchorer;
 use contemporary::components::button::button;
 use contemporary::components::context_menu::{ContextMenuExt, ContextMenuItem};
+use contemporary::components::flyout::flyout;
 use contemporary::components::grandstand::grandstand;
 use contemporary::components::icon::icon;
 use contemporary::components::icon_text::icon_text;
@@ -32,6 +34,7 @@ use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::{SurfaceChange, SurfaceChangeEvent, SurfaceChangeHandler};
 use thegrid_screen_share::{PickerRequired, ScreenShareManager, ScreenShareStartEvent};
 
+mod call_information_flyout;
 mod webcam_start_dialog;
 
 #[derive(Clone)]
@@ -59,6 +62,8 @@ pub struct CallPage {
     big_focus_coordinates: Bounds<Pixels>,
     old_big_focus_coordinates: Bounds<Pixels>,
     focus: Focus,
+
+    call_information_flyout_visible: bool,
 }
 
 impl CallPage {
@@ -89,6 +94,7 @@ impl CallPage {
             big_focus_coordinates: Default::default(),
             old_big_focus_coordinates: Default::default(),
             focus: Focus::Overview,
+            call_information_flyout_visible: false,
         }
     }
 
@@ -201,6 +207,32 @@ impl Render for CallPage {
                 grandstand("call-join")
                     .text(room_name)
                     .pt(px(36.))
+                    .child(
+                        button("call-information")
+                            .flat()
+                            .child(icon("help-about"))
+                            .on_click(cx.listener(move |this, _, window, cx| {
+                                this.call_information_flyout_visible = true;
+                                cx.notify();
+                            }))
+                            .with_anchorer({
+                                let flyout_visible = self.call_information_flyout_visible;
+                                let close_listener = cx.listener(move |this, _, _, cx| {
+                                    this.call_information_flyout_visible = false;
+                                    cx.notify()
+                                });
+                                let call = self.call.clone();
+                                move |david, bounds, _, _| {
+                                    david.child(
+                                        flyout(bounds)
+                                            .visible(flyout_visible)
+                                            .anchor_top_right()
+                                            .on_close(close_listener)
+                                            .child(CallInformationFlyout { call }),
+                                    )
+                                }
+                            }),
+                    )
                     .on_back_click(cx.listener(move |this, _, window, cx| {
                         (this.on_surface_change)(
                             &SurfaceChangeEvent {

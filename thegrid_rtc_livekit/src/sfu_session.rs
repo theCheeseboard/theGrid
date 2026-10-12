@@ -1,14 +1,14 @@
-use crate::{decode_livekit_identity, CallError, CallState, LivekitJwtResponse, SubscribedStream};
+use crate::{CallError, CallState, LivekitJwtResponse, SubscribedStream, decode_livekit_identity};
 use contemporary::tokio::tokio_helper::TokioHelper;
-use gpui::http_client::http::header;
 use gpui::http_client::StatusCode;
+use gpui::http_client::http::header;
 use gpui::private::serde_json;
 use gpui::private::serde_json::json;
 use gpui::{App, AsyncApp, Context, WeakEntity};
 use livekit::id::TrackSid;
 use livekit::prelude::LocalParticipant;
 use livekit::track::RemoteTrack;
-use livekit::{participant, publication, track, Room, RoomEvent, RoomOptions};
+use livekit::{ConnectionState, Room, RoomEvent, RoomOptions, participant, publication, track};
 use log::{error, info};
 use matrix_sdk::ruma::api::client::account::request_openid_token;
 use matrix_sdk::ruma::events::call::member::{
@@ -25,7 +25,10 @@ use thegrid_common::surfaces::MainWindowSurface::Call;
 #[derive(Clone, Debug)]
 pub enum SfuSessionState {
     Connecting,
-    Connected { local_participant: LocalParticipant },
+    Connected {
+        local_participant: LocalParticipant,
+        connection_state: ConnectionState,
+    },
     Error(SfuSessionError),
 }
 
@@ -33,7 +36,9 @@ impl From<&SfuSessionState> for CallState {
     fn from(value: &SfuSessionState) -> Self {
         match value {
             SfuSessionState::Connecting => CallState::Connecting,
-            SfuSessionState::Connected { local_participant } => CallState::Active {
+            SfuSessionState::Connected {
+                local_participant, ..
+            } => CallState::Active {
                 local_participant: local_participant.clone(),
             },
             SfuSessionState::Error(e) => CallState::Error(e.into()),
@@ -166,15 +171,19 @@ impl SfuSession {
             };
 
             let local_participant = livekit_room.local_participant();
-            let _ = weak_this.update(cx, |this, cx| {
-                this.state = SfuSessionState::Connected {
-                    local_participant,
-                };
-                cx.notify();
+            let connection_state = livekit_room.connection_state();
+            let _ = weak_this.update(cx, {
+                let local_participant = local_participant.clone();
+                move |this, cx| {
+                    this.state = SfuSessionState::Connected {
+                        local_participant,
+                        connection_state,
+                    };
+                    cx.notify();
+                }
             });
 
-            let weak_this_clone = weak_this.clone();
-            cx.spawn(async move |cx: &mut AsyncApp| {
+            cx.spawn({let weak_this = weak_this.clone(); async move |cx: &mut AsyncApp| {
                 loop {
                     let Some(event) = tokio::task::unconstrained(room_events.recv()).await else {
                         // TODO: End call?
@@ -198,7 +207,7 @@ impl SfuSession {
                                 return;
                             };
 
-                            if weak_this_clone
+                            if weak_this
                                 .update(cx, |this, cx| {
                                     this.subscribed_streams.push(SubscribedStream {
                                         stream_sid: track.sid(),
@@ -226,7 +235,7 @@ impl SfuSession {
                             publication,
                             participant,
                         } => {
-                            if weak_this_clone
+                            if weak_this
                                 .update(cx, |this, cx| {
                                     this.muted_streams.remove(&track.sid());
                                     this.subscribed_streams
@@ -243,7 +252,7 @@ impl SfuSession {
                             participant,
                             publication,
                         } => {
-                            if weak_this_clone
+                            if weak_this
                                 .update(cx, |this, cx| {
                                     this.muted_streams.insert(publication.sid());
                                     cx.notify();
@@ -258,7 +267,7 @@ impl SfuSession {
                             participant,
                             publication,
                         } => {
-                            if weak_this_clone
+                            if weak_this
                                 .update(cx, |this, cx| {
                                     this.muted_streams.remove(&publication.sid());
                                     cx.notify();
@@ -270,7 +279,7 @@ impl SfuSession {
                             }
                         }
                         RoomEvent::ActiveSpeakersChanged { speakers } => {
-                            if weak_this_clone
+                            if weak_this
                                 .update(cx, |this, cx| {
                                     this.active_speakers = speakers
                                         .iter()
@@ -290,13 +299,31 @@ impl SfuSession {
                                 return;
                             }
                         }
+                        RoomEvent::ConnectionStateChanged(connection_state) => {
+                            if weak_this
+                                .update(cx, {
+                                    let local_participant = local_participant.clone();
+                                    move |this, cx| {
+                                        this.state = SfuSessionState::Connected {
+                                            local_participant,
+                                            connection_state: connection_state.clone(),
+                                        };
+                                        cx.notify();
+                                    }
+                                })
+                                .is_err()
+                            {
+                                // TODO: End call?
+                                return;
+                            }
+                        }
                         _ => {}
                     }
 
                     info!("LiveKit event: {:?}", event);
                 }
                 drop(livekit_room);
-            })
+            }})
             .detach();
         })
         .detach();
