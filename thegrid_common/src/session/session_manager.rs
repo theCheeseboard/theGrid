@@ -3,7 +3,7 @@ use crate::session::caches::Caches;
 use crate::session::capability_cache::CapabilityCache;
 use crate::session::database_secret::{DatabaseSecret, DatabaseSecretExt};
 use crate::session::devices_cache::DevicesCache;
-use crate::session::error_handling::{ClientError, TerminalClientError, handle_error};
+use crate::session::error_handling::{handle_error, ClientError, TerminalClientError};
 use crate::session::ignored_users_cache::IgnoredUsersCache;
 use crate::session::media_cache::MediaCache;
 use crate::session::notifications::trigger_notification;
@@ -12,23 +12,21 @@ use crate::session::spaces_cache::SpacesCache;
 use crate::session::sso_login::SsoLogin;
 use crate::session::verification_requests_cache::VerificationRequestsCache;
 use crate::tokio_helper::TokioHelper;
-use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use contemporary::application::Details;
 use gpui::http_client::anyhow;
 use gpui::private::anyhow;
 use gpui::{App, AppContext, AsyncApp, Context, Entity, Global, Task, WeakEntity};
 use gpui_tokio::Tokio;
-use imbl::HashMap;
 use imbl::hashmap::Entry;
 use imbl::shared_ptr::DefaultSharedPtr;
+use imbl::HashMap;
 use log::{error, info};
 use matrix_sdk::authentication::matrix::MatrixSession;
 use matrix_sdk::config::SyncSettings;
-use matrix_sdk::ruma::OwnedUserId;
-use matrix_sdk::ruma::api::client::discovery::discover_homeserver::RtcFocusInfo;
 use matrix_sdk::ruma::api::error::FromHttpResponseError;
-use matrix_sdk::ruma::events::key::verification::request::ToDeviceKeyVerificationRequestEvent;
+use matrix_sdk::ruma::OwnedUserId;
 use matrix_sdk::store::RoomLoadSettings;
 use matrix_sdk::sync::Notification;
 use matrix_sdk::{Client, Error, HttpError, LoopCtrl, Room, RumaApiError};
@@ -41,6 +39,7 @@ use std::hash::RandomState;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
+use matrix_sdk::ruma::api::client::rtc::RtcTransport;
 use uuid::Uuid;
 
 pub struct SessionManager {
@@ -108,9 +107,17 @@ impl SessionManager {
         .collect()
     }
 
-    pub fn session_secrets(&self, session: &Uuid, cx: &App) -> keyring_core::Result<keyring_core::Entry> {
+    pub fn session_secrets(
+        &self,
+        session: &Uuid,
+        cx: &App,
+    ) -> keyring_core::Result<keyring_core::Entry> {
         let details = cx.global::<Details>();
-        keyring_core::get_default_store().unwrap().build(details.generatable.desktop_entry, &session.to_string(), None)
+        keyring_core::get_default_store().unwrap().build(
+            details.generatable.desktop_entry,
+            &session.to_string(),
+            None,
+        )
     }
 
     pub fn set_session(&mut self, uuid: Uuid, cx: &mut App) {
@@ -360,15 +367,16 @@ impl SessionManager {
         cx.spawn({
             let client = client.clone();
             async move |cx: &mut AsyncApp| {
-                let rtc_foci = cx
+                let Ok(rtc_foci) = cx
                     .spawn_tokio(async move {
-                        let _ = client.reset_well_known().await;
-                        client.rtc_foci().await
+                        client.discover_rtc_transports().await
                     })
-                    .await;
+                    .await else {
+                    return;
+                };
 
                 cx.update_global::<Self, ()>(|session_manager, _| {
-                    session_manager.current_caches.as_mut().unwrap().rtc_foci =
+                    session_manager.current_caches.as_mut().unwrap().rtc_transports =
                         rtc_foci.unwrap_or_default();
                 });
             }
@@ -429,8 +437,8 @@ impl SessionManager {
             .clone()
     }
 
-    pub fn rtc_foci(&self) -> &Vec<RtcFocusInfo> {
-        &self.current_caches.as_ref().unwrap().rtc_foci
+    pub fn rtc_foci(&self) -> &Vec<RtcTransport> {
+        &self.current_caches.as_ref().unwrap().rtc_transports
     }
 
     pub fn set_sso_login_entity(&mut self, entity: WeakEntity<Option<SsoLogin>>) {

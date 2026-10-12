@@ -7,8 +7,8 @@ use crate::session::room_cache::RoomCache;
 use crate::session::spaces_cache::SpacesCache;
 use crate::session::verification_requests_cache::VerificationRequestsCache;
 use gpui::{AppContext, AsyncApp, Entity};
-use matrix_sdk::ruma::api::client::discovery::discover_homeserver::RtcFocusInfo;
 use matrix_sdk::Client;
+use matrix_sdk::ruma::api::client::rtc::RtcTransport;
 
 pub struct Caches {
     pub verification_requests: Entity<VerificationRequestsCache>,
@@ -19,8 +19,7 @@ pub struct Caches {
     pub room_cache: Entity<RoomCache>,
     pub spaces_cache: Entity<SpacesCache>,
     pub ignored_users_cache: Entity<IgnoredUsersCache>,
-
-    pub rtc_foci: Vec<RtcFocusInfo>,
+    pub rtc_transports: Vec<RtcTransport>
 }
 
 impl Caches {
@@ -37,7 +36,7 @@ impl Caches {
             room_cache: RoomCache::new(client, cx),
             spaces_cache,
             ignored_users_cache: cx.new(|cx| IgnoredUsersCache::new(client, cx)),
-            rtc_foci: Vec::new(),
+            rtc_transports: Vec::new()
         })
     }
 }

@@ -20,14 +20,15 @@ use gpui::{
     AppContext, BorrowAppContext, Context, Entity, IntoElement, ObjectFit, ParentElement, Render,
     Styled, StyledImage, Window, div, img, px, rgb,
 };
-use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::OwnedRoomId;
 use nokhwa::utils::CameraInfo;
 use nokhwa::{native_api_backend, query};
 use std::collections::HashMap;
 use std::rc::Rc;
 use thegrid_common::mxc_image::{SizePolicy, mxc_image};
-use thegrid_common::room::active_call_participants::track_active_call_participants;
+use thegrid_common::room::active_call_participants::{
+    ActiveCallParticipant, track_active_call_participants,
+};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::surfaces::SurfaceChangeHandler;
 
@@ -39,7 +40,7 @@ pub struct CallStartPage {
     audio_input_devices: Vec<AudioDevice>,
     selected_output_device: Option<AudioDevice>,
     selected_input_device: Option<AudioDevice>,
-    active_call_users: Entity<Vec<RoomMember>>,
+    active_call_users: Entity<Vec<ActiveCallParticipant>>,
 
     active_camera: Option<Entity<Webcam>>,
     camera_info: Option<Vec<CameraInfo>>,
@@ -134,11 +135,7 @@ impl CallStartPage {
         }
     }
 
-    fn render_camera_setup(
-        &mut self,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) -> impl IntoElement {
+    fn render_camera_setup(&self, window: &mut Window, cx: &Context<Self>) -> impl IntoElement {
         let camera_grant_status = Permissions::grant_status(PermissionType::Camera);
 
         div()
@@ -317,11 +314,7 @@ impl CallStartPage {
             )
     }
 
-    fn render_audio_setup(
-        &mut self,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) -> impl IntoElement {
+    fn render_audio_setup(&self, window: &mut Window, cx: &Context<Self>) -> impl IntoElement {
         div()
             .flex()
             .flex_col()
@@ -380,11 +373,7 @@ impl CallStartPage {
             )
     }
 
-    fn render_mic_setup(
-        &mut self,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) -> impl IntoElement {
+    fn render_mic_setup(&self, window: &mut Window, cx: &Context<Self>) -> impl IntoElement {
         let mic_grant_status = Permissions::grant_status(PermissionType::Microphone);
 
         div()
@@ -602,7 +591,7 @@ impl Render for CallStartPage {
             })
         });
         let focus_url = focus_url.read(cx).clone();
-        let active_call_users = self.active_call_users.read(cx).clone();
+        let active_call_users = self.active_call_users.read(cx);
 
         let in_other_call = cx
             .global::<LivekitCallManager>()
@@ -734,6 +723,7 @@ impl Render for CallStartPage {
                                                     .fold(
                                                         div().flex().gap(px(2.)).items_center(),
                                                         |david, member| {
+                                                            let member = &member.room_member;
                                                             david.child(
                                                                 mxc_image(member.avatar_url())
                                                                     .fallback_image(

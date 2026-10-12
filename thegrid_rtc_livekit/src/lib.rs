@@ -11,19 +11,19 @@ mod sfu_session;
 mod webcam;
 
 use crate::call_manager::LivekitCallManager;
-use crate::focus::{get_focus_url, FocusUrlError};
+use crate::focus::{FocusUrlError, get_focus_url};
 use crate::mic::open_mic;
 use crate::rtc_audio_stream_source::RtcAudioStreamSource;
 use crate::sfu_session::{SfuSession, SfuSessionState};
 use crate::webcam::Webcam;
-use async_ringbuf::consumer::AsyncConsumer;
 use async_ringbuf::AsyncHeapRb;
+use async_ringbuf::consumer::AsyncConsumer;
 use cancellation_token::CancellationTokenSource;
-use cntp_i18n::{tr, tr_load, I18N_MANAGER};
+use cntp_i18n::{I18N_MANAGER, tr, tr_load};
 use contemporary::icon_tool::Url;
 use contemporary::setup_parlance::setup_parlance_i18n_if_enabled;
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::Host;
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use gpui::http_client::anyhow;
 use gpui::private::{anyhow, serde_json};
 use gpui::{
@@ -52,7 +52,6 @@ use matrix_sdk::reqwest::StatusCode;
 use matrix_sdk::room::RoomMember;
 use matrix_sdk::ruma::api::client::account::request_openid_token;
 use matrix_sdk::ruma::api::client::account::request_openid_token::v3::Response;
-use matrix_sdk::ruma::api::client::discovery::discover_homeserver::RtcFocusInfo;
 use matrix_sdk::ruma::events::call::member::{
     ActiveFocus, ActiveLivekitFocus, Application, CallApplicationContent, CallMemberEvent,
     CallMemberEventContent, CallMemberStateKey, CallScope, Focus, FocusSelection, LivekitFocus,
@@ -63,7 +62,7 @@ use matrix_sdk::ruma::exports::serde_json::json;
 use matrix_sdk::ruma::serde::Raw;
 use matrix_sdk::ruma::{OwnedDeviceId, OwnedRoomId, OwnedUserId, RoomId, UserId};
 use matrix_sdk::stream::StreamExt;
-use matrix_sdk::{reqwest, HttpError};
+use matrix_sdk::{HttpError, reqwest};
 use nokhwa::utils::FrameFormat;
 use reqwest::header;
 use ringbuffer::RingBuffer;
@@ -75,15 +74,17 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use thegrid_common::outbound_track::{OutboundTrack, OutboundTrackStatus};
-use thegrid_common::room::active_call_participants::track_active_call_participants;
+use thegrid_common::room::active_call_participants::{
+    ActiveCallParticipant, track_active_call_participants,
+};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::sfx;
 use thegrid_common::sfx::SoundEffect;
 use thegrid_common::tokio_helper::TokioHelper;
 use yuv::{
-    yuv420_to_bgra, yuv420_to_rgba, yuv422_to_uyvy422, yuyv422_to_yuv422, BufferStoreMut,
-    YuvChromaSubsampling, YuvPackedImage, YuvPackedImageMut, YuvPlanarImage, YuvPlanarImageMut,
-    YuvRange, YuvStandardMatrix,
+    BufferStoreMut, YuvChromaSubsampling, YuvPackedImage, YuvPackedImageMut, YuvPlanarImage,
+    YuvPlanarImageMut, YuvRange, YuvStandardMatrix, yuv420_to_bgra, yuv420_to_rgba,
+    yuv422_to_uyvy422, yuyv422_to_yuv422,
 };
 
 pub fn setup_thegrid_rtc_livekit(cx: &mut App) {
@@ -109,13 +110,13 @@ pub struct LivekitCall {
     master_sfu_session: Option<String>,
 
     subscribed_streams: Vec<SubscribedStream>,
-    active_call_participants_state: Entity<Vec<RoomMember>>,
+    active_call_participants_state: Entity<Vec<ActiveCallParticipant>>,
     muted_streams: HashSet<TrackSid>,
     active_speakers: HashSet<TrackSid>,
     cached_call_members: Entity<Vec<CallMember>>,
     video_stream_images: HashMap<TrackSid, Arc<RenderImage>>,
 
-    openid_token: Option<request_openid_token::v3::Response>,
+    openid_token: Option<Response>,
 
     cancellation_source: CancellationTokenSource,
     started_at: Instant,
@@ -132,6 +133,7 @@ pub struct CallMember {
     camera_state: StreamState,
     screenshare_state: StreamState,
 
+    sfu: Option<String>,
     mic_active: bool,
 }
 
@@ -237,8 +239,9 @@ impl LivekitCall {
         cx.spawn({
             let room_id = room_id.clone();
             let room = room.clone();
+            let active_call_participants_state = active_call_participants_state.clone();
             async move |weak_this: WeakEntity<Self>, cx: &mut AsyncApp| {
-                let service_url = match get_focus_url(&room, rtc_foci, cx).await {
+                let service_url = match get_focus_url(rtc_foci).await {
                     Ok(url) => url,
                     Err(FocusUrlError::RoomError) => {
                         error!("Call failed: {}", CallError::RoomError);
@@ -293,15 +296,21 @@ impl LivekitCall {
                         let room = room.clone();
                         let service_url = service_url.clone();
                         async move {
+                            let mut focus = ActiveLivekitFocus::new();
+                            focus.focus_selection = "multi_sfu".into();
                             room.send_state_event_for_key(
-                                &CallMemberStateKey::new(user_id, None, true),
+                                &CallMemberStateKey::new(
+                                    user_id,
+                                    Some(device_id.to_string()),
+                                    true,
+                                ),
                                 CallMemberEventContent::new(
                                     Application::Call(CallApplicationContent::new(
                                         "".to_string(),
                                         CallScope::Room,
                                     )),
                                     device_id,
-                                    ActiveFocus::Livekit(ActiveLivekitFocus::new()),
+                                    ActiveFocus::Livekit(focus),
                                     vec![Focus::Livekit(LivekitFocus::new(
                                         room_id.to_string(),
                                         service_url,
@@ -332,6 +341,12 @@ impl LivekitCall {
                 let _ = weak_this.update(cx, move |this, cx| {
                     this.connect_to_sfu(&service_url, cx);
                     this.master_sfu_session = Some(service_url);
+
+                    cx.observe(&active_call_participants_state, move |this, _, cx| {
+                        this.recalculate_connected_sfus(cx);
+                    })
+                    .detach();
+                    this.recalculate_connected_sfus(cx);
                 });
 
                 // TODO: Delay a disconnection message
@@ -389,6 +404,20 @@ impl LivekitCall {
             openid_token: None,
             master_sfu_session: None,
             initial_streams,
+        }
+    }
+
+    fn recalculate_connected_sfus(&mut self, cx: &mut Context<Self>) {
+        let active_call_participants = self.active_call_participants_state.read(cx).to_vec();
+
+        // TODO: Disconnect from inactive SFUs
+        for active_call_participant in active_call_participants {
+            if let Some(sfu) = &active_call_participant.sfu
+                && !self.connected_sfu_sessions.contains_key(sfu)
+            {
+                info!("Connecting to new SFU: {}", sfu);
+                self.connect_to_sfu(sfu, cx);
+            }
         }
     }
 
@@ -785,7 +814,7 @@ impl LivekitCall {
         let mut this_device_processed = false;
         for participant in active_call_participants.iter() {
             if let Some((tuple, participant)) = devices.iter().find_map(|tuple| {
-                if tuple.0 == participant.user_id() {
+                if tuple.0 == participant.room_member.user_id() {
                     Some((tuple, participant))
                 } else {
                     None
@@ -798,12 +827,13 @@ impl LivekitCall {
                     .collect::<Vec<_>>();
 
                 let mut call_member = CallMember {
-                    room_member: participant.clone(),
+                    room_member: participant.room_member.clone(),
                     device_id: Some(tuple.1.clone()),
                     mic_state: StreamState::Unavailable,
                     screenshare_state: StreamState::Unavailable,
                     camera_state: StreamState::Unavailable,
                     mic_active: false,
+                    sfu: participant.sfu.clone(),
                 };
 
                 for stream in subscribed_streams {
@@ -837,7 +867,7 @@ impl LivekitCall {
                 devices.remove(&tuple);
             } else {
                 let (mic_state, camera_state, screenshare_state) = if !this_device_processed
-                    && participant.user_id() == this_user_id
+                    && participant.room_member.user_id() == this_user_id
                 {
                     this_device_processed = true;
                     (
@@ -868,12 +898,13 @@ impl LivekitCall {
                 };
 
                 call_members.push(CallMember {
-                    room_member: participant.clone(),
+                    room_member: participant.room_member.clone(),
                     device_id: None,
                     mic_state,
                     camera_state,
                     screenshare_state,
                     mic_active: false,
+                    sfu: participant.sfu.clone(),
                 });
             };
         }
@@ -1077,13 +1108,8 @@ impl LivekitCall {
         self.active_devices.clear();
 
         let session_manager = cx.global::<SessionManager>();
-        let user_id = session_manager
-            .client()
-            .unwrap()
-            .read(cx)
-            .user_id()
-            .unwrap()
-            .to_owned();
+        let client = session_manager.client().unwrap().read(cx);
+        let user_id = client.user_id().unwrap().to_owned();
         let room = session_manager
             .rooms()
             .read(cx)
@@ -1092,6 +1118,7 @@ impl LivekitCall {
             .read(cx)
             .inner
             .clone();
+        let device_id = client.device_id().unwrap().to_owned();
 
         // Try to notify everyone that we have hung up
         cx.spawn(
@@ -1099,7 +1126,7 @@ impl LivekitCall {
                 if let Err(e) = cx
                     .spawn_tokio(async move {
                         room.send_state_event_for_key(
-                            &CallMemberStateKey::new(user_id, None, true),
+                            &CallMemberStateKey::new(user_id, Some(device_id.into()), true),
                             CallMemberEventContent::new_empty(None),
                         )
                         .await

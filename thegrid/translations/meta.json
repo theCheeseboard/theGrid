@@ -151,7 +151,7 @@
   },
   "ACTIVE_CALL_CONTENT": {
     "context": "call_members_view.rs",
-    "definedIn": "src/chat/chat_room/call_members_view.rs:58",
+    "definedIn": "src/chat/chat_room/call_members_view.rs:59",
     "plural": true,
     "description": null
   },
@@ -265,7 +265,7 @@
   },
   "ATTACH_PROMPT": {
     "context": "open_room.rs",
-    "definedIn": "src/chat/chat_room/open_room.rs:340",
+    "definedIn": "src/chat/chat_room/open_room.rs:342",
     "plural": false,
     "description": null
   },
@@ -1099,7 +1099,7 @@
   },
   "JOIN_CALL": {
     "context": "call_members_view.rs",
-    "definedIn": "src/chat/chat_room/call_members_view.rs:66",
+    "definedIn": "src/chat/chat_room/call_members_view.rs:67",
     "plural": false,
     "description": null
   },

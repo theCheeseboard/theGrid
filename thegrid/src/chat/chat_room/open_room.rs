@@ -12,14 +12,14 @@ use gpui::{
 };
 use log::error;
 use matrix_sdk::attachment::{AttachmentInfo, BaseFileInfo};
-use matrix_sdk::room::edit::EditedContent;
 use matrix_sdk::room::RoomMember;
+use matrix_sdk::room::edit::EditedContent;
 use matrix_sdk::ruma::api::client::room::aliases::v3::Response;
 use matrix_sdk::ruma::events::room::canonical_alias::RoomCanonicalAliasEventContent;
 use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use matrix_sdk::ruma::events::tag::Tags;
-use matrix_sdk::ruma::events::{room, Mentions, MessageLikeEventType};
-use matrix_sdk::ruma::{api, OwnedRoomAliasId, OwnedRoomId, UInt, UserId};
+use matrix_sdk::ruma::events::{Mentions, MessageLikeEventType, room};
+use matrix_sdk::ruma::{OwnedRoomAliasId, OwnedRoomId, UInt, UserId, api};
 use matrix_sdk::{Error, HttpError, Room};
 use matrix_sdk_ui::timeline::{
     AttachmentConfig, AttachmentSource, EventTimelineItem, RoomExt, TimelineFocus,
@@ -28,7 +28,9 @@ use mime2ext::mime2ext;
 use std::fs::read;
 use std::mem;
 use std::path::PathBuf;
-use thegrid_common::room::active_call_participants::track_active_call_participants;
+use thegrid_common::room::active_call_participants::{
+    ActiveCallParticipant, track_active_call_participants,
+};
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::tokio_helper::TokioHelper;
 
@@ -38,7 +40,7 @@ pub struct OpenRoom {
     pub displayed_room: Entity<DisplayedRoom>,
     pub pending_attachments: Vec<PendingAttachment>,
     pub typing_users: Vec<RoomMember>,
-    pub active_call_users: Entity<Vec<RoomMember>>,
+    pub active_call_users: Entity<Vec<ActiveCallParticipant>>,
     pub chat_input: Entity<ChatInput>,
     pub room_id: OwnedRoomId,
     pub chat_bar: Entity<ChatBar>,

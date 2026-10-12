@@ -145,7 +145,7 @@ impl LivekitCallManager {
 
         cx.spawn(
             async move |weak_entity: WeakEntity<FocusUrl>, cx: &mut AsyncApp| {
-                let focus_url = get_focus_url(&room, rtc_foci, cx).await;
+                let focus_url = get_focus_url(rtc_foci).await;
                 let Some(entity) = weak_entity.upgrade() else {
                     return;
                 };

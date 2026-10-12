@@ -94,7 +94,10 @@ impl SpacesCache {
         space_room_list_entity
     }
 
-    pub fn get_editable_spaces(&self, cx: &mut Context<Option<Vec<SpaceRoom>>>) -> Option<Vec<SpaceRoom>> {
+    pub fn get_editable_spaces(
+        &self,
+        cx: &mut Context<Option<Vec<SpaceRoom>>>,
+    ) -> Option<Vec<SpaceRoom>> {
         let space_service = self.space_service.clone();
 
         cx.spawn(
@@ -143,7 +146,7 @@ impl SpaceRoomListEntity {
     }
 
     fn setup(&mut self, space_room_list: SpaceRoomList, cx: &mut Context<Self>) {
-        let (rooms, mut stream) = space_room_list.subscribe_to_room_updates();
+        let (rooms, mut stream) = smol::block_on(space_room_list.subscribe_to_room_updates());
         self.rooms = rooms;
 
         let (tx, rx) = async_channel::bounded(1);

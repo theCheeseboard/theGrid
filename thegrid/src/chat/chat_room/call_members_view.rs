@@ -7,12 +7,12 @@ use gpui::{
     App, ClickEvent, InteractiveElement, IntoElement, ParentElement, RenderOnce, Styled, Window,
     div, px, relative,
 };
-use matrix_sdk::room::RoomMember;
 use thegrid_common::mxc_image::{SizePolicy, mxc_image};
+use thegrid_common::room::active_call_participants::ActiveCallParticipant;
 
 #[derive(IntoElement)]
 pub struct CallMembersView {
-    pub members: Vec<RoomMember>,
+    pub members: Vec<ActiveCallParticipant>,
     pub start_call: Box<dyn Fn(&ClickEvent, &mut Window, &mut App)>,
 }
 
@@ -46,6 +46,7 @@ impl RenderOnce for CallMembersView {
                             .iter()
                             .take(3)
                             .fold(div().flex().gap(px(2.)).items_center(), |david, member| {
+                                let member = &member.room_member;
                                 david.child(
                                     mxc_image(member.avatar_url())
                                         .fallback_image(member.user_id())
