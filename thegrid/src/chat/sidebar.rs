@@ -300,6 +300,7 @@ impl RenderOnce for SidebarAlert {
                                             device_name:quote = device_name
                                         )
                                     } else {
+                                        let peer = peer.to_string();
                                         tr!(
                                             "INCOMING_VERIFICATION_DESCRIPTION",
                                             "Verify your communication with {{user_id}} to ensure \

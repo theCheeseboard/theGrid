@@ -71,6 +71,7 @@ impl RenderOnce for VerificationSasPage {
                                                 emoji are displayed, in the same order."
                                             )
                                         } else {
+                                            let peer = peer.to_string();
                                             tr!(
                                                 "VERIFICATION_SAS_PEER_EMOJI_DESCRIPTION",
                                                 "Using a different, trusted form of communication, \
@@ -167,6 +168,7 @@ impl RenderOnce for VerificationSasPage {
                                                 numbers are displayed, in the same order."
                                             )
                                         } else {
+                                            let peer = peer.to_string();
                                             tr!(
                                                 "VERIFICATION_SAS_PEER_DECIMAL_DESCRIPTION",
                                                 "Using a different, trusted form of communication, \

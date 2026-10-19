@@ -18,20 +18,20 @@ use contemporary::components::spinner::spinner;
 use contemporary::components::subtitle::subtitle;
 use gpui::prelude::FluentBuilder;
 use gpui::{
-    div, px, App, AppContext, AsyncApp, ClickEvent, Context, Element,
-    Entity, InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled,
-    WeakEntity, Window,
+    App, AppContext, AsyncApp, ClickEvent, Context, Element, Entity, InteractiveElement,
+    IntoElement, ParentElement, Render, StatefulInteractiveElement, Styled, WeakEntity, Window,
+    div, px,
 };
+use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::encryption::identities::Device;
 use matrix_sdk::encryption::verification::VerificationRequestState;
-use matrix_sdk::encryption::VerificationState;
 use matrix_sdk::ruma::events::key::verification::cancel::CancelCode;
 use matrix_sdk_crypto::{CancelInfo, QrVerificationState};
 use std::rc::Rc;
 use thegrid_common::sas_emoji::SasEmoji;
 use thegrid_common::session::session_manager::SessionManager;
 use thegrid_common::session::verification_requests_cache::{
-    VerificationRequestDetails, SUPPORTED_VERIFICATION_METHODS,
+    SUPPORTED_VERIFICATION_METHODS, VerificationRequestDetails,
 };
 use thegrid_common::tokio_helper::TokioHelper;
 
@@ -361,6 +361,7 @@ impl Render for VerificationPopover {
                                             .flex_col()
                                             .gap(px(8.))
                                             .child(if let Some((is_self, peer)) = peer && !is_self {
+                                                let peer = peer.to_string();
                                                 tr!(
                                                     "VERIFICATION_POPOVER_OK_PEER_MESSAGE",
                                                     "Your communication with {{peer}} is now \

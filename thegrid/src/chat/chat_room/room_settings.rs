@@ -26,8 +26,8 @@ use gpui::{
     IntoElement, ParentElement, Render, Styled, WeakEntity, Window, div, px,
 };
 use matrix_sdk::ruma::api::client::room::Visibility;
+use matrix_sdk::ruma::events::StateEventType;
 use matrix_sdk::ruma::events::room::avatar::ImageInfo;
-use matrix_sdk::ruma::events::{MessageLikeEventType, StateEventType};
 use matrix_sdk::ruma::room::JoinRule;
 use matrix_sdk::ruma::{OwnedRoomAliasId, RoomAliasId, UInt};
 use std::rc::Rc;
@@ -255,6 +255,7 @@ impl RoomSettings {
                                     let alias_clone = alias.clone();
                                     let callback = cx.listener(move |_, result, window, cx| {
                                         if let Err(e) = result {
+                                            let alias = alias_clone.to_string();
                                             Toast::new()
                                                 .title(&tr!(
                                                     "ROOM_ALIAS_REMOVE_ERROR_TITLE",
@@ -263,7 +264,7 @@ impl RoomSettings {
                                                 .body(&tr!(
                                                     "ROOM_ALIAS_REMOVE_ERROR_TEXT",
                                                     "Could not remove the room alias {{alias}}",
-                                                    alias:quote = alias_clone
+                                                    alias:quote = alias
                                                 ))
                                                 .post(window, cx)
                                         };
@@ -323,12 +324,14 @@ impl RoomSettings {
                             let mut menu = vec![
                                 ContextMenuItem::separator()
                                     .label(if is_public {
+                                        let alias = alias.to_string();
                                         tr!(
                                             "ALIAS_PUBLIC_CONTEXT_MENU_TITLE",
                                             "For public alias {{alias}}",
                                             alias:quote = alias
                                         )
                                     } else {
+                                        let alias = alias.to_string();
                                         tr!(
                                             "ALIAS_CONTEXT_MENU_TITLE",
                                             "For alias {{alias}}",
@@ -395,6 +398,7 @@ impl RoomSettings {
                                                 let alias = alias.clone();
                                                 alt_aliases.retain(|alt_alias| alt_alias != &alias);
 
+                                                let alias = alias.to_string();
                                                 modify_public_aliases(
                                                     canonical_alias,
                                                     alt_aliases,
@@ -439,6 +443,7 @@ impl RoomSettings {
                                             let mut alt_aliases = alt_aliases.clone();
                                             alt_aliases.retain(|alt_alias| alt_alias != &alias);
 
+                                            let alias = alias.to_string();
                                             modify_public_aliases(
                                                 canonical_alias,
                                                 alt_aliases,
@@ -475,6 +480,7 @@ impl RoomSettings {
                                             alt_aliases.push(alias.clone());
                                             let alias = alias.clone();
 
+                                            let alias = alias.to_string();
                                             modify_public_aliases(
                                                 canonical_alias,
                                                 alt_aliases,
