@@ -1,6 +1,7 @@
 use cpal::traits::{DeviceTrait, StreamTrait};
 use gpui::{App, AppContext, AsyncApp, Entity};
 use log::error;
+use std::time::Duration;
 use thegrid_common::outbound_track::OutboundTrack;
 
 pub fn open_mic(device: &cpal::Device, cx: &mut App) -> Entity<OutboundTrack> {
@@ -9,11 +10,11 @@ pub fn open_mic(device: &cpal::Device, cx: &mut App) -> Entity<OutboundTrack> {
     let (tx, rx) = async_channel::unbounded();
 
     let mut supported_device_configs = device.supported_input_configs().unwrap();
-    let supported_config_range = supported_device_configs
-        .next()
-        .unwrap();
-    let supported_config = supported_config_range
-        .with_sample_rate(48000.clamp(supported_config_range.min_sample_rate(), supported_config_range.max_sample_rate()));
+    let supported_config_range = supported_device_configs.next().unwrap();
+    let supported_config = supported_config_range.with_sample_rate(48000.clamp(
+        supported_config_range.min_sample_rate(),
+        supported_config_range.max_sample_rate(),
+    ));
 
     let outbound_track = cx.new(|cx| {
         OutboundTrack::new_audio(
