@@ -41,6 +41,8 @@ jobs:
       - name: Bundle
         run: cargo cntp-bundle --target aarch64-apple-darwin
         working-directory: thegrid
+      - run: ls target/bundle/*/release
+      - run: ls target/bundle/*/release/*.app
       # Codesigning adapted from https://federicoterzi.com/blog/automatic-code-signing-and-notarization-for-macos-apps-using-github-actions/
       - name: Codesign app bundle
         env:
