@@ -13,7 +13,7 @@ livekit = { workspace = true }
 zed-reqwest = { workspace = true }
 serde = { version = "1.0.228", features = ["derive"] }
 log = "0.4.28"
-cpal = "0.17"
+cpal = { workspace = true }
 async-ringbuf = { workspace = true }
 cancellation-token = { workspace = true }
 async-channel = { workspace = true }

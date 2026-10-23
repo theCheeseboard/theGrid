@@ -49,7 +49,7 @@ ringbuffer = "0.16"
 raw-window-handle = "0.6"
 rustc-hash = "2"
 qrcode = { version = "0.14", features = ["image"] }
-rodio = "0.22"
+rodio = "0.23"
 mimetype-detector = "0.3"
 zed-reqwest = { version = "0.12.15-zed", default-features = false, features = [
     "json",
@@ -57,3 +57,4 @@ zed-reqwest = { version = "0.12.15-zed", default-features = false, features = [
     "rustls-tls-webpki-roots",
     "stream"
 ] }
+cpal = "0.18"

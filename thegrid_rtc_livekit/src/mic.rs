@@ -26,7 +26,7 @@ pub fn open_mic(device: &cpal::Device, cx: &mut App) -> Entity<OutboundTrack> {
 
     let input_stream = device
         .build_input_stream(
-            &supported_config.config(),
+            supported_config.config(),
             move |data: &[i16], _: &cpal::InputCallbackInfo| {
                 let _ = smol::block_on(tx.send(data.to_vec()));
             },
